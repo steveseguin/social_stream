@@ -73,15 +73,15 @@
             </div>
 
             <div class="guide-card">
-                <h3>3. Use One Session ID</h3>
-                <p>Pick one short session ID. Use that exact same ID in the TikTok source, the dock, and OBS.</p>
-                <pre>YOUR_SESSION_ID</pre>
+                <h3>3. Use The Links SSN Gives You</h3>
+                <p>SSN already made a session ID for you and puts it in every link it shows, along with your password and connection settings if you use them. Copy those links instead of typing your own; that ID is how the TikTok source, the dock, and OBS find each other.</p>
+                <p>You will use two of them: <strong>Main chat overlay &amp; control dock</strong> and <strong>Featured chat overlay</strong>. Each has a <strong>Copy link</strong> button.</p>
             </div>
 
             <div class="guide-card">
                 <h3>4. Check The Dock Before OBS</h3>
-                <p>Open the dock with your session ID. Send or wait for one TikTok chat message.</p>
-                <pre>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID</pre>
+                <p>In SSN, click <strong>Copy link</strong> next to <strong>Main chat overlay &amp; control dock</strong> and open it in a browser tab. Send or wait for one TikTok chat message.</p>
+                <p>Your link will look something like <code>https://socialstream.ninja/dock.html?session=...</code>, with your own ID and settings after it.</p>
                 <figure class="guide-figure">
                     <img src="images/guides/obs-dock-message-check.png" alt="Social Stream Ninja dock showing received chat messages" class="guide-image">
                     <figcaption>If the dock receives messages, Social Stream Ninja is working. OBS is the next step.</figcaption>
@@ -90,11 +90,11 @@
 
             <div class="guide-card">
                 <h3>5. Add The Overlay To OBS</h3>
-                <p>Add a Browser Source in OBS and use the same session ID.</p>
-                <pre>https://socialstream.ninja/featured.html?session=YOUR_SESSION_ID</pre>
+                <p>Add a Browser Source in OBS and paste one of your copied links as its URL. Pick the one that matches what you want on stream:</p>
+                <ul class="guide-list"><li><strong>Scrolling chat (every message):</strong> use the <strong>Main chat overlay &amp; control dock</strong> link. Turn on <strong>Hide menu bar</strong> under that link in SSN first, then copy it again, so the control bar stays off your stream.</li><li><strong>One message at a time (click to feature):</strong> use the <strong>Featured chat overlay</strong> link. It stays empty until you click a message in the dock.</li></ul>
                 <figure class="guide-figure">
                     <img src="images/guides/obs-featured-overlay-preview.png" alt="Featured overlay preview with a sample chat message" class="guide-image">
-                    <figcaption>Use a template if you want a full chat layout instead of a single featured message.</figcaption>
+                    <figcaption>The Featured chat overlay after clicking a message in the dock. It stays empty until you click one.</figcaption>
                 </figure>
                 <p>Template setup: <a href="overlay-template-quick-start.html">Overlay Template Quick Start</a>.</p>
             </div>
@@ -104,7 +104,7 @@
                 <ul class="guide-list">
                     <li>Make sure the TikTok live page is actually live.</li>
                     <li>Keep the chat visible when using the browser extension.</li>
-                    <li>Confirm the dock and OBS use the same session ID.</li>
+                    <li>Confirm the dock and OBS links were both copied from SSN, so they share the same session ID.</li>
                     <li>Refresh the dock after changing the session ID.</li>
                     <li>Try the desktop app if the browser tab is being throttled.</li>
                 </ul>

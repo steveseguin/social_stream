@@ -197,7 +197,7 @@ Core URL parameters:
 - `duration`
 - `current`
 - `label`
-- `style`: `stage`, `compact`, or `ring`.
+- `style`: `stage`, `compact`, `ring`, or `bar`.
 - `autostart`
 - `warn`
 - `danger`

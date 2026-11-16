@@ -158,6 +158,9 @@
             }
             select.value = sounds.some(function (s) {return s.url === value;}) ? value : '';
             placeholder.textContent = value && !select.value ? 'Custom sound selected' : 'Choose a sound…';
+            if (!select.value && typeof options.getSelectedLabel === 'function') {
+                placeholder.textContent = options.getSelectedLabel() || placeholder.textContent;
+            }
         }
         select.addEventListener('change', function () {
             if (!select.value) return;

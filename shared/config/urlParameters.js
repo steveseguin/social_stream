@@ -668,6 +668,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Adds a separate rounded bubble behind usernames (bubble mode)"
           },
           {
+            "key": "cards",
+            "displayName": "cards",
+            "aliases": [
+              "cards"
+            ],
+            "values": "boolean",
+            "description": "Shows each message as its own card, with coloured cards for donations and members. Pair with showtime to make cards disappear after a set time"
+          },
+          {
             "key": "fadedtop",
             "displayName": "fadedtop",
             "aliases": [

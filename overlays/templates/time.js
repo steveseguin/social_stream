@@ -212,7 +212,7 @@
 		description: "Counts down to a time of day, a date, or a number of minutes after the source loads.",
 		size: [520, 200],
 		fields: [
-			{ key: "target", label: "Count down to (HH:MM, 2026-12-31T23:59, or blank)", type: "text", group: "Content", default: "", help: "HH:MM rolls to the next time it comes around. Leave blank to use minutes instead." },
+			{ key: "target", label: "Count down to (HH:MM, 2026-12-31T23:59, or blank)", type: "text", group: "Content", default: "", help: "HH:MM rolls to the next time it comes around, and a date with no year (12-25 or 12-25T18:00) repeats every year. Leave blank to use minutes instead." },
 			{ key: "minutes", label: "…or minutes from when it loads", type: "number", group: "Content", default: 5, min: 0, max: 10000, step: 0.5 },
 			{ key: "remember", label: "Keep counting through reloads", type: "bool", group: "Content", default: false },
 			{ key: "label", label: "Label", type: "text", group: "Content", default: "Starting in" },
@@ -285,7 +285,16 @@
 					if (c.hideend) { el.style.opacity = "0"; return; }
 					if (units) { units.innerHTML = '<div class="tm-big">' + esc(c.endtext) + "</div>"; }
 					else { big.textContent = c.endtext; }
-					if (arc) { big.style.fontSize = ".3em"; }
+					if (arc) { big.style.fontSize = ".3em"; return; }
+					// A long finish message shrinks to stay inside the source instead of running off both sides.
+					var msg = units ? units.firstChild : big;
+					var fitEnd = function () {
+						msg.style.fontSize = "";
+						var room = el.parentNode.clientWidth - 24 - (el.offsetWidth - msg.offsetWidth);
+						if (room > 0 && msg.offsetWidth > room) { msg.style.fontSize = Math.max(0.2, room / msg.offsetWidth).toFixed(3) + "em"; }
+					};
+					fitEnd();
+					SSO.fontsReady(fitEnd);
 					return;
 				}
 				if (units) {

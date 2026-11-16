@@ -649,6 +649,10 @@ class SpotifyIntegration {
                 if (data.refresh_token) {
                     this.refreshToken = data.refresh_token;
                 }
+
+                this.settings.spotifyAccessToken = this.accessToken;
+                this.settings.spotifyRefreshToken = this.refreshToken;
+                this.settings.spotifyTokenExpiry = this.tokenExpiry;
                 
                 // Save tokens to settings object
                 chrome.storage.local.get(['settings'], async (result) => {
@@ -1604,6 +1608,18 @@ class SpotifyIntegration {
                 return { canonical, matched: lowerCmd };
             }
         }
+        const legacyAliases = {
+            '!nowplaying': '!song',
+            '!next': '!skip',
+            '!prev': '!previous',
+            '!stop': '!pause',
+            '!resume': '!play',
+            '!vol': '!volume',
+            '!request': '!queue'
+        };
+        if (Object.prototype.hasOwnProperty.call(legacyAliases, lowerCmd)) {
+            return { canonical: legacyAliases[lowerCmd], matched: lowerCmd };
+        }
         return null;
     }
 
@@ -1995,6 +2011,10 @@ class SpotifyIntegration {
                 this.accessToken = data.access_token;
                 this.refreshToken = data.refresh_token;
                 this.tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000;
+
+                this.settings.spotifyAccessToken = this.accessToken;
+                this.settings.spotifyRefreshToken = this.refreshToken;
+                this.settings.spotifyTokenExpiry = this.tokenExpiry;
                 
                 // Save tokens to settings object
                 chrome.storage.local.get(['settings'], async (result) => {

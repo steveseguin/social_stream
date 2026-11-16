@@ -9,6 +9,7 @@ class EventFlowSystem {
         // Prefer helpers from background.js when available so both surfaces share behavior
         this.sendMessageToTabs = options.sendMessageToTabs || window.sendMessageToTabs || null;
         this.sendToDestinations = options.sendToDestinations || window.sendToDestinations || null;
+        this.banUserOnPlatform = options.banUserOnPlatform || null;
         this.fetchWithTimeout = options.fetchWithTimeout || window.fetchWithTimeout || window.fetch; // Fallback to window.fetch if not provided
         this.sanitizeRelay = options.sanitizeRelay || window.sanitizeRelay || null;
 		this.checkExactDuplicateAlreadyRelayed = options.checkExactDuplicateAlreadyRelayed || window.checkExactDuplicateAlreadyRelayed || null;
@@ -73,6 +74,95 @@ class EventFlowSystem {
         //console.log('  - handleMessageStore:', this.handleMessageStore ? 'Function provided' : 'NULL');
         
         this.initPromise = this.initDatabase();
+    }
+
+    async prepareLocalAudio(assetId) {
+        const api = window.ninjafy && window.ninjafy.localMedia || window.ssappLocalMedia;
+        if (!api || typeof api.readAudio !== 'function') return null;
+        const session = typeof streamID !== 'undefined' ? streamID : '';
+        const audio = await api.readAudio(assetId);
+        if (audio && audio.error) {
+            const error = new Error('Local audio unavailable: ' + audio.error);
+            error.code = audio.error;
+            throw error;
+        }
+        if (session !== (typeof streamID !== 'undefined' ? streamID : '')) return null;
+        if (!audio || !/^[a-f0-9]{64}$/.test(audio.hash) || typeof audio.base64 !== 'string' ||
+            audio.size < 1 || audio.size > 16 * 1024 * 1024 || audio.base64.length !== Math.ceil(audio.size / 3) * 4) return null;
+        if (!this.localAudioTransfers) this.localAudioTransfers = new Map();
+        const now = Date.now();
+        let match = null;
+        this.localAudioTransfers.forEach((entry, id) => {
+            if (entry.session !== session || now - entry.used > 120000) this.localAudioTransfers.delete(id);
+            else if (entry.hash === audio.hash && entry.assetId === assetId && entry.mime === audio.mime) match = entry;
+        });
+        if (!match) {
+            let retained = 0;
+            this.localAudioTransfers.forEach(entry => { retained += entry.base64.length; });
+            // Advertised sounds may still be downloading or waiting at a receiver.
+            // Refuse new audio rather than invalidate one of those transfer IDs.
+            if (retained + audio.base64.length > 64 * 1024 * 1024) {
+                const error = new Error('Local audio transfer cache is full. Try again shortly.');
+                error.code = 'AUDIO_BUSY';
+                throw error;
+            }
+            const id = Array.from(crypto.getRandomValues(new Uint32Array(4)), value => value.toString(16)).join('-');
+            match = Object.assign({ id, assetId, session, clients: new Map() }, audio);
+            this.localAudioTransfers.set(id, match);
+        }
+        match.used = now;
+        this.localAudioTransfers.delete(match.id);
+        this.localAudioTransfers.set(match.id, match);
+        // Expire idle audio even if no more commands arrive. Valid chunk requests
+        // refresh entry.used so cleanup cannot interrupt an active transfer.
+        clearTimeout(this.localAudioExpiry);
+        const expire = () => {
+            const now = Date.now();
+            let next = 120000;
+            this.localAudioTransfers.forEach((entry, id) => {
+                const remaining = 120000 - (now - entry.used);
+                if (remaining <= 0) this.localAudioTransfers.delete(id);
+                else next = Math.min(next, remaining);
+            });
+            if (this.localAudioTransfers.size) this.localAudioExpiry = setTimeout(expire, next);
+        };
+        this.localAudioExpiry = setTimeout(expire, 120000);
+        return { id: match.id, hash: match.hash, size: match.size, mime: match.mime };
+    }
+
+    handleLocalAudioRequest(request, peer, session, send) {
+        if (!request || request.action !== 'localAudioRead') return false;
+        const entry = this.localAudioTransfers && this.localAudioTransfers.get(request.id);
+        const offset = request.offset;
+        if (!peer || !entry || entry.session !== session || Date.now() - entry.used > 120000 ||
+            !/^[a-zA-Z0-9_-]{8,100}$/.test(request.requestId || '')) return true;
+        const key = peer + ':' + request.requestId;
+        if (request.cancel === true) {
+            entry.clients.delete(key);
+            return true;
+        }
+        if (!Number.isSafeInteger(offset) || offset < 0 || offset >= entry.base64.length || offset % 16384 !== 0) return true;
+        const now = Date.now();
+        entry.clients.forEach((client, id) => {
+            // A receiver has one pending request per sound. Reclaim its previous
+            // request on retry, including when a cancellation packet was lost.
+            if (now - client.used > 15000 || (offset === 0 && client.peer === peer && id !== key)) entry.clients.delete(id);
+        });
+        // Each receiver asks for the next chunk. This paces the transfer without
+        // filling the shared data-channel queue or changing chat transport.
+        if (!entry.clients.has(key)) {
+            if (offset !== 0 || entry.clients.size >= 16) return true;
+            entry.clients.set(key, { peer, offset: 0, used: now });
+        }
+        const client = entry.clients.get(key);
+        if (client.offset !== offset) return true;
+        const data = entry.base64.slice(offset, offset + 16384);
+        client.offset = offset + data.length;
+        client.used = now;
+        entry.used = now;
+        send({ actionType: 'local_audio_chunk', id: entry.id, requestId: request.requestId, offset, data });
+        if (offset + data.length === entry.base64.length) entry.clients.delete(key);
+        return true;
     }
 
     parseDonationNumericValue(value) {
@@ -441,6 +531,11 @@ class EventFlowSystem {
                 const data = event && event.data;
                 if (!data || data.sourceInstanceId === this.userMemoryInstanceId) return;
 
+                if (data.kind === 'flows-changed') {
+                    this.reloadFlows().catch(error => console.warn('[EventFlowSystem] Unable to reload flows:', error));
+                    return;
+                }
+
                 if (data.kind === 'request-user-memory-state') {
                     this.userMemoryStates.forEach(state => {
                         this.userMemoryChannel.postMessage({
@@ -462,6 +557,19 @@ class EventFlowSystem {
         } catch (error) {
             this.userMemoryChannel = null;
             console.warn('[UserMemory] State synchronization is unavailable:', error && error.message ? error.message : error);
+        }
+    }
+
+    notifyFlowsChanged() {
+        // Standalone extension editors do not share SSApp's parent message route.
+        if (!this.userMemoryChannel || !window.location || window.location.protocol !== 'chrome-extension:') return;
+        try {
+            this.userMemoryChannel.postMessage({
+                kind: 'flows-changed',
+                sourceInstanceId: this.userMemoryInstanceId
+            });
+        } catch (error) {
+            console.warn('[EventFlowSystem] Unable to announce flow changes:', error);
         }
     }
 
@@ -1603,6 +1711,7 @@ class EventFlowSystem {
 			const store = tx.objectStore(this.storeName);
 			
 			const request = store.put(flowData); // flowData now includes 'order'
+			tx.oncomplete = () => this.notifyFlowsChanged();
 			
 			request.onsuccess = async () => {
 				this.reconcileFlowState(existingFlowIndex === -1 ? [...this.flows, flowData]
@@ -1663,6 +1772,7 @@ class EventFlowSystem {
                     }
                 });
                 this.flows.sort((a, b) => (a.order || 0) - (b.order || 0));
+                this.notifyFlowsChanged();
                 resolveOuter({ success: true, message: "Flows reordered successfully." });
             };
             transaction.onerror = (event) => {
@@ -1680,6 +1790,7 @@ class EventFlowSystem {
             const tx = db.transaction(this.storeName, 'readwrite');
             const store = tx.objectStore(this.storeName);
             const request = store.delete(flowId);
+            tx.oncomplete = () => this.notifyFlowsChanged();
             
             request.onsuccess = () => {
                 this.cleanupStateNodes(flowId);
@@ -1732,6 +1843,27 @@ class EventFlowSystem {
 		if (!("meta" in message)) return false;
 		const hasChatFields = this.hasChatLikeFields(message);
 		return !hasChatFields;
+	}
+
+	// The metadata event a Music trigger listens for; empty for every other trigger type.
+	musicTriggerEvent(triggerType) {
+		if (triggerType === 'musicTrackChanged') return 'music_track_changed';
+		if (triggerType === 'musicPlaybackChanged') return 'music_playback_changed';
+		return '';
+	}
+
+	isMusicEventPayload(message) {
+		return !!(message && ['spotify', 'wnp', 'file'].includes(message.type)
+			&& ['music_track_changed', 'music_playback_changed'].includes(message.event)
+			&& message.meta && message.meta.music && !this.hasChatLikeFields(message));
+	}
+
+	async flowMatchesMusicEvent(flow, message) {
+		for (const node of flow.nodes || []) {
+			if (node.type === 'trigger' && this.musicTriggerEvent(node.triggerType)
+				&& await this.evaluateTrigger(node, message, flow)) return true;
+		}
+		return false;
 	}
 
 	isCounterEventPayload(message) {
@@ -1863,10 +1995,11 @@ class EventFlowSystem {
 
         // Automatic User Memory resets happen before flows evaluate the stream event.
         await this.resetUserMemoriesForEvent(message);
+        const musicEvent = this.isMusicEventPayload(message);
         
-		// Counter payloads may continue only to explicit matching event triggers.
+		// Counter and music payloads continue only to their explicit matching triggers.
 		// Other meta-only traffic remains excluded from Event Flow.
-		if (this.isMetaOnlyPayload(message) && !this.isCounterEventPayload(message)) {
+		if (this.isMetaOnlyPayload(message) && !this.isCounterEventPayload(message) && !musicEvent) {
 			return message;
 		}
 		
@@ -1882,6 +2015,8 @@ class EventFlowSystem {
                 // //console.log(`[ProcessMessage] Flow "${flow.name}" (ID: ${flow.id}) is inactive. Skipping.`);
                 continue;
             }
+            // An unrelated NOT gate must not turn a music update into a chat action.
+            if (musicEvent && !(await this.flowMatchesMusicEvent(flow, message))) continue;
           ////console.log(`[ProcessMessage] Evaluating active flow "${flow.name}" (ID: ${flow.id})`);
             
             const result = await this.evaluateFlow(flow, processed);
@@ -2308,8 +2443,14 @@ class EventFlowSystem {
         // console.log(`[EvaluateTrigger] Node: ${triggerNode.id}, Type: ${triggerType}, Config: ${JSON.stringify(config)}, Message: ${message.chatmessage}`);
         let match = false;
 		
-		// Known counters may match only an explicit Event Type trigger. This keeps
-		// them out of Any Message and other generic chat-oriented triggers.
+		// Metadata events use explicit triggers, keeping them out of generic chat flows.
+		const musicTriggerEvent = this.musicTriggerEvent(triggerType);
+		if (this.isMusicEventPayload(message)) {
+			return message.event === musicTriggerEvent
+				&& (!config.source || config.source === message.type)
+				&& (!config.status || config.status === message.meta.music.status);
+		}
+		if (musicTriggerEvent) return false;
 		if (this.isMetaOnlyPayload(message) && (triggerType !== 'eventOther' || !this.isCounterEventPayload(message))){
 			return false;
 		}
@@ -2513,7 +2654,7 @@ class EventFlowSystem {
             }
 
             case 'eventRaid': {
-                const eventMatch = messageEvent === 'raid';
+                const eventMatch = messageEvent === 'raid' || (message.type === 'youtube' && messageEvent === 'redirect');
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
 
                 // Check minimum viewers if specified
@@ -3198,6 +3339,7 @@ class EventFlowSystem {
                         return;
                     }
                     
+                    if (actionResult.stopChain && node.actionType === 'platformBanUser') return;
                     if (actionResult.modified) {
                         currentMessage = actionResult.message;
                         modified = true;
@@ -3806,6 +3948,32 @@ class EventFlowSystem {
                 }
                 break;
                 
+            case 'platformBanUser': {
+                const fail = (reason) => {
+                    console.warn('[Event Flow] Platform ban:', reason);
+                    if (window.flowEditor && typeof window.flowEditor.showNotification === 'function') {
+                        window.flowEditor.showNotification(reason, 'warning');
+                    }
+                    return { stopChain: true };
+                };
+                if (!message || message.reflection || message.event) return { stopChain: true };
+                if (!['twitch', 'kick', 'youtube', 'youtubeshorts', 'vpzone'].includes(message.type)) return fail('Platform bans are unavailable for this source.');
+                if (message.meta && message.meta.economyTest) return fail('Test Flow does not ban users. Use a platform chat command to run this action.');
+                const command = (config.command || '!getout').trim();
+                if (!/^![a-zA-Z0-9_]+$/.test(command)) return fail('Enter a command such as !getout.');
+                const text = message.textonly ? String(message.chatmessage || '') : this.stripHtml(message.chatmessage || '');
+                const parts = text.trim().split(/\s+/);
+                const username = (parts[1] || '').replace(/^@/, '');
+                if (parts.length !== 2 || parts[0].toLowerCase() !== command.toLowerCase() || !username || username.length > 100) {
+                    return fail('Use ' + command + ' <username>.');
+                }
+                if (!this.banUserOnPlatform) return fail('Platform ban commands are unavailable in this app version.');
+                const result = await this.banUserOnPlatform({ type: message.type, tid: message.tid,
+                    messageId: message.meta && message.meta.messageId || message.id,
+                    sourceName: message.sourceName, command: command, username: username });
+                if (!result || !result.ok) return fail(result && result.message || 'The platform did not confirm the ban.');
+                break;
+            }
             case 'sendMessage': {
                 //console.log('[SEND MESSAGE - Action] Starting send message action execution');
                 //console.log('[SEND MESSAGE - Action] Config:', config);
@@ -4422,21 +4590,61 @@ class EventFlowSystem {
 						volume: config.volume !== undefined ? config.volume : 1.0,
                         audioPlayback: config.audioPlayback === 'queue' || config.audioPlayback === 'interrupt' ? config.audioPlayback : undefined
 					};
-					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
-						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
-						//console.log('[ExecuteAction - playAudioClip] Sent to actions page:', actionPayload);
-					} else if (this.sendMessageToTabs) {
-						this.sendMessageToTabs({ overlayNinja: actionPayload, targetPage: 'actions' }, true);
-						//console.log('[ExecuteAction - playAudioClip] Sent via sendMessageToTabs:', actionPayload);
-					} else {
-						console.warn('[ExecuteAction - playAudioClip] No function available to send message to actions page.');
-					}
+                    if (actionPayload.audioPlayback === 'interrupt') {
+                        const preparing = this.audioClipPreparing || actionPayload.sourceType === 'local';
+                        this.localAudioGeneration = (this.localAudioGeneration || 0) + 1;
+                        this.audioClipPreparation = null;
+                        this.audioClipPreparing = 0;
+                        if (preparing) {
+                            const stop = { overlayNinja: { actionType: 'stop_audio' } };
+                            if (this.sendTargetP2P) this.sendTargetP2P(stop, 'actions');
+                            else if (this.sendMessageToTabs) this.sendMessageToTabs({ ...stop, targetPage: 'actions' }, true);
+                        }
+                    }
+                    const generation = this.localAudioGeneration || 0;
+                    const audioSession = typeof streamID !== 'undefined' ? streamID : '';
+                    const cancelled = () => generation !== (this.localAudioGeneration || 0) ||
+                        (execution && execution.cancelled) || audioSession !== (typeof streamID !== 'undefined' ? streamID : '');
+                    const prepareAndSend = async () => {
+                        if (cancelled()) return;
+                        if (actionPayload.sourceType === 'local') {
+                            try { actionPayload.localAudio = await this.prepareLocalAudio(actionPayload.localAssetId); }
+                            catch (error) {
+                                actionPayload.localAudioError = ['AUDIO_TOO_LARGE', 'AUDIO_MISSING', 'AUDIO_CHANGED', 'AUDIO_BUSY'].includes(error && error.code) ? error.code : 'AUDIO_UNAVAILABLE';
+                                console.warn('[Event Flow] Local audio transfer unavailable:', error && error.message || error);
+                            }
+                        }
+                        if (cancelled()) return;
+                        if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                            this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+                        } else if (this.sendMessageToTabs) {
+                            this.sendMessageToTabs({ overlayNinja: actionPayload, targetPage: 'actions' }, true);
+                        } else {
+                            console.warn('[ExecuteAction - playAudioClip] No function available to send message to actions page.');
+                        }
+                    };
+                    // Keep actions in arrival order while a local file is being read.
+                    // Interrupt and Stop start a new generation without waiting for old reads.
+                    if (actionPayload.sourceType === 'local' || this.audioClipPreparing) {
+                        if (this.audioClipPreparing >= 30) break;
+                        this.audioClipPreparing = (this.audioClipPreparing || 0) + 1;
+                        const pending = (this.audioClipPreparation || Promise.resolve()).then(prepareAndSend).finally(() => {
+                            if (generation === (this.localAudioGeneration || 0)) this.audioClipPreparing--;
+                        });
+                        this.audioClipPreparation = pending.catch(() => {});
+                        await pending;
+                    } else await prepareAndSend();
 				} else {
 					console.warn('[ExecuteAction - playAudioClip] Audio URL not configured.');
 				}
 				break;
             }
             case 'stopAudioClips': {
+                this.localAudioGeneration = (this.localAudioGeneration || 0) + 1;
+                this.audioClipPreparation = null;
+                this.audioClipPreparing = 0;
+                if (this.localAudioTransfers) this.localAudioTransfers.clear();
+                clearTimeout(this.localAudioExpiry);
                 const payload = { overlayNinja: { actionType: 'stop_audio' } };
                 if (this.sendTargetP2P) this.sendTargetP2P(payload, 'actions');
                 else if (this.sendMessageToTabs) this.sendMessageToTabs({ ...payload, targetPage: 'actions' }, true);
@@ -4653,6 +4861,22 @@ class EventFlowSystem {
                     console.warn('[OBS] sendTargetP2P not available');
                 }
                 break;
+
+            case 'musicNowPlaying': {
+                // Adds the snapshot and a ready-to-send reply at meta.music. A numeric or array
+                // meta is left as it is; the snapshot is then returned on the result instead.
+                const music = window.musicService
+                    ? window.musicService.nowPlaying()
+                    : { track: null, status: 'idle', message: 'No current song available.' };
+                const meta = message && message.meta;
+                if (meta != null && (typeof meta !== 'object' || Array.isArray(meta))) {
+                    result.music = music;
+                    break;
+                }
+                result.modified = true;
+                result.message = { ...message, meta: { ...(meta || {}), music } };
+                break;
+            }
 
             // Spotify Actions
             case 'spotifySkip':

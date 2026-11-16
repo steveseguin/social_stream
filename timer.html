@@ -55,6 +55,14 @@
         body.compact #timerCore, body.compact #label, body.compact #helper, body.compact #meta { align-items: flex-start; text-align: left; justify-content: flex-start; }
         body.compact #time { font-size: clamp(62px, 11vw, 132px); }
         body.ring #timerWrap { width: min(74vw, 680px); min-height: min(74vw, 680px); }
+        #barFill { display: none; }
+        body.bar #ringSvg, body.bar #sign, body.bar #helper { display: none; }
+        body.bar #timerWrap { width: 100%; min-height: 0; border-radius: 22px; overflow: hidden; background: var(--track); border: 1px solid var(--line); }
+        body.bar #timerCore { width: 100%; padding: 18px 24px; }
+        body.bar #time, #barTime { font-size: clamp(40px, min(11vw, 22vh), 140px); line-height: 1; font-weight: 700; letter-spacing: -.05em; white-space: nowrap; }
+        /* Same digits in a dark colour, clipped to the filled part, so the time stays readable on both halves. */
+        body.bar #barFill { display: flex; align-items: center; justify-content: center; position: absolute; top: 0; right: 0; bottom: 0; left: 0; padding: 18px 24px; background: var(--accent); color: #06121c; -webkit-clip-path: inset(0 100% 0 0); clip-path: inset(0 100% 0 0); transition: clip-path .18s linear, -webkit-clip-path .18s linear; pointer-events: none; }
+        @media (prefers-reduced-motion: reduce) { body.bar #barFill { transition: none; } }
         @media (max-width: 860px) { #controlsGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
         @media (max-width: 560px) { #topbar { flex-direction: column; align-items: flex-start; } #controlsGrid, .btns { grid-template-columns: repeat(2, minmax(0, 1fr)); } .span2 { grid-column: span 2; } }
     </style>
@@ -78,6 +86,7 @@
                     <div id="time">05:00</div>
                     <div id="helper">Ready</div>
                 </div>
+                <div id="barFill" aria-hidden="true"><div id="barTime">05:00</div></div>
             </div>
             <div id="meta">
                 <div class="pill" id="targetPill">Target 05:00</div>
@@ -89,7 +98,7 @@
                 <div class="field span2"><label for="labelInput">Label</label><input id="labelInput" type="text" placeholder="Segment name" /></div>
                 <div class="field"><label for="timeInput">Time</label><input id="timeInput" type="text" placeholder="05:00 or 300" /></div>
                 <div class="field"><label for="modeInput">Mode</label><select id="modeInput"><option value="countdown">Countdown</option><option value="countup">Count up</option></select></div>
-                <div class="field"><label for="styleInput">Style</label><select id="styleInput"><option value="stage">Stage</option><option value="compact">Compact</option><option value="ring">Ring</option></select></div>
+                <div class="field"><label for="styleInput">Style</label><select id="styleInput"><option value="stage">Stage</option><option value="compact">Compact</option><option value="ring">Ring</option><option value="bar">Bar</option></select></div>
                 <div class="field"><label for="warnInput">Warn (sec)</label><input id="warnInput" type="number" min="0" max="999999" step="1" value="60" /></div>
                 <div class="field"><label for="dangerInput">Danger (sec)</label><input id="dangerInput" type="number" min="0" max="999999" step="1" value="15" /></div>
                 <div class="field"><label for="soundInput">Sound URL</label><input id="soundInput" type="text" placeholder="Optional custom sound URL" /></div>
@@ -148,6 +157,8 @@
             targetPill: document.getElementById("targetPill"),
             warningPill: document.getElementById("warningPill"),
             ringProgress: document.getElementById("ringProgress"),
+            barFill: document.getElementById("barFill"),
+            barTime: document.getElementById("barTime"),
             controls: document.getElementById("controls"),
             labelInput: document.getElementById("labelInput"),
             timeInput: document.getElementById("timeInput"),
@@ -168,7 +179,7 @@
         el.ringProgress.style.strokeDashoffset = String(ringCircumference);
         function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
         function hasParam(n) { return urlParams.has(n); }
-        function normalizeStyle(v) { v = (v || "").toLowerCase(); return (v === "compact" || v === "ring") ? v : "stage"; }
+        function normalizeStyle(v) { v = (v || "").toLowerCase(); return (v === "compact" || v === "ring" || v === "bar") ? v : "stage"; }
         function normalizeMode(v) { v = (v || "").toLowerCase(); return (v === "up" || v === "countup") ? "countup" : "countdown"; }
         function parseSeconds(v, d) { var n = parseFloat(v); return isFinite(n) ? n : d; }
         function parseDurationMs(v, d) {
@@ -277,10 +288,23 @@
             el.dangerInput.value = String(Math.round(state.dangerAtMs / 1000));
             el.soundInput.value = state.soundUrl || "";
         }
+        var lastHostStyle = null;
+        var lastHostStyleUpdatedAt = null;
         function applyExported(obj) {
             if (!obj || typeof obj !== "object") { return; }
             state.mode = normalizeMode(obj.mode || state.mode);
-            state.style = normalizeStyle(obj.style || state.style);
+            if (obj.style !== undefined) {
+                var hostStyle = normalizeStyle(obj.style);
+                var hostStyleUpdatedAt = typeof obj.styleUpdatedAt === "number" && isFinite(obj.styleUpdatedAt) ? obj.styleUpdatedAt : null;
+                // Keep the link's initial style, then follow deliberate host style commands.
+                // Older hosts have no style timestamp, so recognize changes to their style value.
+                var styleChanged = lastHostStyle !== null && (hostStyleUpdatedAt === null
+                    ? hostStyle !== lastHostStyle
+                    : hostStyleUpdatedAt > 0 && hostStyleUpdatedAt !== lastHostStyleUpdatedAt);
+                if (!hasParam("style") || styleChanged) { state.style = hostStyle; }
+                lastHostStyle = hostStyle;
+                lastHostStyleUpdatedAt = hostStyleUpdatedAt;
+            }
             state.label = typeof obj.label === "string" ? obj.label : state.label;
             state.durationMs = Math.max(0, parseInt(obj.durationMs, 10) || 0);
             state.currentMs = parseInt(obj.currentMs, 10);
@@ -369,7 +393,7 @@ function processInput(data) {
             if (data.timer && typeof data.timer === "object") {
                 if (data.ssnState) { var transition = timerStateTracker(data.ssnState); if (!transition.accept || !transition.changed) return true; }
                 // Repeated snapshots must not overwrite subsequent page-owned controls.
-                var hostKey = JSON.stringify([data.timer.updatedAt, data.timer.currentMs, data.timer.startedAt, data.timer.running, data.timer.durationMs, data.timer.mode]);
+                var hostKey = JSON.stringify([data.timer.updatedAt, data.timer.currentMs, data.timer.startedAt, data.timer.running, data.timer.durationMs, data.timer.mode, data.timer.style, data.timer.styleUpdatedAt]);
                 if (!data.ssnState && hostKey === lastHostTimerKey) return true;
                 lastHostTimerKey = hostKey;
                 applyExported(data.timer); render(); return true;
@@ -398,7 +422,7 @@ function processInput(data) {
             var helper = "Ready";
             var badge = "Ready";
             var sign = "";
-            document.body.classList.remove("warning", "danger", "done", "stage", "compact", "ring");
+            document.body.classList.remove("warning", "danger", "done", "stage", "compact", "ring", "bar");
             document.body.classList.add(state.style);
             if (s.done) { document.body.classList.add("done"); badge = s.overtime ? "Overtime" : "Done"; helper = s.overtime ? "Past target" : "Time reached"; }
             else if (s.danger) { document.body.classList.add("danger"); badge = "Danger"; helper = "Closing"; }
@@ -410,13 +434,19 @@ function processInput(data) {
             el.connectionBadge.textContent = connectionSummary();
             el.label.textContent = state.label || "Timer";
             el.sign.textContent = s.displayMs < 0 && state.mode === "countdown" ? "+" : "";
-            el.time.textContent = fmt(s.displayMs);
+            // The bar hides the separate sign row, so overtime keeps its "+" inline.
+            el.time.textContent = (state.style === "bar" ? el.sign.textContent : "") + fmt(s.displayMs);
+            el.barTime.textContent = el.time.textContent;
             el.helper.textContent = helper;
             el.targetPill.textContent = state.mode === "countdown" ? (s.displayMs < 0 ? "Over by " + fmt(s.displayMs) : "Target " + fmt(state.durationMs)) : (state.durationMs > 0 ? (s.displayMs > state.durationMs ? "Over by " + fmt(s.displayMs - state.durationMs) : "Target " + fmt(state.durationMs)) : "Free count up");
             el.warningPill.textContent = "Warn " + fmt(state.warnAtMs) + " / Danger " + fmt(state.dangerAtMs);
             el.pauseButton.disabled = !state.running;
             el.startButton.disabled = !!state.running;
             el.ringProgress.style.strokeDashoffset = String(ringCircumference * (1 - s.progress));
+            // Same progress value as the ring: the bar empties on a countdown and fills on a count-up.
+            var barClip = "inset(0 " + (Math.round((1 - s.progress) * 100000) / 1000) + "% 0 0)";
+            el.barFill.style.webkitClipPath = barClip;
+            el.barFill.style.clipPath = barClip;
             if (state.soundEnabled && s.done && state.running && !soundTriggered) {
                 soundTriggered = true;
                 try {

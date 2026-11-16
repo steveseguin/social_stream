@@ -4,13 +4,44 @@
 
 	var settings = {};
 	var isExtensionOn = true;
+	var ready = false;
 	var container = null;
 	var observer = null;
 	var initialized = false;
+	var startedAt = Math.floor(Date.now() / 1000) * 1000;
 	var channel = location.pathname.split("/")[1] || "";
 	var seen = new Set();
 	var processedRows = new WeakSet();
 	var rowSelector = '[id^="chat-message-"]';
+	var viewerRequest = null;
+
+	function viewerChannel() {
+		var match = location.pathname.match(/^\/([^/]+)(?:\/chat)?\/?$/);
+		try { return match ? decodeURIComponent(match[1]) : ""; } catch (e) { return ""; }
+	}
+
+	function checkViewers() {
+		var username = viewerChannel();
+		if (!ready || !username || viewerRequest || !isExtensionOn || !(settings.showviewercount || settings.hypemode)) return;
+		var xhr = new XMLHttpRequest();
+		viewerRequest = xhr;
+		xhr.open("GET", "/api/v1/channels/" + encodeURIComponent(username));
+		xhr.timeout = 10000;
+		xhr.onload = function () {
+			if (xhr.status !== 200 || username !== viewerChannel() || !isExtensionOn || !(settings.showviewercount || settings.hypemode)) return;
+			try {
+				var data = JSON.parse(xhr.responseText).data;
+				if (!data || typeof data.username !== "string" || data.username.toLowerCase() !== username.toLowerCase()) return;
+				var stream = data.stream;
+				if (!stream || typeof stream.isLive !== "boolean") return;
+				var count = stream.isLive ? stream.viewers : 0;
+				if (typeof count !== "number" || !Number.isSafeInteger(count) || count < 0) return;
+				sendToApp({ message: { type: "altstream", event: "viewer_update", meta: count } });
+			} catch (e) {}
+		};
+		xhr.onloadend = function () { if (viewerRequest === xhr) viewerRequest = null; };
+		xhr.send();
+	}
 
 	function hasRuntime() {
 		return typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id;
@@ -57,10 +88,27 @@
 	function remember(row) {
 		processedRows.add(row);
 		seen.add(row.id);
-		if (seen.size > 10000) seen.delete(seen.values().next().value);
 	}
 
-	function processMessage(row) {
+	function messageDetails(row) {
+		try {
+			// SSApp can read page properties directly; extensions use the packaged reader.
+			var key = Object.keys(row).find(function (key) { return key.indexOf("__reactFiber$") === 0; });
+			var fiber = key && row[key];
+			for (var depth = 0; fiber && depth < 6; depth++, fiber = fiber.return) {
+				var message = fiber.memoizedProps && fiber.memoizedProps.message;
+				if (message && "chat-message-" + message.id === row.id) return message;
+			}
+			row.removeAttribute("data-ssn-altstream-message");
+			row.dispatchEvent(new CustomEvent("ssn-read-altstream-message", { bubbles: true }));
+			var value = row.getAttribute("data-ssn-altstream-message");
+			row.removeAttribute("data-ssn-altstream-message");
+			var details = value && JSON.parse(value);
+			return details && "chat-message-" + details.id === row.id ? details : null;
+		} catch (e) { return null; }
+	}
+
+	function processMessage(row, nativeMessage) {
 		if (!row.isConnected || seen.has(row.id) || processedRows.has(row)) return;
 		// Event cards and shoutouts are not ordinary chat rows.
 		var line = row.querySelector(":scope > div.inline.break-words");
@@ -76,9 +124,11 @@
 
 		var badges = [];
 		var moderator = false;
+		var membership = "";
 		for (var badge = line.firstElementChild; badge && badge !== name; badge = badge.nextElementSibling) {
 			var title = badge.getAttribute("title") || "";
 			if (title === "Channel Moderator") moderator = true;
+			if (title === "Channel Supporter") membership = "Channel Supporter";
 			if (badge.tagName === "IMG") {
 				var src = resourceUrl(badge.getAttribute("src"));
 				if (src) badges.push(src);
@@ -88,6 +138,7 @@
 				badges.push({ type: "svg", html: svg.outerHTML });
 			}
 		}
+		if (settings.memberchatonly && !membership) { remember(row); return; }
 
 		var data = {};
 		data.chatname = name.textContent.trim();
@@ -96,31 +147,39 @@
 		data.textColor = "";
 		data.nameColor = getComputedStyle(name).color;
 		data.chatmessage = message;
-		data.chatimg = "";
+		data.chatimg = nativeMessage && typeof nativeMessage.authorImage === "string" ? resourceUrl(nativeMessage.authorImage) : "";
 		data.hasDonation = "";
-		data.membership = "";
+		data.membership = membership;
 		data.contentimg = "";
-		data.textonly = settings.textonlymode || false;
+		data.textonly = !!settings.textonlymode;
 		data.type = "altstream";
 		data.meta = { messageId: row.id.slice("chat-message-".length) };
+		if (nativeMessage && typeof nativeMessage.authorUsername === "string" && nativeMessage.authorUsername) data.userid = nativeMessage.authorUsername;
 		if (moderator) data.mod = true;
 		remember(row);
 		sendToApp({ message: data });
 	}
 
-	function scanMessages(history) {
+	function scanMessages(history, skipAll) {
 		if ((location.pathname.split("/")[1] || "") !== channel) { scanPage(); return; }
 		if (!container) return;
 		container.querySelectorAll(rowSelector).forEach(function (row) {
-			if (history || !isExtensionOn) remember(row);
-			else processMessage(row);
+			if (seen.has(row.id) || processedRows.has(row)) return;
+			var nativeMessage = messageDetails(row);
+			var sentAt = nativeMessage && typeof nativeMessage.sentAt === "number" && Number.isFinite(nativeMessage.sentAt) ? nativeMessage.sentAt : null;
+			if (skipAll || !isExtensionOn || (sentAt !== null ? sentAt < startedAt : history)) remember(row);
+			else processMessage(row, nativeMessage);
 		});
 	}
 
 	function scanPage() {
+		if (!ready) return;
 		var nextChannel = location.pathname.split("/")[1] || "";
 		if (nextChannel !== channel) {
 			channel = nextChannel;
+			startedAt = Math.floor(Date.now() / 1000) * 1000;
+			if (viewerRequest) { viewerRequest.abort(); viewerRequest = null; }
+			checkViewers();
 			seen.clear();
 			processedRows = new WeakSet();
 			if (observer) observer.disconnect();
@@ -147,13 +206,14 @@
 				var input = document.querySelector('textarea[placeholder="Type a message"]');
 				if (input && !input.disabled && !input.readOnly) {
 					input.focus();
-					sendResponse(true);
+					sendResponse(document.activeElement === input);
 					return;
 				}
 			}
 			if (request && typeof request === "object") {
 				if ("settings" in request) settings = request.settings || {};
-				if ("state" in request) { scanMessages(true); isExtensionOn = !!request.state; }
+				if ("state" in request) { scanMessages(false, true); isExtensionOn = !!request.state; }
+				checkViewers();
 				sendResponse(true);
 				return;
 			}
@@ -163,8 +223,12 @@
 			if (chrome.runtime.lastError || !response) return;
 			settings = response.settings || {};
 			if ("state" in response) isExtensionOn = !!response.state;
+			ready = true;
+			scanPage();
+			checkViewers();
 		});
-	}
+	} else { ready = true; }
 	scanPage();
 	setInterval(scanPage, 1000);
+	setInterval(checkViewers, 30000);
 })();

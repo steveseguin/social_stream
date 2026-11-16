@@ -487,6 +487,19 @@
 					if (request === "getSource") { sendResponse("vpzone"); return; }
 					if (request === "focusChat") { sendResponse(false); return; }
 					if (request && typeof request === "object") {
+						if (request.type === "SOURCE_CONTROL" && request.control === "banCommand") {
+							var requestId = "ban-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+							var finish = function (result) {
+								clearTimeout(timer);
+								window.removeEventListener("vpzoneBanResult", listener);
+								sendResponse(result);
+							};
+							var listener = function (event) { if (event.detail && event.detail.requestId === requestId) finish(event.detail.result); };
+							var timer = setTimeout(function () { finish({ ok: false, unconfirmed: true, message: "No ban confirmation received. Check VPZone before trying again." }); }, 30000);
+							window.addEventListener("vpzoneBanResult", listener);
+							window.postMessage({ source: FETCH_BRIDGE_SOURCE, type: EXTENSION_MESSAGE, request: Object.assign({}, request, { banRequestId: requestId }) }, "*");
+							return true;
+						}
 						if ("settings" in request || "state" in request || request.type === "SEND_MESSAGE" || request.type === "SOURCE_CONTROL") {
 							window.postMessage({ source: FETCH_BRIDGE_SOURCE, type: EXTENSION_MESSAGE, request: request }, "*");
 							sendResponse(true);
@@ -924,10 +937,39 @@
 	// message id (query param) and the username (bans take target_username, so
 	// no user-id resolution is needed). Both require chat:moderate and only
 	// work for the channel owner's token.
+	const vpzoneBanCommands = new Map();
+
+	async function runVPZoneBanCommand(payload) {
+		var entry = vpzoneBanCommands.get(String(payload.messageId || ""));
+		var channel = normalizeChannel(state.currentChannel || state.cfg.channel);
+		var token = String(state.cfg.token || "");
+		var username = String(payload.username || "").toLowerCase();
+		var parts = entry ? entry.text.split(/\s+/) : [];
+		if (!entry || entry.used || !entry.allowed || entry.channel !== channel || !channel || !token ||
+			Date.now() - entry.received > 120000 || Date.now() - entry.sent > 120000 ||
+			!/^![a-zA-Z0-9_]+$/.test(payload.command || "") || parts.length !== 2 ||
+			parts[0].toLowerCase() !== payload.command.toLowerCase() || parts[1].replace(/^@/, "").toLowerCase() !== username ||
+			!/^[a-z0-9_-]{1,100}$/.test(username)) {
+			return { ok: false, message: "Ban commands require a recent command from this VPZone channel's owner or moderators." };
+		}
+		if (username === channel || username === normalizeChannel(state.meUsername)) return { ok: false, message: "Cannot ban the owner or the signed-in account." };
+		entry.used = true;
+		try {
+			await apiBanUser(channel, username, token);
+			return { ok: true };
+		} catch (error) {
+			return { ok: false, message: moderationErrorMessage(error) + ". Check VPZone before sending another command." };
+		}
+	}
+
 	function handleSourceControlRequest(request) {
 		var payload = (request && request.payload) || {};
 		var platform = String((request && request.platform) || payload.type || "").toLowerCase();
 		if (platform !== "vpzone") return Promise.resolve(false);
+		if (request.control === "banCommand") return runVPZoneBanCommand(payload).then(function (result) {
+			log(result.ok ? "Banned " + payload.username + " from Event Flow" : result.message, result.ok ? "success" : "warn");
+			return result;
+		});
 		var channel = normalizeChannel(state.currentChannel || state.cfg.channel);
 		var token = String(state.cfg.token || "");
 		if (!channel || !token) return Promise.resolve(false);
@@ -1420,6 +1462,17 @@
 				data.meta.reply = { messageId: replyTo.message_id ? String(replyTo.message_id) : "", author: replyAuthor, text: replyText };
 			}
 		}
+		var commandText = String(ev.message || ev.text || ev.body || ev.content || "").trim();
+		if (messageId && commandText.charAt(0) === "!" && commandText.length <= 200) {
+			var now = Date.now();
+			vpzoneBanCommands.forEach(function (entry, id) { if (now - entry.received > 120000) vpzoneBanCommands.delete(id); });
+			if (!vpzoneBanCommands.has(String(messageId))) vpzoneBanCommands.set(String(messageId), {
+				text: commandText, allowed: isOwner || isModerator,
+				channel: normalizeChannel(ev.streamUsername || state.currentChannel || state.cfg.channel), received: now,
+				sent: toTimestampMs(eventTime(ev)) || now, used: false
+			});
+			while (vpzoneBanCommands.size > 100) vpzoneBanCommands.delete(vpzoneBanCommands.keys().next().value);
+		}
 		return data.chatname && data.chatmessage ? data : null;
 	}
 
@@ -1847,7 +1900,7 @@
 							}
 							if (request.type === "SOURCE_CONTROL") {
 								handleSourceControlRequest(request).then(function (handled) {
-									sendResponse(!!handled);
+									sendResponse(request.control === "banCommand" ? handled : !!handled);
 								}).catch(function () {
 									sendResponse(false);
 								});
@@ -1887,7 +1940,9 @@
 				return;
 			}
 			if (request.type === "SOURCE_CONTROL") {
-				handleSourceControlRequest(request).catch(function () {});
+				handleSourceControlRequest(request).then(function (result) {
+					if (request.control === "banCommand" && request.banRequestId) window.dispatchEvent(new CustomEvent("vpzoneBanResult", { detail: { requestId: request.banRequestId, result: result } }));
+				}).catch(function () {});
 			}
 		});
 	}

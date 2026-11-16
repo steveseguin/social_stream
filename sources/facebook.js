@@ -908,6 +908,21 @@
 		}
 	}
 	
+	function parseFacebookViewerCount(value) {
+		var text = (value || "").trim();
+		var compact = text.match(/^(\d+(?:[.,]\d+)?)\s*([km])$/i);
+		var count;
+		if (compact) {
+			var multiplier = compact[2].toLowerCase() === "k" ? 1000 : 1000000;
+			count = Math.round(parseFloat(compact[1].replace(",", ".")) * multiplier);
+		} else if (/^(?:\d+|\d{1,3}(?:[.,\s]\d{3})+)$/.test(text)) {
+			count = Number(text.replace(/[.,\s]/g, ""));
+		} else {
+			return null;
+		}
+		return Number.isSafeInteger(count) ? count : null;
+	}
+
 	var counter=0;
 	
 	var ttt = setInterval(function() {
@@ -967,14 +982,15 @@
 					}
 					
 					if (viewerCount && viewerCount.textContent.trim().length){
-						if (viewerCount.textContent == parseInt(viewerCount.textContent)){
+						var parsedViewerCount = parseFacebookViewerCount(viewerCount.textContent);
+						if (parsedViewerCount !== null){
 							
 							chrome.runtime.sendMessage(
 								chrome.runtime.id,
 								({message:{
 										type: 'facebook',
 										event: 'viewer_update',
-										meta: parseInt(viewerCount.textContent)
+										meta: parsedViewerCount
 									}
 								}),
 								function (e) {}

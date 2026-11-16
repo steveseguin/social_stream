@@ -31,6 +31,7 @@
         }
 
         .poll-container {
+            font-size: calc(16px * var(--poll-font-scale, 1));
             width: 90%;
             max-width: 600px;
             padding: 20px;
@@ -92,7 +93,7 @@
         }
 
         .style-default .poll-title {
-            font-size: 24px;
+            font-size: calc(24px * var(--poll-font-scale, 1));
             color: #2c3e50;
         }
 
@@ -115,7 +116,7 @@
         }
 
         .style-neon .poll-title {
-            font-size: 36px;
+            font-size: calc(36px * var(--poll-font-scale, 1));
             color: #0ff;
         }
 
@@ -144,7 +145,7 @@
         }
 
         .style-minimalist .poll-title {
-            font-size: 28px;
+            font-size: calc(28px * var(--poll-font-scale, 1));
             color: #1a1a1a;
             font-weight: 600;
         }
@@ -173,7 +174,7 @@
         }
 
         .style-retro-gaming .poll-title {
-            font-size: 24px;
+            font-size: calc(24px * var(--poll-font-scale, 1));
             color: #ff6600;
             margin-bottom: 30px;
         }
@@ -206,7 +207,7 @@
         }
 
         .style-elegant .poll-title {
-            font-size: 32px;
+            font-size: calc(32px * var(--poll-font-scale, 1));
             color: #34495e;
             font-weight: 700;
             border-bottom: 2px solid #34495e;
@@ -239,7 +240,7 @@
         }
 
         .style-futuristic .poll-title {
-            font-size: 28px;
+            font-size: calc(28px * var(--poll-font-scale, 1));
             color: #3498db;
             text-transform: uppercase;
             letter-spacing: 2px;
@@ -276,7 +277,7 @@
         }
 
         .style-vintage .poll-title {
-            font-size: 30px;
+            font-size: calc(30px * var(--poll-font-scale, 1));
             color: #8b4513;
             font-weight: 700;
             text-align: center;
@@ -311,7 +312,7 @@
         }
 
         .style-cyberpunk .poll-title {
-            font-size: 28px;
+            font-size: calc(28px * var(--poll-font-scale, 1));
             color: #f0f;
             text-transform: uppercase;
             letter-spacing: 3px;
@@ -387,7 +388,7 @@
         .style-plain-black .poll-title,
         .style-plain-white .poll-title,
         .style-transparent .poll-title {
-            font-size: 26px;
+            font-size: calc(26px * var(--poll-font-scale, 1));
             font-weight: 700;
             margin-bottom: 16px;
         }
@@ -398,7 +399,7 @@
         .style-transparent .poll-option {
             padding: 10px 14px;
             border-radius: 6px;
-            font-size: 18px;
+            font-size: calc(18px * var(--poll-font-scale, 1));
             font-weight: 600;
         }
 
@@ -439,7 +440,7 @@
         }
 
         .style-high-contrast .poll-title {
-            font-size: 30px;
+            font-size: calc(30px * var(--poll-font-scale, 1));
             font-weight: 800;
             color: var(--poll-accent, #ffd400);
             text-transform: uppercase;
@@ -447,7 +448,7 @@
         }
 
         .style-high-contrast .poll-option {
-            font-size: 20px;
+            font-size: calc(20px * var(--poll-font-scale, 1));
             font-weight: 800;
             background-color: #1a1a1a;
         }
@@ -500,7 +501,7 @@
 
         .style-bar .poll-title {
             margin: 0;
-            font-size: 18px;
+            font-size: calc(18px * var(--poll-font-scale, 1));
             font-weight: 700;
             text-align: left;
             white-space: nowrap;
@@ -525,7 +526,7 @@
             margin: 0;
             padding: 5px 10px;
             border-radius: 999px;
-            font-size: 15px;
+            font-size: calc(15px * var(--poll-font-scale, 1));
             font-weight: 600;
             background-color: rgba(255, 255, 255, 0.1);
             flex: 1 1 0;
@@ -569,7 +570,7 @@
         }
 
         .style-bar .poll-instruction {
-            font-size: 14px;
+            font-size: calc(14px * var(--poll-font-scale, 1));
             opacity: 0.8;
             white-space: nowrap;
             flex-shrink: 0;
@@ -585,7 +586,7 @@
         }
 
         .style-cute .poll-title {
-            font-size: 26px;
+            font-size: calc(26px * var(--poll-font-scale, 1));
             font-weight: 600;
             color: #c2185b;
         }
@@ -617,7 +618,7 @@
 
         .style-metal .poll-title {
             font-family: 'Metal Mania', 'Oswald', sans-serif;
-            font-size: 36px;
+            font-size: calc(36px * var(--poll-font-scale, 1));
             letter-spacing: 1px;
             background: linear-gradient(180deg, #fff 0%, #d9dde3 40%, #6e747c 52%, #c9ced6 70%, #fff 100%);
             -webkit-background-clip: text;
@@ -628,7 +629,7 @@
 
         .style-metal .poll-option {
             padding: 10px 14px;
-            font-size: 19px;
+            font-size: calc(19px * var(--poll-font-scale, 1));
             text-transform: uppercase;
             letter-spacing: 0.5px;
             background-color: rgba(0, 0, 0, 0.35);
@@ -784,6 +785,11 @@ function debugLog(message, payload) {
     }
 }
 
+function normalizePollFontSize(value) {
+    const size = Number(value);
+    return Number.isFinite(size) && size > 0 ? Math.max(50, Math.min(300, size)) : 100;
+}
+
 const settings = {
     pollType: urlParams.get('pollType') || 'freeform',
     pollQuestion: urlParams.get('pollQuestion') || 'Loading poll ...',
@@ -792,6 +798,7 @@ const settings = {
     pollTimer: urlParams.get('pollTimer') || 60,
     pollEnabled: urlParams.get('pollEnabled') || false,
     styleType: urlParams.get('style') || 'default',
+    pollFontSize: normalizePollFontSize(urlParams.get('pollFontSize')),
     pollSpam: urlParams.has('pollSpam') || false,
     pollClosed: false,
     pollTally: urlParams.has('pollTally') || false,
@@ -805,12 +812,12 @@ settings.pollDonationWeighted = normalizeBoolean(settings.pollDonationWeighted) 
 settings.pollTimer = normalizeNumber(settings.pollTimer, 60) || 60;
 settings.pollOptions = normalizeOptionsList(settings.pollOptions);
 
-let results = {};
+let results = Object.create(null);
 // Numeric freeform votes refer to the last rendered, ranked options.
 let displayedFreeformOptions = [];
 let totalVotes = 0;
 let alreadyVoted = {};
-let donationTotals = {}; // Track donation amounts per option
+let donationTotals = Object.create(null); // Track donation amounts per option
 let totalDonations = 0;  // Track total donations
 let updatePending = false;
 let lastUpdateTime = 0;
@@ -830,6 +837,7 @@ function getPollInstructionText() {
 
 // Optional &accent=hex tints the bars in the newer styles; the bar style also anchors the poll to the bottom.
 function applyStyleExtras() {
+    document.documentElement.style.setProperty('--poll-font-scale', settings.pollFontSize / 100);
     const accent = (urlParams.get('accent') || '').replace(/^#/, '');
     if (/^[0-9a-f]{3}([0-9a-f]{3})?$/i.test(accent)) {
         document.documentElement.style.setProperty('--poll-accent', '#' + accent);
@@ -1395,6 +1403,13 @@ function processData(data, source) {
                 updateUiSetting('pollTally', incomingTally);
             }
         }
+        if (data.settings.pollFontSize !== undefined) {
+            const incomingSize = data.settings.pollFontSize;
+            const rawSize = incomingSize && typeof incomingSize === 'object'
+                ? incomingSize.numbersetting : incomingSize;
+            updateUiSetting('pollFontSize', normalizePollFontSize(rawSize));
+            applyStyleExtras();
+        }
         if (data.settings.pollStyle) {
             const nextStyle = typeof data.settings.pollStyle === 'string'
                 ? data.settings.pollStyle
@@ -1428,7 +1443,7 @@ function processData(data, source) {
                 updateUiSetting('pollDonationWeighted', incomingDonationWeighted);
             }
         }
-        if (data.settings.multipleChoiceOptions) {
+        if (settings.pollType === 'multiple' && data.settings.multipleChoiceOptions) {
             const rawOptions = typeof data.settings.multipleChoiceOptions === 'string'
                 ? data.settings.multipleChoiceOptions
                 : (typeof data.settings.multipleChoiceOptions.textsetting === 'string'
@@ -1463,10 +1478,10 @@ function processData(data, source) {
             const shouldReinitializePoll = coreChanges.some((change) => pollCoreResetKeys.has(change.key));
             if (shouldReinitializePoll) {
                 messageQueue.length = 0;
-                results = {};
+                results = Object.create(null);
                 totalVotes = 0;
                 alreadyVoted = {};
-                donationTotals = {};
+                donationTotals = Object.create(null);
                 totalDonations = 0;
             }
             if (shouldReinitializePoll) {
@@ -1489,6 +1504,7 @@ function processData(data, source) {
             debugLog('UI adjustments applied alongside core reset', { uiChanges });
         }
     } else if (shouldProcessPollMessage(data)) {
+        if (!settings.pollEnabled) return;
         if (isDuplicatePollDelivery(data, source)) return;
         queueVote(data.chatmessage, data.chatname, data.type, extractVoterId(data), data.hasDonation || data.donation, getDonationValueUSD(data));
     } else if (data.chatmessage) {
@@ -1521,8 +1537,8 @@ function startPoll() {
     settings.pollClosed = false;
     alreadyVoted = {};
     totalVotes = 0;
-    results = {};
-    donationTotals = {};
+    results = Object.create(null);
+    donationTotals = Object.create(null);
     totalDonations = 0;
     initializePoll();
     updatePollVisibility();
@@ -1535,10 +1551,10 @@ function startPoll() {
 function resetPoll() {
     messageQueue.length = 0;
     settings.pollClosed = false;
-    results = {};
+    results = Object.create(null);
     totalVotes = 0;
     alreadyVoted = {};
-    donationTotals = {};
+    donationTotals = Object.create(null);
     totalDonations = 0;
     initializePoll();
     debugLog('Poll reset without changing visibility', {
@@ -1562,6 +1578,7 @@ function processInput(data, source) {
         }
         return true;
     } else if (shouldProcessPollMessage(data)) {
+        if (!settings.pollEnabled) return false;
         if (isDuplicatePollDelivery(data, source)) return false;
         debugLog('Chat message received for poll', { chatmessage: data.chatmessage, chatname: data.chatname, source: data.type, hasDonation: data.hasDonation });
         queueVote(data.chatmessage, data.chatname, data.type, extractVoterId(data), data.hasDonation || data.donation, getDonationValueUSD(data));

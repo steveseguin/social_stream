@@ -103,6 +103,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `split` | boolean | Enables split mode for message alignment |
 | `bubble` | boolean | Styles messages as chat bubbles |
 | `namebubble` | boolean | Adds a separate rounded bubble behind usernames (bubble mode) |
+| `cards` | boolean | Shows each message as its own card, with coloured cards for donations and members. Pair with `showtime` to make cards disappear after a set time |
 | `fadedtop` | boolean | Fades out the top of the overlay |
 | `reverse` | boolean | Displays the feed in reverse order (newest at the top) |
 | `dropdown` | boolean | Enables reverse order with drop-down style animations |

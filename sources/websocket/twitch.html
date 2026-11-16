@@ -261,6 +261,117 @@
             margin-top: 6px;
         }
 
+        /* Stream details card */
+        .stream-details {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .stream-details > summary {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            cursor: pointer;
+            list-style: none;
+            user-select: none;
+        }
+        .stream-details > summary::-webkit-details-marker { display: none; }
+        .stream-details > summary:focus-visible {
+            outline: 2px solid #9146FF;
+            outline-offset: -2px;
+        }
+        .stream-details-heading {
+            font-size: 16px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .stream-details-preview {
+            flex: 1 1 0;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 13px;
+            color: #666;
+        }
+        .stream-details-toggle {
+            flex-shrink: 0;
+            padding: 5px 12px;
+            border: 1px solid rgba(0, 0, 0, 0.22);
+            border-radius: 4px;
+            font-size: 13px;
+            color: #333;
+        }
+        .stream-details-toggle::after { content: "Edit"; }
+        .stream-details[open] .stream-details-toggle::after { content: "Close"; }
+        .stream-details > summary:hover .stream-details-toggle { background: rgba(0, 0, 0, 0.06); }
+        .stream-details-body {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+            gap: 10px 12px;
+            padding: 2px 12px 12px;
+        }
+        .stream-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+        .stream-field-wide,
+        .stream-details-actions,
+        .stream-details-note {
+            grid-column: 1 / -1;
+        }
+        .stream-field label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #555;
+        }
+        .stream-field-hint {
+            font-weight: normal;
+            color: #888;
+        }
+        .stream-field .channel-input {
+            box-sizing: border-box;
+            width: 100%;
+        }
+        .stream-field .channel-input:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .stream-details-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+        #btn-refresh-channel {
+            background: transparent;
+            color: #555;
+            border: 1px solid rgba(0, 0, 0, 0.22);
+            padding: 7px 12px;
+        }
+        #btn-refresh-channel:hover {
+            background: rgba(0, 0, 0, 0.06);
+            color: #222;
+        }
+        .stream-details-status {
+            flex: 1 1 160px;
+            min-width: 0;
+            font-size: 13px;
+            color: #666;
+        }
+        .stream-details-status[data-state="success"] { color: #237a3b; }
+        .stream-details-status[data-state="error"] { color: #b42318; }
+        .stream-details-note {
+            margin: 0;
+            font-size: 12px;
+            line-height: 1.35;
+            color: #666;
+        }
+        .stream-details-note:empty { display: none; }
+
         /* Stats grid */
         .stats-container {
             background: white;
@@ -475,6 +586,28 @@
             .channel-source,
             .advanced-hint { color: #808086; }
             .advanced-menu > summary::before { color: #adadb8; }
+            .stream-details {
+                background: #1f1f23;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            }
+            .stream-details-heading { color: #efeff1; }
+            .stream-details-preview,
+            .stream-details-status,
+            .stream-details-note,
+            .stream-field label { color: #adadb8; }
+            .stream-field-hint { color: #808086; }
+            .stream-details-toggle,
+            #btn-refresh-channel {
+                color: #adadb8;
+                border-color: #3d3d42;
+            }
+            .stream-details > summary:hover .stream-details-toggle,
+            #btn-refresh-channel:hover {
+                background: rgba(255, 255, 255, 0.06);
+                color: #efeff1;
+            }
+            .stream-details-status[data-state="success"] { color: #7ddc91; }
+            .stream-details-status[data-state="error"] { color: #ff8a80; }
         }
     </style>
     <link rel="stylesheet" href="websocket-responsive.css">
@@ -518,6 +651,35 @@
                     </div>
                     <button id="sign-out-button" class="sign-out-button">Sign Out</button>
                 </div>
+
+                <!-- Stream details: secondary to chat, but always one click away -->
+                <details class="stream-details" id="stream-details">
+                    <summary>
+                        <span class="stream-details-heading">Stream details</span>
+                        <span class="stream-details-preview" id="stream-details-preview"></span>
+                        <span class="stream-details-toggle" aria-hidden="true"></span>
+                    </summary>
+                    <div class="stream-details-body">
+                        <div class="stream-field stream-field-wide">
+                            <label for="stream-title">Title</label>
+                            <input type="text" id="stream-title" class="channel-input" maxlength="140" autocomplete="off" placeholder="Stream title">
+                        </div>
+                        <div class="stream-field">
+                            <label for="stream-category">Category</label>
+                            <input type="text" id="stream-category" class="channel-input" autocomplete="off" placeholder="Game or category name">
+                        </div>
+                        <div class="stream-field">
+                            <label for="stream-tags">Tags <span class="stream-field-hint">(up to 10, separated by commas)</span></label>
+                            <input type="text" id="stream-tags" class="channel-input" autocomplete="off" placeholder="English, Chill, Speedrun" title="Up to 10 tags, 25 letters or numbers each. Clear the field to remove all tags." disabled>
+                        </div>
+                        <div class="stream-details-actions">
+                            <button type="button" id="btn-update-channel" class="connect-button">Save details</button>
+                            <button type="button" id="btn-refresh-channel" class="connect-button">Reload</button>
+                            <span id="stream-details-status" class="stream-details-status" role="status" aria-live="polite"></span>
+                        </div>
+                        <p id="stream-details-note" class="stream-details-note"></p>
+                    </div>
+                </details>
 
                 <!-- Stats section -->
                 <div class="stats-container">
@@ -609,15 +771,6 @@
                         <input type="checkbox" id="hide-metrics">
                         <span>Hide dashboard metrics</span>
                     </label>
-                    <div class="moderation-input-grid">
-                        <input type="text" id="stream-title" class="channel-input" placeholder="Stream title">
-                        <input type="text" id="stream-category" class="channel-input" placeholder="Game / category">
-                        <div class="moderation-button-group">
-                            <button id="btn-update-channel" class="connect-button" style="background:#2255dd;">Update Title / Category</button>
-                            <button id="btn-refresh-channel" class="connect-button" style="background:#555;">Refresh Current</button>
-                        </div>
-                    </div>
-                    <div style="font-size:12px; color:#666; margin-top:8px;">Title/category editing requires the Twitch OAuth scope <code>channel:manage:broadcast</code>.</div>
                 </div>
             </details>
         </div>
@@ -763,22 +916,100 @@
             g('btn-ad-60')?.addEventListener('click', () => post('ad', { length: 60 }));
             g('btn-ad-90')?.addEventListener('click', () => post('ad', { length: 90 }));
             g('btn-ad-schedule')?.addEventListener('click', () => post('ad_schedule', {}));
-            g('btn-update-channel')?.addEventListener('click', () => post('update_channel_info', {
-				title: g('stream-title')?.value,
-				category: g('stream-category')?.value
-			}));
-            g('btn-refresh-channel')?.addEventListener('click', () => post('refresh_channel_info', {}));
+			// Stream details editor
+			const streamStatus = g('stream-details-status');
+			let streamReplyTimer = null;
+			let streamPending = '';
+			let streamCanEdit = true;
+			let streamHasSaveStatus = false;
+			function setStreamStatus(message, state) {
+				if (!streamStatus) return;
+				streamStatus.textContent = message || '';
+				if (state) streamStatus.setAttribute('data-state', state);
+				else streamStatus.removeAttribute('data-state');
+			}
+			function awaitStreamReply(kind, message) {
+				streamPending = kind;
+				syncStreamEditAccess();
+				setStreamStatus(message);
+				clearTimeout(streamReplyTimer);
+				// Older source scripts only report the result under Recent Events.
+				streamReplyTimer = setTimeout(function() {
+					streamPending = '';
+					syncStreamEditAccess();
+					setStreamStatus('No reply yet. Check Recent Events.', 'error');
+				}, 12000);
+			}
+			function endStreamReply(message, state) {
+				streamPending = '';
+				syncStreamEditAccess();
+				clearTimeout(streamReplyTimer);
+				setStreamStatus(message, state);
+			}
+			function syncStreamEditAccess() {
+				['stream-title', 'stream-category', 'btn-update-channel'].forEach(function(id) {
+					if (g(id)) g(id).disabled = !streamCanEdit || streamPending === 'save';
+				});
+				if (g('stream-tags')) {
+					g('stream-tags').disabled = !streamCanEdit || streamPending === 'save' || g('stream-tags').dataset.loaded !== 'true';
+				}
+				if (g('btn-refresh-channel')) g('btn-refresh-channel').disabled = streamPending === 'save';
+			}
+            g('btn-update-channel')?.addEventListener('click', () => {
+				if (streamPending === 'save') return;
+				post('update_channel_info', {
+					title: g('stream-title')?.value,
+					category: g('stream-category')?.value,
+					tags: !g('stream-tags')?.disabled && g('stream-tags').value !== g('stream-tags').dataset.current ? g('stream-tags').value : undefined,
+					channelId: g('stream-tags')?.dataset.channelId
+				});
+				if (streamHasSaveStatus) awaitStreamReply('save', 'Saving...');
+				else endStreamReply('Request sent. Check Recent Events.');
+			});
+            g('btn-refresh-channel')?.addEventListener('click', () => {
+				if (streamPending === 'save') return;
+				awaitStreamReply('load', 'Loading...');
+				post('refresh_channel_info', {});
+			});
 			window.addEventListener('message', function(event) {
 				if (!event?.data || event.data.source !== 'twitch-ws-script') {
 					return;
 				}
-				if (event.data.action === 'channel_info' && event.data.payload) {
+				const payload = event.data.payload;
+				if (payload && (event.data.action === 'stream_details_status' || event.data.action === 'stream_details_access' ||
+					(event.data.action === 'channel_info' && typeof payload.afterSave === 'boolean'))) {
+					streamHasSaveStatus = true;
+				}
+				if (event.data.action === 'channel_info' && payload) {
+					if (streamPending === 'save' && !payload.afterSave) return;
 					if (g('stream-title')) {
-						g('stream-title').value = event.data.payload.title || '';
+						g('stream-title').value = payload.title || '';
 					}
 					if (g('stream-category')) {
-						g('stream-category').value = event.data.payload.category || '';
+						g('stream-category').value = payload.category || '';
 					}
+					if (g('stream-tags')) {
+						g('stream-tags').value = (payload.tags || []).join(', ');
+						g('stream-tags').dataset.current = g('stream-tags').value;
+						g('stream-tags').dataset.channelId = payload.channelId || '';
+						g('stream-tags').dataset.loaded = Array.isArray(payload.tags) ? 'true' : 'false';
+					}
+					if (g('stream-details-preview')) {
+						g('stream-details-preview').textContent = [payload.title, payload.category].filter(Boolean).join(' ' + String.fromCharCode(183) + ' ');
+					}
+					syncStreamEditAccess();
+					if (streamPending === 'load') {
+						endStreamReply('Loaded current details.', 'success');
+					}
+				} else if (event.data.action === 'stream_details_status' && payload) {
+					if (streamPending === 'save' && payload.operation === 'load') return;
+					endStreamReply(payload.message, payload.state);
+				} else if (event.data.action === 'stream_details_access' && payload) {
+					streamCanEdit = payload.canEdit !== false;
+					if (g('stream-details-note')) {
+						g('stream-details-note').textContent = payload.message || '';
+					}
+					syncStreamEditAccess();
 				}
 			});
         });

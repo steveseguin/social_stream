@@ -653,14 +653,174 @@ body.hide-metrics .stats-container {
 	min-width: 120px;
 }
 
-#stream-description {
+/* Stream details card */
+.stream-details {
+	margin: 5px;
+	background: white;
+	border-radius: 4px;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.stream-details > summary {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 12px;
+	cursor: pointer;
+	list-style: none;
+	user-select: none;
+}
+.stream-details > summary::-webkit-details-marker {
+	display: none;
+}
+.stream-details > summary:focus-visible {
+	outline: 2px solid #1a73e8;
+	outline-offset: -2px;
+}
+.stream-details-heading {
+	font-size: 16px;
+	font-weight: bold;
+	white-space: nowrap;
+}
+.stream-details-preview {
+	flex: 1 1 0;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 13px;
+	color: #5f6368;
+}
+.stream-details-toggle {
+	flex-shrink: 0;
+	padding: 5px 12px;
+	border: 1px solid rgba(0, 0, 0, 0.22);
+	border-radius: 4px;
+	font-size: 13px;
+	color: #333;
+}
+.stream-details-toggle::after {
+	content: "Edit";
+}
+.stream-details[open] .stream-details-toggle::after {
+	content: "Close";
+}
+.stream-details > summary:hover .stream-details-toggle {
+	background: rgba(0, 0, 0, 0.06);
+}
+.stream-details-body {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+	gap: 10px 12px;
+	padding: 2px 12px 12px;
+}
+.stream-field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+.stream-field-wide {
+	grid-column: 1 / -1;
+}
+.stream-field label {
+	font-size: 12px;
+	font-weight: 600;
+	color: #555;
+}
+.stream-field-hint {
+	font-weight: normal;
+	color: #80868b;
+}
+.stream-field .channel-input {
 	box-sizing: border-box;
+	flex: none;
 	width: 100%;
 	min-width: 0;
-	min-height: 120px;
+}
+#stream-description {
+	min-height: 96px;
 	resize: vertical;
 	font-family: inherit;
 	line-height: 1.4;
+}
+.stream-field-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+.stream-field-row > .channel-input,
+.stream-field-row > input[type="file"] {
+	flex: 1 1 0;
+	width: auto;
+	min-width: 0;
+}
+.stream-field-row > .connect-button {
+	flex-shrink: 0;
+	white-space: nowrap;
+}
+.stream-details-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	align-self: end;
+	gap: 8px;
+}
+.stream-details-save {
+	background-color: #1a73e8;
+}
+.stream-details-save:hover {
+	background-color: #1765cc;
+}
+.stream-details-quiet {
+	background: transparent;
+	color: #555;
+	border: 1px solid rgba(0, 0, 0, 0.22);
+	padding: 7px 12px;
+}
+.stream-details-quiet:hover {
+	background: rgba(0, 0, 0, 0.06);
+	color: #222;
+}
+.stream-details .connect-button:disabled,
+.stream-field .channel-input:disabled,
+#stream-thumbnail:disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+.stream-details-divider {
+	border-top: 1px solid #eee;
+}
+.stream-details-status {
+	font-size: 13px;
+	line-height: 1.35;
+	color: #5f6368;
+}
+.stream-details-status[data-state="success"] {
+	color: #188038;
+}
+.stream-details-status[data-state="error"] {
+	color: #c5221f;
+}
+.stream-details-note {
+	margin: 0;
+	font-size: 12px;
+	line-height: 1.35;
+	color: #5f6368;
+}
+.stream-details-status:empty,
+.stream-details-note:empty {
+	display: none;
+}
+#stream-thumbnail {
+	color: inherit;
+	font-size: 13px;
+}
+#stream-thumbnail-preview {
+	align-self: flex-start;
+	max-width: 100%;
+	max-height: 110px;
+	object-fit: contain;
 }
 
 /* Responsive adjustments */
@@ -1110,5 +1270,40 @@ body:has(.auth:not(.hidden)) {
     .sidebar-toggle:hover {
         background: #404040;
         color: #f1f1f1;
+    }
+    .stream-details {
+        background: #212121;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+    .stream-details-heading {
+        color: #f1f1f1;
+    }
+    .stream-details-preview,
+    .stream-details-status,
+    .stream-details-note,
+    .stream-field label {
+        color: #aaaaaa;
+    }
+    .stream-field-hint {
+        color: #888888;
+    }
+    .stream-details-toggle,
+    .stream-details-quiet {
+        color: #aaaaaa;
+        border-color: #4a4a4a;
+    }
+    .stream-details > summary:hover .stream-details-toggle,
+    .stream-details-quiet:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: #f1f1f1;
+    }
+    .stream-details-divider {
+        border-top-color: #404040;
+    }
+    .stream-details-status[data-state="success"] {
+        color: #81c995;
+    }
+    .stream-details-status[data-state="error"] {
+        color: #f28b82;
     }
 }

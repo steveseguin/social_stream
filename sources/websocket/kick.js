@@ -2358,7 +2358,7 @@ function initExtensionBridge() {
                     }
                     if (request.type === 'SOURCE_CONTROL') {
                         handleSourceControlRequest(request)
-                            .then(result => sendResponse(Boolean(result)))
+                            .then(result => sendResponse(request.control === 'banCommand' ? result : Boolean(result)))
                             .catch(err => {
                                 console.error('Kick SOURCE_CONTROL failed', err);
                                 sendResponse(false);
@@ -2441,8 +2441,11 @@ function initElements() {
         streamAdminTarget: q('stream-admin-target'),
         streamTitle: q('stream-title'),
         streamCategory: q('stream-category'),
+        streamTags: q('stream-tags'),
         refreshStreamInfo: q('refresh-stream-info'),
-        updateStreamInfo: q('update-stream-info')
+        updateStreamInfo: q('update-stream-info'),
+        streamDetailsStatus: q('stream-details-status'),
+        streamDetailsPreview: q('stream-details-preview')
     });
 }
 
@@ -3158,17 +3161,29 @@ function bindEvents() {
     }
     if (els.refreshStreamInfo) {
         els.refreshStreamInfo.addEventListener('click', () => {
-            refreshKickStreamInfo().catch((err) => {
+            setKickStreamDetailsStatus('Loading...');
+            refreshKickStreamInfo().then((channel) => {
+                if (channel) {
+                    setKickStreamDetailsStatus('Loaded current details.', 'success');
+                } else {
+                    setKickStreamDetailsStatus('Sign-in changed. Try again.', 'error');
+                }
+            }).catch((err) => {
                 console.error('Failed to refresh Kick stream info', err);
                 log(`Unable to refresh stream info: ${err.message}`, 'warning');
+                setKickStreamDetailsStatus(`Could not load details: ${describeKickStreamDetailsError(err)}`, 'error');
             });
         });
     }
     if (els.updateStreamInfo) {
         els.updateStreamInfo.addEventListener('click', () => {
-            updateKickStreamInfoFromInputs().catch((err) => {
+            setKickStreamDetailsStatus('Saving...');
+            updateKickStreamInfoFromInputs().then(() => {
+                setKickStreamDetailsStatus('Details saved.', 'success');
+            }).catch((err) => {
                 console.error('Failed to update Kick stream info', err);
                 log(`Unable to update stream info: ${err.message}`, 'error');
+                setKickStreamDetailsStatus(`Not saved: ${describeKickStreamDetailsError(err)}`, 'error');
             });
         });
     }
@@ -4740,6 +4755,7 @@ async function refreshAccessToken() {
     if (state.refreshPromise) {
         return state.refreshPromise;
     }
+    const previousToken = state.tokens.access_token;
     state.refreshPromise = (async () => {
         const base = getBridgeBaseUrl().replace(/\/$/, '');
         const response = await fetch(`${base}/kick/token`, {
@@ -4769,6 +4785,9 @@ async function refreshAccessToken() {
             throw new Error(`Kick refresh failed (${response.status}): ${message}`);
         }
 
+        if (state.tokens?.access_token === previousToken && kickStreamTagsToken === previousToken) {
+            kickStreamTagsToken = data.access_token;
+        }
         const now = Date.now();
         state.tokens = {
             ...(state.tokens || {}),
@@ -4866,6 +4885,41 @@ async function apiFetch(path, options = {}, retry = true) {
     return res.text();
 }
 
+let kickStreamTagsToken = null;
+
+// Result line beside the stream details buttons (absent on older page layouts).
+function setKickStreamDetailsStatus(message, stateName) {
+    if (!els.streamDetailsStatus) return;
+    els.streamDetailsStatus.textContent = message || '';
+    if (stateName) {
+        els.streamDetailsStatus.setAttribute('data-state', stateName);
+    } else {
+        els.streamDetailsStatus.removeAttribute('data-state');
+    }
+}
+
+function describeKickStreamDetailsError(err) {
+    const message = err && err.message ? String(err.message) : 'Unknown error.';
+    if (/not authenticated/i.test(message)) {
+        return 'Sign in with Kick to edit stream details.';
+    }
+    const status = /^Kick API (\d{3})/.exec(message);
+    if (status && (status[1] === '401' || status[1] === '403')) {
+        return 'Kick refused the request. Sign in as the channel you want to edit and allow the channel:write permission.';
+    }
+    return message.length > 180 ? message.slice(0, 177) + '...' : message;
+}
+
+// Collapsed-panel summary of what is currently set, taken from the editor fields.
+function updateKickStreamDetailsPreview() {
+    if (!els.streamDetailsPreview) return;
+    const parts = [
+        els.streamTitle ? els.streamTitle.value.trim() : '',
+        els.streamCategory ? els.streamCategory.value.trim() : ''
+    ].filter(Boolean);
+    els.streamDetailsPreview.textContent = parts.join(' ' + String.fromCharCode(183) + ' ');
+}
+
 function updateKickStreamEditorFields(channel) {
     const values = resolveKickStreamEditorValues(channel);
     if (els.streamTitle) {
@@ -4874,6 +4928,14 @@ function updateKickStreamEditorFields(channel) {
     if (els.streamCategory) {
         els.streamCategory.value = values.category || '';
     }
+    if (els.streamTags) {
+        const tags = channel?.stream?.custom_tags;
+        els.streamTags.value = Array.isArray(tags) ? tags.join(', ') : '';
+        els.streamTags.dataset.current = els.streamTags.value;
+        els.streamTags.disabled = !Array.isArray(tags);
+        kickStreamTagsToken = state.tokens?.access_token || null;
+    }
+    updateKickStreamDetailsPreview();
 }
 
 function extractKickStreamEditorValues() {
@@ -5271,7 +5333,9 @@ async function fetchCurrentKickChannelInfo() {
 }
 
 async function refreshKickStreamInfo() {
+    const token = state.tokens?.access_token;
     const channel = await fetchCurrentKickChannelInfo();
+    if (token !== state.tokens?.access_token) return null;
     if (!channel) {
         throw new Error('Unable to load current Kick channel information.');
     }
@@ -5296,10 +5360,17 @@ async function resolveKickCategoryId(value) {
 }
 
 async function updateKickStreamInfoFromInputs() {
+    const token = state.tokens?.access_token;
     const title = els.streamTitle ? els.streamTitle.value.trim() : '';
     const category = els.streamCategory ? els.streamCategory.value.trim() : '';
     const adminContext = getKickAdminControlContext();
     const payload = {};
+    if (els.streamTags && !els.streamTags.disabled && els.streamTags.value !== els.streamTags.dataset.current) {
+        if (!token || token !== kickStreamTagsToken) throw new Error('Sign-in changed. Reload the stream details first.');
+        const tags = els.streamTags.value.split(',').map(tag => tag.trim()).filter(Boolean);
+        if (tags.length > 10) throw new Error('Use up to 10 tags.');
+        payload.custom_tags = tags;
+    }
     if (title) {
         payload.stream_title = title;
     }
@@ -5316,6 +5387,7 @@ async function updateKickStreamInfoFromInputs() {
     if (adminContext.mismatch) {
         log(`Kick admin controls target ${adminContext.authLabel}, not ${adminContext.selectedLabel}.`, 'warning');
     }
+    if (token !== state.tokens?.access_token) throw new Error('Sign-in changed. Reload the stream details first.');
     await apiFetch('/public/v1/channels', {
         method: 'PATCH',
         body: JSON.stringify(payload)
@@ -5327,12 +5399,14 @@ async function updateKickStreamInfoFromInputs() {
         slug: adminContext.authSlug || state.channelSlug,
         source: 'patch'
     });
-    log('Kick stream title/category updated.', 'info');
+    if (payload.custom_tags && els.streamTags) els.streamTags.dataset.current = payload.custom_tags.join(', ');
+    log('Kick stream details updated.', 'info');
     // Reflect submitted values immediately — the Kick API caches stale data
     // after a PATCH so an immediate re-fetch would overwrite the inputs with
     // old values.  After a short delay the cache should have cleared.
     if (els.streamTitle && title) els.streamTitle.value = title;
     if (els.streamCategory && category) els.streamCategory.value = category;
+    updateKickStreamDetailsPreview();
     setTimeout(() => {
         refreshKickStreamInfo().catch(() => {});
     }, 3000);
@@ -5386,10 +5460,58 @@ async function banKickUser(payload = {}) {
     return true;
 }
 
+const kickBanCommands = new Map();
+
+async function runKickBanCommand(payload) {
+    const entry = kickBanCommands.get(String(payload.messageId || ''));
+    const channelId = state.channelId;
+    const channelSlug = state.channelSlug;
+    const parts = entry ? entry.text.split(/\s+/) : [];
+    const username = String(payload.username || '').toLowerCase();
+    if (!entry || entry.used || !entry.allowed || entry.channelId !== channelId || entry.channelSlug !== channelSlug ||
+        Date.now() - entry.received > 120000 || Date.now() - entry.sent > 120000 ||
+        !/^![a-zA-Z0-9_]+$/.test(payload.command || '') || parts.length !== 2 ||
+        parts[0].toLowerCase() !== payload.command.toLowerCase() || parts[1].replace(/^@/, '').toLowerCase() !== username ||
+        !/^[a-z0-9_-]{1,100}$/.test(username)) {
+        return { ok: false, message: 'Ban commands require a recent command from this Kick channel\'s broadcaster or moderators.' };
+    }
+    entry.used = true;
+    try {
+        const matches = new Set();
+        state.chatMessageCache.forEach(message => {
+            if (normalizeChannel(message.username) === normalizeChannel(username) && message.userId) matches.add(String(message.userId));
+        });
+        const userId = matches.size === 1 ? matches.values().next().value : null;
+        if (!userId) return { ok: false, message: 'Kick user not found in this connection. Use a username that has appeared in chat.' };
+        const account = getAuthenticatedKickChannelIdentity();
+        if (String(userId) === String(channelId) || String(userId) === String(account.userId)) {
+            return { ok: false, message: 'Cannot ban the broadcaster or the signed-in account.' };
+        }
+        const token = await ensureToken();
+        if (!channelId || channelId !== state.channelId || channelSlug !== state.channelSlug) {
+            return { ok: false, message: 'Kick connection changed. Send the command again in the intended channel.' };
+        }
+        // Use the existing ban endpoint with a fixed token/channel and no mutation retries.
+        const response = await fetch('https://api.kick.com/public/v1/moderation/bans', {
+            method: 'POST', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ broadcaster_user_id: Number(channelId), user_id: Number(userId), reason: 'Banned by Event Flow command ' + payload.command })
+        });
+        if (response.ok) return { ok: true };
+        return { ok: false, message: 'Kick rejected the ban (HTTP ' + response.status + '). Check the signed-in account\'s moderation permissions.' };
+    } catch (_) {
+        return { ok: false, unconfirmed: true, message: 'No ban confirmation received. Check Kick before sending another command.' };
+    }
+}
+
 async function handleSourceControlRequest(request) {
     const payload = request?.payload || {};
     if (normalizeSourceControlPlatform(request?.platform || payload?.type) !== 'kick') {
         return false;
+    }
+    if (request.control === 'banCommand') {
+        const result = await runKickBanCommand(payload);
+        log(result.ok ? 'Banned ' + payload.username + ' from Event Flow' : result.message, result.ok ? 'info' : 'warning');
+        return result;
     }
     if (request.control === 'deleteMessage') {
         if (!state.advancedControls.syncDeleteMessages) {
@@ -6955,6 +7077,20 @@ async function forwardChatMessage(evt, bridgeMeta) {
         }
         if (bridgeMessageId && bridgeMessageId !== normalizeKickMessageId(resolvedId)) {
             rememberKickChatMessage(bridgeMessageId, cacheContext);
+        }
+        const commandText = String(content || '').trim();
+        if (nativeMessageId && !normalizedEvent && commandText.charAt(0) === '!' && commandText.length <= 200) {
+            const now = Date.now();
+            kickBanCommands.forEach((entry, id) => { if (now - entry.received > 120000) kickBanCommands.delete(id); });
+            const nativeMod = sender.is_moderator === true || sender.moderator === true || sender.identity?.moderator === true ||
+                (Array.isArray(sender.roles) && sender.roles.some(role => /^(mod|moderator)$/i.test(role))) ||
+                (Array.isArray(sender.identity?.badges) && sender.identity.badges.some(badge => badge && /^(mod|moderator)$/i.test(badge.type || badge.name || '')));
+            if (!kickBanCommands.has(nativeMessageId)) kickBanCommands.set(nativeMessageId, {
+                text: commandText, allowed: nativeMod || (!!ids?.userId && String(ids.userId) === String(state.channelId)),
+                channelId: state.channelId, channelSlug: state.channelSlug, received: now, used: false,
+                sent: toTimestampMs(message.created_at || payload.created_at || bridgeMeta?.timestamp) || now
+            });
+            while (kickBanCommands.size > 100) kickBanCommands.delete(kickBanCommands.keys().next().value);
         }
         pushMessage(messagePayload);
         appendChatFeedMessage(messagePayload, content);

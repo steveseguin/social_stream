@@ -60,7 +60,7 @@ SSN is free to use. Some optional integrations, AI services, and voice providers
 <a id="supported-sites"></a>
 ## 🌐 Supported platforms
 
-SSN includes integrations for livestreaming services, social networks, meetings, and community chat. Examples include YouTube, Twitch, TikTok, Kick, Facebook, Instagram, Rumble, Discord, Zoom, Microsoft Teams, Google Meet, Slack, Telegram, and WhatsApp.
+SSN includes integrations for livestreaming services, social networks, meetings, and community chat. Examples include YouTube, Twitch, TikTok, Kick, Facebook, Instagram, Rumble, Altstream (altstream.online), Discord, Zoom, Microsoft Teams, Google Meet, Slack, Telegram, and WhatsApp.
 
 **[Browse supported sites and setup instructions](https://socialstream.ninja/docs/supported-sites.html)** for each platform’s capture method and limitations. Some sources need a pop-out chat; others require an explicit opt-in toggle or authentication. The [sources directory](sources/) contains the capture implementations, including newer and experimental integrations.
 

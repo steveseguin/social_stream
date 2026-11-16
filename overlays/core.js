@@ -403,7 +403,8 @@
 		return { d: Math.floor(total / 86400), h: Math.floor(total % 86400 / 3600), m: Math.floor(total % 3600 / 60), s: total % 60 };
 	};
 
-	// Parses "19:30" (next occurrence), "2026-12-31T23:59", or "" -> null. Uses this computer's clock.
+	// Parses "19:30" (next occurrence), "12-25" or "12-25T18:00" (every year), "2026-12-31T23:59", or "" -> null.
+	// Uses this computer's clock.
 	SSO.parseTarget = function (value, now) {
 		var v = String(value || "").trim();
 		now = now || new Date();
@@ -412,6 +413,14 @@
 			var t = new Date(now.getFullYear(), now.getMonth(), now.getDate(), +m[1], +m[2], +(m[3] || 0));
 			if (t.getTime() <= now.getTime()) { t.setDate(t.getDate() + 1); }
 			return t;
+		}
+		// Month-day with no year comes around every year. It stays on this year's date for a day after it
+		// passes (so the "finished" text shows on the day), then rolls over to next year.
+		var y = /^(\d{1,2})-(\d{1,2})(?:[T ](\d{1,2}):(\d{2}))?$/.exec(v);
+		if (y && +y[1] >= 1 && +y[1] <= 12 && +y[2] >= 1 && +y[2] <= 31) {
+			var d = new Date(now.getFullYear(), +y[1] - 1, +y[2], +(y[3] || 0), +(y[4] || 0), 0);
+			if (now.getTime() - d.getTime() > 86400000) { d = new Date(now.getFullYear() + 1, +y[1] - 1, +y[2], +(y[3] || 0), +(y[4] || 0), 0); }
+			return d;
 		}
 		if (!v) { return null; }
 		var parsed = new Date(v.replace(" ", "T"));
@@ -464,6 +473,8 @@
 		".fx-drip{color:var(--fx1) !important;animation:fx-drip 4s ease-in-out infinite;}",
 		"@keyframes fx-drip{0%,100%{text-shadow:0 2px 0 var(--fx3),0 6px 6px rgba(0,0,0,.6),0 0 18px var(--fx3)}50%{text-shadow:0 2px 0 var(--fx3),0 14px 8px rgba(120,0,0,.7),0 0 28px var(--fx3)}}",
 		".fx-rainbow{background:linear-gradient(90deg,#ff3b3b,#ffb03b,#ffee3b,#3bff6b,#3bd4ff,#8a3bff,#ff3bd4,#ff3b3b);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent !important;animation:fx-slide 4s linear infinite;filter:drop-shadow(0 2px 2px rgba(0,0,0,.4));}",
+		// Gradient text only paints inside its box, so script and italic fonts lose their swashes without some room.
+		".fx-fire,.fx-ice,.fx-chrome,.fx-gold,.fx-vapor,.fx-rainbow{padding:.12em .22em;margin:-.12em -.22em;-webkit-box-decoration-break:clone;box-decoration-break:clone;}",
 		".fx-ransom{display:inline-block;line-height:1.25;text-shadow:none !important;}",
 		".fx-ransom .rl{display:inline-block;padding:.03em .12em;margin:0 .03em;box-shadow:1px 2px 3px rgba(0,0,0,.35);line-height:1.05;vertical-align:middle;}",
 		".fx-ransom .rs{display:inline-block;width:.45em;}"

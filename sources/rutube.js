@@ -35,6 +35,8 @@ function toDataURL(url, callback) {
 			 .replace(/'/g, "&#039;") || "";
 	}
 	function getAllContentNodes(element) {
+		if (!element){return "";}
+		if (settings.textonlymode){return element.textContent || "";}
 		var resp = "";
 		
 		if (!element.childNodes || !element.childNodes.length){
@@ -65,7 +67,27 @@ function toDataURL(url, callback) {
 	}
 	
 	
+	var seenRows = new WeakSet();
+	var seenMessages = new Set();
+	function getMessageData(ele){
+		try {
+			var key = Object.keys(ele).find(key=>key.startsWith("__reactFiber$"));
+			var fiber = key && ele[key];
+			for (var depth = 0; fiber && depth < 8; depth++, fiber = fiber.return){
+				var message = fiber.memoizedProps && fiber.memoizedProps.message;
+				if (message && typeof message.id === "string" && /^\d{1,22}$/.test(message.id) && message.user && typeof message.user.name === "string" && typeof message.text === "string"){
+					return message;
+				}
+			}
+		} catch(e){}
+		return null;
+	}
 	function processMessage(ele){
+		if (!ele){return;}
+		var message = getMessageData(ele);
+		var stream = location.pathname.match(/^\/live\/chat\/([a-f0-9]{32})\/?$/);
+		var messageId = message && "rutube:" + (stream ? stream[1] : location.pathname) + ":" + message.id;
+		if (messageId ? seenMessages.has(messageId) : seenRows.has(ele)){return;}
 		//console.log(ele);
 		var chatimg = "";
 		
@@ -73,8 +95,7 @@ function toDataURL(url, callback) {
 		
 		var name="";
 		try {
-			name = ele.querySelector(".bull-message-module__authorName").textContent.trim();
-			name = escapeHtml(name);
+			name = message ? message.user.name : ele.querySelector(".bull-message-module__authorName, .bull-author-module__name").textContent.trim();
 		} catch(e){
 		//	console.warn(e);
 		}
@@ -82,7 +103,9 @@ function toDataURL(url, callback) {
 		
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector(".bull-message-module__authorName").nextElementSibling);
+			var author = ele.querySelector(".bull-message-module__authorName, .bull-author-module__name");
+			var content = ele.querySelector(".bull-message-module__textMsg") || (author && author.nextElementSibling);
+			msg = message && settings.textonlymode ? message.text : getAllContentNodes(content);
 		} catch(e){
 		//	console.warn(e);
 		}
@@ -118,9 +141,15 @@ function toDataURL(url, callback) {
 		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "rutube";
+		if (messageId){
+			data.id = messageId;
+			data.userid = String(message.user.id);
+		}
 		
 	//	console.log(data);
 		
+		seenRows.add(ele);
+		if (messageId){seenMessages.add(messageId);}
 		pushMessage(data);
 	}
 
@@ -172,21 +201,26 @@ function toDataURL(url, callback) {
 	function onElementInserted(target) {
 		if (!target){return;}
 		
+		function collect(node, rows, descendants){
+			var element = node.nodeType === 1 ? node : node.parentElement;
+			if (!element || !target.contains(element)){return;}
+			var row = element.closest(".bull-message-module__message");
+			if (row && target.contains(row)){rows.add(row);}
+			if (descendants){
+				element.querySelectorAll(".bull-message-module__message").forEach(row=>rows.add(row));
+				if (!row && !element.querySelector(".bull-message-module__message") && element.querySelector(".bull-message-module__authorName")){rows.add(element);}
+			}
+		}
 		var onMutationsObserved = function(mutations) {
+			var rows = new Set();
 			mutations.forEach(function(mutation) {
-				if (mutation.addedNodes.length) {
-					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						try {
-							if (mutation.addedNodes[i].skip){continue;}
-							mutation.addedNodes[i].skip = true;
-							processMessage(mutation.addedNodes[i]);
-						} catch(e){}
-					}
-				}
+				collect(mutation.target, rows, false);
+				mutation.addedNodes.forEach(node=>collect(node, rows, true));
 			});
+			rows.forEach(row=>{try{processMessage(row);}catch(e){}});
 		};
 		
-		var config = { childList: true, subtree: true };
+		var config = { childList: true, subtree: true, characterData: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);

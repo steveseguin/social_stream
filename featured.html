@@ -2524,7 +2524,9 @@
 			// These will be handled by TTS.configure()
 			
 			// Configure TTS with URL parameters
-			TTS.configure(urlParams);
+			if (window.TTS && typeof TTS.configure === "function") {
+				TTS.configure(urlParams);
+			}
 
 
 			var colorized = false;
@@ -2577,6 +2579,7 @@
 			}
 
 			function speak(text) {
+				if (!window.TTS || typeof TTS.speak !== "function") return;
 				// Handle URL replacement and beep words before passing to TTS
 				if (replaceURLInLink) {
 					text = replaceURLsWithSubstring(text, "Link");
@@ -2836,6 +2839,7 @@
 				} else if (data.action){
 					log(data);
 					if (data.action === "toggleTTS" || data.action === "tts") {
+						if (!window.TTS || typeof TTS.speechMeta !== "function") return false;
 						if ("value" in data){
 							if (data.value == "toggle") {
 								TTS.speech = !TTS.speech;
@@ -3216,7 +3220,8 @@
 					  }
 					}
 
-					var chatbadges = showbadges ? SocialStreamBadges.render(data.chatbadges, { className: "hl-badge" }) : "";
+					var chatbadges = showbadges && window.SocialStreamBadges && typeof SocialStreamBadges.render === "function"
+						? SocialStreamBadges.render(data.chatbadges, { className: "hl-badge" }) : "";
 
 					if (chatbadges) {
 					  chatbadges = '<div class="hl-badges" >' + chatbadges + "</div>";
@@ -3363,7 +3368,9 @@
 					var fontsize = "";
 					var limitchar = parseInt(window.innerWidth / 6.5);
 
-					if (activeMessageDiv) SSNContentImage.watch(activeMessageDiv.closest(".hl-c-cont"), data, activeMessageDiv);
+					if (activeMessageDiv && window.SSNContentImage && typeof SSNContentImage.watch === "function") {
+						SSNContentImage.watch(activeMessageDiv.closest(".hl-c-cont"), data, activeMessageDiv);
+					}
 					if (largeImage && activeMessageDiv){
 					  activeMessageDiv.classList.add("largeImage");
 					} else if (fontfit && activeMessageDiv) {
@@ -3444,7 +3451,7 @@
 					document.getElementById("output").classList.remove(transitionType);
 
 					// Handle TTS if enabled
-					if (TTS.speech) {
+					if (window.TTS && TTS.speech && typeof TTS.speechMeta === "function") {
 					  TTS.speechMeta(data);
 					}
 					

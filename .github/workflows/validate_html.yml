@@ -29,6 +29,11 @@ jobs:
     - name: Validate HTML files
       run: npx htmlhint "**/*.html" --config .htmlhintrc
 
+    - name: Test non-browser monetization and providers
+      timeout-minutes: 2
+      # Exclude Node's synthetic root so it does not re-include the browser cases.
+      run: node --test --test-concurrency=1 --test-name-pattern='^(?!<root>$|Wishlist HTML import|Popup retries incomplete startup).+' tests/monetization.test.cjs tests/monetization-providers.test.cjs
+
     - name: Validate Python scripts
       run: python3 -m compileall -q scripts docs/skills/control-social-stream/scripts
 

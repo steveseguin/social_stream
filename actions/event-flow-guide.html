@@ -360,8 +360,8 @@
                     <strong>Using local media in the standalone app:</strong>
                     <ol>
                         <li>In a Play Audio Clip or Display Media Overlay action, click <em>Choose Local File</em>.</li>
-                        <li>Click <em>Copy Local Flow Actions URL for OBS</em> and use that generated localhost URL instead of the hosted Flow Actions URL.</li>
-                        <li>Keep SSApp running. If a selected file moves, return to the action and click <em>Relink</em>.</li>
+                        <li>Audio up to 16 MB can use the regular Flow Actions link over WebRTC. For other media, larger sounds, server-only connections, or older app builds, use <em>Copy Local Flow Actions URL for OBS</em>.</li>
+                        <li>Keep SSApp running. If a selected file moves, return to the action and click <em>Choose Local File</em> again.</li>
                     </ol>
                     <p>The Chrome extension cannot serve disk files by itself. Use Upload or a hosted URL when no desktop companion is available. See the <a href="../docs/media-hosting-event-flow.html" target="_blank" rel="noopener">Media Files for Event Flow guide</a> for the full setup.</p>
                 </div>
@@ -393,6 +393,19 @@
                 </div>
                 <div class="panel warn">
                     <strong>Keep the overlay open.</strong> Closing the Flow Actions page pauses every overlay/audio/OBS action in Event Flow. Hide it or put it on a separate monitor instead of closing it outright.
+                </div>
+            </section>
+
+            <section>
+                <div class="panel" id="platform-ban-command">
+                    <strong>Platform ban command with a sound</strong>
+                    <ol>
+                        <li>Connect Twitch, Kick, YouTube, or VPZone using its API or WebSocket source. Sign in with permission to ban users in that channel. VPZone requires the channel owner's account.</li>
+                        <li>Load <em>Platform ban command + sound</em>. Select your sound, save, and enable the flow.</li>
+                        <li>Keep the Flow Actions overlay open in OBS. Type <code>!getout username</code> in the platform chat. On YouTube use the user's unique <code>@handle</code> or channel ID. On Kick the username must have appeared in the connection's chat.</li>
+                    </ol>
+                    <p>Only that channel's platform moderators and broadcaster can trigger the command. SSN-only moderator roles do not grant this permission. This action bans on the platform; it does not change SSN's local block, timeout, or mute settings. Test Flow never bans users.</p>
+                    <p>For an existing flow, connect <em>Message Starts With</em> (<code>!getout </code>) to <em>Ban User on Platform</em>, then to <em>Play Audio Clip</em>. Set the same command in both nodes. The sound plays after a confirmed ban. A failed or unconfirmed ban stops this chain; check the source connection's event log before trying again.</p>
                 </div>
             </section>
 

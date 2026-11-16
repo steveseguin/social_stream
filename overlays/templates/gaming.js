@@ -233,7 +233,8 @@
 			var html = '<div class="hb-name"></div>';
 			if (c.hearts) {
 				var hearts = "", food = "";
-				var icons = Math.min(10, Math.max(3, Math.floor(n * sz / 2 / (sz * 0.3))));
+				// The food emoji is wider than the heart, so size the rows by it or they collide on short bars.
+				var icons = Math.min(10, Math.max(3, Math.floor(n * sz / 2 / (sz * 0.4))));
 				for (var h = 0; h < icons; h++) { hearts += "❤"; food += "🍗"; }
 				html += '<div class="hb-stats" style="width:' + (n * sz + 6) + 'px"><span style="color:#ff2020">' + hearts + "</span><span>" + food + "</span></div>";
 			}

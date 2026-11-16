@@ -95,7 +95,7 @@
 				if (result.environment !== (p.environment || 'production') || !Array.isArray(result.items) || result.items.length > 100) throw new Error('Incomplete seller listing response.');
 				var prior = p.sellerListings, rows = result.items.map(function (i) {
 					if (!/^\d{9,15}$/.test(i.id) || typeof i.name !== 'string' || i.variant && (typeof i.variant !== 'string' || i.variant.length > 100)) throw new Error('Invalid seller listing.');
-					var old = (prior || []).filter(function (r) { return r.id === i.id && (r.variant || '') === (i.variant || ''); })[0];
+					var old = (prior || []).concat(p.items).filter(function (r) { return r.id === i.id && (r.variant || '') === (i.variant || ''); })[0];
 					return {id:i.id, name:i.name.slice(0,180), variant:i.variant || '', sku:i.sku || '', quantity:i.quantity, amount:i.amount, currency:i.currency, available:i.active === false ? false : i.quantity == null ? null : i.quantity > 0, addedAt:old && old.addedAt || Date.now()};
 				});
 				// Keep imported links even when the next page replaces the discovery results.

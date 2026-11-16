@@ -710,13 +710,22 @@ if (typeof(chrome.runtime)=='undefined'){
 				const isGetSettingsRequest = !!(data && data.cmd === "getSettings");
 				const isLLMProviderTestRequest = !!(data && (data.cmd === "testLLMProvider" || data.cmd === "testCensorModel"));
 				const isAiEventRequest = !!(data && data.cmd === "aiEvent");
-				const timeoutMs = isAiEventRequest ? 195000 : data?.cmd === "testCensorModel" ? getCensorTestTimeout(data.model) : isLLMProviderTestRequest ? 60000 : (isGetSettingsRequest ? 3000 : 500);
+				const isPointsBackupRequest = !!(data && (data.cmd === "importPointsData" || data.cmd === "exportPointsData"));
+				const timeoutMs = isPointsBackupRequest ? 120000 : isAiEventRequest ? 195000 : data?.cmd === "testCensorModel" ? getCensorTestTimeout(data.model) : isLLMProviderTestRequest ? 60000 : (isGetSettingsRequest ? 3000 : 500);
 				
 				// Create promise with timeout
 				const promise = new Promise((resolve) => {
 					// Store callback with timeout
-					const timeoutId = setTimeout(() => {
+					// The native file dialog completes when the user selects a file or cancels. Never resend it.
+					const timeoutId = data && data.cmd === "musicSelectFile" ? null : setTimeout(() => {
 						pendingCallbacks.delete(callbackId);
+						if (isPointsBackupRequest) {
+							// Database work may still be running. Never resend an import on timeout.
+							resolve({ success: false, error: data.cmd === "importPointsData"
+								? 'Points import timed out waiting for a response. It may still be running. Check your balances before importing again.'
+								: 'Points export timed out waiting for a response. Please try again.' });
+							return;
+						}
 						if (isLLMProviderTestRequest || isAiEventRequest) {
 							// The provider may still be working. Never resubmit a timed-out test.
 							resolve({ success: false, error: isAiEventRequest ? 'AI overlay request timed out.' : 'Connection test timed out.' });
@@ -2225,7 +2234,7 @@ function updateBlockedWordsList() {
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
-    return div.innerHTML;
+    return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 const DEFAULT_CUSTOM_URL_SLOT_COUNT = 9;
@@ -5209,6 +5218,106 @@ async function loadOpenCodeModels(force) {
         }
     }());
     return openCodeModelLoadInFlight;
+}
+
+let geminiChatModels = [];
+let geminiModelRequest = null;
+
+function populateGeminiModelSelect() {
+    const select = document.getElementById("geminiChatModelSelect");
+    const input = document.getElementById("geminiChatModelInput");
+    if (!select || !input) return;
+    const manual = select.value === "custom";
+    const current = input.value;
+    select.textContent = "";
+    select.add(new Option("Default (gemini-2.5-flash)", ""));
+    if (current && geminiChatModels.indexOf(current) === -1) {
+        select.add(new Option(current + " (saved)", current));
+    }
+    geminiChatModels.forEach(function (id) { select.add(new Option(id, id)); });
+    select.add(new Option("Enter model ID...", "custom"));
+    select.value = manual ? "custom" : current;
+    document.getElementById("geminiChatModelCustom").classList.toggle("hidden", !manual);
+}
+
+function resetGeminiModels() {
+    if (geminiModelRequest) geminiModelRequest.abort();
+    geminiModelRequest = null;
+    geminiChatModels = [];
+    populateGeminiModelSelect();
+    document.getElementById("geminiModelStatus").textContent = "";
+    const button = document.getElementById("refreshGeminiModels");
+    button.disabled = false;
+    button.textContent = "Load models";
+}
+
+async function loadGeminiModels() {
+    const keyInput = document.querySelector("[data-textsetting='geminiApiKey']");
+    const status = document.getElementById("geminiModelStatus");
+    const button = document.getElementById("refreshGeminiModels");
+    const apiKey = keyInput.value.trim();
+    if (!apiKey) {
+        status.textContent = "Enter your Google API key first.";
+        return;
+    }
+    if (geminiModelRequest) return;
+    const controller = new AbortController();
+    geminiModelRequest = controller;
+    const timeout = setTimeout(function () { controller.abort(); }, 15000);
+    button.disabled = true;
+    status.textContent = "Loading...";
+    try {
+        const models = new Set();
+        const pageTokens = new Set();
+        let pageToken = "";
+        do {
+            const url = new URL("https://generativelanguage.googleapis.com/v1beta/models");
+            url.searchParams.set("pageSize", "1000");
+            if (pageToken) url.searchParams.set("pageToken", pageToken);
+            const response = await fetch(url.href, {
+                headers: { "x-goog-api-key": apiKey },
+                cache: "no-store",
+                signal: controller.signal
+            });
+            if (geminiModelRequest !== controller || keyInput.value.trim() !== apiKey) return;
+            if (!response.ok) {
+                status.textContent = "Could not load models (HTTP " + response.status + "). Check your API key and retry.";
+                return;
+            }
+            const payload = await response.json();
+            if (!Array.isArray(payload.models)) throw new Error("Invalid model list");
+            payload.models.forEach(function (model) {
+                if (!model || typeof model.name !== "string") return;
+                const id = model.name.replace(/^models\//, "");
+                // generateContent also includes specialized image and speech models.
+                if (/^gemini-/.test(id) && !/(?:^|-)(?:embedding|image|tts|audio|live|robotics)(?:-|$)/i.test(id) &&
+                    Array.isArray(model.supportedGenerationMethods) && model.supportedGenerationMethods.indexOf("generateContent") !== -1) {
+                    models.add(id);
+                }
+            });
+            pageToken = payload.nextPageToken || "";
+            if (pageToken && pageTokens.has(pageToken)) throw new Error("Repeated model page");
+            pageTokens.add(pageToken);
+        } while (pageToken);
+        if (geminiModelRequest !== controller || keyInput.value.trim() !== apiKey) return;
+        geminiChatModels = Array.from(models).sort(function (a, b) { return a.localeCompare(b, undefined, { numeric: true }); });
+        populateGeminiModelSelect();
+        const current = document.getElementById("geminiChatModelInput").value;
+        status.textContent = !models.size ? "No text models returned. Enter a model ID manually." :
+            current && !models.has(current) ? "Saved model not in Google's list." : "";
+        button.textContent = "Refresh models";
+    } catch (error) {
+        if (geminiModelRequest === controller) {
+            status.textContent = error.name === "AbortError" ? "Request timed out. Retry or enter a model ID." :
+                "Could not load models. Retry or enter a model ID.";
+        }
+    } finally {
+        clearTimeout(timeout);
+        if (geminiModelRequest === controller) {
+            geminiModelRequest = null;
+            button.disabled = false;
+        }
+    }
 }
 
 // Handle AI provider visibility
@@ -8557,6 +8666,9 @@ function updateSettings(ele, sync = true, value = null) {
         return;
     }
     
+    // Keep the Gemini picker on the existing text setting used by all chatbot callers.
+    if (ele.dataset.textsetting === "geminimodel") populateGeminiModelSelect();
+
     // Handle text settings
     if (ele.dataset.textsetting && sync) {
         chrome.runtime.sendMessage({
@@ -8655,6 +8767,7 @@ function attachMultiAlertSoundLibrary(inputId) {
     window.SSNSoundLibrary.attach({
         container, input, id: inputId, label: ({
             'multi-alert-custombeep': 'Default alert sound',
+            'multi-alert-likesound': 'Like sound',
             'multi-alert-followsound': 'Follow sound',
             'multi-alert-subsound': 'Subscription sound',
             'multi-alert-donosound': 'Donation sound',
@@ -9106,6 +9219,8 @@ function buildMultiAlertPreviewDescriptor(category) {
         : `${profile.chatname} has subscribed`;
 
     switch (category) {
+        case 'like':
+            return { category, overrides: { ...commonOverrides, event: 'liked', chatmessage: 'liked the stream' } };
         case 'follow':
             return {
                 category,
@@ -9187,6 +9302,12 @@ function buildMultiAlertPreviewDescriptor(category) {
 
 function buildTestAlertPayload(category, overrides = {}) {
     const payloads = {
+        like: {
+            type: 'tiktok',
+            event: 'liked',
+            chatname: 'Jess',
+            chatmessage: 'sent a like'
+        },
         follow: {
             type: 'twitch',
             event: 'new_follower',
@@ -11978,6 +12099,7 @@ const PollManager = {
             multipleChoiceOptions: document.querySelector('[data-textsetting="multipleChoiceOptions"]').value,
             pollMatchMode: document.querySelector('[data-optionsetting="pollMatchMode"]')?.value || 'exact',
             pollStyle: document.querySelector('[data-optionsetting="pollStyle"]').value,
+            pollFontSize: document.querySelector('[data-numbersetting="pollFontSize"]').value,
             pollTimer: document.querySelector('[data-numbersetting="pollTimer"]').value,
             pollTimerState: document.querySelector('[data-setting="pollTimerState"]').checked,
             pollTally: document.querySelector('[data-setting="pollTally"]').checked,
@@ -12011,6 +12133,7 @@ const PollManager = {
             multipleChoiceOptions: '',
             pollMatchMode: 'exact',
             pollStyle: 'default',
+            pollFontSize: 100,
             pollTimer: 60,
             pollTimerState: false,
             pollTally: false,
@@ -12024,6 +12147,7 @@ const PollManager = {
             '[data-textsetting="multipleChoiceOptions"]': defaultSettings.multipleChoiceOptions,
             '[data-optionsetting="pollMatchMode"]': defaultSettings.pollMatchMode,
             '[data-optionsetting="pollStyle"]': defaultSettings.pollStyle,
+            '[data-numbersetting="pollFontSize"]': defaultSettings.pollFontSize,
             '[data-numbersetting="pollTimer"]': defaultSettings.pollTimer,
             '[data-setting="pollTimerState"]': defaultSettings.pollTimerState,
             '[data-setting="pollTally"]': defaultSettings.pollTally,
@@ -12060,6 +12184,7 @@ const PollManager = {
             '[data-textsetting="multipleChoiceOptions"]': poll.settings.multipleChoiceOptions,
             '[data-optionsetting="pollMatchMode"]': poll.settings.pollMatchMode || 'exact',
             '[data-optionsetting="pollStyle"]': poll.settings.pollStyle,
+            '[data-numbersetting="pollFontSize"]': poll.settings.pollFontSize || 100,
             '[data-numbersetting="pollTimer"]': poll.settings.pollTimer,
             '[data-setting="pollTimerState"]': poll.settings.pollTimerState,
             '[data-setting="pollTally"]': poll.settings.pollTally,
@@ -12103,9 +12228,10 @@ const PollManager = {
             }
 
             pollElement.innerHTML = `
-                <div class="poll-name" style="flex-grow: 1;">${poll.name}</div>
+                <div class="poll-name" style="flex-grow: 1;"></div>
                 <button class="delete-poll" style="background: none; border: none; color: #ff4444; cursor: pointer; padding: 0 5px;">×</button>
             `;
+            pollElement.querySelector('.poll-name').textContent = poll.name;
             container.appendChild(pollElement);
         });
     },
@@ -12515,7 +12641,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		event.stopPropagation()
 		chrome.runtime.sendMessage({cmd: "setOnOffState", data: {value: !isExtensionOn}}, function (response) {
 			chrome.runtime.lastError;
-			update(response);
+			update(response, false);
 		});
 		return false;
 	};
@@ -12590,6 +12716,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	moveHypetrainOptionsIntoMetaSection();
 
 	attachOverlayPreviewControls('multialerts', [
+		{ id: 'multi-alert-preview-like', descriptor: () => buildMultiAlertPreviewDescriptor('like') },
 		{ id: 'multi-alert-preview-follow', descriptor: () => buildMultiAlertPreviewDescriptor('follow') },
 		{ id: 'multi-alert-preview-sub', descriptor: () => buildMultiAlertPreviewDescriptor('subscription') },
 		{ id: 'multi-alert-preview-dono', descriptor: () => buildMultiAlertPreviewDescriptor('donation') },
@@ -13068,6 +13195,16 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 		addPopupSearchVisibleText(parts, element);
 		addPopupSearchAttributes(parts, element);
+		if (/^(input|select|textarea)$/i.test(element.tagName || '')) {
+			// Some fields have a label beside them rather than a dedicated row.
+			Array.prototype.forEach.call(element.labels || [], function(label) {
+				addPopupSearchVisibleText(parts, label);
+			});
+			var previous = element.previousElementSibling;
+			if (previous && /^(label|span)$/i.test(previous.tagName) && !isPopupSearchExplicitlyHidden(previous)) {
+				addPopupSearchVisibleText(parts, previous);
+			}
+		}
 
 		var searchable = element.querySelectorAll('[title], [aria-label], [alt], [data-keywords], [data-search], input, textarea, select, label, img');
 		searchable.forEach(function(child) {
@@ -13491,13 +13628,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 
 	function getPopupSearchRows(wrapper) {
-		var rows = wrapper.querySelectorAll('.options_group > *, .options_group > span > *, .options > :not(.options_group), .options > .overlay-config-section > *, .options_group > .game-config-section > *, .collapsible-text > :not(.options)');
+		var rows = wrapper.querySelectorAll('.options_group > *, .options_group > span > *, .options > :not(.options_group), .options > .overlay-config-section > *, .options_group > .game-config-section > *, .collapsible-text > :not(.options), .popup-toggle-row');
 		var filtered = [];
+		var seen = new Set();
 		function addRow(row) {
 			if (!row.classList || row.classList.contains('options_group') || row.classList.contains('options') || /^(script|style|template|br)$/i.test(row.tagName || '')) {
 				return;
 			}
-			if (filtered.indexOf(row) === -1) {
+			if (!seen.has(row)) {
+				seen.add(row);
 				filtered.push(row);
 			}
 		}
@@ -13507,6 +13646,23 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				return;
 			}
 			container.querySelectorAll(':scope > div, :scope > h3, :scope > p, :scope > span').forEach(addRow);
+		});
+		// Discover fields at any depth, including controls inside closed details.
+		// Keep a complete toggle/field row, but never promote it to a settings panel.
+		wrapper.querySelectorAll('input:not(.collapsible-input):not([type="hidden"]), select, textarea, button').forEach(function(control) {
+			var row = control.closest('.colorInputRow, .textInputContainer, .popup-toggle-row');
+			if (!row || !wrapper.contains(row)) {
+				row = control.parentElement;
+				if (row && row.classList.contains('switch')) row = row.parentElement;
+				if (!row || row === wrapper ||
+					!row.matches('div, p, li, label, span') ||
+					row.matches('.options, .options_group, .collapsible-text, .popup-settings-panel') ||
+					row.querySelector(':scope > div input, :scope > div select, :scope > div textarea, details, .options_group') ||
+					row.querySelectorAll('select, textarea, label.switch').length > 1) {
+					row = control;
+				}
+			}
+			addRow(row);
 		});
 		return filtered;
 	}
@@ -13569,6 +13725,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				return;
 			}
 			if (!isPopupSearchExplicitlyHidden(element)) {
+				getPopupSearchRows(element).forEach(function(row) {
+					if (!isPopupSearchExplicitlyHidden(row)) {
+						index.topLevel.push({element: row, text: getPopupSearchText(row)});
+					}
+				});
 				index.topLevel.push({
 					element: element,
 					text: getPopupSearchText(element)
@@ -13626,9 +13787,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				return;
 			}
 			matchedElements.add(element);
-			if (matches.length < resultLimit) {
-				matches.push({element: element, wrapper: wrapper || null});
-			}
+			matches.push({element: element, wrapper: wrapper || null});
 		}
 
 		popupSearchIndex.wrappers.forEach(function(wrapperRecord) {
@@ -13637,15 +13796,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			var sectionMatches = popupSearchTextMatches(wrapperRecord.sectionText, terms);
 			rows.forEach(function(rowRecord) {
 				if (popupSearchRecordMatches(rowRecord, terms)) {
-					var matchElement = rowRecord.element;
-					var parent = matchElement.parentElement;
-					while (parent && parent !== wrapper) {
-						if (wrapperRecord.rowElementSet.has(parent)) {
-							matchElement = parent;
-						}
-						parent = parent.parentElement;
-					}
-					addResult(matchElement, wrapper);
+					addResult(rowRecord.element, wrapper);
 				}
 			});
 			if (sectionMatches) {
@@ -13665,6 +13816,21 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 		});
 
+		// A nested match must not also produce a result for its entire panel.
+		// Apply this across all sections before limiting the number of results.
+		var matchingContainers = new Set();
+		matches.forEach(function(record) {
+			var parent = record.element.parentElement;
+			while (parent && parent !== document.body) {
+				if (matchedElements.has(parent)) matchingContainers.add(parent);
+				parent = parent.parentElement;
+			}
+		});
+		matches = matches.filter(function(record) {
+			return !matchingContainers.has(record.element);
+		});
+		matchingContainers.forEach(function(element) { matchedElements.delete(element); });
+		matches = matches.slice(0, resultLimit);
 		renderPopupSearchResults(matches, matchedElements.size);
 		setPopupSearchActive(true, matchedElements.size === 0);
 	}
@@ -13876,6 +14042,24 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		testSelectedLLMProviderButton.addEventListener('click', testSelectedLLMProvider);
 	}
 	const refreshOpenCodeModelsButton = document.getElementById('refreshOpenCodeModels');
+	const refreshGeminiModelsButton = document.getElementById('refreshGeminiModels');
+	if (refreshGeminiModelsButton) {
+		refreshGeminiModelsButton.addEventListener('click', loadGeminiModels);
+		document.querySelector("[data-textsetting='geminiApiKey']").addEventListener('input', resetGeminiModels);
+		document.getElementById('geminiChatModelSelect').addEventListener('change', function() {
+			const manual = this.value === 'custom';
+			document.getElementById('geminiChatModelCustom').classList.toggle('hidden', !manual);
+			const input = document.getElementById('geminiChatModelInput');
+			if (manual) {
+				input.focus();
+			} else {
+				input.value = this.value;
+				updateSettings(input);
+				document.getElementById('geminiModelStatus').textContent = '';
+			}
+		});
+		populateGeminiModelSelect();
+	}
 	if (refreshOpenCodeModelsButton) {
 		refreshOpenCodeModelsButton.addEventListener('click', function() {
 			loadOpenCodeModels(true);
@@ -14096,6 +14280,50 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 			reader.readAsText(file);
 		});
+	}
+
+	// Music: show the fields for the selected source and report the host status while the panel is open.
+	const musicSource = document.getElementById('musicSource');
+	if (musicSource) {
+		const musicStatus = document.getElementById('musicStatus');
+		const updateMusicFields = () => {
+			document.getElementById('musicWnpFields').hidden = musicSource.value !== 'wnp';
+			document.getElementById('musicFileFields').hidden = musicSource.value !== 'file';
+			document.getElementById('musicExpiryFields').hidden = musicSource.value === 'spotify';
+		};
+		const describeMusicStatus = response => {
+			if (response.enabled === false) return 'Music is off.';
+			if (response.message) return response.message;
+			const status = response.music && response.music.status;
+			if (response.summary) return ({ paused: 'Paused: ', stopped: 'Stopped: ' }[status] || 'Now playing: ') + response.summary;
+			return status === 'stopped' ? 'Nothing is playing.' : 'Waiting for a track.';
+		};
+		const refreshMusicStatus = () => {
+			// Saved settings are applied to the selector without a change event.
+			updateMusicFields();
+			const panelOpen = document.getElementById('wrapper-music').checked && musicSource.getClientRects().length;
+			if (document.hidden || !panelOpen) return;
+			chrome.runtime.sendMessage({ cmd: 'musicStatus' }, response => {
+				if (chrome.runtime.lastError || !response) return;
+				const text = describeMusicStatus(response);
+				// Leave an unchanged live region alone so it is not announced again.
+				if (musicStatus.textContent !== text) musicStatus.textContent = text;
+				document.getElementById('musicChooseFile').disabled = !response.fileAvailable;
+				document.getElementById('musicFileName').textContent = response.fileName || '';
+			});
+		};
+		musicSource.addEventListener('change', updateMusicFields);
+		document.getElementById('musicEnabled').addEventListener('change', () => setTimeout(refreshMusicStatus, 100));
+		document.getElementById('wrapper-music').addEventListener('change', refreshMusicStatus);
+		document.getElementById('musicChooseFile').addEventListener('click', () => {
+			chrome.runtime.sendMessage({ cmd: 'musicSelectFile' }, result => {
+				if (chrome.runtime.lastError || !result || result.canceled) return;
+				musicStatus.textContent = result.error || result.name || '';
+				if (result.name) document.getElementById('musicFileName').textContent = result.name;
+			});
+		});
+		setInterval(refreshMusicStatus, 2000);
+		refreshMusicStatus();
 	}
 
 	// Initialize Spotify section inputs and handle manual saving
@@ -15234,6 +15462,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	// Handle per-type alert sound upload buttons
 	const alertSoundUploads = [
 		{ btnId: 'uploadMultiAlertSoundBtn', inputId: 'multi-alert-custombeep' },
+		{ btnId: 'uploadLikeSoundBtn', inputId: 'multi-alert-likesound' },
 		{ btnId: 'uploadFollowSoundBtn', inputId: 'multi-alert-followsound' },
 		{ btnId: 'uploadSubSoundBtn', inputId: 'multi-alert-subsound' },
 		{ btnId: 'uploadDonoSoundBtn', inputId: 'multi-alert-donosound' },

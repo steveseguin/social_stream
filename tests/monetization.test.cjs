@@ -441,9 +441,9 @@ test('Switching eBay environments preserves separate products and credentials an
 test('An unavailable eBay service cannot enable the source or overwrite other support settings', async () => {
 	const s = service();
 	await s.request('save', { config: { wishlist: { enabled: true, url } } });
-	s.c.fetch = async () => ({ ok: false, status: 404 });
+	s.c.fetch = async () => new Response('', { status: 404 });
 	const reply = await s.request('save', { config: { ebay: { enabled: true } } });
-	assert.match(reply.error, /not available/);
+	assert.equal(reply.error, 'This eBay tool needs an updated SSN server.');
 	const saved = await s.request('get');
 	assert.equal(saved.config.ebay.enabled, false);
 	assert.equal(saved.config.wishlist.enabled, true);

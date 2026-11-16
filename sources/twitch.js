@@ -1107,6 +1107,11 @@
 		
 		var mod = false;
 		var vip = false;
+		var bot = false;
+		if (globalThis.SSNTwitchBots) {
+			var loginElement = displayNameEle && displayNameEle.closest("[data-a-user]");
+			bot = globalThis.SSNTwitchBots.isKnownBot(loginElement ? loginElement.getAttribute("data-a-user") : username);
+		}
 		
 		try {
 			const badges = ele.querySelectorAll(SELECTORS.chatBadges);
@@ -1132,6 +1137,9 @@
 
 				if (!mod && isTwitchModeratorBadge(badge)) {
 					mod = true;
+				}
+				if (!bot && globalThis.SSNTwitchBots && globalThis.SSNTwitchBots.isBotBadgeElement(badge)) {
+					bot = true;
 				}
 				if (!vip && loweredBadgeText === "vip") {
 					vip = true;
@@ -1495,6 +1503,9 @@
 		
 		if (mod){
 			data.mod = true;
+		}
+		if (bot){
+			data.bot = true;
 		}
 		if (vip){
 			data.vip = true;

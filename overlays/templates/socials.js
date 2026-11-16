@@ -566,7 +566,14 @@
 		category: "socials",
 		description: "A tidy card listing where to find you, with an optional QR code.",
 		size: [420, 420],
-		sizeFor: function (c) { return c.layout === "row" ? [960, 110] : c.layout === "grid" || c.qr ? [720, 420] : [420, 420]; },
+		sizeFor: function (c) {
+			if (c.layout === "row") { return [960, 110]; }
+			if (c.layout === "grid" || c.qr) { return [720, 420]; }
+			// A long list or bigger text needs a taller source than the default, or the card is cut off top and bottom.
+			var rows = SSO.parseSocials(c.socials).length;
+			var tall = c.fontsize * (2.3 + (c.title ? 1.9 : 0) + (c.subtitle ? 1.9 : 0) + rows * (c.netlabel ? 3.3 : 2.6)) + 30;
+			return [420, Math.max(420, Math.ceil(tall / 10) * 10)];
+		},
 		libs: ["thirdparty/qrcode.min.js"],
 		fields: [
 			{ key: "title", label: "Title", type: "text", group: "Content", default: "Find me online" },
@@ -609,6 +616,7 @@
 			".sc-list{display:flex;flex-direction:column;}",
 			".sc.grid .sc-list{flex-direction:row;flex-wrap:wrap;margin:0 -.25em;}",
 			".sc.grid .sc-row{width:calc(50% - .5em);margin:.25em;}",
+			".sc.grid .sc-row:last-child:nth-child(odd){width:calc(100% - .5em);}",
 			".sc.grid .sc-main{width:23em;}",
 			".sc.row .sc-list{flex-direction:row;} .sc.row .sc-row{margin:0 .3em;} .sc.row .sc-title{margin:0 .7em 0 .2em;white-space:nowrap;}",
 			".sc.row{flex-direction:row;padding:.5em .7em;} .sc.row .sc-main{display:flex;align-items:center;}",

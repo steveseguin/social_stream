@@ -215,11 +215,25 @@
 			el.innerHTML = imgs.map(function (src, i) {
 				var img = '<img src="' + esc(src) + '" alt="" style="border-radius:' + c.radius + "px;" + (c.fit === "cover" ? "width:100%;height:100%;object-fit:cover;" : "") + '">';
 				var cap = caps[i] ? '<div class="ss-cap">' + esc(caps[i]) + "</div>" : "";
-				return '<div class="ss-i">' + (c.transition === "polaroid" ? '<div style="--r:' + ((Math.random() - 0.5) * 14).toFixed(1) + 'deg">' + img + cap + "</div>" : img + cap) + "</div>";
+				return '<div class="ss-i">' + (c.transition === "polaroid" ? '<div style="--r:' + ((Math.random() - 0.5) * 14).toFixed(1) + "deg" + (cap ? "" : ";padding-bottom:10px") + '">' + img + cap + "</div>" : img + cap) + "</div>";
 			}).join("");
 			root.appendChild(el);
 			var items = el.children;
 			if (!items.length) { return; }
+			if (c.transition === "polaroid") {
+				// The print has no fixed height, so a percentage limit on the photo does nothing and a tall photo
+				// pushed the border and caption off the source. Size the photo from the source instead.
+				var fitPile = function () {
+					var capH = caps.length ? c.fontsize * 1.75 : 10;
+					var maxH = Math.max(40, Math.round(el.clientHeight * 0.8 - capH - 10));
+					var maxW = Math.max(40, Math.round(el.clientWidth * 0.8 - 20));
+					var photos = el.querySelectorAll("img");
+					for (var k = 0; k < photos.length; k++) { photos[k].style.maxHeight = maxH + "px"; photos[k].style.maxWidth = maxW + "px"; }
+				};
+				fitPile();
+				window.addEventListener("resize", fitPile);
+				SSO.onCleanup(root, function () { window.removeEventListener("resize", fitPile); });
+			}
 			var i = 0;
 			items[0].className = "ss-i on";
 			if (items.length < 2) { return; }
@@ -451,6 +465,163 @@
 			} else {
 				SSO.startEngine("aquarium", inner, { transparent: true, count: c.count, speed: c.speed, c3: c.sand, fishSize: c.shape === "strip" ? 1.3 : 1.9 });
 			}
+		}
+	});
+
+	// ---------------------------------------------------------------- rotating logo cube
+	SSO.register({
+		id: "logocube",
+		name: "Rotating logo cube",
+		category: "socials",
+		description: "An old console-style block that turns to show the next logo, banner or short message, pausing on each face so it can be read.",
+		size: [480, 360],
+		fields: [
+			{ key: "faces", label: "Faces: an image link or a short message per line", type: "textarea", image: true, group: "Content", default: [SSO.assetBase() + "media/logo.png", "Thanks for watching", "!discord to join"].join("\n") },
+			{ key: "hold", label: "Seconds on each face", type: "number", group: "Content", default: 5, min: 1, max: 600, step: 0.5 },
+			{ key: "shape", label: "Shape", type: "select", group: "Motion", default: "4", options: [["4", "Cube"], ["3", "Triangle"], ["6", "Hexagon"]] },
+			{ key: "axis", label: "Turns", type: "select", group: "Motion", default: "y", options: [["y", "Sideways"], ["x", "Upwards"]] },
+			{ key: "turn", label: "Turn time (seconds)", type: "range", group: "Motion", default: 0.9, min: 0.2, max: 4, step: 0.1 },
+			{ key: "size", label: "Size (% of the source)", type: "range", group: "Style", default: 62, min: 20, max: 90, step: 1 },
+			{ key: "fit", label: "Image fit", type: "select", group: "Style", default: "contain", options: [["contain", "Show the whole image"], ["cover", "Fill and crop"]] },
+			{ key: "bg", label: "Face colour", type: "color", group: "Style", default: "141a2e" },
+			{ key: "bg2", label: "Second face colour (gradient)", type: "color", group: "Style", default: "2b3a67" },
+			{ key: "fg", label: "Text colour", type: "color", group: "Style", default: "ffffff" },
+			SSO.f.font("Rajdhani"),
+			{ key: "fontsize", label: "Text size", type: "range", group: "Text", default: 44, min: 10, max: 200, step: 1 }
+		],
+		presets: [
+			{ name: "Console cube", tags: ["console", "retro", "gaming"], values: {} },
+			{ name: "Sponsor prism", tags: ["pro", "simple"], values: { shape: "3", axis: "x", bg: "ffffff", bg2: "e5e7eb", fg: "111827", font: "Poppins", hold: 6 } },
+			{ name: "Neon hexagon", tags: ["cyber"], values: { shape: "6", bg: "12002b", bg2: "3b0764", fg: "67e8f9", font: "Orbitron", turn: 1.2 } },
+			{ name: "Message block", tags: ["simple", "cozy"], values: { faces: "Be kind in chat\nFollow for more\nNew video every Friday\nBack in 5", bg: "1f2937", bg2: "111827", font: "Poppins", fontsize: 36 } }
+		],
+		css: [
+			".lc{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;}",
+			".lc-cube{position:relative;flex:0 0 auto;transform-style:preserve-3d;will-change:transform;}",
+			".lc-face{position:absolute;left:0;top:0;width:100%;height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:var(--lc-pad,12px);text-align:center;line-height:1.15;font-weight:700;border:1px solid rgba(255,255,255,.22);-webkit-backface-visibility:hidden;backface-visibility:hidden;}",
+			".lc-face::after{content:'';position:absolute;left:0;top:0;right:0;bottom:0;background:#000;opacity:.5;pointer-events:none;transition:opacity var(--lc-turn,0s) ease;}",
+			".lc-face.on::after{opacity:0;}",
+			".lc-face img{display:block;max-width:100%;max-height:100%;}",
+			".lc-face.cover{padding:0;} .lc-face.cover img{width:100%;height:100%;object-fit:cover;}",
+			".lc-face span{display:block;width:100%;}"
+		].join("\n"),
+		render: function (root, c) {
+			SSO.loadFont(c.font);
+			var items = SSO.lines(c.faces);
+			var sides = parseInt(c.shape, 10);
+			if (sides !== 3 && sides !== 6) { sides = 4; }
+			var upward = c.axis === "x";
+			var angle = 360 / sides;
+			var turn = Math.max(0.2, parseFloat(c.turn) || 0.9);
+			var hold = Math.max(1, parseFloat(c.hold) || 5);
+			// Respect the viewer's reduced-motion setting: faces still change, but cut instead of spinning.
+			var reduce = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+			var stage = document.createElement("div");
+			stage.className = "lc";
+			var cube = document.createElement("div");
+			cube.className = "lc-cube";
+			// Shade a child layer; filters on the transformed faces can hide their backgrounds in OBS.
+			if (!reduce) { cube.style.setProperty("--lc-turn", turn + "s"); }
+			stage.appendChild(cube);
+			root.appendChild(stage);
+			if (!items.length) { return; }
+			var faces = [];
+			var i;
+			for (i = 0; i < sides; i++) {
+				var face = document.createElement("div");
+				face.className = "lc-face";
+				face.style.color = SSO.color(c.fg);
+				face.style.fontFamily = SSO.fontStack(c.font);
+				face.style.background = "linear-gradient(145deg," + SSO.color(c.bg2) + "," + SSO.color(c.bg) + ")";
+				cube.appendChild(face);
+				faces.push(face);
+			}
+			function isImage(line) {
+				return /^(https?:)?\/\/|^data:image\/|^\.{0,2}\//i.test(line) || /\.(png|jpe?g|gif|webp|svg|avif)(\?.*)?$/i.test(line);
+			}
+			function fitText(face) {
+				var span = face.querySelector("span");
+				if (!span || !face.clientWidth) { return; }
+				var size = c.fontsize;
+				var style = window.getComputedStyle(face);
+				var room = face.clientHeight - (parseFloat(style.paddingTop) || 0) - (parseFloat(style.paddingBottom) || 0);
+				span.style.overflowWrap = "normal";
+				span.style.fontSize = size + "px";
+				// Long messages shrink to stay on the face instead of being cut off or split mid-word.
+				while (size > 1 && (span.scrollWidth > span.clientWidth + 1 || span.offsetHeight > room)) {
+					size = Math.max(1, Math.floor(size * 0.9));
+					span.style.fontSize = size + "px";
+				}
+				// Only a single very long word can still be too wide at the smallest size; let that one break.
+				if (span.scrollWidth > span.clientWidth + 1) { span.style.overflowWrap = "break-word"; }
+			}
+			function setFace(faceIndex, itemIndex) {
+				var face = faces[((faceIndex % sides) + sides) % sides];
+				var line = items[((itemIndex % items.length) + items.length) % items.length];
+				if (face.getAttribute("data-line") === line) { return; }
+				face.setAttribute("data-line", line);
+				face.textContent = "";
+				if (isImage(line)) {
+					var img = document.createElement("img");
+					img.alt = "";
+					img.onerror = function () { img.style.visibility = "hidden"; };
+					img.src = line;
+					face.className = "lc-face" + (c.fit === "cover" ? " cover" : "") + (face.className.indexOf(" on") !== -1 ? " on" : "");
+					face.appendChild(img);
+				} else {
+					var span = document.createElement("span");
+					span.textContent = line;
+					face.className = "lc-face" + (face.className.indexOf(" on") !== -1 ? " on" : "");
+					face.appendChild(span);
+					fitText(face);
+				}
+			}
+			// Faces this many steps away are turned away from the camera, so their content can be swapped unseen.
+			var hidden = Math.ceil(sides / 4);
+			var step = 0;
+			var apothem = 0;
+			function place() {
+				cube.style.transform = "translateZ(" + (-apothem) + "px) " + (upward ? "rotateX(" + (step * angle) + "deg)" : "rotateY(" + (-step * angle) + "deg)");
+			}
+			function layout() {
+				var W = root.clientWidth || 480, H = root.clientHeight || 360;
+				var share = SSO.clamp(parseFloat(c.size) || 62, 20, 90) / 100;
+				// The prism swings wider than one face while it turns; size the face so the whole turn stays inside the source.
+				var swing = Math.sin(Math.PI / sides) / 1.12;
+				var w = Math.max(40, Math.round(W * share * (upward ? 1 / 1.12 : swing)));
+				var h = Math.max(30, Math.round(H * share * (upward ? swing : 1 / 1.12)));
+				apothem = Math.round(((upward ? h : w) / 2) / Math.tan(Math.PI / sides));
+				cube.style.width = w + "px";
+				cube.style.height = h + "px";
+				// Padding follows the shorter side, so a wide banner face keeps room for its text.
+				cube.style.setProperty("--lc-pad", Math.round(Math.min(w, h) * 0.07) + "px");
+				stage.style.perspective = Math.round(Math.max(w, h) * 3.2) + "px";
+				for (var k = 0; k < sides; k++) {
+					faces[k].style.transform = (upward ? "rotateX(" + (-k * angle) + "deg)" : "rotateY(" + (k * angle) + "deg)") + " translateZ(" + apothem + "px)";
+					fitText(faces[k]);
+				}
+				place();
+			}
+			for (i = -(hidden - 1); i <= hidden; i++) { setFace(i, i); }
+			faces[0].className += " on";
+			layout();
+			window.addEventListener("resize", layout);
+			var swapTimer = null;
+			if (SSO.onCleanup) { SSO.onCleanup(root, function () { clearTimeout(swapTimer); window.removeEventListener("resize", layout); }); }
+			if (items.length < 2) { return; }
+			// Start animating only after the first placement, so the cube does not swing in on load.
+			setTimeout(function () { if (!reduce) { cube.style.transition = "transform " + turn + "s cubic-bezier(.6,.04,.3,1)"; } }, 60);
+			setInterval(function () {
+				var leaving = faces[((step % sides) + sides) % sides];
+				step++;
+				var arriving = faces[((step % sides) + sides) % sides];
+				leaving.className = leaving.className.replace(" on", "");
+				if (arriving.className.indexOf(" on") === -1) { arriving.className += " on"; }
+				place();
+				// Once the turn has finished, load the upcoming item onto a face that is out of sight.
+				clearTimeout(swapTimer);
+				swapTimer = setTimeout(function () { setFace(step + hidden, step + hidden); }, reduce ? 0 : turn * 1000 + 40);
+			}, (hold + (reduce ? 0 : turn)) * 1000);
 		}
 	});
 })();

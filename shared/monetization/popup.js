@@ -372,6 +372,12 @@
             by('overlay').href = u.href;
 			by('overlay').textContent = tr('money-open-overlay', 'Open overlay') + ': ' + by('mode').options[by('mode').selectedIndex].textContent;
 		} catch (_) {}
+        var guideLanguage = typeof getSelectedTranslationLinkParam === 'function' ? new URLSearchParams(getSelectedTranslationLinkParam().replace(/^&/, '')).get('ln') || '' : '';
+        guideLanguage = guideLanguage.toLowerCase();
+        if (['es', 'pt-br', 'ru', 'fr', 'de', 'ja', 'zh-cn', 'zh-tw', 'it', 'pl', 'ko', 'uk', 'ar', 'tr', 'cs', 'th', 'et'].indexOf(guideLanguage) === -1) guideLanguage = '';
+        var guideURL = 'https://socialstream.ninja/' + (guideLanguage ? guideLanguage + '/' : '') + 'docs/ninjabacker.html';
+        by('ninja-guide').href = guideURL;
+        document.getElementById('tipjar-ninja-guide').href = guideURL;
 		var name = by('ninja-username').value.trim();
 		by('ninja-link').value = /^[a-z0-9_-]{1,50}$/i.test(name) ? 'https://ninjabacker.com/' + name.toLowerCase() : '';
 		var preview = new URL('monetization.html', location.href); preview.searchParams.set('demo', ''); preview.searchParams.set('mode', by('mode').value);
@@ -448,6 +454,7 @@
 		by('ninja-delivery').value = displayConfig.ninja.reliable ? 'reliable' : 'live';
 		showNinjaDelivery();
 		by('ninja-webhook').value = reply.ninjaReceiver && reply.ninjaReceiver.webhook || '';
+        by('ninja-copy').disabled = !by('ninja-webhook').value;
 		by('ninja-secret').placeholder = moneyText(by('ninja-webhook').value ? 'Saved securely on the SSN API' : 'Generate in the NinjaBacker dashboard');
 		by('throne-username').value = displayConfig.throne.username;
 		by('ebay-display').value = displayConfig.ebay.display;
@@ -619,6 +626,15 @@
 	by('mode').addEventListener('change', showMode);
 	function showNinjaDelivery() { var reliable = by('ninja-delivery').value === 'reliable'; by('ninja-reliable-panel').hidden = !reliable; by('ninja-live-help').hidden = reliable; }
 	by('ninja-delivery').addEventListener('change', showNinjaDelivery);
+    by('ninja-copy').onclick = function () {
+        var input = by('ninja-webhook');
+        if (!input.value) return;
+        function fallback() { input.focus(); input.select(); status(tr('ninja-copy-selected', 'Copy the selected receiver URL.'), 'ninja-status'); }
+        if (!navigator.clipboard) { fallback(); return; }
+        navigator.clipboard.writeText(input.value).then(function () {
+            status(tr('ninja-receiver-copied', 'Receiver URL copied. Paste it into NinjaBacker > Webhook.'), 'ninja-status');
+        }).catch(fallback);
+    };
 	by('ninja-webhook').addEventListener('click', function () { this.select(); });
 	by('ninja-username').addEventListener('input', links);
 	by('copy').onclick = function () {

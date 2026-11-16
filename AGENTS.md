@@ -49,6 +49,11 @@ If you need more context on how Electron wiring differs from the extension boots
 - Additional, non-standard details that truly need to be transmitted belong inside the top-level `meta` object. Populate `meta` with plain JSON values (no functions/classes) so downstream consumers can safely parse them.
 - Avoid emitting ad-hoc top-level keys—coordinate changes through the event reference doc before shipping.
 
+## Hosted Overlay Reliability
+
+- Remember the overlay reports discussed on November 12, 2026, including a report from two days earlier. One user initially recovered in beta while fetched stable/beta Featured code matched, then reported that both fail with the shown OBS Windows graphics settings (Power Saving, AMD Radeon Graphics); giving SSN the same setting did not help. Steve recalled moving the vdo.socialstream.ninja server from Google to Vultr roughly one or two weeks earlier, but the migration timing and incident cause remain unconfirmed. Treat these clues separately from the other users' unexplained black/white backgrounds. Cache corruption or a GitHub outage was not established.
+- For hosted overlay hardening, reuse the existing SSApp mirror/recovery patterns where appropriate, but account for ordinary OBS/browser pages lacking the app bridge. Keep stable and beta assets separate, preserve session/password/connection parameters, and avoid duplicate initialization during retries.
+
 ## Custom Overlay Notes
 
 - Before adding an overlay or operator page, trace an existing equivalent from popup URL generation through the receiver, host handler, and reply. Treat Chrome extension and SSApp as equal targets. Do not assume an OBS API dock is the right transport merely because the new page also has controls; compare the Giveaway Manager and `ssn-streamdeck/plugin/src/api/` for native, P2P, and explicit API patterns.

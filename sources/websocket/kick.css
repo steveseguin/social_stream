@@ -379,6 +379,91 @@ body.hide-metrics #viewer-count {
     margin-bottom: 10px;
 }
 
+/* Stream details panel */
+.stream-details-panel .panel-summary h2 {
+    white-space: nowrap;
+}
+
+.stream-details-preview {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--kick-muted);
+    font-size: 13px;
+}
+
+.stream-details-toggle {
+    flex-shrink: 0;
+    padding: 5px 12px;
+    border: 1px solid #334153;
+    border-radius: 4px;
+    background: #1a212d;
+    color: #d8e2ec;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.stream-details-toggle::after {
+    content: "Edit";
+}
+
+.stream-details-panel[open] .stream-details-toggle::after {
+    content: "Close";
+}
+
+.stream-details-panel .panel-summary:hover .stream-details-toggle {
+    border-color: #4a5c72;
+}
+
+.stream-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+    gap: 10px 12px;
+}
+
+.stream-details-grid > div {
+    min-width: 0;
+}
+
+.stream-details-grid input:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.stream-field-wide {
+    grid-column: 1 / -1;
+}
+
+.stream-field-hint {
+    font-weight: 400;
+    color: var(--kick-muted);
+}
+
+.stream-details-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.stream-details-status {
+    flex: 1 1 160px;
+    min-width: 0;
+    color: var(--kick-muted);
+    font-size: 13px;
+}
+
+.stream-details-status[data-state="success"] {
+    color: #bcff9c;
+}
+
+.stream-details-status[data-state="error"] {
+    color: var(--kick-danger-fg);
+}
+
 .log {
     background: var(--kick-log-bg);
     border: 1px solid #273241;
@@ -718,6 +803,7 @@ img.zero-width-emote-centered {
     }
 
     .kick-page:not(.compact-settings-open) .channel-header,
+    .kick-page:not(.compact-settings-open) #kick-stream-details,
     .kick-page:not(.compact-settings-open) #kick-events,
     .kick-page:not(.compact-settings-open) .sidebar,
     .kick-page .chat-panel > .panel-summary,

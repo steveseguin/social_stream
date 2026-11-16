@@ -27,7 +27,9 @@ document.addEventListener('DOMContentLoaded', function() {
 		const showTestimonial = (index) => {
 			// Update active dot
 			dots.forEach(d => d.classList.remove('active'));
-			dots[index].classList.add('active');
+			if (dots[index]) {
+				dots[index].classList.add('active');
+			}
 
 			// Slide to the selected testimonial
 			testimonialSlider.style.transform = `translateX(-${index * 100}%)`;

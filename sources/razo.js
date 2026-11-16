@@ -14,6 +14,31 @@
 	var rows = 'article[id^="chat-msg-"][data-chat-line]';
 	// Keep native IDs for this page's lifetime, including rows pruned and replayed by Razo.
 	var messages = new Map();
+	var lastViewerCount = null;
+	var viewerPage = "";
+
+	function checkViewers(refresh) {
+		if (!ready || !enabled || !isChatPage() || !(settings.showviewercount || settings.hypemode)) {
+			lastViewerCount = null;
+			return;
+		}
+		if (viewerPage !== location.pathname) {
+			viewerPage = location.pathname;
+			lastViewerCount = null;
+		}
+		// The chat header's title has the exact audience count, unlike compact
+		// watch-page labels or the sidebar's counts for other channels.
+		var counter = document.querySelector('[data-rz-chat2] [data-viewers-toggle], [data-deck-viewers-slot] [data-viewers-toggle]');
+		var match = counter && /^(\d+) watching$/.exec(counter.getAttribute("title") || "");
+		if (!match) return; // Unavailable/hidden counts must not become zero.
+		var count = Number(match[1]);
+		if (!Number.isSafeInteger(count)) return;
+		if (!refresh && count === lastViewerCount) return;
+		lastViewerCount = count;
+		chrome.runtime.sendMessage(chrome.runtime.id, { message: {
+			type: "razo", event: "viewer_update", meta: count
+		} }, function () { void chrome.runtime.lastError; });
+	}
 
 	function escapeHtml(value) {
 		return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -122,8 +147,9 @@
 			if (row) processRow(row);
 			mutation.addedNodes.forEach(scan);
 		});
+		checkViewers();
 	});
-	observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["id", "data-chat-line", "data-chat-text", "data-chat-emote", "src", "alt", "class"] });
+	observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["id", "data-chat-line", "data-chat-text", "data-chat-emote", "src", "alt", "class", "title"] });
 
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		if (request === "getSource") { sendResponse("razo"); return; }
@@ -136,6 +162,7 @@
 		if (request && typeof request === "object") {
 			if ("settings" in request) settings = request.settings || {};
 			if ("state" in request) enabled = !!request.state;
+			checkViewers();
 			sendResponse(true);
 			return;
 		}
@@ -149,5 +176,7 @@
 		}
 		ready = true;
 		scan(document.documentElement);
+		checkViewers();
 	});
+	setInterval(function () { checkViewers(true); }, 30000);
 })();

@@ -2511,7 +2511,11 @@ async function ensureChatClientInstance() {
 				const ok = await updateChannelInformation(payload || {});
 				if (!ok) console.warn('Channel update failed');
 			} else if (action === 'refresh_channel_info') {
-				await refreshChannelInformation();
+				const generation = channelInformationGeneration + 1;
+				const info = await refreshChannelInformation();
+				if (!info && generation === channelInformationGeneration) {
+					notifyPage('stream_details_status', { message: 'Could not load the current stream details.', state: 'error', operation: 'load' });
+				}
 			}
 		} catch (e) {
 			console.error('UI action error', e);
@@ -2799,6 +2803,7 @@ async function ensureChatClientInstance() {
 	});
 
 	let twitchPinControlQueue = Promise.resolve();
+	const twitchBanCommands = new Map();
 
 	async function handleSourceControlRequest(request) {
 		const payload = request?.payload || {};
@@ -2807,6 +2812,11 @@ async function ensureChatClientInstance() {
 		}
 		if (request.control === 'timeoutUser') {
 			return syncDockTimeoutToTwitch(payload);
+		}
+		if (request.control === 'banCommand') {
+			const result = await runTwitchBanCommand(payload);
+			addEvent(result.ok ? 'Banned ' + payload.username + ' from Event Flow' : result.message);
+			return result;
 		}
 		if (request.control === 'pinMessage' || request.control === 'unpinMessage') {
 			if (!isAdvancedControlEnabled('syncPinMessages')) return false;
@@ -3851,6 +3861,13 @@ async function ensureChatClientInstance() {
 		data.membership = markSubscriberAsMembership ? subscriber : "";
 		data.subtitle = subtitle;
 		data.mod = mod;
+		if (normalizedPayload?.bot === true || (globalThis.SSNTwitchBots && (
+			globalThis.SSNTwitchBots.isKnownBot(user)
+			|| globalThis.SSNTwitchBots.hasBotBadge(parsedMessage.tags?.badges)
+			|| globalThis.SSNTwitchBots.hasBotBadge(parsedMessage.tags?.['source-badges'])
+		))) {
+			data.bot = true;
+		}
 
 		try {
 			if (userInfo && userInfo.profile_image_url) {
@@ -3889,6 +3906,19 @@ async function ensureChatClientInstance() {
 		// Message ID for deduplication
 		if (parsedMessage.tags && parsedMessage.tags.id) {
 			data.id = parsedMessage.tags.id;
+		}
+		// Keep the native command and role here, before SSN role overrides or flow edits.
+		// A ban request must refer back to this channel's recent, unconsumed chat message.
+		const commandText = String(getTwitchMessageText(normalizedPayload, parsedMessage.trailing) || '').trim();
+		if (data.id && commandText.charAt(0) === '!' && commandText.length <= 100 && !pendingMessage.deleted) {
+			const now = Date.now();
+			twitchBanCommands.forEach((entry, id) => { if (now - entry.received > 120000) twitchBanCommands.delete(id); });
+			if (!twitchBanCommands.has(data.id)) twitchBanCommands.set(data.id, {
+				text: commandText, allowed: mod === true || normalizeTwitchLogin(user) === normalizeTwitchLogin(channel),
+				channelId: currentChannelId, sourceName: sourceInfo.name, received: now, used: false,
+				sent: Number(parsedMessage.tags['tmi-sent-ts']) || now
+			});
+			while (twitchBanCommands.size > 100) twitchBanCommands.delete(twitchBanCommands.keys().next().value);
 		}
 		
 		} catch(e){
@@ -5279,25 +5309,55 @@ async function cleanupCurrentConnection() {
 		}
 	}
 
-	async function refreshChannelInformation() {
+	let channelInformationGeneration = 0;
+	async function refreshChannelInformation(afterSave = false) {
+		const generation = ++channelInformationGeneration;
+		const channelId = currentChannelId;
 		const channelInfo = await getCurrentChannelInformation();
-		if (!channelInfo) {
+		if (!channelInfo || channelId !== currentChannelId || generation !== channelInformationGeneration) {
 			return null;
 		}
 		const payload = {
 			title: channelInfo.title || '',
 			category: channelInfo.game_name || '',
-			categoryId: channelInfo.game_id || ''
+			categoryId: channelInfo.game_id || '',
+			channelId,
+			tags: channelInfo.tags,
+			afterSave
 		};
 		notifyPage('channel_info', payload);
 		return payload;
 	}
 
+	// Shows a stream details result under Recent Events and beside the editor's buttons.
+	function reportStreamDetails(message, state) {
+		addEvent(message);
+		notifyPage('stream_details_status', { message, state: state || 'error' });
+	}
+
 	async function updateChannelInformation(payload = {}) {
+		// A read started before this save must not replace the submitted fields.
+		channelInformationGeneration++;
 		try {
 			const token = getStoredToken();
-			if (!token || !currentChannelId) return false;
+			if (!token || !currentChannelId) {
+				reportStreamDetails('Connect to a channel before editing stream details.');
+				return false;
+			}
+			const channelId = currentChannelId;
 			const requestBody = {};
+			if (typeof payload.tags === 'string') {
+				if (payload.channelId !== channelId) {
+					reportStreamDetails('Channel changed. Reload the stream details first.');
+					return false;
+				}
+				const tags = payload.tags.split(',').map(tag => tag.trim()).filter(Boolean);
+				if (tags.length > 10 || tags.some(tag => !/^[\p{L}\p{N}]{1,25}$/u.test(tag))) {
+					reportStreamDetails('Use up to 10 tags, with 25 letters or numbers each.');
+					return false;
+				}
+				requestBody.tags = tags;
+			}
 			const title = (payload?.title || '').trim();
 			const category = (payload?.category || '').trim();
 			if (title) {
@@ -5306,15 +5366,20 @@ async function cleanupCurrentConnection() {
 			if (category) {
 				const gameId = await resolveGameId(category);
 				if (!gameId) {
-					addEvent(`Category lookup failed: ${category}`);
+					reportStreamDetails(`No Twitch category found for "${category}".`);
 					return false;
 				}
 				requestBody.game_id = gameId;
 			}
 			if (!Object.keys(requestBody).length) {
+				reportStreamDetails('Nothing to save yet.');
 				return false;
 			}
-			const response = await fetch(`https://api.twitch.tv/helix/channels?broadcaster_id=${currentChannelId}`, {
+			if (channelId !== currentChannelId || token !== getStoredToken()) {
+				reportStreamDetails('Channel or sign-in changed. Reload the stream details first.');
+				return false;
+			}
+			const response = await fetch(`https://api.twitch.tv/helix/channels?broadcaster_id=${channelId}`, {
 				method: 'PATCH',
 				headers: {
 					'Client-ID': getTwitchApiClientId(),
@@ -5326,15 +5391,18 @@ async function cleanupCurrentConnection() {
 			if (!response.ok) {
 				const errorData = await response.json().catch(() => ({}));
 				console.error('updateChannelInformation failed', errorData);
-				addEvent('Stream title/category update failed');
+				const reason = response.status === 401 || response.status === 403
+					? 'Twitch refused the change. Only the channel owner can edit stream details.'
+					: (typeof errorData.message === 'string' && errorData.message ? errorData.message : 'HTTP ' + response.status);
+				reportStreamDetails('Stream details not saved: ' + reason);
 				return false;
 			}
-			await refreshChannelInformation();
-			addEvent('Stream title/category updated');
+			await refreshChannelInformation(true);
+			reportStreamDetails('Stream details saved.', 'success');
 			return true;
 		} catch (error) {
 			console.error('updateChannelInformation error', error);
-			addEvent('Stream title/category update failed');
+			reportStreamDetails('Stream details not saved: could not reach Twitch.');
 			return false;
 		}
 	}
@@ -5456,6 +5524,52 @@ async function cleanupCurrentConnection() {
 			return { ok: true };
 		} catch (error) {
 			return { ok: false, unconfirmed: true, message: 'No confirmation received from Twitch. Check Twitch before trying again.' };
+		}
+	}
+
+	async function runTwitchBanCommand(payload) {
+		const entry = twitchBanCommands.get(payload.messageId);
+		const token = getStoredToken();
+		const channelId = currentChannelId;
+		const channelLogin = normalizeTwitchLogin(channel);
+		if (!entry || entry.used || Date.now() - entry.received > 120000 || Date.now() - entry.sent > 120000 ||
+			!entry.allowed || entry.channelId !== channelId || normalizeTwitchLogin(entry.sourceName) !== channelLogin ||
+			normalizeTwitchLogin(payload.sourceName) !== channelLogin) {
+			return { ok: false, message: 'Ban commands require a recent message from this Twitch channel\'s broadcaster or moderators.' };
+		}
+		const parts = entry.text.split(/\s+/);
+		const username = String(payload.username || '').toLowerCase();
+		if (!/^![a-zA-Z0-9_]+$/.test(payload.command || '') || parts.length !== 2 ||
+			parts[0].toLowerCase() !== payload.command.toLowerCase() || parts[1].replace(/^@/, '').toLowerCase() !== username ||
+			!/^[a-z0-9_]{1,25}$/.test(username)) return { ok: false, message: 'Invalid Twitch ban command.' };
+		if (!token || !channelId) return { ok: false, message: 'Sign in to the Twitch connection to use ban commands.' };
+		entry.used = true; // Do not replay a command, including after an uncertain API response.
+		try {
+			const moderator = await getCurrentModerator();
+			if (!moderator || !moderator.user_id || !hasTwitchScope(moderator, 'moderator:manage:banned_users')) {
+				return { ok: false, message: 'Reconnect Twitch with ban/timeout permission using a broadcaster or moderator account.' };
+			}
+			const userId = await getUserIdByLogin(username);
+			if (!userId) return { ok: false, message: 'Twitch user not found: ' + username };
+			if (String(userId) === String(channelId) || String(userId) === String(moderator.user_id)) {
+				return { ok: false, message: 'Cannot ban the broadcaster or the signed-in account.' };
+			}
+			if (token !== getStoredToken() || channelId !== currentChannelId || channelLogin !== normalizeTwitchLogin(channel)) {
+				return { ok: false, message: 'Twitch connection changed. Send the command again in the intended channel.' };
+			}
+			const response = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${encodeURIComponent(channelId)}&moderator_id=${encodeURIComponent(moderator.user_id)}`, {
+				method: 'POST', headers: { 'Client-ID': getTwitchApiClientId(), 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+				body: JSON.stringify({ data: { user_id: String(userId), reason: 'Banned by Event Flow command ' + payload.command } })
+			});
+			if (response.ok) return { ok: true };
+			const error = await response.json().catch(() => ({}));
+			let reason = error.message || 'Twitch returned HTTP ' + response.status;
+			if (response.status === 401) reason = 'Reconnect Twitch to grant ban/timeout permission.';
+			if (response.status === 403) reason = 'Broadcaster or moderator access is required in this Twitch channel.';
+			if (response.status === 429) reason = 'Twitch rate limit reached. Try again later.';
+			return { ok: false, message: reason };
+		} catch (_) {
+			return { ok: false, unconfirmed: true, message: 'No ban confirmation received. Check Twitch before sending another command.' };
 		}
 	}
 
@@ -5612,6 +5726,7 @@ async function cleanupCurrentConnection() {
 			canModerate: isBroadcaster || isModerator,
 			hasChannelModerateScope: !!scopes['channel:moderate'],
 			canManageBroadcast: isBroadcaster && !!scopes['channel:manage:broadcast'],
+			broadcastPermissionKnown: !!tokenInfo && Array.isArray(tokenInfo.scopes),
 			canManageAds: !!scopes['channel:manage:ads'],
 			canReadAds: !!scopes['channel:read:ads'],
 			canReadBits: !!scopes['bits:read'],
@@ -5643,9 +5758,26 @@ async function cleanupCurrentConnection() {
 			elements.moderationControls.style.display = 'block';
 		}
 		updateModerationRequirements(permissions, elements.moderationRequirements);
+		updateStreamDetailsAccess(permissions);
 
 		// Update permissions info display
 		updatePermissionsDisplay(permissions, elements.permissionsInfo);
+	}
+
+	// Twitch only lets the channel owner change the title, category, and tags.
+	function updateStreamDetailsAccess(permissions) {
+		let message = '';
+		if (permissions && !permissions.isBroadcaster) {
+			message = 'Only the channel owner can edit these. Sign in as the owner of this channel to make changes.';
+		} else if (permissions && !permissions.broadcastPermissionKnown) {
+			message = 'Could not check edit permission. You can still try saving.';
+		} else if (permissions && !permissions.canManageBroadcast) {
+			message = 'Sign out and sign in again to give Social Stream permission to edit stream details.';
+		}
+		notifyPage('stream_details_access', {
+			canEdit: !permissions || !!permissions.isBroadcaster,
+			message
+		});
 	}
 
 	function updateModerationRequirements(permissions, container) {
@@ -5669,9 +5801,6 @@ async function cleanupCurrentConnection() {
 		}
 		if (!permissions.canReadAds) {
 			notes.push('Fetching ad schedule requires channel:read:ads.');
-		}
-		if (!permissions.canManageBroadcast) {
-			notes.push('Title/category editing requires broadcaster access and channel:manage:broadcast.');
 		}
 
 		container.textContent = notes.length ? notes.join(' ') : 'Your current sign-in has access to these channel controls.';

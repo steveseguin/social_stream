@@ -39,7 +39,7 @@
                 socket.send(JSON.stringify({ join: session.split(',')[0], out: requestChannel, in: 7 }));
                 // Only read current state. Never replay a start/reset on reconnect.
                 function request() {
-                    if (socket.readyState === 1 && ['poll', 'hype', 'map', 'timer', 'ticker', 'spotify'].indexOf(target) !== -1) {
+                    if (socket.readyState === 1 && ['poll', 'hype', 'map', 'timer', 'ticker', 'spotify', 'music'].indexOf(target) !== -1) {
                         socket.send(JSON.stringify({ ssnControlRequest: { target: target, client: client } }));
                     }
                 }

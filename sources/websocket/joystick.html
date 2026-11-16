@@ -241,6 +241,103 @@
             margin: 0;
         }
 
+        /* Stream details card */
+        .stream-details > summary {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            list-style: none;
+            user-select: none;
+        }
+
+        .stream-details > summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .stream-details > summary:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 4px;
+            border-radius: 6px;
+        }
+
+        .stream-details > summary h2 {
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .stream-details-preview {
+            flex: 1 1 0;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .stream-details-toggle {
+            flex-shrink: 0;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            background: #171a20;
+        }
+
+        .stream-details-toggle::after {
+            content: "Edit";
+        }
+
+        .stream-details[open] .stream-details-toggle::after {
+            content: "Close";
+        }
+
+        .stream-details > summary:hover .stream-details-toggle {
+            border-color: #4a5266;
+        }
+
+        .stream-details-body {
+            margin-top: 12px;
+        }
+
+        .stream-details-grid {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+        }
+
+        .stream-details-grid input:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .label-hint {
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        .stream-details-status {
+            flex: 1 1 auto;
+            min-width: 0;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .stream-details-status:empty {
+            display: none;
+        }
+
+        .stream-details-status[data-state="success"] {
+            color: #81f2d7;
+        }
+
+        .stream-details-status[data-state="error"] {
+            color: #ff9eaa;
+        }
+
         @media (max-width: 900px) {
             .split {
                 grid-template-columns: 1fr;
@@ -315,6 +412,32 @@
             </div>
             <p id="status-text" class="hint" style="margin-top:10px;">Waiting for configuration.</p>
         </section>
+
+        <details id="stream-details" class="card stream-details hidden">
+            <summary>
+                <h2>Stream details</h2>
+                <span id="stream-details-preview" class="stream-details-preview"></span>
+                <span class="stream-details-toggle" aria-hidden="true"></span>
+            </summary>
+            <div class="stream-details-body">
+                <div class="stream-details-grid">
+                    <div>
+                        <label for="stream-title">Title</label>
+                        <input id="stream-title" type="text" autocomplete="off" placeholder="Stream title" />
+                    </div>
+                    <div>
+                        <label for="stream-tags">Tags <span class="label-hint">(separated by commas)</span></label>
+                        <input id="stream-tags" type="text" autocomplete="off" placeholder="irl, chatty" title="Clear the field to remove all tags." disabled />
+                    </div>
+                </div>
+                <div class="row" style="margin-top:10px;">
+                    <button id="save-stream-details" type="button">Save details</button>
+                    <button id="reload-stream-details" type="button" class="alt">Reload</button>
+                    <span id="stream-details-status" class="stream-details-status" role="status" aria-live="polite"></span>
+                </div>
+                <p class="hint">Edits the channel that authorized this bot. The bot needs Joystick's <code>stream:manage</code> permission.</p>
+            </div>
+        </details>
 
         <section class="split">
             <section class="card">

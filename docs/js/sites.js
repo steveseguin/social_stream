@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
             name: 'YouTube Live',
             icon: 'youtube.png',
             description: 'The world\'s largest video platform with live streaming capabilities.',
-            type: 'popout',
+            type: 'popout', guide: 'youtube-setup-guide.html',
             instructions: `
                 <ul>
                     <li>Pop out the chat to trigger (studio or guest view)</li>
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
             name: 'Twitch',
             icon: 'twitch.png',
             description: 'Popular gaming and creative content live streaming platform.',
-            type: 'popout',
+            type: 'popout', guide: 'twitch-eventsub-setup.html',
             instructions: `
                 <ul>
                     <li>Pop out the chat to trigger</li>
@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
             name: 'TikTok Live',
             icon: 'tiktok.png',
             description: 'Live streaming on the popular short-form video platform.',
-            type: 'standard',
+            type: 'standard', guide: 'tiktok-quick-start.html',
             instructions: `
                 <ul>
                     <li>URL format: tiktok.com/*/live</li>
@@ -193,6 +193,20 @@ document.addEventListener('DOMContentLoaded', function() {
             notes: 'See this video for help with toggled integrations: <a href="https://www.youtube.com/watch?v=L3l0_8V1t0Q" target="_blank">https://www.youtube.com/watch?v=L3l0_8V1t0Q</a>'
         },
         {
+            name: 'Altstream',
+            icon: 'altstream.png',
+            description: 'Live channel chat on altstream.online.',
+            type: 'popout',
+            instructions: `
+                <ul>
+                    <li>Open https://altstream.online/USERNAME/chat</li>
+                    <li>In the desktop app, use Add other source and paste the chat URL</li>
+                    <li>With the extension, enable Social Stream Ninja and keep the chat page open</li>
+                </ul>
+            `,
+            notes: 'Only new chat messages are captured. Send a new message to check your setup. Enable Show viewer count in SSN to include the live viewer total.'
+        },
+        {
             name: 'VPZone.tv',
             icon: 'vpzone.png',
             description: 'Live streaming platform with on-page chat capture and an authenticated API page option. Supports Pixels tips as donations, dock delete/block sync, and a stream title/category editor for channel owners.',
@@ -245,10 +259,10 @@ document.addEventListener('DOMContentLoaded', function() {
             name: 'Microsoft Teams',
             icon: 'teams.png',
             description: 'Microsoft\'s collaboration platform.',
-            type: 'standard',
+            type: 'toggle',
             instructions: `
                 <ul>
-                    <li>Works with teams.live.com and teams.microsoft.com</li>
+                    <li>REQUIRES the TOGGLE in menu to enable it</li><li>Works with teams.live.com and teams.microsoft.com</li>
                     <li>No need to pop out the chat</li>
                 </ul>
             `
@@ -280,7 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
             name: 'Twitch IRC WebSocket',
             icon: 'twitch.png',
             description: 'WebSocket connection to Twitch chat.',
-            type: 'websocket',
+            type: 'websocket', guide: 'twitch-eventsub-setup.html',
             instructions: `
                 <ul>
                     <li>URL: https://socialstream.ninja/sources/websocket/twitch</li>
@@ -328,7 +342,7 @@ document.addEventListener('DOMContentLoaded', function() {
             name: 'Kick.com',
             icon: 'kick.png',
             description: 'Emerging live streaming platform.',
-            type: 'popout',
+            type: 'popout', guide: 'kick-setup-authentication.html',
             instructions: `
                 <ul>
                     <li>Use the pop out chat</li>
@@ -558,10 +572,10 @@ document.addEventListener('DOMContentLoaded', function() {
             name: 'Amazon Chime',
             icon: 'chime.png',
             description: 'Amazon\'s communication service.',
-            type: 'standard',
+            type: 'toggle',
             instructions: `
                 <ul>
-                    <li>URL: https://app.chime.aws/meetings/xxxxxxxxx</li>
+                    <li>REQUIRES the TOGGLE in menu to enable it</li><li>URL: https://app.chime.aws/meetings/xxxxxxxxx</li>
                 </ul>
             `
         },
@@ -1229,6 +1243,14 @@ document.addEventListener('DOMContentLoaded', function() {
 			`
 		},
 		{
+			name: 'l2.games',
+			icon: 'l2games.png',
+			description: 'Lineage 2 community chat.',
+			type: 'popout',
+			instructions: `<ul><li>Open https://l2.games/popout/chat/USERNAME, replacing USERNAME with the streamer name.</li></ul>`,
+			notes: 'Captures new messages after the chat opens. Keep the browser pop-out visible so the site refreshes its chat. In the desktop app, choose l2.games and enter the username or chat pop-out URL.'
+		},
+		{
 			name: 'Seal Team Sloth',
 			icon: 'sealteamsloth.png',
 			description: 'Live streaming platform.',
@@ -1710,7 +1732,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			name: 'Patreon',
 			icon: 'patreon.png',
 			description: 'Creator subscription and membership platform.',
-			type: 'toggle',
+			type: 'toggle', guide: 'creator-store-setup.html#patreon',
 			instructions: `
 				<ul>
 					<li>REQUIRES the TOGGLE in menu to enable it</li>
@@ -1794,7 +1816,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			name: 'TikFinity Activity Feed',
 			icon: 'tikfinity.png',
 			description: 'Read-only TikTok chat and event ingestion through TikFinity.',
-			type: 'standard',
+			type: 'standard', guide: 'tikfinity-setup.html',
 			instructions: `
 				<ul>
 					<li>Open the TikFinity activity-feed widget</li>
@@ -1916,7 +1938,7 @@ document.addEventListener('DOMContentLoaded', function() {
         modalIcon.src = sourceURL('../sources/images/' + site.icon);
         document.getElementById('modalTitle').textContent = site.name;
         document.getElementById('modalDescription').textContent = site.description;
-        document.getElementById('modalInstructions').innerHTML = site.instructions;
+        document.getElementById('modalInstructions').innerHTML = site.instructions + (site.guide ? '<p><a href="' + site.guide + '">Step-by-step setup guide</a></p>' : '');
         
         // Set notes if they exist
         const modalNotes = document.getElementById('modalNotes');
