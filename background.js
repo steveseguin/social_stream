@@ -10951,6 +10951,9 @@ function registerPendingStreamDeckDockRequest(request, UUID) {
 		if (!expired) {
 			return;
 		}
+		// API-connected Docks answer directly. The host only supplies a P2P
+		// fallback, so its timeout must not contradict the owner's response.
+		if (expired.transport === "websocket") return;
 		var router = getStreamDeckRemoteControlRouter();
 		var result = router && typeof router.makeError === "function"
 			? router.makeError(request, "TARGET_UNAVAILABLE", "No default Dock page completed the command.")
@@ -11561,6 +11564,7 @@ async function routeStreamDeckRemoteRequest(request, context) {
 		if ((context.transport === "webrtc" || context.transport === "operator") && context.UUID) {
 			const registration = registerPendingStreamDeckDockRequest(request, context.UUID);
 			if (!registration || registration.ok !== true) {
+				if (relayDockCommand) return { kind: "deferred" };
 				return {
 					kind: "command",
 					result: router.makeError(
@@ -11574,9 +11578,11 @@ async function routeStreamDeckRemoteRequest(request, context) {
 				return { kind: "deferred" };
 			}
 			if (context.reply) registration.pending.reply = context.reply;
+			if (relayDockCommand) registration.pending.transport = "websocket";
 			const sent = await sendStreamDeckDockRequestP2P(request, context.UUID);
 			if (!sent) {
 				clearPendingStreamDeckDockRequest(String(request.get || ""));
+				if (relayDockCommand) return { kind: "deferred" };
 				return {
 					kind: "command",
 					result: router.makeError(request, "TARGET_UNAVAILABLE", "No connected default Dock page is available.")

@@ -224,7 +224,7 @@ function testDockOwnerAndDeduplication() {
 	const execute = Function(
 		"processInput",
 		`var remoteControlDockResultCache = new Map();
-		 var remoteControlDockActions = { nextInQueue: true, clearOverlay: true, nextPinned: true, getQueueSize: true };
+		 var remoteControlDockActions = { nextInQueue: true, clearOverlay: true, nextPinned: true, getQueueSize: true, pin: true, unpin: true, clearDock: true, clear: true, clearAll: true };
 		 var thisLabel = false;
 		 ${source}; return executeRemoteControlDockRequest;`
 	)(() => {
@@ -249,17 +249,88 @@ function testDockOwnerAndDeduplication() {
 	assert.equal(legacy.skip, false);
 	assert.deepEqual(legacy.result, { queueLength: 2 });
 	assert.equal(executions, 2);
+	for (const action of ["pin", "unpin", "clearDock", "clear", "clearAll"]) {
+		const before = executions;
+		const request = { action, protocol: 2, get: "duplicate-" + action, replyFormat: "commandResult" };
+		const first = execute(request);
+		assert.deepEqual(execute({ ...request, replyFormat: undefined }).result, first.result);
+		assert.equal(executions, before + 1, action + " must execute only once across API and P2P");
+	}
 
 	const executeNamedDock = Function(
 		"processInput",
 		`var remoteControlDockResultCache = new Map();
-		 var remoteControlDockActions = { nextInQueue: true, clearOverlay: true, nextPinned: true, getQueueSize: true };
+		 var remoteControlDockActions = { nextInQueue: true, clearOverlay: true, nextPinned: true, getQueueSize: true, clearDock: true };
 		 var thisLabel = "producer";
 		 ${source}; return executeRemoteControlDockRequest;`
-	)(() => {
-		throw new Error("a named Dock must not execute a default-target version 2 command");
+	)(request => {
+		assert.equal(request.target, "producer", "a named Dock must not execute a default-target version 2 command");
+		return true;
 	});
 	assert.equal(executeNamedDock(request).skip, true);
+	assert.equal(executeNamedDock({ action: "clearDock", protocol: 2, get: "named-1" }).skip, true);
+	assert.equal(executeNamedDock({ action: "clearDock", protocol: 2, get: "named-2", target: "producer" }).result.ok, true);
+}
+
+function testDockReplyFormats() {
+	const dock = read("dock.html");
+	const reply = Function(`${extractFunction(dock, "isVersionedRemoteControlRequest")}
+		${extractFunction(dock, "buildRemoteControlDockReply")}; return buildRemoteControlDockReply;`)();
+	const result = { ok: true, request: "clear-1", payload: { value: true } };
+	const request = { action: "clearDock", protocol: 2, get: "clear-1", replyFormat: "commandResult" };
+	assert.deepEqual(reply(request, result), { type: "commandResult", action: "clearDock", get: "clear-1", result });
+	assert.deepEqual(reply({ ...request, replyFormat: undefined }, result), { callback: { get: "clear-1", result } }, "HTTP clients still require callback envelopes");
+	assert.deepEqual(reply({ ...request, protocol: undefined }, result), { callback: { get: "clear-1", result } }, "legacy replies must remain unchanged");
+}
+
+async function testWebsocketDockFallback() {
+	const background = read("background.js");
+	const replies = [], timers = new Map();
+	let timerId = 0, canSend = false;
+	const context = vm.createContext({
+		getStreamDeckRemoteControlRouter: () => router,
+		pendingStreamDeckDockRequests: new Map(), MAX_PENDING_STREAM_DECK_DOCK_REQUESTS: 1,
+		setTimeout: callback => { timers.set(++timerId, callback); return timerId; },
+		clearTimeout: id => timers.delete(id),
+		sendStreamDeckDockRequestP2P: async () => canSend,
+		sendStreamDeckCommandResult: (_socket, _request, result) => replies.push(result),
+		sendDataP2P: packet => replies.push(packet.result)
+	});
+	vm.runInContext([
+		"clearPendingStreamDeckDockRequest", "registerPendingStreamDeckDockRequest",
+		"buildStreamDeckCallbackPacket", "buildStreamDeckCommandResultPacket",
+		"sendStreamDeckDockResultToOrigin", "handleStreamDeckDockCallback", "routeStreamDeckRemoteRequest"
+	].map(name => extractFunction(background, name)).join("\n"), context);
+	const route = context.routeStreamDeckRemoteRequest;
+	const websocket = { transport: "websocket", socket: {} };
+	for (const action of ["pin", "unpin", "clearDock", "clear", "clearAll"]) {
+		const result = await route({ action, protocol: 2, get: action }, websocket);
+		assert.equal(result.kind, "deferred", "a WebSocket-only Dock must be allowed to answer " + action);
+		assert.equal(context.pendingStreamDeckDockRequests.size, 0);
+	}
+	const request = { action: "clearDock", protocol: 2, get: "clear-1", replyFormat: "commandResult" };
+	canSend = true;
+	await route(request, websocket);
+	const full = await route({ ...request, get: "clear-2" }, websocket);
+	assert.equal(full.kind, "deferred", "a full P2P fallback queue must not reject a direct API command");
+	Array.from(timers.values())[0]();
+	assert.equal(context.pendingStreamDeckDockRequests.size, 0);
+	assert.equal(replies.length, 0, "a missing fallback reply must not contradict a direct Dock result");
+
+	await route(request, websocket);
+	const dockResult = router.makeResponse(request, { value: true });
+	assert.equal(context.handleStreamDeckDockCallback({ callback: { get: request.get, result: dockResult } }), true);
+	assert.deepEqual(replies, [dockResult], "P2P-only Docks still answer WebSocket clients through the host");
+	assert.equal(context.pendingStreamDeckDockRequests.size, 0);
+
+	replies.length = 0;
+	const peer = { transport: "webrtc", UUID: "test-peer" };
+	await route(request, peer);
+	Array.from(timers.values())[0]();
+	assert.equal(replies[0].error.code, "TARGET_UNAVAILABLE", "P2P requests still report their missing owner");
+	canSend = false;
+	const missing = await route(request, peer);
+	assert.equal(missing.result.error.code, "TARGET_UNAVAILABLE");
 }
 
 async function testVersionedRoutingOwnership() {
@@ -321,6 +392,8 @@ Promise.resolve()
 	.then(testSendChatRequiresDispatchCandidate)
 	.then(testWebsocketMessageOriginForwarding)
 	.then(testDockOwnerAndDeduplication)
+	.then(testDockReplyFormats)
+	.then(testWebsocketDockFallback)
 	.then(testVersionedRoutingOwnership)
 	.then(() => console.log("mobile remote-control contract tests passed"))
 	.catch((error) => {

@@ -5540,6 +5540,13 @@
 				return { skip: false, result: result };
 			}
 
+			function buildRemoteControlDockReply(data, result) {
+				if (isVersionedRemoteControlRequest(data) && data.replyFormat === "commandResult") {
+					return { type: "commandResult", action: data.action, get: data.get, result: result };
+				}
+				return { callback: { get: data.get, result: result } };
+			}
+
 			var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja/api";
 			var reconnectionTimeout = null;
 			function setupSocket() {
@@ -5594,11 +5601,7 @@
 						//console.log(resp);
 						if (resp !== null) {
 							if (data.get) {
-								var ret = {};
-								ret.callback = {};
-								ret.callback.get = data.get;
-								ret.callback.result = resp;
-								socketserver.send(JSON.stringify(ret));
+								socketserver.send(JSON.stringify(buildRemoteControlDockReply(data, resp)));
 							}
 						}
 					}
