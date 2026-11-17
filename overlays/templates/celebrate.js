@@ -161,11 +161,11 @@
 		[dim, back, mid, front].forEach(function (n) { wrap.appendChild(n); });
 		root.appendChild(wrap);
 		var st = { root: root, wrap: wrap, dim: dim, mid: mid, back: back, front: front, gb: back.getContext("2d"), gf: front.getContext("2d"), W: 0, H: 0, d: 1, q: 1, u: 1, time: 0, tick: null, draw: null, onfit: null };
-		var dirty = 3, idle = 0, alive = true, last = null, frameId, lag = 16, seen = 0;
+		var dirty = 3, idle = 0, alive = true, last = null, frameId, lag = 16, seen = 0, GOV = window.SSO_FRAMES || null;
 		function fit(force) {
 			var W = root.clientWidth || window.innerWidth, H = root.clientHeight || window.innerHeight;
 			if (!force && W === st.W && H === st.H) { return; }
-			st.W = W; st.H = H; st.d = Math.min(window.devicePixelRatio || 1, 2) * st.q; st.u = Math.min(W / 1920, H / 1080);
+			st.W = W; st.H = H; st.d = Math.min(window.devicePixelRatio || 1, 2) * st.q * (GOV ? GOV.scale() : 1); st.u = Math.min(W / 1920, H / 1080);
 			back.width = front.width = Math.max(2, Math.round(W * st.d));
 			back.height = front.height = Math.max(2, Math.round(H * st.d));
 			mid.style.fontSize = (st.u * 10).toFixed(3) + "px";
@@ -175,13 +175,13 @@
 		function frame(now) {
 			if (!alive) { return; }
 			if (last === null) { last = now; }
-			var gap = now - last, dt = Math.min(0.05, gap / 1000);
+			var gap = now - last, dt = SSO.frameDelta(gap);
 			last = now; st.time += dt;
 			fit();
 			var busy = st.tick ? st.tick(dt) : false;
 			// A slow machine (or OBS without GPU acceleration) gets a lower canvas resolution, a step at a time, instead of a
 			// stutter. It only ever steps down; a pause of the page (hidden source) is not counted as a slow frame.
-			if (busy && gap < 250) {
+			if (busy && gap < 250 && !window.SSO_FRAMES) {
 				lag = lag * 0.9 + gap * 0.1;
 				if (++seen > 90 && lag > 25 && st.q > 0.5) { st.q = Math.max(0.5, st.q * 0.8); seen = 0; lag = 16; fit(true); }
 			} else if (!busy) { seen = 0; }
@@ -198,7 +198,9 @@
 		}
 		fit();
 		frameId = requestAnimationFrame(frame);
-		SSO.onCleanup(root, function () { alive = false; cancelAnimationFrame(frameId); });
+		// Everything here is drawn in stage units, so the load governor (view.html) may lower the canvas resolution on a slow machine.
+		var unhook = GOV && GOV.onScale ? GOV.onScale(function () { fit(true); }) : null;
+		SSO.onCleanup(root, function () { alive = false; cancelAnimationFrame(frameId); if (unhook) { unhook(); } });
 		return st;
 	}
 	// Cheap glow: the back canvas, shrunk twice and added back on top of itself.
@@ -440,7 +442,7 @@
 				}
 				if (a > 0.07) { (D[c] || (D[c] = [])).push(s.x, s.y, Math.max(1.1, s.w * u * (0.9 + 0.8 * a))); }
 			}
-			g.lineCap = "round";
+			g.lineCap = "round"; g.lineJoin = "round";
 			var wThin = Math.max(1.4, 2.4 * u), wThick = Math.max(2.3, 4.4 * u);
 			for (k = 0; k < B.length; k++) {
 				list = B[k];
@@ -450,7 +452,11 @@
 				g.globalAlpha = LA[lv & 3];
 				g.lineWidth = (lv & 4 ? wThick : wThin) * (1 - (lv & 3) * 0.15);
 				g.beginPath();
-				for (i = 0; i < list.length; i += 4) { g.moveTo(list[i], list[i + 1]); g.lineTo(list[i + 2], list[i + 3]); }
+				// pieces of one trail follow on from each other, so each trail is drawn as a single line
+				for (i = 0; i < list.length; i += 4) {
+					if (i === 0 || list[i] !== list[i - 2] || list[i + 1] !== list[i - 1]) { g.moveTo(list[i], list[i + 1]); }
+					g.lineTo(list[i + 2], list[i + 3]);
+				}
 				g.stroke();
 				list.length = 0;
 			}

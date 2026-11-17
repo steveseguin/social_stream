@@ -67,7 +67,7 @@
 		function frame(now) {
 			if (!alive) { return; }
 			if (last === null) { last = now; }
-			var dt = Math.min(0.05, (now - last) / 1000);
+			var dt = SSO.frameDelta(now - last);
 			last = now; st.t += dt;
 			fit();
 			if (st.update) { st.update(dt, st.t); }

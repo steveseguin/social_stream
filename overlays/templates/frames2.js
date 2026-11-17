@@ -53,7 +53,7 @@
 		function frame(now) {
 			if (!alive) { return; }
 			if (last === null) { last = now; }
-			t += Math.min(0.05, (now - last) / 1000); last = now;
+			t += SSO.frameDelta(now - last); last = now;
 			fn(t);
 			if (alive) { id = requestAnimationFrame(frame); }
 		}

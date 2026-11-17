@@ -9,7 +9,7 @@
 	// Canvas particle backdrops: rain streaks, falling code, rising embers.
 	function particles(canvas, kind, color, color2) {
 		var ctx = canvas.getContext("2d");
-		var alive = true, frameId;
+		var alive = true, frameId, last = performance.now();
 		SSO.onCleanup(canvas, function () { alive = false; cancelAnimationFrame(frameId); window.removeEventListener("resize", size); });
 		var list = [];
 		var glyphs = "01アイウエオカキクケコサシスセソ<>/{}[]#$%&*";
@@ -24,10 +24,11 @@
 		}
 		size();
 		window.addEventListener("resize", size);
-		(function frame() {
+		(function frame(now) {
 			if (!alive) { return; }
+			var step = SSO.frameDelta(now - last) * 60; last = now;
 			if (kind === "matrix") {
-				ctx.fillStyle = "rgba(0,0,0,.12)";
+				ctx.fillStyle = "rgba(0,0,0," + (1 - Math.pow(0.88, step)) + ")";
 				ctx.fillRect(0, 0, canvas.width, canvas.height);
 				ctx.font = "16px monospace";
 			} else {
@@ -43,13 +44,13 @@
 					ctx.moveTo(p.x, p.y);
 					ctx.lineTo(p.x - 2, p.y + p.l);
 					ctx.stroke();
-					p.y += p.v;
+					p.y += p.v * step;
 					if (p.y > canvas.height) { p.y = -20; p.x = Math.random() * canvas.width; }
 				} else if (kind === "matrix") {
 					ctx.globalAlpha = 1;
 					ctx.fillStyle = p.s > 0.92 ? "#ffffff" : color;
 					ctx.fillText(glyphs.charAt(Math.floor(Math.random() * glyphs.length)), p.x, p.y);
-					p.y += p.v * 4;
+					p.y += p.v * 4 * step;
 					if (p.y > canvas.height + 20) { p.y = -20; }
 				} else {
 					ctx.globalAlpha = Math.max(0, Math.min(1, p.y / canvas.height)) * (0.5 + p.s * 0.5);
@@ -57,14 +58,14 @@
 					ctx.beginPath();
 					ctx.arc(p.x, p.y, 1 + p.s * 2.5, 0, 6.283);
 					ctx.fill();
-					p.y -= p.v;
-					p.x += Math.sin((p.y + p.s * 100) / 40) * 0.6;
+					p.y -= p.v * step;
+					p.x += Math.sin((p.y + p.s * 100) / 40) * 0.6 * step;
 					if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
 				}
 			}
 			ctx.globalAlpha = 1;
 			frameId = requestAnimationFrame(frame);
-		})();
+		})(last);
 	}
 
 	function backdrop(root, kind, c1, c2, c3) {
@@ -120,7 +121,7 @@
 
 	function stars(canvas, color) {
 		var ctx = canvas.getContext("2d");
-		var alive = true, frameId;
+		var alive = true, frameId, last = performance.now();
 		SSO.onCleanup(canvas, function () { alive = false; cancelAnimationFrame(frameId); window.removeEventListener("resize", size); });
 		var list = [];
 		function size() {
@@ -136,11 +137,12 @@
 		window.addEventListener("resize", size);
 		(function frame(t) {
 			if (!alive) { return; }
+			var step = SSO.frameDelta(t - last) * 60; last = t;
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 			ctx.fillStyle = color;
 			for (var i = 0; i < list.length; i++) {
 				var s = list[i];
-				s.x -= s.v;
+				s.x -= s.v * step;
 				if (s.x < -2) { s.x = canvas.width + 2; }
 				ctx.globalAlpha = 0.35 + 0.65 * Math.abs(Math.sin(s.p + (t || 0) / 1000 * s.s));
 				ctx.beginPath();
@@ -148,7 +150,7 @@
 				ctx.fill();
 			}
 			frameId = requestAnimationFrame(frame);
-		})(0);
+		})(last);
 	}
 
 	var SCREEN_BACKDROPS = (SSO.ENGINE_LIST || []).concat(BACKDROPS);
@@ -287,7 +289,7 @@
 			bgHost.className = "scn-bg";
 			el.appendChild(bgHost);
 			if (SSO.ENGINES && SSO.ENGINES[c.backdrop]) {
-				SSO.startEngine(c.backdrop, bgHost, { c1: c.c1, c2: c.c2, c3: c.c3, speed: c.speed, words: c.words, font: c.font, count: 8, minutes: 3, country: c.country, mono: c.flagmono });
+				SSO.startEngine(c.backdrop, bgHost, { c1: c.c1, c2: c.c2, c3: c.c3, speed: c.speed, words: c.words, font: c.font, count: 8, minutes: 3, country: c.country, mono: c.flagmono, layout: c.layout });
 			} else if (c.backdrop !== "none") {
 				el.removeChild(bgHost);
 				backdrop(el, c.backdrop, c.c1, c.c2, c.c3);

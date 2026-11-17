@@ -203,7 +203,7 @@
 			var t0 = performance.now(), last = t0, alive = true, frameId;
 			(function frame(now) {
 				if (!alive) { return; }
-				var dt = Math.min(0.05, (now - last) / 1000) * (o.speed || 1); last = now;
+				var dt = SSO.frameDelta(now - last) * (o.speed || 1); last = now;
 				var t = (now - t0) / 1000;
 				water(t);
 				g.clearRect(0, 0, W, H);

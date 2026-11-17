@@ -76,7 +76,7 @@
 		function frame(now) {
 			if (!alive) { return; }
 			if (last === null) { last = now; }
-			var dt = Math.min(0.05, (now - last) / 1000);
+			var dt = SSO.frameDelta(now - last);
 			last = now;
 			t += dt;
 			fn(t, dt);
@@ -976,7 +976,7 @@
 	engine({
 		id: "halloween", label: "Halloween night", colors: ["12051f", "ff7a00", "6b2fb3"],
 		start: function (host, o) {
-			var cv = makeCanvas(host, 0.75), g = cv.getContext("2d");
+			var cv = makeCanvas(host, 0.75), main = cv.getContext("2d"), g = main;
 			function W() { return cv.width; } function H() { return cv.height; }
 			var rnd = SSO.seeded("spooky");
 			var bats = [], fog = [], pumpkins = [];
@@ -993,12 +993,26 @@
 				rnd = SSO.seeded("tree" + flip);
 				branch(x, base, h * 0.35, -Math.PI / 2 + (flip ? 0.08 : -0.08), h * 0.05, 6);
 			}
-			return loop(function (t, dt) {
-				dt *= o.speed || 1;
+			// Nothing in the sky, the hills, the trees or the pumpkins themselves ever changes, so each is painted once
+			// (and again if the source is resized). A frame is then three stamps plus the few things that move.
+			var back = document.createElement("canvas"), mid = document.createElement("canvas"), front = document.createElement("canvas"), lw = 0, lh = 0;
+			function soft(rgb, alpha) {
+				var c = document.createElement("canvas"), cg;
+				c.width = c.height = 128;
+				cg = c.getContext("2d");
+				var gr = cg.createRadialGradient(64, 64, 0, 64, 64, 64);
+				gr.addColorStop(0, "rgba(" + rgb + "," + alpha + ")"); gr.addColorStop(1, "rgba(" + rgb + ",0)");
+				cg.fillStyle = gr; cg.fillRect(0, 0, 128, 128);
+				return c;
+			}
+			var fogArt = soft("190,170,220", 0.16), haloArt = soft("255,140,0", 0.35);
+			function build() {
+				lw = W(); lh = H();
+				[back, mid, front].forEach(function (c) { c.width = lw; c.height = lh; });
+				g = back.getContext("2d");
 				var sky = g.createLinearGradient(0, 0, 0, H());
 				sky.addColorStop(0, "#05010a"); sky.addColorStop(0.6, SSO.color(o.c1)); sky.addColorStop(1, SSO.color(o.c3));
 				g.fillStyle = sky; g.fillRect(0, 0, W(), H());
-				// moon
 				var mx = W() * 0.72, my = H() * 0.28, mr = H() * 0.17;
 				var mg = g.createRadialGradient(mx, my, mr * 0.6, mx, my, mr * 2.6);
 				mg.addColorStop(0, "rgba(255,220,160,.35)"); mg.addColorStop(1, "rgba(255,220,160,0)");
@@ -1008,6 +1022,26 @@
 				g.fillStyle = mf; g.beginPath(); g.arc(mx, my, mr, 0, 6.283); g.fill();
 				g.fillStyle = "rgba(180,130,60,.25)";
 				[[-0.3, -0.2, 0.18], [0.25, 0.1, 0.12], [-0.05, 0.35, 0.1]].forEach(function (c2) { g.beginPath(); g.arc(mx + c2[0] * mr, my + c2[1] * mr, c2[2] * mr, 0, 6.283); g.fill(); });
+				g = mid.getContext("2d");
+				g.fillStyle = "#0a0312";
+				g.beginPath(); g.moveTo(0, H());
+				for (var x = 0; x <= W(); x += W() / 24) { g.lineTo(x, H() * 0.8 - Math.sin(x / W() * 5 + 1) * H() * 0.05 - Math.sin(x / W() * 13) * H() * 0.015); }
+				g.lineTo(W(), H()); g.fill();
+				tree(W() * 0.1, H() * 0.82, H() * 0.75, 0);
+				tree(W() * 0.93, H() * 0.8, H() * 0.65, 1);
+				g = front.getContext("2d");
+				pumpkins.forEach(function (pk) {
+					var px = pk.x * W(), py = H() * 0.93, r = H() * 0.045 * pk.s;
+					g.fillStyle = SSO.color(o.c2);
+					for (var lobe = -1; lobe <= 1; lobe++) { g.beginPath(); g.ellipse(px + lobe * r * 0.5, py, r * 0.65, r * 0.8, 0, 0, 6.283); g.fill(); }
+					g.fillStyle = "#2f5d1e"; g.fillRect(px - r * 0.08, py - r * 1.05, r * 0.16, r * 0.3);
+				});
+				g = main;
+			}
+			return loop(function (t, dt) {
+				dt *= o.speed || 1;
+				if (W() !== lw || H() !== lh) { build(); }
+				g.drawImage(back, 0, 0);
 				// bats
 				g.fillStyle = "#050108";
 				bats.forEach(function (b) {
@@ -1022,24 +1056,19 @@
 					g.quadraticCurveTo(bx + s, by - s * flap - s * 0.3, bx, by);
 					g.fill();
 				});
-				// hills + trees
-				g.fillStyle = "#0a0312";
-				g.beginPath(); g.moveTo(0, H());
-				for (var x = 0; x <= W(); x += W() / 24) { g.lineTo(x, H() * 0.8 - Math.sin(x / W() * 5 + 1) * H() * 0.05 - Math.sin(x / W() * 13) * H() * 0.015); }
-				g.lineTo(W(), H()); g.fill();
-				tree(W() * 0.1, H() * 0.82, H() * 0.75, 0);
-				tree(W() * 0.93, H() * 0.8, H() * 0.65, 1);
-				// pumpkins
+				g.drawImage(mid, 0, 0);
+				// the candle glow round each pumpkin, the pumpkins, then their flickering faces
+				var glows = pumpkins.map(function (pk, idx) { return 0.7 + 0.3 * Math.sin(t * 6 + idx * 2) * Math.sin(t * 2.3 + idx); });
 				pumpkins.forEach(function (pk, idx) {
 					var px = pk.x * W(), py = H() * 0.93, r = H() * 0.045 * pk.s;
-					var glow = 0.7 + 0.3 * Math.sin(t * 6 + idx * 2) * Math.sin(t * 2.3 + idx);
-					var halo = g.createRadialGradient(px, py, 0, px, py, r * 4);
-					halo.addColorStop(0, "rgba(255,140,0," + 0.35 * glow + ")"); halo.addColorStop(1, "rgba(255,140,0,0)");
-					g.fillStyle = halo; g.beginPath(); g.arc(px, py, r * 4, 0, 6.283); g.fill();
-					g.fillStyle = SSO.color(o.c2);
-					for (var lobe = -1; lobe <= 1; lobe++) { g.beginPath(); g.ellipse(px + lobe * r * 0.5, py, r * 0.65, r * 0.8, 0, 0, 6.283); g.fill(); }
-					g.fillStyle = "#2f5d1e"; g.fillRect(px - r * 0.08, py - r * 1.05, r * 0.16, r * 0.3);
-					g.fillStyle = "rgba(255,230,120," + glow + ")";
+					g.globalAlpha = glows[idx];
+					g.drawImage(haloArt, px - r * 4, py - r * 4, r * 8, r * 8);
+				});
+				g.globalAlpha = 1;
+				g.drawImage(front, 0, 0);
+				pumpkins.forEach(function (pk, idx) {
+					var px = pk.x * W(), py = H() * 0.93, r = H() * 0.045 * pk.s;
+					g.fillStyle = "rgba(255,230,120," + glows[idx] + ")";
 					g.beginPath(); g.moveTo(px - r * 0.45, py - r * 0.15); g.lineTo(px - r * 0.2, py - r * 0.45); g.lineTo(px - r * 0.1, py - r * 0.1); g.fill();
 					g.beginPath(); g.moveTo(px + r * 0.45, py - r * 0.15); g.lineTo(px + r * 0.2, py - r * 0.45); g.lineTo(px + r * 0.1, py - r * 0.1); g.fill();
 					g.beginPath(); g.moveTo(px - r * 0.45, py + r * 0.2); g.lineTo(px - r * 0.25, py + r * 0.35); g.lineTo(px, py + r * 0.22); g.lineTo(px + r * 0.25, py + r * 0.35); g.lineTo(px + r * 0.45, py + r * 0.2); g.lineTo(px, py + r * 0.5); g.fill();
@@ -1048,9 +1077,7 @@
 				fog.forEach(function (fg) {
 					fg.x += fg.v * dt; if (fg.x > 1.3) { fg.x = -0.3; }
 					var fx = fg.x * W(), fy = fg.y * H(), fr = fg.r * W();
-					var fgr = g.createRadialGradient(fx, fy, 0, fx, fy, fr);
-					fgr.addColorStop(0, "rgba(190,170,220,.16)"); fgr.addColorStop(1, "rgba(190,170,220,0)");
-					g.fillStyle = fgr; g.fillRect(fx - fr, fy - fr, fr * 2, fr * 2);
+					g.drawImage(fogArt, fx - fr, fy - fr, fr * 2, fr * 2);
 				});
 			});
 		}

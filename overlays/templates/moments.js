@@ -149,12 +149,12 @@
 		[dim, back, mid, front].forEach(function (n) { wrap.appendChild(n); });
 		root.appendChild(wrap);
 		var st = { root: root, wrap: wrap, dim: dim, mid: mid, back: back, front: front, gb: back.getContext("2d"), gf: front.getContext("2d"), W: 0, H: 0, d: 1, u: 1, time: 0, tick: null, draw: null, onfit: null };
-		var dirty = true, alive = true, last = null, frameId;
-		function fit() {
+		var dirty = true, alive = true, last = null, frameId, GOV = window.SSO_FRAMES || null;
+		function fit(force) {
 			var W = root.clientWidth || window.innerWidth, H = root.clientHeight || window.innerHeight;
-			if (W === st.W && H === st.H) { return; }
+			if (!force && W === st.W && H === st.H) { return; }
 			// The unit follows the shorter side, so a 9:16 source gets the same size artwork as a 16:9 one.
-			st.W = W; st.H = H; st.d = Math.min(window.devicePixelRatio || 1, 2); st.u = Math.min(W, H) / 1080;
+			st.W = W; st.H = H; st.d = Math.min(window.devicePixelRatio || 1, 2) * (GOV ? GOV.scale() : 1); st.u = Math.min(W, H) / 1080;
 			back.width = front.width = Math.max(2, Math.round(W * st.d));
 			back.height = front.height = Math.max(2, Math.round(H * st.d));
 			mid.style.fontSize = (st.u * 10).toFixed(3) + "px";
@@ -164,7 +164,7 @@
 		function frame(now) {
 			if (!alive) { return; }
 			if (last === null) { last = now; }
-			var dt = Math.min(0.05, (now - last) / 1000);
+			var dt = SSO.frameDelta(now - last);
 			last = now; st.time += dt;
 			fit();
 			var busy = st.tick ? st.tick(dt) : false;
@@ -178,8 +178,23 @@
 		}
 		fit();
 		frameId = requestAnimationFrame(frame);
-		SSO.onCleanup(root, function () { alive = false; cancelAnimationFrame(frameId); });
+		// Everything here is drawn in stage units, so the load governor (view.html) may lower the canvas resolution on a slow machine.
+		var unhook = GOV && GOV.onScale ? GOV.onScale(function () { fit(true); }) : null;
+		SSO.onCleanup(root, function () { alive = false; cancelAnimationFrame(frameId); if (unhook) { unhook(); } });
 		return st;
+	}
+	// The alarm wash is the same picture every frame apart from its strength, so it is painted once, small, and stretched.
+	function washImage(st, col) {
+		var key = col + "|" + Math.round(st.W) + "x" + Math.round(st.H);
+		if (st.washKey === key) { return st.wash; }
+		var w = Math.max(2, Math.round(st.W / 4)), h = Math.max(2, Math.round(st.H / 4)), cv = document.createElement("canvas"), g;
+		cv.width = w; cv.height = h;
+		g = cv.getContext("2d");
+		var vg = g.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.35, w / 2, h / 2, Math.max(w, h) * 0.72);
+		vg.addColorStop(0, rgba(col, 0)); vg.addColorStop(1, rgba(col, 1));
+		g.fillStyle = vg; g.fillRect(0, 0, w, h);
+		st.wash = cv; st.washKey = key;
+		return cv;
 	}
 	// Shrinks el's font size so it fits inside the stage.
 	function fitBox(st, el, maxW, maxH) {
@@ -535,9 +550,9 @@
 			var W = st.W, H = st.H, u = st.u, i;
 			if (kind === "raid" && level > 0.01) {
 				// alarm light washing in from the edges
-				var k = level * (0.3 + 0.22 * Math.sin(st.time * 9)), vg = gb.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.72);
-				vg.addColorStop(0, rgba(o.a, 0)); vg.addColorStop(1, rgba(o.a, k));
-				gb.fillStyle = vg; gb.fillRect(0, 0, W, H);
+				gb.globalAlpha = Math.max(0, Math.min(1, level * (0.3 + 0.22 * Math.sin(st.time * 9))));
+				gb.drawImage(washImage(st, o.a), 0, 0, W, H);
+				gb.globalAlpha = 1;
 			}
 			if (kind === "lastcall" && level > 0.01) {
 				// hazard tape sliding along the top and bottom edges
@@ -1067,11 +1082,7 @@
 				if (on) {
 					// alarm light washing in from the edges while the raid arrives
 					var W = st.W, H = st.H, k = Math.max(0, 1 - t / 3) * (0.34 + 0.22 * Math.sin(st.time * 9));
-					if (k > 0.01) {
-						var vg = gb.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.72);
-						vg.addColorStop(0, rgba(a, 0)); vg.addColorStop(1, rgba(a, k));
-						gb.fillStyle = vg; gb.fillRect(0, 0, W, H);
-					}
+					if (k > 0.01) { gb.globalAlpha = Math.min(1, k); gb.drawImage(washImage(st, a), 0, 0, W, H); gb.globalAlpha = 1; }
 				}
 				horde.draw(gf);
 				bits.draw(gf);

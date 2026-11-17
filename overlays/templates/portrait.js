@@ -295,7 +295,7 @@
 			frameId = requestAnimationFrame(frame);
 			// About 30 frames a second is plenty for slow drifting things and halves the cost.
 			if (now - last < 30) { return; }
-			var dt = Math.min(0.08, (now - last) / 1000 || 0.03); last = now; t += dt;
+			var dt = (SSO.frameDelta(now - last, 0.08) || 0.03); last = now; t += dt;
 			fit();
 			draw(dt);
 		})(performance.now());

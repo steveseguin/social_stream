@@ -384,5 +384,71 @@ window.SSNGamesCatalog = [
     "image": "images/games/phraseguess.jpg",
     "demo": true,
     "audience": "Solo-friendly"
+  },
+  {
+    "id": "seismograph",
+    "title": "Chat Seismograph",
+    "category": "Hype",
+    "description": "Turn chat excitement into a live seismograph with quakes, magnitudes, and a record to beat.",
+    "command": "Say anything in chat",
+    "path": "games/seismograph.html",
+    "image": "images/games/seismograph.jpg",
+    "demo": true,
+    "audience": "Solo-friendly"
+  },
+  {
+    "id": "quakecity",
+    "title": "Quake City",
+    "category": "Hype",
+    "description": "Excited chat shakes a skyline down, and every rebuild is taller and tougher.",
+    "command": "Say anything in chat",
+    "path": "games/quakecity.html",
+    "image": "images/games/quakecity.jpg",
+    "demo": true,
+    "audience": "Solo-friendly"
+  },
+  {
+    "id": "hypeflight",
+    "title": "Hype Flight",
+    "category": "Hype",
+    "description": "Keep a little bird flying through easy gaps with nothing but chat hype.",
+    "command": "Say anything in chat",
+    "path": "games/hypeflight.html",
+    "image": "images/games/hypeflight.jpg",
+    "demo": true,
+    "audience": "Solo-friendly"
+  },
+  {
+    "id": "chatvolcano",
+    "title": "Chat Volcano",
+    "category": "Hype",
+    "description": "Build pressure with chat until the volcano erupts, bigger each time.",
+    "command": "Say anything in chat",
+    "path": "games/chatvolcano.html",
+    "image": "images/games/chatvolcano.jpg",
+    "demo": true,
+    "audience": "Solo-friendly"
+  },
+  {
+    "id": "hyperocket",
+    "title": "Hype Rocket",
+    "category": "Hype",
+    "description": "Fuel a rocket with chat hype and fly it to farther and farther destinations.",
+    "command": "Say anything in chat",
+    "path": "games/hyperocket.html",
+    "image": "images/games/hyperocket.jpg",
+    "demo": true,
+    "audience": "Solo-friendly"
+  },
+  {
+    "id": "chatcampfire",
+    "title": "Chat Campfire",
+    "category": "Hype",
+    "description": "Feed a shared campfire with chat and keep it burning as long as you can.",
+    "command": "Say anything in chat",
+    "path": "games/chatcampfire.html",
+    "image": "images/games/chatcampfire.jpg",
+    "demo": true,
+    "audience": "Solo-friendly"
   }
 ];
