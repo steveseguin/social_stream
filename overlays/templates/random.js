@@ -1737,7 +1737,7 @@
 				roll: function (S) {
 					var i, j;
 					if (style === "teams") {
-						var n = Math.max(2, Math.min(6, Math.round(c.teams))), names = shuffle(all.slice(0, 60).map(function (e) { return e.name; }));
+						var n = Math.max(2, Math.min(6, Math.round(c.teams))), names = shuffle(all.map(function (e) { return e.name; }));
 						var given = String(c.teamnames || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
 						teams = []; teamNames = [];
 						for (i = 0; i < n; i++) { teams.push([]); teamNames.push(given[i] || "Team " + (i + 1)); }

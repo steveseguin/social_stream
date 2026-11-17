@@ -1230,7 +1230,7 @@
 				if (target) { end = target.getTime(); return; }
 				if (c.minutes > 0) {
 					var key = "giveaway:" + c.minutes + ":" + c.prize, saved = c.remember && !preview ? parseInt(SSO.store.get(key), 10) : NaN;
-					end = saved && saved > now ? saved : now + c.minutes * 60000;
+					end = isFinite(saved) && saved > 0 ? saved : now + c.minutes * 60000;
 					if (c.remember && !preview) { SSO.store.set(key, String(end)); }
 				}
 			}

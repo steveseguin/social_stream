@@ -7512,9 +7512,12 @@
 				let selector = "";
 				let matchField = "";
 				const cloudReceipt = data[cloudReceiptInfo];
-				const matchesCloudReceipt = message => !cloudReceipt || (message[cloudReceiptInfo] &&
-					message[cloudReceiptInfo].stream === cloudReceipt.stream && message[cloudReceiptInfo].seq < cloudReceipt.seq);
 				const nativeId = data.delete.meta && data.delete.meta.messageId;
+				// Exact IDs also identify P2P/history rows, which have no cloud receipt.
+				// Bulk deletions still need sequence ordering to protect newer messages.
+				const matchesCloudReceipt = message => !cloudReceipt || (message[cloudReceiptInfo] ?
+					message[cloudReceiptInfo].stream === cloudReceipt.stream && message[cloudReceiptInfo].seq < cloudReceipt.seq :
+					!!(nativeId || data.delete.id));
 				const vpzoneChannel = data.delete.type === "vpzone" && data.delete.meta && data.delete.meta.streamUsername;
 				const matchesVpzoneChannel = message => !vpzoneChannel ||
 					String(message.meta && message.meta.streamUsername).toLowerCase() === String(vpzoneChannel).toLowerCase();
