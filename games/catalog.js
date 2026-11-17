@@ -375,17 +375,6 @@ window.SSNGamesCatalog = [
     "audience": "2+ chatters"
   },
   {
-    "id": "phraseguess",
-    "title": "Phrase Guessing",
-    "category": "Puzzle",
-    "description": "Guess the host's phrases as their letters are gradually revealed.",
-    "command": "Guess the phrase",
-    "path": "games/phraseguess.html",
-    "image": "images/games/phraseguess.jpg",
-    "demo": true,
-    "audience": "Solo-friendly"
-  },
-  {
     "id": "seismograph",
     "title": "Chat Seismograph",
     "category": "Hype",

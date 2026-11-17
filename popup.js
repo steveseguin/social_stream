@@ -3990,6 +3990,15 @@ function syncChatOverlayTemplateLinkFromDock() {
   });
 }
 
+function updatePhraseGuessLink() {
+  const link = document.getElementById('phraseguess-control-link');
+  if (!link) return;
+  const params = getFeaturedConnectionParams();
+  const dock = document.getElementById('dock');
+  appendMissingGeneratedParams(params, dock && dock.raw, ['lanonly']);
+  link.href = buildGeneratedUrl('games/phraseguess.html', params);
+}
+
 function setupPageLinks(hideLinks, baseURL, streamID, password) {
   const tipjarPreview = document.getElementById('tipjar-style-preview');
   if (tipjarPreview) tipjarPreview.href = new URL('tipjar-preview.html', baseURL).href;
@@ -4097,6 +4106,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   });
 
   syncChatOverlayTemplateLinkFromDock();
+  updatePhraseGuessLink();
   if (window.updateMonetizationLinks) window.updateMonetizationLinks();
   updateAiOverlayGeneratedLinks(hideLinks, baseURL, streamID, password, versionParam);
   
@@ -9560,6 +9570,7 @@ function refreshLinks(){
     document.body.classList.remove("hidelinks");
   }
   syncChatOverlayTemplateLinkFromDock();
+  updatePhraseGuessLink();
   try {
     const linkIdToDivIdMap = {
       'docklink': 'dock',

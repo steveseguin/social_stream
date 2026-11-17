@@ -75,7 +75,9 @@
     function start(onMessage, reset, samples) {
         var session = params.get('session');
         var demo = params.has('demo') || !session;
-        if (params.has('clean')) document.body.classList.add('clean');
+        var showControls = (demo || params.has('controls')) && !params.has('clean');
+        document.body.classList.toggle('controls', showControls);
+        document.body.classList.toggle('clean', !showControls);
         document.getElementById('reset').onclick = function () { totals.clear(); reset(); log('Ready for a new run.'); };
         document.getElementById('demo-controls').hidden = !demo;
         text('payload', 'Use a sample button to inspect an event.');
