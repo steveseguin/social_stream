@@ -59,11 +59,11 @@
 	</div>
 	<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-	<script src="core.js?v=16"></script>
+	<script src="core.js?v=17"></script>
 	<script src="templates/countries.js?v=15"></script>
 	<script src="templates/engines.js?v=17"></script>
 	<script src="templates/socials.js?v=18"></script>
-	<script src="templates/time.js?v=16"></script>
+	<script src="templates/time.js?v=17"></script>
 	<script src="templates/scenes.js?v=19"></script>
 	<script src="templates/maps.js?v=17"></script>
 	<script src="templates/fun.js?v=15"></script>
@@ -71,8 +71,8 @@
 	<script src="templates/gaming.js?v=17"></script>
 	<script src="templates/obs.js?v=15"></script>
 	<script src="templates/pets.js?v=15"></script>
-	<script src="templates/extra.js?v=22"></script>
-	<script src="templates/themes.js?v=16"></script>
+	<script src="templates/extra.js?v=23"></script>
+	<script src="templates/themes.js?v=17"></script>
 	<script src="templates/music.js?v=15"></script>
 	<script src="templates/promo.js?v=15"></script>
 	<script src="templates/live.js?v=16"></script>
@@ -80,12 +80,23 @@
 	<script src="templates/reef.js?v=15"></script>
 	<script src="templates/kaiju.js?v=15"></script>
 	<script src="templates/party.js?v=15"></script>
-	<script src="templates/cozy.js?v=15"></script>
+	<script src="templates/cozy.js?v=16"></script>
 	<script src="templates/themebar.js?v=15"></script>
 	<script src="templates/winter.js?v=2"></script>
 	<script src="templates/winterstrip.js?v=2"></script>
 	<script src="templates/winterscenes.js?v=2"></script>
 	<script src="templates/winterfx.js?v=2"></script>
+	<script src="templates/frames2.js?v=1"></script>
+	<script src="templates/lowerfx.js?v=1"></script>
+	<script src="templates/seasons.js?v=1"></script>
+	<script src="templates/seasondecor.js?v=1"></script>
+	<script src="templates/splat.js?v=1"></script>
+	<script src="templates/three3d.js?v=1"></script>
+	<script src="templates/portrait.js?v=2"></script>
+	<script src="templates/celebrate.js?v=1"></script>
+	<script src="templates/moments.js?v=2"></script>
+	<script src="templates/random.js?v=3"></script>
+	<script src="templates/seasontags.js?v=1"></script>
 	<script>
 	(function () {
 		var $ = function (id) { return document.getElementById(id); };
@@ -269,8 +280,8 @@
 					num.min = field.min; num.max = field.max; num.step = field.step || 1;
 					num.value = value;
 					num.setAttribute("aria-label", field.label);
-					rng.addEventListener("input", function () { num.value = rng.value; cfg[field.key] = parseFloat(rng.value); update(); });
-					num.addEventListener("input", function () { if (num.value === "") { return; } rng.value = num.value; cfg[field.key] = parseFloat(rng.value); update(); });
+					rng.addEventListener("input", function () { num.value = rng.value; cfg[field.key] = parseFloat(rng.value); update(); refreshVisibility(); });
+					num.addEventListener("input", function () { if (num.value === "") { return; } rng.value = num.value; cfg[field.key] = parseFloat(rng.value); update(); refreshVisibility(); });
 					num.addEventListener("change", function () { num.value = rng.value; });
 					row.appendChild(rng); row.appendChild(num);
 					wrap.appendChild(row);

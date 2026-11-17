@@ -2446,6 +2446,8 @@
 						}
 						
 						var pid = false;
+						// Versioned Stream Deck commands are owned by the host or Dock.
+						if (data && data.action && data.get && Number(data.protocolVersion !== undefined ? data.protocolVersion : data.protocol) >= 2) return;
 						if (data && data.get){
 							pid = data.get;
 						}

@@ -5467,6 +5467,11 @@
 			var socketserver = false;
 			var remoteControlDockResultCache = new Map();
 			var remoteControlDockActions = {
+				pin: true,
+				unpin: true,
+				clearDock: true,
+				clear: true,
+				clearAll: true,
 				nextInQueue: true,
 				clearOverlay: true,
 				nextPinned: true,
@@ -5517,7 +5522,9 @@
 				if (!data.action || !remoteControlDockActions[data.action]) {
 					return { skip: true, result: null };
 				}
-				if (thisLabel) {
+				var targetedAction = ["pin", "unpin", "clearDock", "clear", "clearAll"].indexOf(data.action) !== -1;
+				var targetLabel = targetedAction && data.target && data.target !== "null" ? data.target : "";
+				if ((thisLabel || "") !== targetLabel) {
 					return { skip: true, result: null };
 				}
 				var key = data.get ? String(data.get) : "";
@@ -5531,6 +5538,13 @@
 					remoteControlDockResultCache.set(key, { createdAt: now, result: result });
 				}
 				return { skip: false, result: result };
+			}
+
+			function buildRemoteControlDockReply(data, result) {
+				if (isVersionedRemoteControlRequest(data) && data.replyFormat === "commandResult") {
+					return { type: "commandResult", action: data.action, get: data.get, result: result };
+				}
+				return { callback: { get: data.get, result: result } };
 			}
 
 			var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja/api";
@@ -5587,11 +5601,7 @@
 						//console.log(resp);
 						if (resp !== null) {
 							if (data.get) {
-								var ret = {};
-								ret.callback = {};
-								ret.callback.get = data.get;
-								ret.callback.result = resp;
-								socketserver.send(JSON.stringify(ret));
+								socketserver.send(JSON.stringify(buildRemoteControlDockReply(data, resp)));
 							}
 						}
 					}
@@ -5649,8 +5659,68 @@
 			var server3 = false;
 			var reconnectionTimeoutExtension = null;
 			var cloudReceiptPositions = null;
+			var cloudReceiptLegacy = null;
+			var cloudReceiptWindow = 10000;
+			var cloudReceiptPending = 0;
+			var cloudReceiptStorageKey = "ssn-cloud-receipts-v3:" + roomID;
+			// Symbols follow local message copies without entering exported payloads.
+			var cloudReceiptInfo = Symbol("cloudReceipt");
 			if (urlParams.has("cloudack")) {
-				try { cloudReceiptPositions = JSON.parse(localStorage.getItem("ssn-cloud-receipts:" + roomID) || "{}"); } catch (error) {}
+				try {
+					cloudReceiptPositions = JSON.parse(localStorage.getItem(cloudReceiptStorageKey) || localStorage.getItem("ssn-cloud-receipts-v2:" + roomID) || "{}");
+					cloudReceiptLegacy = JSON.parse(localStorage.getItem("ssn-cloud-receipts:" + roomID) || "{}");
+				} catch (error) {}
+			}
+			function validCloudReceiptRecord(record) {
+				if (!record || !Number.isSafeInteger(record.legacy) || record.legacy < 0 ||
+					!Number.isSafeInteger(record.floor) || record.floor < 1 || record.floor < record.legacy ||
+					!Array.isArray(record.ranges) || record.ranges.length > cloudReceiptWindow / 2) return false;
+				var previous = record.floor - 2;
+				for (var i = 0; i < record.ranges.length; i++) {
+					var range = record.ranges[i];
+					if (!Array.isArray(range) || range.length !== 2 || !Number.isSafeInteger(range[0]) || !Number.isSafeInteger(range[1]) ||
+						range[0] < record.floor || range[0] <= record.legacy || range[1] < range[0] ||
+						range[1] - record.floor >= cloudReceiptWindow || range[0] <= previous + 1) return false;
+					previous = range[1];
+				}
+				if (record.moderation !== undefined) {
+					if (!Array.isArray(record.moderation) || record.moderation.length > cloudReceiptWindow) return false;
+					for (var j = 0; j < record.moderation.length; j++) {
+						var action = record.moderation[j];
+						if (!action || !Number.isSafeInteger(action.seq) || action.seq < record.floor || action.seq - record.floor >= cloudReceiptWindow) return false;
+						if (action.id !== undefined) {
+							if (typeof action.id !== "string" || !action.id || action.id.length > 192) return false;
+						} else if (typeof action.userid !== "string" || typeof action.chatroomId !== "string" ||
+							!/^[1-9]\d{0,19}$/.test(action.userid) || !/^[1-9]\d{0,19}$/.test(action.chatroomId)) return false;
+					}
+				}
+				return true;
+			}
+			function hasCloudReceipt(record, sequence) {
+				return sequence <= record.legacy || record.ranges.some(function (range) { return sequence >= range[0] && sequence <= range[1]; });
+			}
+			function mergeCloudReceipts(first, second, sequence) {
+				var ranges = first.ranges.concat(second.ranges, [[sequence, sequence]]).sort(function (a, b) { return a[0] - b[0]; });
+				var legacy = Math.max(first.legacy, second.legacy);
+				var high = Math.max(sequence, first.ranges.length ? first.ranges[first.ranges.length - 1][1] : 0,
+					second.ranges.length ? second.ranges[second.ranges.length - 1][1] : 0);
+				var floor = Math.max(first.floor, second.floor, high - cloudReceiptWindow + 1, Math.min(Number.MAX_SAFE_INTEGER, legacy + 1));
+				var merged = [];
+				for (var i = 0; i < ranges.length; i++) {
+					if (ranges[i][1] < floor) continue;
+					var start = Math.max(floor, ranges[i][0]), last = merged[merged.length - 1];
+					if (last && start <= last[1] + 1) last[1] = Math.max(last[1], ranges[i][1]);
+					else merged.push([start, ranges[i][1]]);
+				}
+				var result = { legacy: legacy, floor: floor, ranges: merged };
+				var moderation = new Map();
+				(first.moderation || []).concat(second.moderation || []).forEach(function (action) {
+					if (action.seq < floor) return;
+					var key = action.id !== undefined ? "message:" + action.id : "user:" + action.chatroomId + ":" + action.userid;
+					if (!moderation.has(key) || moderation.get(key).seq < action.seq) moderation.set(key, action);
+				});
+				if (moderation.size) result.moderation = Array.from(moderation.values());
+				return result;
 			}
 			function receiveCloudMessage(data, socket) {
 				if (!data || !data.ssnCloudDelivery) return false;
@@ -5662,25 +5732,69 @@
 				if (receipt.v !== 1 || !/^[a-f0-9]{32}$/.test(receipt.stream || "") ||
 					!/^[a-f0-9]{32}$/.test(receipt.token || "") || !Number.isSafeInteger(receipt.seq) || receipt.seq < 1 ||
 					!payload || (payload.type !== "kick" && (!payload.delete || payload.delete.type !== "kick"))) return true;
-				try {
-					var storageKey = "ssn-cloud-receipts:" + roomID;
-					if (!cloudReceiptPositions || typeof cloudReceiptPositions !== "object" || Array.isArray(cloudReceiptPositions)) return true;
-					var previous = cloudReceiptPositions[receipt.stream] || 0;
-					if (!Number.isSafeInteger(previous) || previous < 0) return true;
-					if (receipt.seq > previous) {
-						if (!previous && Object.keys(cloudReceiptPositions).length >= 128) return true;
-						// Check storage availability before handing the message to the dock.
-						localStorage.setItem(storageKey, JSON.stringify(cloudReceiptPositions));
-						if (!isDuplicateTransportDelivery(payload, "server")) processInput(payload);
-						cloudReceiptPositions[receipt.stream] = receipt.seq;
+				var storageKey = cloudReceiptStorageKey;
+				function acceptReceipt() {
+					try {
+						if (!cloudReceiptPositions || typeof cloudReceiptPositions !== "object" || Array.isArray(cloudReceiptPositions)) return true;
+						var previous = cloudReceiptPositions[receipt.stream];
+						if (!previous) {
+							if (Object.keys(cloudReceiptPositions).length >= 128 || !cloudReceiptLegacy || typeof cloudReceiptLegacy !== "object" || Array.isArray(cloudReceiptLegacy)) return true;
+							var legacy = cloudReceiptLegacy[receipt.stream] || 0;
+							if (!Number.isSafeInteger(legacy) || legacy < 0) return true;
+							// Old storage only records a high-water mark. Preserve that
+							// boundary; new receipts are tracked individually above it.
+							previous = { legacy: legacy, floor: Math.min(Number.MAX_SAFE_INTEGER, legacy + 1), ranges: [] };
+						}
+						if (!validCloudReceiptRecord(previous)) return true;
+						var persisted = JSON.parse(localStorage.getItem(storageKey) || localStorage.getItem("ssn-cloud-receipts-v2:" + roomID) || "{}");
+						if (!persisted || typeof persisted !== "object" || Array.isArray(persisted) ||
+							(!persisted[receipt.stream] && Object.keys(persisted).length >= 128)) return true;
+						var saved = persisted[receipt.stream] || previous;
+						if (!validCloudReceiptRecord(saved)) return true;
+						var next = mergeCloudReceipts(previous, previous, receipt.seq);
+						if (payload.delete) {
+							var action = null;
+							if (typeof payload.delete.id === "string" && payload.delete.id && payload.delete.id.length <= 192) action = { seq: receipt.seq, id: payload.delete.id };
+							else if (payload.delete.userid && payload.delete.meta && payload.delete.meta.chatroomId) action = { seq: receipt.seq, userid: String(payload.delete.userid), chatroomId: String(payload.delete.meta.chatroomId) };
+							if (action) next.moderation = (next.moderation || []).concat([action]);
+						}
+						var combined = mergeCloudReceipts(saved, next, receipt.seq);
+						if (!validCloudReceiptRecord(combined)) return true;
+						if (!hasCloudReceipt(previous, receipt.seq)) {
+							// An expired gap is unknown, not a duplicate. Leave it
+							// unacknowledged rather than silently discard its message.
+							if (receipt.seq < Math.max(previous.floor, saved.floor)) throw Error("Cloud receipt is outside the retained window.");
+							// Check storage availability before handing the message to the dock.
+							localStorage.setItem(storageKey, JSON.stringify(persisted));
+							var moderated = !payload.delete && (combined.moderation || []).some(function (action) {
+								return receipt.seq < action.seq && (action.id !== undefined ? String(payload.id) === action.id :
+									String(payload.userid) === action.userid && String(payload.meta && payload.meta.chatroomId) === action.chatroomId);
+							});
+							if ((!moderated || showDeleted) && !isDuplicateTransportDelivery(payload, "server")) {
+								payload[cloudReceiptInfo] = { stream: receipt.stream, seq: receipt.seq };
+								if (moderated) deletedDockMessages.add(payload);
+								processInput(payload);
+							}
+						}
+						// Each open dock has its own delivery ledger. Merge persistent
+						// records for reloads without suppressing another dock's feed.
+						cloudReceiptPositions[receipt.stream] = mergeCloudReceipts(next, next, receipt.seq);
+						persisted[receipt.stream] = combined;
+						localStorage.setItem(storageKey, JSON.stringify(persisted));
+						if (socket.readyState === 1) socket.send(JSON.stringify({ssnCloudReceipt: receipt}));
+					} catch (error) {
+						console.warn("Cloud message confirmation is unavailable.");
 					}
-					var persisted = JSON.parse(localStorage.getItem(storageKey) || "{}");
-					persisted[receipt.stream] = Math.max(persisted[receipt.stream] || 0, receipt.seq);
-					localStorage.setItem(storageKey, JSON.stringify(persisted));
-					if (socket.readyState === 1) socket.send(JSON.stringify({ssnCloudReceipt: receipt}));
-				} catch (error) {
-					console.warn("Cloud message confirmation is unavailable.");
 				}
+				if (navigator.locks && typeof navigator.locks.request === "function") {
+					if (cloudReceiptPending >= 1000) return true;
+					cloudReceiptPending++;
+					// Multiple docks share reload state, but each displays its own
+					// feed. Serialize the storage merge across those open pages.
+					navigator.locks.request(storageKey, acceptReceipt).catch(function () {
+						console.warn("Cloud message confirmation is unavailable.");
+					}).then(function () { cloudReceiptPending--; });
+				} else acceptReceipt();
 				return true;
 			}
 
@@ -7397,10 +7511,19 @@
 			function deleteMessages(data, deleteOnlyLast=false, forceRemove=false) {
 				let selector = "";
 				let matchField = "";
+				const cloudReceipt = data[cloudReceiptInfo];
 				const nativeId = data.delete.meta && data.delete.meta.messageId;
+				// Exact IDs also identify P2P/history rows, which have no cloud receipt.
+				// Bulk deletions still need sequence ordering to protect newer messages.
+				const matchesCloudReceipt = message => !cloudReceipt || (message[cloudReceiptInfo] ?
+					message[cloudReceiptInfo].stream === cloudReceipt.stream && message[cloudReceiptInfo].seq < cloudReceipt.seq :
+					!!(nativeId || data.delete.id));
 				const vpzoneChannel = data.delete.type === "vpzone" && data.delete.meta && data.delete.meta.streamUsername;
 				const matchesVpzoneChannel = message => !vpzoneChannel ||
 					String(message.meta && message.meta.streamUsername).toLowerCase() === String(vpzoneChannel).toLowerCase();
+				const kickChatroom = data.delete.type === "kick" && data.delete.userid && data.delete.meta && data.delete.meta.chatroomId;
+				const matchesKickChatroom = message => !kickChatroom ||
+					String(message.meta && message.meta.chatroomId) === String(kickChatroom);
 				const deleteSourceName = (data.delete.meta && (data.delete.meta.sourceDisplayName || (data.delete.type === "twitch" && data.delete.meta.twitchDisplayName))) || data.delete.chatname;
 				if (data.delete.meta && data.delete.meta.messageId) {
 					const sourceSelector = data.delete.type ? dataAttributeSelector("data-source-type", data.delete.type) : "";
@@ -7439,14 +7562,16 @@
 				selectedQueue.concat(autoShowQueue).forEach(node => {
 					if (node.matches(selector)) nodes.add(node);
 				});
-				let matches = Array.from(nodes).filter(node => matchesVpzoneChannel(node.rawContents || {}) && (!nativeId ||
+				let matches = Array.from(nodes).filter(node => matchesCloudReceipt(node.rawContents || {}) && matchesVpzoneChannel(node.rawContents || {}) && matchesKickChatroom(node.rawContents || {}) && (!nativeId ||
 					String(getNativeSourceControlMessageId(node.rawContents || {})) === String(nativeId))
 				).map(node => ({ node, id: node.dataset.mid, type: node.dataset.sourceType }));
 				const pending = historyMissedLiveBuffer.concat(queue.map(item => item.contents), messageBuffer.map(item => item.contents));
 				if (featuredMessage) pending.push(featuredMessage);
 				pending.forEach(message => {
+					if (!matchesCloudReceipt(message)) return;
 					if (data.delete.type && String(message.type) !== String(data.delete.type)) return;
 					if (!matchesVpzoneChannel(message)) return;
+					if (!matchesKickChatroom(message)) return;
 					if (nativeId) {
 						if (String(getNativeSourceControlMessageId(message)) !== String(nativeId)) return;
 					} else if (matchField) {
@@ -9341,6 +9466,7 @@
 						}
 					} else if (data.action == "pin" || data.action == "unpin") {
 						var pinValues = Array.isArray(data.value) ? data.value : [data.value];
+						var pinnedCount = 0;
 						pinValues.forEach(function(pinValue) {
 							var pinElement = false;
 							if (pinValue && typeof pinValue === "object") {
@@ -9363,8 +9489,9 @@
 								unpinIt(pinElement);
 							}
 							applyHiddenState(pinElement);
+							pinnedCount++;
 						});
-						return true;
+						return isVersionedRemoteControlRequest(data) ? (pinnedCount === pinValues.length && pinnedCount > 0 ? { count: pinnedCount } : false) : true;
 					} else if (data.action === "toggleTTS" || data.action === "tts") {
 						if ("value" in data){
 							if (data.value == "toggle") {

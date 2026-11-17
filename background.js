@@ -10951,6 +10951,9 @@ function registerPendingStreamDeckDockRequest(request, UUID) {
 		if (!expired) {
 			return;
 		}
+		// API-connected Docks answer directly. The host only supplies a P2P
+		// fallback, so its timeout must not contradict the owner's response.
+		if (expired.transport === "websocket") return;
 		var router = getStreamDeckRemoteControlRouter();
 		var result = router && typeof router.makeError === "function"
 			? router.makeError(request, "TARGET_UNAVAILABLE", "No default Dock page completed the command.")
@@ -11309,7 +11312,7 @@ async function handleStreamDeckSsappRequest(request) {
 }
 
 function isStreamDeckTimerAction(action) {
-	return ["starttimer", "pausetimer", "resettimer", "gettimerstate"].indexOf(action) !== -1;
+	return ["starttimer", "pausetimer", "resettimer", "gettimerstate", "toggletimer", "timeradd", "timersubtract", "settimer"].indexOf(action) !== -1;
 }
 
 function isStreamDeckResetConfirmed(value) {
@@ -11418,6 +11421,12 @@ async function handleStreamDeckBackgroundRequest(request) {
 		const presets = await new Promise(resolve => getPollPresets(resolve));
 		return router.makeResponse(request, presets);
 	}
+	if (action === "loadpoll") {
+		const result = loadPollPreset(request.value && request.value.pollId);
+		return result.ok
+			? router.makeResponse(request, { pollId: result.pollId }, "accepted")
+			: router.makeError(request, result.code, result.message);
+	}
 
 	if (isStreamDeckTimerAction(action)) {
 		if (action === "resettimer" && !isStreamDeckResetConfirmed(request.value)) {
@@ -11431,6 +11440,60 @@ async function handleStreamDeckBackgroundRequest(request) {
 			action: action,
 			timer: exportTimerState()
 		});
+	}
+	if (action === "setpollsettings" || action === "createpoll") {
+		const value = action === "createpoll" ? request.value && request.value.settings : request.value;
+		if (!value || typeof value !== "object" || Array.isArray(value)) {
+			return router.makeError(request, "INVALID_VALUE", "Poll settings must be an object.");
+		}
+		if (action === "createpoll") createNewPoll(value);
+		else updatePollSettings(value);
+		return router.makeResponse(request, { settings: pollControlSettings(settings) }, "accepted");
+	}
+	if (["closepoll", "resetpoll", "startmap", "pausemap", "resetmap"].indexOf(action) !== -1) {
+		const target = action === "closepoll" || action === "resetpoll" ? "poll" : "map";
+		await sendTargetP2P({ cmd: action }, target);
+		return router.makeResponse(request, { action: action, state: target === "poll" ? pollControlState : mapControlState }, "accepted");
+	}
+	if (["startentries", "openentries", "resumeentries", "stopentries"].indexOf(action) !== -1) {
+		toggleEntries(action !== "stopentries");
+		return router.makeResponse(request, { open: allowNewEntries });
+	}
+	if (action === "waitlistmessage" || action === "setwaitlistmessage") {
+		setWaitlistMessage(request.value);
+		return router.makeResponse(request, { message: settings.customwaitlistmessage.textsetting });
+	}
+	if (action === "drawmode") {
+		const current = getSettingFlag("drawmode");
+		let enable = current;
+		if (request.value == null || request.value === "toggle") enable = !current;
+		else if (typeof request.value === "boolean") enable = request.value;
+		else if (typeof request.value === "string") {
+			const value = request.value.toLowerCase();
+			if (value === "toggle") enable = !current;
+			else if (["true", "1", "on", "yes", "enable", "enabled"].includes(value)) enable = true;
+			else if (["false", "0", "off", "no", "disable", "disabled"].includes(value)) enable = false;
+			else return router.makeError(request, "INVALID_VALUE", "Use true, false or toggle for draw mode.");
+		} else enable = Boolean(request.value);
+		if (enable) settings.drawmode = true;
+		else delete settings.drawmode;
+		chrome.storage.local.set({ settings: settings });
+		sendWaitlistConfig(null, true);
+		return router.makeResponse(request, { drawmode: enable });
+	}
+	if (action === "removefromwaitlist" || action === "highlightwaitlist") {
+		const index = parseInt(request.value) || 0;
+		if (action === "removefromwaitlist") removeWaitlist(index);
+		else highlightWaitlist(index);
+		return router.makeResponse(request, { count: waitlist.length });
+	}
+	if (action === "resetwaitlist") {
+		resetWaitlist();
+		return router.makeResponse(request, { count: waitlist.length, open: allowNewEntries });
+	}
+	if (action === "selectwinner") {
+		const winners = selectRandomWaitlist(parseInt(request.value) || 1);
+		return winners ? router.makeResponse(request, { winners: winners }) : router.makeError(request, "COMMAND_FAILED", "The waitlist draw failed.");
 	}
 
 	return router.makeError(request, "UNSUPPORTED_ACTION", "The requested Social Stream action is not part of the Phase 1 contract.");
@@ -11478,21 +11541,30 @@ async function routeStreamDeckRemoteRequest(request, context) {
 			result: await handleStreamDeckSsappRequest(request)
 		};
 	}
-	if ((router.isVersionedRequest(request) || isGiveawayAction(request.action) || isCreditsRemoteAction(request.action) || router.isCommerceAction(request.action) || request.action === "getCommerceState" || request.action === "triggerWorkflow" || request.action === "getWorkflowTriggers") && router.isRemoteSsnRequest(request, "background")) {
+	if ((router.isVersionedRequest(request) || request.action === "loadpoll" || isGiveawayAction(request.action) || isCreditsRemoteAction(request.action) || router.isCommerceAction(request.action) || request.action === "getCommerceState" || request.action === "triggerWorkflow" || request.action === "getWorkflowTriggers") && router.isRemoteSsnRequest(request, "background")) {
 		return {
 			kind: "command",
 			result: await handleStreamDeckBackgroundRequest(request)
 		};
 	}
 	if (router.isVersionedRequest(request) && router.isRemoteSsnRequest(request, "dock")) {
-		if (context.transport === "websocket") {
+		const relayDockCommand = context.transport === "websocket" && ["pin", "unpin", "clearDock", "clear", "clearAll"].indexOf(request.action) !== -1;
+		if (context.transport === "websocket" && !relayDockCommand) {
 			// A server-connected Dock is the authoritative owner and answers the
 			// control client's channel-1 request directly on channel 2.
 			return { kind: "deferred" };
 		}
+		if (relayDockCommand) {
+			// These commands previously reached P2P Docks through the API host.
+			// Keep that route, but return the Dock's result. Its request cache prevents
+			// a second execution when the same Dock also listens on the API socket.
+			const socket = context.socket;
+			context = { transport: "webrtc", UUID: "websocket:" + request.get, reply: result => sendStreamDeckCommandResult(socket, request, result) };
+		}
 		if ((context.transport === "webrtc" || context.transport === "operator") && context.UUID) {
 			const registration = registerPendingStreamDeckDockRequest(request, context.UUID);
 			if (!registration || registration.ok !== true) {
+				if (relayDockCommand) return { kind: "deferred" };
 				return {
 					kind: "command",
 					result: router.makeError(
@@ -11506,9 +11578,11 @@ async function routeStreamDeckRemoteRequest(request, context) {
 				return { kind: "deferred" };
 			}
 			if (context.reply) registration.pending.reply = context.reply;
+			if (relayDockCommand) registration.pending.transport = "websocket";
 			const sent = await sendStreamDeckDockRequestP2P(request, context.UUID);
 			if (!sent) {
 				clearPendingStreamDeckDockRequest(String(request.get || ""));
+				if (relayDockCommand) return { kind: "deferred" };
 				return {
 					kind: "command",
 					result: router.makeError(request, "TARGET_UNAVAILABLE", "No connected default Dock page is available.")
@@ -11839,12 +11913,6 @@ function setupSocket() {
 					data.get = false;
 				}
 				resp = true;
-			} else if (data.action && data.action === "loadpoll") {
-				// Load a saved poll preset by ID
-				if (data.value && data.value.pollId) {
-					loadPollPreset(data.value.pollId);
-					resp = true;
-				}
 			} else if (data.action && data.action === "setpollsettings") {
 				// Directly set poll settings via API
 				if (data.value && typeof data.value === "object") {
@@ -14827,8 +14895,15 @@ function getSavedPolls() {
 }
 
 function loadPollPreset(pollId) {
-	const poll = getSavedPolls().find(p => p.id === pollId);
-	if (!poll || !poll.settings) return;
+	if ((typeof pollId !== "string" && typeof pollId !== "number") ||
+		(typeof pollId === "number" && !isFinite(pollId)) || !String(pollId).trim()) {
+		return { ok: false, code: "INVALID_REQUEST", message: "Choose a saved poll preset." };
+	}
+	const id = String(pollId).trim();
+	const poll = getSavedPolls().find(p => p && String(p.id) === id);
+	if (!poll || !poll.settings) {
+		return { ok: false, code: "POLL_NOT_FOUND", message: "Poll preset not found. Refresh the saved presets." };
+	}
 
 	const fields = {
 		pollType: "optionsetting", pollQuestion: "textsetting", multipleChoiceOptions: "textsetting",
@@ -14844,6 +14919,7 @@ function loadPollPreset(pollId) {
 	});
 	sendTargetP2P({ settings: settings }, "poll");
 	chrome.storage.local.set({ settings: settings });
+	return { ok: true, pollId: poll.id };
 }
 
 function updatePollSettings(newSettings) {

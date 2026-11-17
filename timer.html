@@ -389,6 +389,8 @@
 function processInput(data) {
     if (!SSNOverlayControl.accept(data, "timer")) return;
             if (!data || typeof data !== "object") { return false; }
+            // The host applies versioned Stream Deck commands and sends the timer state.
+            if (data.action && data.get && Number(data.protocolVersion !== undefined ? data.protocolVersion : data.protocol) >= 2) return false;
             if (data.callback && data.callback.result && data.callback.result.currentMs !== undefined) { applyExported(data.callback.result); render(); return true; }
             if (data.timer && typeof data.timer === "object") {
                 if (data.ssnState) { var transition = timerStateTracker(data.ssnState); if (!transition.accept || !transition.changed) return true; }
@@ -535,12 +537,12 @@ function processInput(data) {
             var payload = {
                 label: el.labelInput.value || "Timer",
                 mode: el.modeInput.value,
-                style: el.styleInput.value,
                 warnSeconds: parseSeconds(el.warnInput.value, 60),
                 dangerSeconds: parseSeconds(el.dangerInput.value, 15),
                 soundUrl: el.soundInput.value || "",
                 sound: !!(el.soundInput.value || state.soundEnabled),
             };
+            if (el.styleInput.value !== state.style) { payload.style = el.styleInput.value; }
             var targetMs = parseDurationMs(el.timeInput.value, null);
             if (targetMs !== null && targetMs !== state.durationMs) {
                 if (el.modeInput.value === "countup") {

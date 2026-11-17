@@ -105,6 +105,8 @@
                                     <li><a href="#altstream">Altstream</a></li>
                                     <li><a href="#livacha">Livacha</a></li>
                                     <li><a href="#chatango">Chatango</a></li>
+                                    <li><a href="#vkvideo">VK Video</a></li>
+                                    <li><a href="#mixlr">Mixlr</a></li>
                                     <li><a href="#streamplace">Streamplace</a></li>
                                     <li><a href="#worldswave">WorldsWave</a></li>
                                     <li><a href="#goodgame">Goodgame</a></li>
@@ -886,7 +888,7 @@
                             <tr>
                                 <td><code>raid</code></td>
                                 <td>EventSub <code>channel.raid</code> or USERNOTICE <code>msg-id=raid</code>.</td>
-                                <td><code>meta</code> = { fromId, fromLogin, viewers }.</td>
+                                <td><code>meta</code> = { fromId, fromLogin, viewers }. Cloud Lightweight's opt-in IRC raid alerts use these fields and preserve the native notice ID.</td>
                             </tr>
 							<tr>
 								<td><code>watch_streak</code></td>
@@ -1470,6 +1472,8 @@
                     </table>
                 </div>
                     <p class="field-highlights">Profile lookups leverage <code>profileCache</code>; <code>mapBadges</code> merges Kick's badge assets with cached SVG when available. When Kick reports donations in KICKs, the bridge converts them into <code>hasDonation</code> plus <code>meta.amount</code> with <code>currency</code> fallback to "KICKs". Chat payloads include <code>meta.messageId</code> when the bridge exposes a native Kick message ID so delete sync can target the correct message. Reply payloads include <code>meta.reply</code> with the parent <code>messageId</code>, <code>author</code>, and <code>text</code> when known. Supplied reply details remain available even when the original message is not cached; an ID-only reply without cached context can still lack a visible quote.</p>
+
+                    <p>Cloud Lightweight removes a user's earlier messages on a ban or timeout with <code>delete: {type: "kick", userid, meta: {chatroomId}}</code>. The top-level <code>id</code> identifies the moderation event; <code>delete.meta.chatroomId</code> limits removal to that chatroom.</p>
 
                     <h4>Kick Websocket: Event Quick Reference</h4>
                     <div class="table-scroll" role="region" tabindex="0" aria-label="Kick – Websocket/Bridge table">
@@ -2501,9 +2505,20 @@
                 <p>Message IDs are used internally to avoid recapturing edits and remounted rows. Initial history and prepended older messages are skipped; timestamps and reaction menus are outside the captured body. No donation, membership, moderation, or viewer-count events are inferred.</p>
             </section>
 
+            <section class="section-summary" id="vkvideo">
+                <h2>VK Video</h2>
+                <p>Cloud Lightweight captures public default-stream chat with <code>type: "vkvideo"</code>, a channel-scoped <code>id</code>, <code>userid</code>, plain <code>chatmessage</code> with <code>textonly: true</code>, and <code>timestamp</code> in milliseconds. Emotes use their names. Private, deleted and alternate-stream messages are excluded. Message deletions and user-message clears remove captured rows by exact ID. Use Browser for paid events, emote images or sign-in.</p>
+            </section>
+
+            <section class="section-summary" id="mixlr">
+                <h2>Mixlr</h2>
+                <p>Cloud Lightweight captures public live event chat with <code>type: "mixlr"</code>, an owner-scoped <code>id</code>, <code>userid</code>, plain <code>chatmessage</code> with <code>textonly: true</code>, and <code>meta.messageId</code>/<code>meta.eventId</code>/<code>meta.channel</code>. Initial history and other broadcasts are excluded. Deletions remove captured messages by exact ID. Use Browser for GIFs, edited comments or sign-in.</p>
+            </section>
+
             <section class="section-summary" id="chatango">
                 <h2>Chatango - Group Chat</h2>
                 <p>Open <code>https://ROOM.chatango.com/</code>, or a page with an embedded Chatango room. New rows emit standard chat with <code>type</code>/<code>platform: "chatango"</code>, plain-text <code>chatname</code>, <code>nameColor</code>, <code>chatmessage</code>, and <code>chatimg</code> when available. Inline images use HTTP(S) URLs; text-only mode uses their alt text or <code>[image]</code>. Rows already displayed when capture attaches and older messages prepended while scrolling back are skipped.</p>
+                <p>Cloud Lightweight emits public text chat with <code>type: "chatango"</code>, <code>textonly: true</code>, room-scoped <code>id</code>, <code>timestamp</code> in milliseconds, and the original ID in <code>meta.messageId</code>. Initial history is skipped. Message deletions and room clears emit <code>delete: {type: "chatango", id}</code> for captured messages. Use Browser for emotes, avatars or sign-in.</p>
             </section>
 
             <section class="section-summary" id="vaughn">
@@ -2538,7 +2553,7 @@
                         <thead><tr><th scope="col">Source / type</th><th scope="col">Page to capture</th><th scope="col">Viewer count and chat fields</th></tr></thead>
                         <tbody>
                             <tr id="goodgame"><td><strong>Goodgame</strong><br><code>goodgame</code></td><td><code>goodgame.ru/CHANNEL/chat</code></td><td>Stream <code>viewers</code>. Chat rows also include the native ID as a string in <code>meta.messageId</code> when available.</td></tr>
-                            <tr id="altstream"><td><strong>Altstream</strong><br><code>altstream</code></td><td><code>altstream.online/USERNAME/chat</code>, or the channel page with chat open</td><td><code>data.stream.viewers</code> from <code>/api/v1/channels/USERNAME</code>; an offline channel emits zero. Chat includes avatars (<code>chatimg</code>), login names (<code>userid</code>), name colors, badges, inline emotes/stickers, and the native ID in <code>meta.messageId</code>. Channel supporters set <code>membership</code> and qualify for <code>memberchatonly</code>; site-wide supporters do not. <code>textonlymode</code> uses plain text and emote/sticker alt text. Initial history and non-chat event cards are excluded.</td></tr>
+                            <tr id="altstream"><td><strong>Altstream</strong><br><code>altstream</code></td><td><code>altstream.online/USERNAME/chat</code>, or the channel page with chat open</td><td><code>data.stream.viewers</code> from <code>/api/v1/channels/USERNAME</code>; an offline channel emits zero. Chat includes avatars (<code>chatimg</code>), login names (<code>userid</code>), name colors, badges, inline emotes/stickers, and the native ID in <code>meta.messageId</code>. Ko-fi tip cards include the donor name, message, and original amount/currency in <code>hasDonation</code> (or <code>Ko-fi tip</code> when no amount is available). USD tips also set numeric <code>donoValue</code>; other currencies use the shared conversion. Tips use <code>subtitle: "Ko-fi tip"</code> without an <code>event</code> field. Channel supporters set <code>membership</code> and qualify for <code>memberchatonly</code>; site-wide supporters and tip cards do not. <code>textonlymode</code> uses plain text and emote/sticker alt text. Initial history and other event cards are excluded.</td></tr>
                             <tr id="pilled"><td><strong>Pilled</strong><br><code>pilled</code></td><td><code>pilled.net/livechat/USERNAME</code> or <code>pilled.net/comment/TOPIC_ID</code></td><td>The current live topic's <code>topicFacts.liveViews</code>. The dedicated chat URL supports counts without opening the video page.</td></tr>
                             <tr id="owncast"><td><strong>Owncast</strong><br><code>owncast</code></td><td>Your captured Owncast stream or chat page</td><td><code>viewerCount</code> from that server's <code>/api/status</code>.</td></tr>
                             <tr id="picarto"><td><strong>Picarto</strong><br><code>picarto</code></td><td><code>picarto.tv/chatpopout/CHANNEL/public</code></td><td>Channel <code>viewers</code>.</td></tr>

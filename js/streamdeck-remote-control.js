@@ -151,6 +151,33 @@
 	};
 
 	const REMOTE_SSN_ACTION_DESCRIPTORS = {
+		clearDock: { owner: "dock", phase: 2, category: "overlay", label: "Clear Dock messages", risk: "mutating", callback: "guaranteed" },
+		clear: { owner: "dock", phase: 2, category: "overlay", label: "Clear messages", risk: "mutating", callback: "guaranteed" },
+		clearAll: { owner: "dock", phase: 2, category: "overlay", label: "Clear all messages", risk: "mutating", callback: "guaranteed" },
+		pin: { owner: "dock", phase: 2, category: "overlay", label: "Pin message", risk: "mutating", callback: "guaranteed" },
+		unpin: { owner: "dock", phase: 2, category: "overlay", label: "Unpin message", risk: "mutating", callback: "guaranteed" },
+		drawmode: { owner: "background", phase: 2, category: "waitlist", label: "Draw mode", risk: "mutating", callback: "guaranteed" },
+		removefromwaitlist: { owner: "background", phase: 2, category: "waitlist", label: "Remove entry", risk: "mutating", callback: "guaranteed" },
+		highlightwaitlist: { owner: "background", phase: 2, category: "waitlist", label: "Highlight entry", risk: "mutating", callback: "guaranteed" },
+		resetwaitlist: { owner: "background", phase: 2, category: "waitlist", label: "Reset waitlist", risk: "mutating", callback: "guaranteed" },
+		stopentries: { owner: "background", phase: 2, category: "waitlist", label: "Stop entries", risk: "mutating", callback: "guaranteed" },
+		startentries: { owner: "background", phase: 2, category: "waitlist", label: "Start entries", risk: "mutating", callback: "guaranteed" },
+		openentries: { owner: "background", phase: 2, category: "waitlist", label: "Open entries", risk: "mutating", callback: "guaranteed" },
+		resumeentries: { owner: "background", phase: 2, category: "waitlist", label: "Resume entries", risk: "mutating", callback: "guaranteed" },
+		waitlistmessage: { owner: "background", phase: 2, category: "waitlist", label: "Waitlist message", risk: "mutating", callback: "guaranteed" },
+		setwaitlistmessage: { owner: "background", phase: 2, category: "waitlist", label: "Set waitlist message", risk: "mutating", callback: "guaranteed" },
+		selectwinner: { owner: "background", phase: 2, category: "waitlist", label: "Select winner", risk: "mutating", callback: "guaranteed" },
+		toggletimer: { owner: "background", phase: 2, category: "timer", label: "Toggle timer", risk: "mutating", callback: "guaranteed" },
+		timeradd: { owner: "background", phase: 2, category: "timer", label: "Add time", risk: "mutating", callback: "guaranteed" },
+		timersubtract: { owner: "background", phase: 2, category: "timer", label: "Subtract time", risk: "mutating", callback: "guaranteed" },
+		settimer: { owner: "background", phase: 2, category: "timer", label: "Set timer", risk: "mutating", callback: "guaranteed" },
+		setpollsettings: { owner: "background", phase: 2, category: "poll", label: "Set poll settings", risk: "mutating", callback: "guaranteed" },
+		createpoll: { owner: "background", phase: 2, category: "poll", label: "Create poll", risk: "mutating", callback: "guaranteed" },
+		resetpoll: { owner: "background", phase: 2, category: "poll", label: "Reset poll", risk: "mutating", callback: "guaranteed" },
+		closepoll: { owner: "background", phase: 2, category: "poll", label: "Close poll", risk: "mutating", callback: "guaranteed" },
+		startmap: { owner: "background", phase: 2, category: "map", label: "Start map", risk: "mutating", callback: "guaranteed" },
+		pausemap: { owner: "background", phase: 2, category: "map", label: "Pause map", risk: "mutating", callback: "guaranteed" },
+		resetmap: { owner: "background", phase: 2, category: "map", label: "Reset map", risk: "mutating", callback: "guaranteed" },
 		getWorkflowTriggers: { owner: "background", phase: 2, category: "workflows", label: "List enabled workflow triggers", risk: "read-only", callback: "guaranteed" },
 		triggerWorkflow: {
 			owner: "background", phase: 2, category: "workflows", label: "Run Event Flow workflow", risk: "mutating", callback: "guaranteed",
@@ -277,6 +304,14 @@
 			category: "timer",
 			label: "Get timer state",
 			risk: "read-only",
+			callback: "guaranteed"
+		},
+		loadpoll: {
+			owner: "background",
+			phase: 1,
+			category: "poll",
+			label: "Load poll preset",
+			risk: "mutating",
 			callback: "guaranteed"
 		},
 		getpollpresets: {

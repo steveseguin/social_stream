@@ -352,7 +352,7 @@ When a message is sent, it goes to the specified output channel. Those who have 
 16. **Poll Operations**
     - Reset: `{"action": "resetpoll"}`
     - Close: `{"action": "closepoll"}`
-    - Load Preset: `{"action": "loadpoll", "value": {"pollId": "poll-123456"}}`
+    - Load Preset: `{"action": "loadpoll", "value": {"pollId": 1234567890}}`
     - Set Settings: `{"action": "setpollsettings", "value": {"pollQuestion": "What's your favorite color?", "pollType": "multiple", "multipleChoiceOptions": "Red\nBlue\nGreen"}}`
     - Get Presets: `{"action": "getpollpresets"}`
     - Create New: `{"action": "createpoll", "value": {"settings": {"pollQuestion": "New Poll", "pollType": "freeform"}}}`
@@ -1092,7 +1092,9 @@ The poll system can now be controlled through the API with the following actions
 - **Close Poll**: `{"action": "closepoll"}` - Closes the current poll, preventing new votes
 
 ### Advanced Poll Controls
-- **Load Poll Preset**: `{"action": "loadpoll", "value": {"pollId": "poll-123456"}}` - Loads a previously saved poll preset by its ID
+In Stream Deck, choose **Load Poll Preset**, then select a **Saved poll**. Use **Refresh presets** after saving or deleting polls in SSN. Enable Poll in SSN and open its overlay before using the button.
+
+- **Load Poll Preset**: `{"action": "loadpoll", "value": {"pollId": 1234567890}}` - Loads a previously saved poll preset by its ID
 - **Get Poll Presets**: `{"action": "getpollpresets"}` - Returns a list of all saved poll presets with their IDs and names
 - **Set Poll Settings**: `{"action": "setpollsettings", "value": {...}}` - Updates the current poll settings
   - Available settings: `pollType`, `pollQuestion`, `multipleChoiceOptions`, `pollMatchMode`, `pollStyle`, `pollTimer`, `pollTimerState`, `pollTally`, `pollSpam`
@@ -1117,7 +1119,7 @@ ws.send(JSON.stringify({
 // Load a saved poll preset
 ws.send(JSON.stringify({
     action: "loadpoll",
-    value: { pollId: "poll-1234567890" }
+    value: { pollId: 1234567890 }
 }));
 ```
 

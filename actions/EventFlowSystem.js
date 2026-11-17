@@ -562,7 +562,7 @@ class EventFlowSystem {
 
     notifyFlowsChanged() {
         // Standalone extension editors do not share SSApp's parent message route.
-        if (!this.userMemoryChannel || !window.location || window.location.protocol !== 'chrome-extension:') return;
+        if (!this.userMemoryChannel || !window.location || !['chrome-extension:', 'moz-extension:'].includes(window.location.protocol)) return;
         try {
             this.userMemoryChannel.postMessage({
                 kind: 'flows-changed',
