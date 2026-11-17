@@ -5467,6 +5467,11 @@
 			var socketserver = false;
 			var remoteControlDockResultCache = new Map();
 			var remoteControlDockActions = {
+				pin: true,
+				unpin: true,
+				clearDock: true,
+				clear: true,
+				clearAll: true,
 				nextInQueue: true,
 				clearOverlay: true,
 				nextPinned: true,
@@ -5517,7 +5522,9 @@
 				if (!data.action || !remoteControlDockActions[data.action]) {
 					return { skip: true, result: null };
 				}
-				if (thisLabel) {
+				var targetedAction = ["pin", "unpin", "clearDock", "clear", "clearAll"].indexOf(data.action) !== -1;
+				var targetLabel = targetedAction && data.target && data.target !== "null" ? data.target : "";
+				if ((thisLabel || "") !== targetLabel) {
 					return { skip: true, result: null };
 				}
 				var key = data.get ? String(data.get) : "";
@@ -9453,6 +9460,7 @@
 						}
 					} else if (data.action == "pin" || data.action == "unpin") {
 						var pinValues = Array.isArray(data.value) ? data.value : [data.value];
+						var pinnedCount = 0;
 						pinValues.forEach(function(pinValue) {
 							var pinElement = false;
 							if (pinValue && typeof pinValue === "object") {
@@ -9475,8 +9483,9 @@
 								unpinIt(pinElement);
 							}
 							applyHiddenState(pinElement);
+							pinnedCount++;
 						});
-						return true;
+						return isVersionedRemoteControlRequest(data) ? (pinnedCount === pinValues.length && pinnedCount > 0 ? { count: pinnedCount } : false) : true;
 					} else if (data.action === "toggleTTS" || data.action === "tts") {
 						if ("value" in data){
 							if (data.value == "toggle") {

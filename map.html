@@ -2477,6 +2477,8 @@
                             if (!event.data) return;
                             try {
                                 const data = JSON.parse(event.data);
+                                // Versioned Stream Deck commands are owned by the host or Dock.
+                                if (data.action && data.get && Number(data.protocolVersion !== undefined ? data.protocolVersion : data.protocol) >= 2) return;
                                 const resp = messageHandler(data);
                                 if (resp !== null && data.get) {
                                     const ret = { callback: { get: data.get, result: resp } };

@@ -389,6 +389,8 @@
 function processInput(data) {
     if (!SSNOverlayControl.accept(data, "timer")) return;
             if (!data || typeof data !== "object") { return false; }
+            // The host applies versioned Stream Deck commands and sends the timer state.
+            if (data.action && data.get && Number(data.protocolVersion !== undefined ? data.protocolVersion : data.protocol) >= 2) return false;
             if (data.callback && data.callback.result && data.callback.result.currentMs !== undefined) { applyExported(data.callback.result); render(); return true; }
             if (data.timer && typeof data.timer === "object") {
                 if (data.ssnState) { var transition = timerStateTracker(data.ssnState); if (!transition.accept || !transition.changed) return true; }
