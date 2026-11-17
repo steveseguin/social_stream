@@ -11418,6 +11418,12 @@ async function handleStreamDeckBackgroundRequest(request) {
 		const presets = await new Promise(resolve => getPollPresets(resolve));
 		return router.makeResponse(request, presets);
 	}
+	if (action === "loadpoll") {
+		const result = loadPollPreset(request.value && request.value.pollId);
+		return result.ok
+			? router.makeResponse(request, { pollId: result.pollId }, "accepted")
+			: router.makeError(request, result.code, result.message);
+	}
 
 	if (isStreamDeckTimerAction(action)) {
 		if (action === "resettimer" && !isStreamDeckResetConfirmed(request.value)) {
@@ -11478,7 +11484,7 @@ async function routeStreamDeckRemoteRequest(request, context) {
 			result: await handleStreamDeckSsappRequest(request)
 		};
 	}
-	if ((router.isVersionedRequest(request) || isGiveawayAction(request.action) || isCreditsRemoteAction(request.action) || router.isCommerceAction(request.action) || request.action === "getCommerceState" || request.action === "triggerWorkflow" || request.action === "getWorkflowTriggers") && router.isRemoteSsnRequest(request, "background")) {
+	if ((router.isVersionedRequest(request) || request.action === "loadpoll" || isGiveawayAction(request.action) || isCreditsRemoteAction(request.action) || router.isCommerceAction(request.action) || request.action === "getCommerceState" || request.action === "triggerWorkflow" || request.action === "getWorkflowTriggers") && router.isRemoteSsnRequest(request, "background")) {
 		return {
 			kind: "command",
 			result: await handleStreamDeckBackgroundRequest(request)
@@ -11839,12 +11845,6 @@ function setupSocket() {
 					data.get = false;
 				}
 				resp = true;
-			} else if (data.action && data.action === "loadpoll") {
-				// Load a saved poll preset by ID
-				if (data.value && data.value.pollId) {
-					loadPollPreset(data.value.pollId);
-					resp = true;
-				}
 			} else if (data.action && data.action === "setpollsettings") {
 				// Directly set poll settings via API
 				if (data.value && typeof data.value === "object") {
@@ -14827,8 +14827,15 @@ function getSavedPolls() {
 }
 
 function loadPollPreset(pollId) {
-	const poll = getSavedPolls().find(p => p.id === pollId);
-	if (!poll || !poll.settings) return;
+	if ((typeof pollId !== "string" && typeof pollId !== "number") ||
+		(typeof pollId === "number" && !isFinite(pollId)) || !String(pollId).trim()) {
+		return { ok: false, code: "INVALID_REQUEST", message: "Choose a saved poll preset." };
+	}
+	const id = String(pollId).trim();
+	const poll = getSavedPolls().find(p => p && String(p.id) === id);
+	if (!poll || !poll.settings) {
+		return { ok: false, code: "POLL_NOT_FOUND", message: "Poll preset not found. Refresh the saved presets." };
+	}
 
 	const fields = {
 		pollType: "optionsetting", pollQuestion: "textsetting", multipleChoiceOptions: "textsetting",
@@ -14844,6 +14851,7 @@ function loadPollPreset(pollId) {
 	});
 	sendTargetP2P({ settings: settings }, "poll");
 	chrome.storage.local.set({ settings: settings });
+	return { ok: true, pollId: poll.id };
 }
 
 function updatePollSettings(newSettings) {

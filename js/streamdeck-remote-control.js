@@ -279,6 +279,14 @@
 			risk: "read-only",
 			callback: "guaranteed"
 		},
+		loadpoll: {
+			owner: "background",
+			phase: 1,
+			category: "poll",
+			label: "Load poll preset",
+			risk: "mutating",
+			callback: "guaranteed"
+		},
 		getpollpresets: {
 			owner: "background",
 			phase: 1,

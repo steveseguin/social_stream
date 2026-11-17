@@ -3910,11 +3910,16 @@ async function ensureChatClientInstance() {
 		// Keep the native command and role here, before SSN role overrides or flow edits.
 		// A ban request must refer back to this channel's recent, unconsumed chat message.
 		const commandText = String(getTwitchMessageText(normalizedPayload, parsedMessage.trailing) || '').trim();
+		const commandTags = parsedMessage.tags || {};
+		const commandFromRoom = !commandTags['source-room-id'] || String(commandTags['source-room-id']) === String(commandTags['room-id']);
+		const commandModerator = [true, 1, '1', 'true'].includes(commandTags.mod)
+			|| /(?:^|,)(?:moderator|broadcaster)\//.test(commandTags.badges || '')
+			|| normalizeTwitchLogin(user) === normalizeTwitchLogin(channel);
 		if (data.id && commandText.charAt(0) === '!' && commandText.length <= 100 && !pendingMessage.deleted) {
 			const now = Date.now();
 			twitchBanCommands.forEach((entry, id) => { if (now - entry.received > 120000) twitchBanCommands.delete(id); });
 			if (!twitchBanCommands.has(data.id)) twitchBanCommands.set(data.id, {
-				text: commandText, allowed: mod === true || normalizeTwitchLogin(user) === normalizeTwitchLogin(channel),
+				text: commandText, allowed: commandFromRoom && commandModerator,
 				channelId: currentChannelId, sourceName: sourceInfo.name, received: now, used: false,
 				sent: Number(parsedMessage.tags['tmi-sent-ts']) || now
 			});

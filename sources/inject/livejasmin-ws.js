@@ -47,6 +47,45 @@
 		if (event.source !== window || event.origin !== location.origin || !event.data || event.data.source !== "ssn-livejasmin-ready") return;
 		ready = true; pending.splice(0).forEach(function (packet) { post(packet, location.origin); });
 	});
+	// SSApp observes before navigation and replays frames collected before injection.
+	// The extension keeps its document-start WebSocket hook below.
+	if (window.ninjafy && typeof window.ninjafy.onWebSocketMessage === "function") {
+		var observed = new Map();
+		window.ninjafy.onWebSocketMessage(function (event) {
+			var url;
+			try { url = new URL(event.url); } catch (_) { return; }
+			if (url.protocol !== "wss:" || !/^ls-entry-[a-z0-9-]+\.dditsadn\.com$/.test(url.hostname) || url.pathname !== "/socket.io/") return;
+			var match = location.pathname.match(/^\/[a-z]{2}\/chat\/([a-z0-9_-]+)\/?$/i);
+			if (!match || !event.requestId) return;
+			if (event.type === "close") { observed.delete(event.requestId); return; }
+			if (event.type === "open") {
+				observed.set(event.requestId, { roomId: "", publicChat: false, serial: 0, connection: pageId + "_" + (++socketNumber) });
+				while (observed.size > 16) observed.delete(observed.keys().next().value);
+				return;
+			}
+			var room = observed.get(event.requestId), channel = match[1].toLowerCase();
+			if (!room || event.type !== "message" || typeof event.data !== "string" || event.data.length > 2 * 1024 * 1024 || event.data.slice(0, 3) !== "42[") return;
+			try {
+				var packet = JSON.parse(event.data.slice(2)), method = packet[0], context = packet[1], value = packet[2];
+				if (!context || !/^[a-zA-Z0-9_-]{1,100}$/.test(context.roomId || "") || room.roomId && room.roomId !== context.roomId) return;
+				room.roomId = context.roomId;
+				if (method === "updateChatType") room.publicChat = !!value && value.chatType === "free";
+				if (["privateStarted", "part", "closeConnection", "guestTimeoutChatClosed", "guestTimeoutStreamStopped"].includes(method)) room.publicChat = false;
+				if (method === "notification" && value && value.type === "MESSAGE_DELETED") {
+					var deleted = value.payload && value.payload.ids;
+					if (Array.isArray(deleted) && deleted.length <= 1000) deleted.forEach(function (id) {
+						if (Number.isSafeInteger(id)) id = String(id);
+						if (text(id, 100)) publish(channel, null, "livejasmin_" + room.roomId + "_" + id);
+					});
+				}
+				if (method === "addLine" && room.publicChat) {
+					var payload = parseMessage(value, room.roomId, channel, room.connection + "_" + (++room.serial));
+					if (payload) publish(channel, payload);
+				}
+			} catch (_) {}
+		});
+		return;
+	}
 	window.WebSocket = new Proxy(NativeSocket, {
 		construct: function (Target, args) {
 			var socket = Reflect.construct(Target, args), url;
