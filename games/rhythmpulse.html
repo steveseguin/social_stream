@@ -299,44 +299,6 @@
             font-size: 18px;
         }
 
-        #audio-controls {
-            position: absolute;
-            top: 120px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px 20px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 100;
-            text-align: center;
-        }
-
-        #volume-slider {
-            width: 150px;
-            margin: 10px 0;
-        }
-
-        #mute-button {
-            background: #00ff88;
-            color: #000;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.2s ease;
-        }
-
-        #mute-button:hover {
-            background: #00cc70;
-            transform: scale(1.05);
-        }
-
-        #mute-button.muted {
-            background: #ff4757;
-        }
-
         .sync-burst {
             position: absolute;
             top: 50%;
@@ -421,13 +383,6 @@
             <div>BPM</div>
         </div>
         
-        <div id="audio-controls">
-            <h4 style="margin-top: 0; color: #00ff88;">Audio</h4>
-            <input type="range" id="volume-slider" min="0" max="100" value="50">
-            <div id="volume-display">50%</div>
-            <button id="mute-button">🔊 Sound ON</button>
-        </div>
-        
         <div id="drum-kit">
             <h4 style="margin-top: 0; color: #00ff88;">Drum Kit</h4>
             <div class="drum-pad drum-kick" data-sound="kick">🥁</div>
@@ -487,7 +442,8 @@
         let audioContext = null;
         let masterGain = null;
         let audioEnabled = true;
-        const DEFAULT_VOLUME = 0.5;
+        // Loudness is a link option: &volume=0 to 100 (0 is silent). OBS can also control the source's audio.
+        const DEFAULT_VOLUME = urlParams.has('volume') ? Math.max(0, Math.min(100, parseFloat(urlParams.get('volume')) || 0)) / 100 : 0.5;
 
         // Initialize Web Audio API
         function initAudio() {
@@ -1109,36 +1065,6 @@
                 instructions.classList.add('fade-out');
             }
         }, 30000);
-        
-        // Audio control event listeners
-        const volumeSlider = document.getElementById('volume-slider');
-        const volumeDisplay = document.getElementById('volume-display');
-        const muteButton = document.getElementById('mute-button');
-        
-        volumeSlider.addEventListener('input', (e) => {
-            const volume = e.target.value / 100;
-            if (masterGain) {
-                masterGain.gain.value = volume;
-            }
-            volumeDisplay.textContent = e.target.value + '%';
-        });
-        
-        muteButton.addEventListener('click', () => {
-            audioEnabled = !audioEnabled;
-            if (audioEnabled) {
-                muteButton.textContent = '🔊 Sound ON';
-                muteButton.classList.remove('muted');
-                if (masterGain) {
-                    masterGain.gain.value = volumeSlider.value / 100;
-                }
-            } else {
-                muteButton.textContent = '🔇 Sound OFF';
-                muteButton.classList.add('muted');
-                if (masterGain) {
-                    masterGain.gain.value = 0;
-                }
-            }
-        });
         
         // Clean up old data periodically
         setInterval(() => {

@@ -37,8 +37,8 @@ These pages are output/control surfaces. They do not capture platform chat by th
 
 - Signal Lock: `!code 1234`, four digits from 1 through 6 including repeats, exact/misplaced feedback, 90 seconds from the first valid guess. Five-second per-viewer cooldown, duplicate guesses ignored.
 - Crowd Quest: `!vote 1`, `!vote 2`, or `!vote 3`; five chapters, 30 seconds per chapter starting with the first valid vote. One changeable vote per platform account; outcomes shown in advance. Insufficient-supply routes are unavailable. Ties choose randomly.
-- Both advance after a ten-second result screen. Host buttons pause or restart locally; chat cannot invoke them. State resets on reload, with no loyalty spending or source-chat replies. At most 1,000 players per round; identity combines platform with user ID, username, or display name in that order.
-- Parameters: `session` (aliases `room`, `s`, `id`), `password`, `server`, `demo`, `clean` (hide host controls), `transparent`, `chroma`. `demo` never connects, even if a session is supplied. A missing session never joins a shared fallback room.
+- Both advance after a ten-second result screen. The page shows no host buttons or connection status. State resets on reload, with no loyalty spending or source-chat replies. At most 1,000 players per round; identity combines platform with user ID, username, or display name in that order.
+- Parameters: `session` (aliases `room`, `s`, `id`), `password`, `server`, `demo`, `transparent`, `chroma`. `demo` never connects, even if a session is supplied. A missing session never joins a shared fallback room.
 - Use either the normal dock-label iframe bridge or `server` WebSocket (out 2/in 1), never both. Array payloads and `content` envelopes are accepted. Bots, private/reflected traffic, and events are excluded. Only the created bridge may deliver window messages.
 - Word Chain now uses `games/wordchain.css` and a chronological trail of eight words. Scoring, letter matching, themes, and timers remain unchanged.
 
@@ -143,7 +143,7 @@ Chicken Royale is the largest game page in this group.
 | WebSocket mode does not work | Most games use `server` out 2/in 1, but Phrase Guess uses `in:2`, `out:1`; Chicken Royale and root Spam Power also support extension relay `server2`/`server3` out 3/in 4. |
 | Bot response does not appear in platform chat | Most game responses are page-local `postMessage` responses. Do not promise real platform chat send-back unless the exact page, send mode, source, and platform support have been checked. |
 | Old stats or winners keep returning | Clear the relevant localStorage key: Spam Power history in `games.html`, `chickenRoyaleDinners`, or Phrase Guess keys `ssnPhraseGameSettings` and `ssnPhrases`. |
-| Rhythm Pulse has no sound | Browser audio can be muted, blocked by autoplay policy, or not captured by OBS. Click the page/audio control and verify OBS browser-source audio settings. |
+| Rhythm Pulse has no sound | Browser audio can be muted, blocked by autoplay policy, or not captured by OBS. Click the page and verify OBS browser-source audio settings. Set volume in SSN Game Options or with `&volume=0` through `100` (default 50). |
 | Chicken Royale is full or will not join | Check `maxplayers`, whether the battle already started, duplicate names, and whether `autojoin` is intended. |
 
 ## Answer Pattern
@@ -172,11 +172,11 @@ For Pet Race, open `https://socialstream.ninja/games/petrace.html?session=YOUR_S
 
 ## Tug of War
 
-`games/tugofwar.html` uses `tug-engine.js`, `tug-view.js`, and the shared `audience-page.js` transport/host controls. Join with `!join`; teams auto-balance and stay fixed per match. Each correct plain-chat answer (or `!answer VALUE`) adds one tug per player per 12-second prompt. Words alternate with generated arithmetic questions. Twenty net tugs or the lead after 180 seconds wins. Ties draw. Teams reset between matches. State is bounded to 1,000 players and 20,000 message IDs; no persistence, points, or outgoing chat commands. Supports standard session/password/server/demo/clean/transparent/chroma parameters.
+`games/tugofwar.html` uses `tug-engine.js`, `tug-view.js`, and the shared `audience-page.js` transport. Join with `!join`; teams auto-balance and stay fixed per match. Each correct plain-chat answer (or `!answer VALUE`) adds one tug per player per 12-second prompt. Words alternate with generated arithmetic questions. Twenty net tugs or the lead after 180 seconds wins. Ties draw. Teams reset between matches. State is bounded to 1,000 players and 20,000 message IDs; no persistence, points, or outgoing chat commands. Supports standard session/password/server/demo/transparent/chroma parameters.
 
 ## Cooperative participation games
 
-`crewkitchen.html`, `beaconrelay.html`, and `meteorshield.html` share `teamplay-engine.js`, `teamplay-view.js`, and the existing `audience-page.js` chat transport/host controls. Kitchen accepts current-recipe `!cook INGREDIENT` contributions every six seconds per viewer, two per ingredient, four orders in 90 seconds. Relay accepts `!pass` from alternating accounts, four seconds per account and 300ms globally, targeting 20 passes in 90 seconds. Shield accepts one changeable `!shield red|blue|gold` choice per account per 12-second wave, with six waves and six hull. Unblocked meteors damage hull; subsequent waves scale with participant count, capped at 12 meteors. All are opt-in by opening their game link, free of loyalty spending, and bounded to 1,000 players and 20,000 accepted message IDs per round.
+`crewkitchen.html`, `beaconrelay.html`, and `meteorshield.html` share `teamplay-engine.js`, `teamplay-view.js`, and the existing `audience-page.js` chat transport. Kitchen accepts current-recipe `!cook INGREDIENT` contributions every six seconds per viewer, two per ingredient, four orders in 90 seconds. Relay accepts `!pass` from alternating accounts, four seconds per account and 300ms globally, targeting 20 passes in 90 seconds. Shield accepts one changeable `!shield red|blue|gold` choice per account per 12-second wave, with six waves and six hull. Unblocked meteors damage hull; subsequent waves scale with participant count, capped at 12 meteors. All are opt-in by opening their game link, free of loyalty spending, and bounded to 1,000 players and 20,000 accepted message IDs per round.
 
 ## Puzzle party games
 

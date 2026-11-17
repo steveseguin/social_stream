@@ -37,9 +37,6 @@
         #status-panel { top: 20px; left: 20px; min-width: 230px; }
         #status-line { font-size: 26px; font-weight: bold; color: #FFD700; }
         #status-sub { font-size: 16px; margin-top: 4px; opacity: 0.9; }
-        #connection-line { font-size: 13px; margin-top: 7px; color: #ffd966; }
-        #connection-line.connected { color: #7CFC00; }
-        #connection-line.disconnected { color: #ff8a8a; }
         #alive-line { font-size: 16px; margin-top: 6px; }
         #alive-line b { color: #7CFC00; }
 
@@ -156,8 +153,7 @@
 
     <div id="status-panel" class="hud-panel">
         <div id="status-line">🐔 CHICKEN ROYALE</div>
-        <div id="status-sub">Connecting to chat...</div>
-        <div id="connection-line">● Connecting to chat...</div>
+        <div id="status-sub">Waiting for chickens... type !join</div>
         <div id="alive-line"></div>
     </div>
 
@@ -165,7 +161,7 @@
 
     <div id="roster" class="hud-panel">
         <h4>🐔 Lobby <span id="roster-count">(0)</span></h4>
-        <div id="roster-list">Connecting to chat...</div>
+        <div id="roster-list">Type <b style="color:#7CFC00">!join</b> in chat</div>
         <details id="legacy-wins" open hidden>
             <summary>Past name-based wins</summary>
             <p>Older totals were shared by display name across platforms.</p>
@@ -1138,7 +1134,6 @@
     const el = {
         statusLine: document.getElementById('status-line'),
         statusSub: document.getElementById('status-sub'),
-        connectionLine: document.getElementById('connection-line'),
         aliveLine: document.getElementById('alive-line'),
         killfeed: document.getElementById('killfeed'),
         roster: document.getElementById('roster'),
@@ -1170,10 +1165,6 @@
         const ready = isChatTransportReady();
         if (ready) chatTransportWasReady = true;
 
-        el.connectionLine.className = ready ? 'connected' : (chatTransportWasReady ? 'disconnected' : 'connecting');
-        el.connectionLine.textContent = ready
-            ? '● Chat connected' + (AUTO_JOIN ? ' • Auto-join ON' : '')
-            : (chatTransportWasReady ? '● Chat disconnected • Reconnecting...' : '● Connecting to chat...');
         el.instructions.style.display = ready ? '' : 'none';
     }
 
@@ -1203,9 +1194,7 @@
     function updateHUD() {
         if (G.mode === 'lobby') {
             el.statusLine.textContent = '🐔 CHICKEN ROYALE';
-            if (!isChatTransportReady()) {
-                el.statusSub.textContent = chatTransportWasReady ? 'Reconnecting to chat...' : 'Connecting to chat...';
-            } else if (G.players.size === 0) {
+            if (G.players.size === 0) {
                 el.statusSub.textContent = 'Waiting for chickens... type !join';
             } else if (G.countdownEnd > 0) {
                 const left = Math.max(0, Math.ceil((G.countdownEnd - performance.now()) / 1000));
@@ -1237,9 +1226,7 @@
     function updateRoster() {
         el.rosterCount.textContent = '(' + G.players.size + ')';
         if (G.players.size === 0) {
-            el.rosterList.innerHTML = isChatTransportReady()
-                ? 'Type <b style="color:#7CFC00">!join</b> in chat'
-                : (chatTransportWasReady ? 'Reconnecting to chat...' : 'Connecting to chat...');
+            el.rosterList.innerHTML = 'Type <b style="color:#7CFC00">!join</b> in chat';
             return;
         }
         el.rosterList.textContent = '';

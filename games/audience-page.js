@@ -10,24 +10,22 @@
         location.replace(managedUrl.href);return;
     }
     var demo = params.has('demo'), session = params.get('session') || params.get('room') || params.get('s') || params.get('id');
-    var game = new SSNAudienceGame.Game(mode), paused = false, pausedAt = 0, nextAt = 0, lastRender = '';
-    var status = document.getElementById('connection'), history = document.getElementById('history');
+    var game = new SSNAudienceGame.Game(mode), nextAt = 0, lastRender = '';
+    var history = document.getElementById('history');
     function el(tag, text, className) { var node = document.createElement(tag); if (text != null) node.textContent = text; if (className) node.className = className; return node; }
     if (params.has('chroma')) document.body.classList.add('chroma');
     if (params.has('transparent')) document.body.classList.add('transparent');
-    if (params.has('clean')) document.getElementById('host-controls').hidden = true;
     function render() {
-        var remaining = game.phase === 'active' ? Math.max(0, Math.ceil((game.deadline - (paused ? pausedAt : Date.now())) / 1000)) : game.seconds;
-        document.getElementById('clock-value').textContent = paused ? 'Paused' : game.phase === 'result' ? 'Complete' : remaining + 's';
+        var remaining = game.phase === 'active' ? Math.max(0, Math.ceil((game.deadline - Date.now()) / 1000)) : game.seconds;
+        document.getElementById('clock-value').textContent = game.phase === 'result' ? 'Complete' : remaining + 's';
         document.getElementById('clock-label').textContent = game.phase === 'waiting' ? 'Starts with chat' : game.phase === 'result' ? 'Next round shortly' : 'Remaining';
-        if (game.tug) { SSNTugView.clock(game, paused ? pausedAt : Date.now()); if (game.phase === 'waiting') document.getElementById('clock-label').textContent = 'Join both teams to start'; }
-        if (game.teamplay) SSNTeamplayView.clock(game, paused ? pausedAt : Date.now());
-        if (window.SSNGameView) SSNGameView.clock(game, paused ? pausedAt : Date.now());
+        if (game.tug) { SSNTugView.clock(game, Date.now()); if (game.phase === 'waiting') document.getElementById('clock-label').textContent = 'Join both teams to start'; }
+        if (game.teamplay) SSNTeamplayView.clock(game, Date.now());
+        if (window.SSNGameView) SSNGameView.clock(game, Date.now());
         var key = JSON.stringify([game.phase, game.round, game.history, Array.from(game.votes), game.supplies, game.discoveries, game.scrambled, game.revision]);
         if (key === lastRender) return;
         lastRender = key;
         var result = document.getElementById('result'); result.hidden = game.phase !== 'result'; result.textContent = game.result;
-        document.getElementById('next').hidden = game.phase !== 'result';
         document.getElementById('participants').textContent = game.users.size;
         if (game.phase === 'result' && !nextAt) nextAt = Date.now() + 10000;
         history.textContent = '';
@@ -84,7 +82,6 @@
         }
     }
     function receive(payload) {
-        if (paused) return;
         var changed = false;
         var batch = Array.isArray(payload) ? payload.slice(0, 100) : [payload];
         batch.forEach(function (message) {
@@ -98,24 +95,13 @@
             }
             if (game.input(copy)) changed = true;
         });
-        if (changed) { if (!demo) status.textContent = 'Chat received'; render(); }
+        if (changed) render();
     }
-    document.getElementById('pause').onclick = function () {
-        paused = !paused;
-        if (paused) pausedAt = Date.now();
-        else { var elapsed = Date.now() - pausedAt; if (game.deadline) game.deadline += elapsed; if (nextAt) nextAt += elapsed; if (game.shiftTime) game.shiftTime(elapsed); }
-        document.body.classList.toggle('game-paused', paused);
-        this.textContent = paused ? 'Resume' : 'Pause'; render();
-    };
-    document.getElementById('next').onclick = function () { if (!paused) { game.next(); nextAt = 0; render(); } };
-    document.getElementById('restart').onclick = function () { game.reset(); nextAt = 0; lastRender = ''; render(); };
     render();
     setInterval(function () {
-        if (paused) return;
         game.tick(); if (nextAt && Date.now() >= nextAt) { game.next(); nextAt = 0; } render();
     }, 250);
     if (demo) {
-        status.textContent = 'Preview · simulated chat';
         var counter = 0;
         setInterval(function () {
             counter++;
@@ -124,22 +110,20 @@
         }, 2000);
         return; // Demo never opens a session or sends messages.
     }
-    if (!session) { status.textContent = 'Add your SSN session link to connect'; return; }
+    if (!session) return;
     if (chatRelay.enabled) {
         var endpoint = chatRelay.url, socket, retry;
         try { var parsed = new URL(endpoint); if (parsed.protocol !== 'wss:' && parsed.protocol !== 'ws:') throw new Error(); }
-        catch (_) { status.textContent = 'Invalid WebSocket address'; return; }
+        catch (_) { return; }
         function connect() {
-            status.textContent = 'Connecting to chat…';
-            try { socket = new WebSocket(endpoint); } catch (_) { status.textContent = 'Could not open chat connection'; return; }
-            socket.onopen = function () { socket.send(JSON.stringify({ join: session.split(',')[0], out: chatRelay.out, in: chatRelay.in })); status.textContent = 'Relay connected · waiting for chat'; };
+            try { socket = new WebSocket(endpoint); } catch (_) { return; }
+            socket.onopen = function () { socket.send(JSON.stringify({ join: session.split(',')[0], out: chatRelay.out, in: chatRelay.in })); };
             socket.onmessage = function (event) { if (typeof event.data !== 'string' || event.data.length > 256000) return; try { receive(JSON.parse(event.data)); } catch (_) {} };
             socket.onerror = function () { socket.close(); };
-            socket.onclose = function () { status.textContent = 'Reconnecting to chat…'; clearTimeout(retry); retry = setTimeout(connect, 5000); };
+            socket.onclose = function () { clearTimeout(retry); retry = setTimeout(connect, 5000); };
         }
         connect(); return;
     }
-    status.textContent = 'Waiting for chat';
     var bridge = document.createElement('iframe'); bridge.title = 'SSN chat connection';
     bridge.style.cssText = 'position:fixed;width:0;height:0;border:0;left:-100px;top:-100px';
     bridge.src = 'https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=' + encodeURIComponent(params.get('password') || 'false') + '&solo&view=' + encodeURIComponent(session) + '&novideo&noaudio&label=dock&cleanoutput&room=' + encodeURIComponent(session);

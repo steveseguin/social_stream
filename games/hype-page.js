@@ -2,10 +2,10 @@
 	'use strict';
 	var Hype = window.SSNHypeGame;
 	var params = new URLSearchParams(location.search), mode = document.body.dataset.game;
-	var demo = params.has('demo'), paused = false;
+	var demo = params.has('demo');
 	var chatRelay = SocialStreamLocalServer.getChatRelayConfig(params);
 	var canvas = document.getElementById('playfield'), ctx = canvas.getContext('2d');
-	var connection = document.getElementById('connection'), summary = document.getElementById('summary');
+	var summary = document.getElementById('summary');
 	var FONT = 'px system-ui, -apple-system, "Segoe UI", sans-serif';
 	var INK = '#eef4f8', MUTED = '#a9bac8', PLATE = 'rgba(8,13,20,.74)', EDGE = 'rgba(255,255,255,.15)', HOT = '#ff6b4a';
 
@@ -45,7 +45,6 @@
 
 	if (demo) document.body.classList.add('demo');
 	if (params.has('chroma')) document.body.classList.add('chroma');
-	if (params.has('clean')) { document.getElementById('controls').hidden = true; connection.hidden = true; }
 
 	// ---- Small drawing helpers ----
 	function clamp(v, min, max) { return v < min ? min : v > max ? max : v; }
@@ -459,7 +458,7 @@
 		text('Streak ' + st.streak, W / 2, groundY + 21, 13, st.streak >= 5 ? '#9be7a8' : INK, 'center', 700);
 		text('Best ' + st.best, W - 14, groundY + 21, 12, MUTED, 'right', 500);
 	};
-	SUMMARY.flight = function () { var st = game.state; return 'Hype Flight: ' + (st.phase === 'resting' ? 'waiting for chat' : 'streak ' + st.streak) + ', best ' + st.best; };
+	SUMMARY.flight = function () { var st = game.state; return 'Hype Flight: ' + (st.phase === 'resting' ? 'resting' : 'streak ' + st.streak) + ', best ' + st.best; };
 
 	// ---- Chat Volcano ----
 	var VEINS = [[[-0.5, 0.06], [-0.9, 0.3], [-0.75, 0.55], [-1.2, 0.85]], [[0.4, 0.06], [0.75, 0.28], [0.6, 0.5], [1.05, 0.8]], [[-0.1, 0.08], [-0.25, 0.3], [0.05, 0.5], [-0.15, 0.78]], [[0.75, 0.1], [1.25, 0.4], [1.5, 0.7]], [[-0.8, 0.12], [-1.45, 0.45], [-1.7, 0.72]]];
@@ -702,7 +701,6 @@
 	function advance() {
 		var now = performance.now() / 1000, gap = Math.min(30, Math.max(0, now - wall)), left = gap;
 		wall = now;
-		if (paused) return 0;
 		while (left > 0.0001) { var step = Math.min(0.1, left); game.tick(step); left -= step; }
 		return Math.min(gap, 0.1);
 	}
@@ -718,12 +716,8 @@
 	setInterval(function () { advance(); summary.textContent = SUMMARY[mode](); }, 1000);
 	requestAnimationFrame(frame);
 
-	document.getElementById('pause').onclick = function () { advance(); paused = !paused; this.textContent = paused ? 'Resume' : 'Pause'; };
-	document.getElementById('restart').onclick = function () { game.begin(); parts.length = 0; trace.length = 0; marks.length = 0; seenInputs = 0; banner = null; };
-
 	// ---- Chat in ----
 	function receive(payload) {
-		if (paused) return;
 		advance();
 		var batch = Array.isArray(payload) ? payload.slice(0, 100) : [payload];
 		batch.forEach(function (m) {
@@ -743,12 +737,11 @@
 				});
 				copy.chatmessage = t.content.textContent || '';
 			}
-			if (game.input(copy) && !demo) connection.textContent = 'Chat connected';
+			game.input(copy);
 		});
 	}
 	if (demo) {
 		// Simulated chat only: calm chatter with a burst of excitement every so often.
-		connection.textContent = 'Preview - simulated chat';
 		var n = 0, names = ['Nova', 'Milo', 'Juniper', 'River', 'Ava', 'CosmicCat', 'Pixel', 'Sunny', 'Echo', 'Tango', 'Wren', 'Zed'], tags = ['', '_tv', '99', '_xo', 'HD'];
 		var calm = ['hello!', 'nice stream', 'what game is this?', 'lol', 'good one', 'first time here', 'that was close'], hot = ['LETS GO', 'hype hype hype', 'no way!!', 'HYPE', 'what a play', 'hype train'];
 		(function next() {
@@ -760,20 +753,19 @@
 		return;
 	}
 	var session = params.get('session') || params.get('room') || params.get('s') || params.get('id');
-	if (!session) { connection.textContent = 'Add your SSN session to connect'; return; }
+	if (!session) return;
 	if (chatRelay.enabled) {
 		var endpoint = chatRelay.url, socket, retry, closed = false;
 		try { var parsedUrl = new URL(endpoint); if (parsedUrl.protocol !== 'ws:' && parsedUrl.protocol !== 'wss:') throw new Error(); }
-		catch (_) { connection.textContent = 'Invalid relay address'; return; }
+		catch (_) { return; }
 		var connect = function () {
 			if (closed) return;
-			connection.textContent = 'Connecting to chat';
 			try { socket = new WebSocket(endpoint); }
-			catch (_) { connection.textContent = 'Could not connect'; return; }
-			socket.onopen = function () { socket.send(JSON.stringify({ join: session.split(',')[0], out: chatRelay.out, in: chatRelay.in })); connection.textContent = 'Relay connected - waiting for chat'; };
+			catch (_) { return; }
+			socket.onopen = function () { socket.send(JSON.stringify({ join: session.split(',')[0], out: chatRelay.out, in: chatRelay.in })); };
 			socket.onmessage = function (event) { if (typeof event.data !== 'string' || event.data.length > 256000) return; try { receive(JSON.parse(event.data)); } catch (_) {} };
 			socket.onerror = function () { socket.close(); };
-			socket.onclose = function () { if (!closed) { connection.textContent = 'Reconnecting'; retry = setTimeout(connect, 5000); } };
+			socket.onclose = function () { if (!closed) { retry = setTimeout(connect, 5000); } };
 		};
 		window.addEventListener('beforeunload', function () { closed = true; clearTimeout(retry); if (socket) socket.close(); });
 		connect();
