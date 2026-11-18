@@ -9,13 +9,19 @@
 		var get = function (id) { return document.getElementById(id); };
 		var params = new URLSearchParams(location.search);
 		var channel = (params.get("channel") || "").replace(/^@/, "").toLowerCase();
-		var relay = new URL(params.get("relay") || "ws://127.0.0.1:38178/x/live");
-		if (relay.protocol !== "wss:" && relay.href !== "ws://127.0.0.1:38178/x/live") {
+		var relay;
+		try { relay = new URL(params.get("relay") || "ws://127.0.0.1:38178/x/live"); } catch (_) {}
+		if (!relay || (relay.protocol !== "wss:" && relay.href !== "ws://127.0.0.1:38178/x/live")) {
 			get("status").textContent = "Invalid X relay address."; return;
 		}
 		var storageKey = "ssn.x.live:" + relay.href + ":" + channel;
 		var ticket = "";
 		try { ticket = localStorage.getItem(storageKey) || ""; } catch (_) {}
+		try { get("sync-delete").checked = localStorage.getItem(storageKey + ":sync-delete") === "1"; } catch (_) {}
+		get("sync-delete").onchange = function () {
+			try { localStorage.setItem(storageKey + ":sync-delete", this.checked ? "1" : "0"); } catch (_) {}
+		};
+		var sourceName = channel, sourceImg = "";
 		var socket, retry, delay = 1000, closing = false, account = "", broadcast = "", streaming = false;
 		var enabled = false, settings = {}, seen = new Map(), pending = new Map(), nextId = 0;
 		var rows = new Map();
@@ -39,6 +45,7 @@
 		function update() {
 			get("compose").hidden = !(account && broadcast && streaming);
 			get("forget").hidden = !ticket;
+			get("moderation").hidden = !account;
 			if (account) status(!streaming ? "Connecting to X activity..." :
 				broadcast ? "Live on @" + account : "Waiting for @" + account + " to go live.",
 				streaming ? "connected" : "ready");
@@ -53,10 +60,16 @@
 				status("Send 1 to 140 characters during a live X broadcast.", "warn");
 				return Promise.resolve(false);
 			}
+			return command({ op: "send", text: text, broadcast: broadcast });
+		}
+		function command(data) {
 			var id = ++nextId;
-			if (!write({ op: "send", text: text, id: id, broadcast: broadcast })) return Promise.resolve(false);
+			data.id = id;
+			if (!write(data)) return Promise.resolve(false);
 			return new Promise(function (resolve) {
-				var timer = setTimeout(function () { pending.delete(id); resolve(false); }, 20000);
+				var timer = setTimeout(function () {
+					pending.delete(id); status("X did not confirm the request.", "warn"); resolve(false);
+				}, 20000);
 				pending.set(id, function (ok) { clearTimeout(timer); pending.delete(id); resolve(ok); });
 			});
 		}
@@ -73,11 +86,20 @@
 		chrome.runtime.onMessage.addListener(function (req, sender, respond) {
 			if (req === "getSource") { respond(setting("detweet") ? "twitter" : "x"); return; }
 			if (req && req.type === "SEND_MESSAGE") { chat(req.message).then(respond); return true; }
+			if (req && req.type === "SOURCE_CONTROL" && req.platform === "x" && req.control === "deleteMessage") {
+				var id = req.payload && req.payload.messageId;
+				var known = seen.get(id);
+				if (!enabled || !account || !broadcast || !get("sync-delete").checked || !known || known.removed ||
+					known.type !== req.payload.type || id.indexOf(broadcast + ":") !== 0) { respond(false); return; }
+				command({ op: "delete", broadcast: broadcast, messageId: id.slice(broadcast.length + 1) }).then(respond);
+				return true;
+			}
 			if (req && typeof req === "object") applySettings(req);
 			respond(false);
 		});
 		forward({ getSettings: true }, applySettings);
-		function receive(event, p) {
+		function escapeText(text) { return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+		function receive(event, p, createdAt) {
 			if (!p || typeof p.broadcast_id !== "string" || typeof p.message_id !== "string") return;
 			var id = p.broadcast_id + ":" + p.message_id;
 			var prior = seen.get(id);
@@ -89,27 +111,45 @@
 			seen.set(id, { type: type, removed: removed });
 			if (seen.size > 20000) seen.delete(seen.keys().next().value);
 			if (removed) {
-				if (rows.has(id)) { rows.get(id).remove(); rows.delete(id); }
+				if (rows.has(id)) { rows.get(id).element.remove(); rows.delete(id); }
 				if (enabled) forward({ "delete": { type: type, meta: meta } });
 				return;
 			}
 			var user = p.author.data;
+			var author = user.name || user.username || "";
+			var replyId = typeof p.reply_to === "string" && !setting("excludeReplyingTo") ? p.broadcast_id + ":" + p.reply_to : "";
+			var parent = rows.get(replyId);
 			var row = document.createElement("div");
-			row.textContent = (user.name || user.username) + ": " + p.message;
+			row.textContent = author + ": " + p.message;
 			get("messages").appendChild(row);
-			rows.set(id, row);
-			if (rows.size > 100) { var oldest = rows.keys().next().value; rows.get(oldest).remove(); rows.delete(oldest); }
-			if (enabled) {
+			var capture = enabled && (!setting("memberchatonly") || p.is_subscriber === true);
+			rows.set(id, { element: row, author: author, text: p.message, captured: capture });
+			if (rows.size > 100) { var oldest = rows.keys().next().value; rows.get(oldest).element.remove(); rows.delete(oldest); }
+			if (capture) {
 				var textonly = setting("textonlymode");
-				var message = textonly ? p.message : p.message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-				forward({ message: { type: type, chatname: user.name || user.username, username: user.username,
-					userid: user.id, chatimg: user.profile_image_url || "", chatmessage: message, textonly: textonly, meta: meta } });
+				var data = { type: type, chatname: author, username: user.username, userid: user.id,
+					sourceName: sourceName, sourceImg: sourceImg, videoid: p.broadcast_id,
+					chatimg: user.profile_image_url || "", chatmessage: textonly ? p.message : escapeText(p.message), textonly: textonly, meta: meta };
+				var timestamp = Date.parse(createdAt);
+				if (Number.isFinite(timestamp)) data.timestamp = timestamp;
+				if (p.is_moderator === true) data.mod = true;
+				if (p.is_subscriber === true) { data.member = true; data.membership = "Subscriber"; }
+				if (replyId) {
+					meta.reply = { messageId: replyId };
+					if (parent && parent.captured) {
+						meta.reply.author = parent.author;
+						meta.reply.text = parent.text;
+						data.initial = parent.author + ": " + parent.text;
+						data.reply = data.chatmessage;
+						data.chatmessage = textonly ? data.initial + ": " + data.reply : "<i><small>" + escapeText(data.initial) + ":&nbsp;</small></i> " + data.reply;
+					}
+				}
+				forward({ message: data });
 			}
 		}
 		function connect() {
 			socket = new WebSocket(relay.href);
 			socket.onopen = function () {
-				delay = 1000;
 				if (wantsViewers()) write({ op: "watchViewers", enabled: true });
 				get("login").hidden = !!ticket;
 				if (ticket) write({ op: "resume", ticket: ticket, channel: channel });
@@ -118,6 +158,7 @@
 			socket.onmessage = function (e) {
 				var m = JSON.parse(e.data);
 				if (m.ticket) { ticket = m.ticket; try { localStorage.setItem(storageKey, ticket); } catch (_) {} }
+				if (m.sourceName) { sourceName = m.sourceName; sourceImg = m.sourceImg || ""; }
 				if (m.authorize) {
 					var url = new URL(m.authorize);
 					if (url.origin !== "https://x.com" || url.pathname !== "/i/oauth2/authorize") return;
@@ -127,6 +168,7 @@
 				}
 				if (m.account) {
 					account = m.account;
+					delay = 1000;
 					get("authorize").hidden = get("pair").hidden = get("login").hidden = true;
 					get("code").value = "";
 				}
@@ -139,9 +181,10 @@
 				if (m.account || "broadcast" in m || "stream" in m) update();
 				if (m.warning) {
 					if (m.signIn) get("login").hidden = false;
-					status(m.warning, "warn");
+					if (m.retryMs > delay) delay = m.retryMs;
+					status(m.warning, m.signIn ? "signin_required" : "warn");
 				}
-				if (m.event) receive(m.event, m.payload);
+				if (m.event) receive(m.event, m.payload, m.createdAt);
 				var done = pending.get(m.sent || m.failed);
 				if (done) done(!!m.sent);
 			};

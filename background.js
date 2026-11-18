@@ -16491,6 +16491,9 @@ function getWebsocketSourcePlatformFromUrl(url) {
 	if (lowerUrl.includes("/sources/websocket/vpzone.html")) {
 		return "vpzone";
 	}
+	if (lowerUrl.includes("/sources/websocket/x.html")) {
+		return "x";
+	}
 	return "";
 }
 
@@ -16625,6 +16628,17 @@ function forwardPlatformBanCommand(payload) {
 
 function forwardSourceControlToWebsocketPages(control, payload) {
 	if (!payload || typeof payload !== "object") {
+		return;
+	}
+	if (payload.type === "x" || payload.type === "twitter") {
+		const tabId = Number(payload.tid);
+		if (control === "deleteMessage" && isExtensionOn && payload.messageId && Number.isInteger(tabId) && tabId > 0) {
+			chrome.tabs.query({}, function (tabs) {
+				const tab = (tabs || []).find(entry => entry.id === tabId);
+				if (chrome.runtime.lastError || !tab || getWebsocketSourcePlatformFromUrl(tab.url) !== "x") return;
+				chrome.tabs.sendMessage(tab.id, { type: "SOURCE_CONTROL", control, platform: "x", payload }, function () { chrome.runtime.lastError; });
+			});
+		}
 		return;
 	}
 	// Pins must stay with the originating Twitch connection; never broadcast them.
