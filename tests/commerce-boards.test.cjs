@@ -15,6 +15,31 @@ test('120 spots support claims, reveals and corrections without recording sales'
  assert.throws(()=>B.apply(initial,'boardSave',{labels:Array(121).fill('Team').join('\n'),columns:6}));
  assert.equal(B.apply({},'boardSave',{labels:'Boston\nToronto',columns:2,style:'teams'}).board.spots.length,2);
 });
+test('spot commands reject a replaced board without changing its reused spot IDs', () => {
+ const original = B.apply({}, 'boardSave', {count:2,columns:2}, 1);
+ const replacement = B.apply(original, 'boardSave', {labels:'Boston\nToronto',columns:2}, 2);
+ const snapshot = JSON.parse(JSON.stringify(replacement));
+ assert.notEqual(original.board.id, replacement.board.id);
+ for (const status of ['available', 'claimed', 'revealed']) {
+  assert.throws(() => B.apply(replacement, 'boardSpot', {
+   boardId:original.board.id, id:'2', status, result:'Old result'
+  }, 3), /board changed/);
+  assert.deepEqual(replacement, snapshot);
+ }
+ const current = B.apply(replacement, 'boardSpot', {
+  boardId:replacement.board.id, id:'2', status:'revealed', result:'New result'
+ }, 4);
+ assert.deepEqual(current.board.spots[1], {id:'2',label:'Toronto',status:'revealed',result:'New result'});
+ assert.deepEqual(current.board.spots[0], replacement.board.spots[0]);
+ assert.equal(current.revision, replacement.revision + 1);
+ assert.deepEqual(replacement, snapshot);
+});
+test('legacy spot commands can omit the optional board ID', () => {
+ const initial = B.apply({}, 'boardSave', {count:2,columns:2}, 1);
+ const updated = B.apply(initial, 'boardSpot', {id:'2',status:'claimed'}, 2);
+ assert.equal(updated.board.spots[1].status, 'claimed');
+ assert.equal(initial.board.spots[1].status, 'available');
+});
 test('sales require opt-in purchases; bids, gifts, tests and unrelated platforms never count', () => {
  const on = B.apply({},'salesSettings',{automatic:true,visible:true});
  const event = {type:'shopify',event:'purchase',id:'order1',subtitle:'Signed card',chatname:'private buyer',hasDonation:'$900',meta:{commerce:{quantity:2}}};
