@@ -1,25 +1,33 @@
-:root { color-scheme:dark; }
 * { box-sizing:border-box; }
-body { margin:0; background:#101d27; color:#e8f0f3; font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; }
-#game-container { max-width:1200px; min-height:100vh; margin:auto; padding:40px; display:grid; grid-template-columns:1fr 280px; grid-template-rows:auto auto 1fr auto; gap:24px 40px; position:relative; }
-#timer { grid-column:1; font-size:20px; font-variant-numeric:tabular-nums; color:#9edccc; }
-#theme-indicator { grid-column:2; grid-row:1; color:#9aaebc; font-size:13px; align-self:center; }
-#word-display { grid-column:1; grid-row:2; font-size:clamp(38px,7vw,88px); font-weight:650; letter-spacing:-.045em; overflow-wrap:anywhere; line-height:1.1; margin:24px 0; }
-#word-display:before { content:"THE NEXT WORD STARTS WITH MY LAST LETTER"; display:block; font:700 10px/1.6 system-ui,sans-serif; letter-spacing:.13em; color:#9edccc; margin-bottom:20px; }
-#chain-container { grid-column:1; grid-row:3; min-height:190px; display:flex; flex-wrap:wrap; gap:10px; align-content:flex-start; padding:24px 0; border-top:1px solid #ffffff18; }
-.chain-word { padding:10px 14px; border:1px solid #ffffff22; background:#ffffff06; border-radius:10px; font-size:18px; overflow-wrap:anywhere; max-width:100%; }
-.chain-word:last-child { background:#9edccc18; border-color:#9edccc66; color:#b8eee0; }
-.chain-word span { display:block; margin:3px 0 0!important; color:#a8b9c5; }
-#scoreboard { grid-column:2; grid-row:2 / 4; background:#ffffff04; border:1px solid #ffffff18; border-radius:18px; padding:22px; align-self:start; }
-#scoreboard h3 { margin:0 0 20px; font-size:14px; font-weight:600; }
-.score-entry { display:flex; justify-content:space-between; gap:12px; padding:12px 0; border-top:1px solid #ffffff12; font-size:13px; }
-.score-entry span:first-child { min-width:0; overflow-wrap:anywhere; }.score-entry span:last-child { white-space:nowrap; color:#9edccc; }
-#score-list:empty:after { content:"Your first word starts the leaderboard."; color:#9aaebc; font-size:13px; }
-#instructions { grid-column:1 / -1; grid-row:4; border-top:1px solid #ffffff18; padding:24px 0 0; color:#a8b9c5; font-size:14px; }
-#instructions strong { display:block; font-size:20px; color:#e8f0f3; margin-bottom:8px; }
-.combo-indicator { position:absolute; font-size:28px; font-weight:700; padding:10px 20px; border-radius:12px; background:#9edccc; color:#101d27; animation:comboFlash 1s ease-out forwards; pointer-events:none; }
+html, body { width:100%; height:100%; }
+body { margin:0; overflow:hidden; background:#101d27; color:#f2f6f8; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+body.transparent { background:transparent; }
+#game-container { position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:3vmin; overflow:hidden; }
+.chip { flex:none; padding:.8vmin 3vmin; border-radius:5vmin; background:rgba(20,30,44,.88); border:1px solid rgba(255,255,255,.18); font-weight:800; line-height:1.25; white-space:nowrap; }
+#timer-chip { font-size:5vmin; font-variant-numeric:tabular-nums; }
+#timer-chip.low #timer { color:#ff8a70; }
+#timer-chip.bonus { animation:bonusPop .6s ease-out; }
+#chain-container { flex:none; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; max-width:100%; min-height:6vmin; margin-top:4vmin; }
+.chain-word { margin:.5vmin 0; font-size:3.2vmin; font-weight:700; line-height:1.3; color:#9fb3c2; overflow-wrap:anywhere; max-width:100%; }
+.chain-word:after { content:"\203A"; margin:0 1.4vmin; color:#5d7385; }
+.chain-word:last-child { display:none; }
+#word-row { position:relative; flex:none; max-width:100%; margin-top:1vmin; }
+#word-display { font-size:18vmin; font-weight:800; line-height:1.15; letter-spacing:.02em; white-space:nowrap; }
+#word-display .last-letter { display:inline-block; margin-left:.07em; padding:0 .13em; border-radius:.16em; background:#9edccc; color:#0f2b2a; }
+#author { flex:none; max-width:90%; min-height:5.6vmin; margin-top:1.4vmin; font-size:3.2vmin; font-weight:700; line-height:1.3; color:#c9d6de; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#next-word { flex:none; display:flex; align-items:center; margin-top:3vmin; }
+#next-word .tile { width:12vmin; height:12vmin; margin:0 .8vmin; display:flex; align-items:center; justify-content:center; border-radius:2.4vmin; border:.6vmin dashed #4d6577; font-size:8vmin; font-weight:800; line-height:1; }
+#next-word #next-letter { border:1px solid rgba(0,0,0,.2); background:#9edccc; color:#0f2b2a; }
+#next-word.closed { visibility:hidden; }
+#score-list { flex:none; display:flex; flex-wrap:wrap; justify-content:center; max-width:100%; min-height:7vmin; margin-top:5vmin; }
+.score-entry { display:flex; align-items:center; max-width:60vmin; margin:.6vmin 1vmin; padding:1vmin 2.2vmin 1vmin 1.6vmin; border-radius:2.4vmin; background:rgba(20,30,44,.88); border:1px solid rgba(255,255,255,.16); font-size:3.2vmin; font-weight:700; line-height:1.3; }
+.score-entry .score-name { min-width:0; margin:0 1.8vmin 0 1vmin; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.score-entry .score-points { flex:none; white-space:nowrap; color:#ffd866; font-variant-numeric:tabular-nums; }
+.score-entry .score-points small { font-size:.62em; font-weight:700; color:#a9b9c5; }
+.combo-indicator { position:absolute; right:-4vmin; top:-3vmin; font-size:6vmin; font-weight:800; line-height:1.2; padding:.6vmin 3vmin; border-radius:4vmin; background:#ffd866; color:#2b2000; animation:comboFlash 1.1s ease-out forwards; pointer-events:none; }
 .wrong-answer { animation:shake .4s ease-out; }
-@keyframes comboFlash { 0% { opacity:0; } 30% { opacity:1; } 100% { opacity:0; } }
-@keyframes shake { 25% { transform:translateX(-4px); } 75% { transform:translateX(4px); } }
-@media(max-width:720px) { #game-container { padding:24px; grid-template-columns:1fr; gap:16px; } #theme-indicator { grid-column:1; grid-row:2; } #word-display { grid-row:3; margin:12px 0; } #chain-container { grid-row:4; min-height:130px; } #scoreboard { grid-column:1; grid-row:5; } #instructions { grid-row:6; } }
-@media(prefers-reduced-motion:reduce) { * { animation:none!important; transition:none!important; } }
+@keyframes comboFlash { 0% { opacity:0; transform:rotate(8deg) scale(.5); } 25% { opacity:1; transform:rotate(8deg) scale(1.1); } 80% { opacity:1; transform:rotate(8deg) scale(1); } 100% { opacity:0; transform:rotate(8deg) scale(1); } }
+@keyframes bonusPop { 0% { transform:scale(1); } 40% { transform:scale(1.25); } 100% { transform:scale(1); } }
+@keyframes shake { 25% { transform:translateX(-1.2vmin); } 75% { transform:translateX(1.2vmin); } }
+@media (orientation:portrait) { #timer-chip { font-size:6.4vmin; } #chain-container { margin-top:7vmin; } .chain-word { font-size:3.8vmin; } #author { margin-top:2.4vmin; font-size:4vmin; } #next-word { margin-top:7vmin; } #next-word .tile { width:17vmin; height:17vmin; font-size:11vmin; border-radius:3.4vmin; } #score-list { flex-direction:column; align-items:center; margin-top:9vmin; } .score-entry { max-width:86vmin; margin:.8vmin 0; font-size:4vmin; padding:1.4vmin 3vmin 1.4vmin 2vmin; } }
+@media (prefers-reduced-motion:reduce) { * { animation:none!important; transition:none!important; } }

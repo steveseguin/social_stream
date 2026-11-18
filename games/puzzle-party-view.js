@@ -1,7 +1,7 @@
 (function(){
     'use strict';
     window.SSNGameView={
-        clock:function(g,now){document.getElementById('puzzle-timing').textContent=g.phase!=='active'?'':g.mode==='sum'?'':g.mode==='memory'&&!g.revealed?'Memorize · '+Math.max(0,Math.ceil((g.showUntil-now)/1000))+'s':'Answer · '+Math.max(0,Math.ceil((g.waveDeadline-now)/1000))+'s';},
+        clock:function(g,now){document.getElementById('puzzle-timing').textContent=g.phase!=='active'?'':g.mode==='sum'?'':g.mode==='memory'&&!g.revealed?Math.max(0,Math.ceil((g.showUntil-now)/1000))+'s':Math.max(0,Math.ceil((g.waveDeadline-now)/1000))+'s';},
         render:function(g,el,history){
             document.getElementById('round').textContent='Match '+g.round;
             document.getElementById('player-word').textContent=g.users.size===1?'player':'players';
@@ -9,18 +9,18 @@
             document.getElementById('puzzle-note').textContent=g.note;
             if(g.mode==='memory'){
                 var command=document.getElementById('play-command');command.textContent='';
-                if(g.phase==='waiting'){command.appendChild(el('span','Chat '));command.appendChild(el('code','!ready'));}
-                else if(g.phase==='active' && g.revealed){command.appendChild(el('span','Example '));command.appendChild(el('code','!mem '+ '123412'.slice(0,g.sequence.length)));}
-                document.getElementById('puzzle-title').textContent=g.phase==='active' && g.revealed?'Recall the sequence':'';
-                document.getElementById('puzzle-score').textContent='Sequence '+Math.min(4,g.stage+1)+' / 4';
+                if(g.phase==='waiting'){command.appendChild(el('code','!ready'));}
+                else if(g.phase==='active' && g.revealed){command.appendChild(el('code','!mem '+ '123412'.slice(0,g.sequence.length)));}
+                document.getElementById('puzzle-title').textContent='';
+                document.getElementById('puzzle-score').textContent=Math.min(4,g.stage+1)+' / 4';
                 (g.revealed||g.phase==='waiting'||g.phase==='result'?'?'.repeat(g.sequence.length):g.sequence).split('').forEach(function(n){board.appendChild(el('span',n,'memory-tile tile-'+n));});
             }else if(g.mode==='odd'){
-                var q=g.question();document.getElementById('puzzle-title').textContent=g.phase==='result'?'':q[0];document.getElementById('puzzle-score').textContent='Question '+Math.min(5,g.stage+1)+' / 5';
+                var q=g.question();document.getElementById('puzzle-title').textContent=g.phase==='result'?'':q[0];document.getElementById('puzzle-score').textContent=Math.min(5,g.stage+1)+' / 5';
                 if(q&&g.phase!=='result')q[1].forEach(function(word,i){var card=el('div',null,'odd-card');card.appendChild(el('h3',word));card.appendChild(el('code','!odd '+(i+1)));board.appendChild(card);});
             }else{
-                document.getElementById('puzzle-title').textContent='';document.getElementById('puzzle-score').textContent=Math.min(3,g.stage)+' / 3 targets';
-                var current=el('div',null,'sum-current');current.appendChild(el('small','TEAM TOTAL'));current.appendChild(el('b',String(g.total)));board.appendChild(current);
-                var target=el('div',null,'sum-target');target.appendChild(el('small','TARGET'));target.appendChild(el('b',String(g.target)));board.appendChild(target);
+                document.getElementById('puzzle-title').textContent='';document.getElementById('puzzle-score').textContent=Math.min(3,g.stage)+' / 3';
+                var current=el('div',null,'sum-current');current.appendChild(el('b',String(g.total)));board.appendChild(current);
+                var target=el('div',null,'sum-target');target.appendChild(el('small','🎯'));target.appendChild(el('b',String(g.target)));board.appendChild(target);
                 document.getElementById('puzzle-note').textContent='';
             }
             if(g.mode!=='sum'){

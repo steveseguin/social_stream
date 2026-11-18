@@ -3,7 +3,8 @@
 var params=new URLSearchParams(location.search),mode=document.body.dataset.game,game=new SSNOverlayGame.Game(mode),demo=params.has('demo');
     var chatRelay = SocialStreamLocalServer.getChatRelayConfig(params);
 var canvas=document.getElementById('playfield'),ctx=canvas.getContext('2d'),result=document.getElementById('result'),images=new Map(),last=performance.now(),lastDraw=0;
-function resize(){if(mode!=='maze'){canvas.width=Math.min(1600,window.innerWidth);return;}var scale=Math.min(1,640/window.innerWidth,480/window.innerHeight);canvas.width=Math.max(1,Math.round(window.innerWidth*scale));canvas.height=Math.max(1,Math.round(window.innerHeight*scale));}
+var fit=1,layer=document.getElementById('layer');
+function resize(){if(mode!=='maze'){fit=Math.max(1,Math.min(1.6,window.innerWidth/1000));layer.style.width=(100/fit)+'%';layer.style.transformOrigin='0 100%';layer.style.transform='scale('+fit+')';canvas.width=Math.round(Math.min(1600,window.innerWidth/fit)*fit);canvas.height=Math.round(220*fit);return;}var scale=Math.min(1,640/window.innerWidth,480/window.innerHeight);canvas.width=Math.max(1,Math.round(window.innerWidth*scale));canvas.height=Math.max(1,Math.round(window.innerHeight*scale));}
 window.addEventListener('resize',resize);resize();
 if(demo)document.body.classList.add('demo');if(params.has('fullscreen'))document.body.classList.add('fullscreen');
 if(params.has('chroma'))document.body.classList.add('chroma');
@@ -11,18 +12,18 @@ function receive(payload){var batch=Array.isArray(payload)?payload.slice(0,100):
 function text(value,x,y,size,color,align){ctx.font='600 '+size+(mode==='maze'?'px monospace':'px system-ui, sans-serif');ctx.textAlign=align||'left';ctx.fillStyle=color||'#fff';ctx.fillText(value,x,y);}
 function roundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
 function star(x,y,r,color){ctx.beginPath();for(var i=0;i<10;i++){var a=i*Math.PI/5-Math.PI/2,d=i%2?r*0.45:r;ctx.lineTo(x+Math.cos(a)*d,y+Math.sin(a)*d);}ctx.closePath();ctx.fillStyle=color;ctx.fill();}
-function drawAmbient(){var w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);var left=w*0.13,right=w*0.87,width=right-left;
+function drawAmbient(){var w=canvas.width/fit,h=canvas.height/fit;ctx.setTransform(fit,0,0,fit,0,0);ctx.clearRect(0,0,w,h);var left=w*0.13,right=w*0.87,width=right-left;
  if(mode==='catch'){
   var t=game.phase==='waiting'?0:game.time%8,ready=t>=3&&t<=5,x=left+width*t/8,y=110-Math.sin(t/8*Math.PI)*42;
   ctx.strokeStyle='#b3ddd366';ctx.lineWidth=2;ctx.setLineDash([3,8]);ctx.beginPath();ctx.moveTo(left,110);ctx.lineTo(right,110);ctx.stroke();ctx.setLineDash([]);
   ctx.strokeStyle=ready?'#ceffa8':'#cce2db';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(w/2,100,Math.max(30,width/8),42,0,0,Math.PI*2);ctx.stroke();
   var glow=ctx.createRadialGradient(x,y,0,x,y,35);glow.addColorStop(0,'#f3ffd6cc');glow.addColorStop(1,'#d5ff8c00');ctx.fillStyle=glow;ctx.fillRect(x-35,y-35,70,70);star(x,y,12,'#edffc7');
-  text(game.phase==='waiting'?'Type !catch to wake the fireflies':ready?'CATCH NOW!':'Wait for the ring...',w/2,174,w<600?13:18,ready?'#dcffb2':'#eef8f3','center');
-  game.effects.forEach(function(e,i){var age=game.time-e.at;text(e.name.slice(0,14)+(e.score?' +'+e.score:' - too early / late'),left+(i%4)*width/4,135-age*20,12,e.score?'#e2ffc1':'#c2c8cf');});
+  if(game.phase==='waiting'||ready)text('!catch',w/2,176,ready?26:20,ready?'#dcffb2':'#eef8f3','center');
+  game.effects.forEach(function(e,i){var age=game.time-e.at;text(e.name.slice(0,14)+(e.score?' +'+e.score:' \u2715'),left+(i%4)*width/4,135-age*20,15,e.score?'#e2ffc1':'#c2c8cf');});
  }else{
-  ['#ffa3a3','#9deedc'].forEach(function(color,team){var y=65+team*70,progress=game.points[team]/20,x=left+width*progress;ctx.fillStyle='#18263899';roundRect(left,y-5,width,10,5);ctx.fill();var glow=ctx.createLinearGradient(Math.max(left,x-100),0,x+1,0);glow.addColorStop(0,color+'00');glow.addColorStop(1,color);ctx.fillStyle=glow;ctx.fillRect(Math.max(left,x-100),y-4,Math.min(100,x-left),8);star(x,y,18,color);text(team?'MINT':'CORAL',left,y-24,12,color);text(game.points[team]+' / 20',right,y-24,12,color,'right');});
-  ctx.strokeStyle='#e8f1ff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(right+18,36);ctx.lineTo(right+18,155);ctx.stroke();text('Type !boost - Your first boost assigns your team',w/2,188,w<600?10:16,'#f4f7ff','center');
-  game.effects.forEach(function(e,i){text(e.name.slice(0,14)+' +1',left+(i%5)*width/5,65+e.team*70-(game.time-e.at)*15,12,e.team?'#9deedc':'#ffa3a3');});
+  ['#ffa3a3','#9deedc'].forEach(function(color,team){var y=65+team*70,progress=game.points[team]/20,x=left+width*progress;ctx.fillStyle='#18263899';roundRect(left,y-5,width,10,5);ctx.fill();var glow=ctx.createLinearGradient(Math.max(left,x-100),0,x+1,0);glow.addColorStop(0,color+'00');glow.addColorStop(1,color);ctx.fillStyle=glow;ctx.fillRect(Math.max(left,x-100),y-4,Math.min(100,x-left),8);star(x,y,18,color);text(game.points[team]+' / 20',right,y-24,16,color,'right');});
+  ctx.strokeStyle='#e8f1ff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(right+18,36);ctx.lineTo(right+18,155);ctx.stroke();text('!boost',w/2,190,20,'#f4f7ff','center');
+  game.effects.forEach(function(e,i){text(e.name.slice(0,14)+' +1',left+(i%5)*width/5,65+e.team*70-(game.time-e.at)*15,15,e.team?'#9deedc':'#ffa3a3');});
  }
 }
 // Six tiny cached pixel textures; no downloaded artwork or per-frame texture creation.
@@ -104,8 +105,8 @@ function drawMaze(){
  var heading=((p.angle*180/Math.PI)%360+360)%360;text(['E','S','W','N'][Math.round(heading/90)%4]+' / '+Math.round(heading)+'\u00b0',w/2,(window.innerWidth<600?56:24),12,'#c0d8d6','center');
 }
 function render(){document.body.dataset.phase=game.phase;document.getElementById('round').textContent='Round '+game.round;document.getElementById('players').textContent=game.users.size+(mode==='maze'?' raiders':' players');
- document.getElementById('meter').textContent=mode==='maze'?game.hp+' HP':game.phase==='waiting'?'Starts with chat':mode==='catch'?'Flight '+Math.min(6,game.flight+1)+' / 6':Math.max(0,Math.ceil(60-game.time))+'s';
- result.hidden=game.phase!=='result';result.textContent=game.result+(game.phase==='result'?' - Next round in '+Math.max(0,Math.ceil(game.endAt-game.time))+'s':'');
+ document.getElementById('meter').textContent=mode==='maze'||game.phase==='waiting'?'':mode==='catch'?Math.min(6,game.flight+1)+' / 6':Math.max(0,Math.ceil(60-game.time))+'s';
+ result.hidden=game.phase!=='result';result.textContent=game.result;
  if(mode==='maze'){document.getElementById('health').style.width=game.hp+'%';drawMaze();}else drawAmbient();
  if(images.size&&!game.enemies.length)images.clear();
 }

@@ -3,14 +3,14 @@ body[data-game="number"] { --accent:#9be1fa; --panel:#152c42; background:#0b1828
 body[data-game="shuffle"] { --accent:#f7d896; --panel:#342b29; background:#1d1918; }
 body[data-game="showdown"] { --accent:#fca9b6; --panel:#342337; background:#1b1324; }
 body[data-game="minority"] { --accent:#c6b5ff; --panel:#282744; background:#13142b; }
-.party-art { padding:32px 12px; border:1px solid #ffffff25; border-radius:24px; text-align:center; font-size:clamp(28px,4.5vw,60px); font-weight:750; letter-spacing:.04em; color:var(--accent); overflow-wrap:anywhere; background:linear-gradient(135deg,#ffffff12,transparent); box-shadow:0 18px 60px #0002; }
+.party-art { padding:32px 12px; border:1px solid #ffffff25; border-radius:24px; text-align:center; font-size:35px; font-weight:750; letter-spacing:.04em; color:var(--accent); overflow-wrap:anywhere; background:linear-gradient(135deg,#ffffff12,transparent); box-shadow:0 18px 60px #0002; }
 .guess code { overflow-wrap:anywhere; }
 .guess small { overflow-wrap:anywhere; }
-@media (max-width:600px) {
-    body[data-game="showdown"] .guess, body[data-game="minority"] .guess { flex-direction:column; align-items:flex-start; gap:6px; }
-    body[data-game="showdown"] .guess code, body[data-game="minority"] .guess code { font-size:18px; letter-spacing:.02em; }
-    body[data-game="showdown"] .guess b, body[data-game="minority"] .guess b { color:var(--muted); font-size:12px; }
-}
+/* Portrait layout */
+body.portrait[data-game="showdown"] .guess, body.portrait[data-game="minority"] .guess {flex-direction:column; align-items:flex-start; gap:6px; }
+body.portrait[data-game="showdown"] .guess code, body.portrait[data-game="minority"] .guess code {font-size:18px; letter-spacing:.02em; }
+body.portrait[data-game="showdown"] .guess b, body.portrait[data-game="minority"] .guess b {color:var(--muted); font-size:12px; }
+
 * { box-sizing:border-box; }
 [hidden] { display:none!important; }
 .choice + .choice { margin-top:12px; }
@@ -23,7 +23,7 @@ body.chroma { background:#00ff00; } body.transparent { background:transparent; }
 .brand,.eyebrow { font-size:11px; font-weight:700; letter-spacing:.17em; text-transform:uppercase; }
 .brand { color:var(--accent); }
 .topline { margin:42px 0 24px; align-items:flex-end; }
-h1 { margin:5px 0 0; font-size:clamp(36px,5vw,64px); letter-spacing:-.055em; line-height:1.05; font-weight:650; }
+h1 { margin:5px 0 0; font-size:39px; letter-spacing:-.055em; line-height:1.05; font-weight:650; }
 p { margin:0; }.eyebrow { color:var(--muted); }
 .clock { text-align:right; font-size:28px; font-variant-numeric:tabular-nums; white-space:nowrap; }.clock small { display:block; color:var(--muted); font-size:11px; letter-spacing:.08em; text-transform:uppercase; }
 .board { display:grid; grid-template-columns:1.05fr 1fr; border:1px solid #ffffff20; border-radius:24px; overflow:hidden; background:var(--panel); min-height:440px; }
@@ -48,14 +48,33 @@ p { margin:0; }.eyebrow { color:var(--muted); }
 .footer { margin:24px 0 16px; align-items:flex-start; }.command { font-size:15px; }.command code { color:var(--accent); font-size:18px; }.hint { font-size:12px; color:var(--muted); margin-top:5px; max-width:680px; }
 a { color:inherit; } a:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
 .progress { display:flex; gap:7px; }.progress span { width:26px; height:4px; background:#ffffff25; border-radius:2px; }.progress .done { background:var(--accent); }
-@media(max-width:760px) { .shell { width:calc(100% - 32px); margin:20px auto; }.topline { margin-top:28px; }.board { grid-template-columns:1fr; }.scene { padding:24px; gap:16px; }.scene h2 { max-width:none; }.scene p { max-width:none; }.signal-art,.planet-art { min-height:140px; height:140px; }.signal-art:before { width:140px;height:140px; }.signal-art:after { width:200px;height:200px; }.digit { height:65px;width:52px;font-size:32px; }.planet { width:110px;height:110px; }.planet-art:after { width:200px;height:50px;border-width:9px; }.content { border-left:0;border-top:1px solid #ffffff15;padding:22px; }.history { min-height:80px; }.empty { margin:20px 0; }.footer { flex-direction:column;gap:16px; }.clock { font-size:21px; }.masthead { gap:10px; } }
+/* Portrait layout */
+body.portrait .shell {width:calc(100% - 32px); margin:20px auto; }
+body.portrait .topline {margin-top:28px; }
+body.portrait .board {grid-template-columns:1fr; }
+body.portrait .scene {padding:24px; gap:16px; }
+body.portrait .scene h2 {max-width:none; }
+body.portrait .scene p {max-width:none; }
+body.portrait .signal-art, body.portrait .planet-art {min-height:140px; height:140px; }
+body.portrait .signal-art:before {width:140px;height:140px; }
+body.portrait .signal-art:after {width:200px;height:200px; }
+body.portrait .digit {height:65px;width:52px;font-size:32px; }
+body.portrait .planet {width:110px;height:110px; }
+body.portrait .planet-art:after {width:200px;height:50px;border-width:9px; }
+body.portrait .content {border-left:0;border-top:1px solid #ffffff15;padding:22px; }
+body.portrait .history {min-height:80px; }
+body.portrait .empty {margin:20px 0; }
+body.portrait .footer {flex-direction:column;gap:16px; }
+body.portrait .clock {font-size:21px; }
+body.portrait .masthead {gap:10px; }
+
 @media(prefers-reduced-motion:reduce) { *,*:before,*:after { transition:none!important;animation:none!important; } }
 
 /* Keep the stream visible around the board. The guide uses .shell as well. */
 body[data-game]:not(.chroma) { background:transparent; }
 body[data-game] .shell { width:calc(100% - 16px); max-width:780px; margin:8px auto; padding:0 0 5px; background:var(--panel); border-radius:18px; overflow:hidden; }
 body[data-game] .topline { margin:0; padding:10px 18px; align-items:center; background:#0003; }
-body[data-game] h1 { margin:0; font-size:clamp(20px,3vw,29px); letter-spacing:-.035em; }
+body[data-game] h1 { margin:0; font-size:23px; letter-spacing:-.035em; }
 body[data-game] .clock { font-size:18px; font-weight:700; }
 body[data-game] .board, body[data-game] .crew-board { min-height:0; border:0; border-radius:0; }
 body[data-game] .scene { gap:12px; padding:18px; }
@@ -74,8 +93,8 @@ body[data-game] .command code, #join-hint code { display:inline-block; padding:2
 .pick-heading span,.pick-footer { font-size:13px; color:var(--muted); }
 .pick-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:10px 0; }
 .pick-option { border-radius:14px; padding:10px 3px; background:#ffffff0b; text-align:center; }
-.pick-option code,.pick-option b { display:block; font-size:clamp(12px,2.6vw,20px); color:var(--accent); }
-.choice-symbol { display:block; font-size:clamp(28px,5vw,54px); color:var(--accent); }
+.pick-option code,.pick-option b { display:block; font-size:20px; color:var(--accent); }
+.choice-symbol { display:block; font-size:39px; color:var(--accent); }
 .pick-option b { color:var(--ink); font-size:14px; }
 body[data-phase="result"] .command, body[data-phase="result"] .pick-footer > :first-child { visibility:hidden; }
 body[data-game="signal"][data-phase="waiting"] .content,
@@ -92,7 +111,25 @@ body[data-game] .choice { padding:10px 14px; }
 body[data-game] .choice + .choice { margin-top:6px; }
 body[data-game] .choice h3 { margin:2px 0; }
 body[data-game] .eyebrow { letter-spacing:.06em; }
-@media(max-width:760px) and (min-width:540px) {
-    body[data-game] .board { grid-template-columns:1fr 1fr; }
-}
+
 .game-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+
+/* The card is laid out once at a fixed width, then fit-card.js scales it to the browser source. */
+html, body[data-game] { height:100%; overflow:hidden; }
+body[data-game] .shell { position:absolute; left:0; top:0; width:780px; max-width:none; margin:0; transform-origin:0 0; }
+body[data-game].portrait .shell { width:460px; }
+/* Stream look: only the clock sits above the board, and nothing is smaller than it needs to be. */
+body[data-game] .topline { height:44px; padding:8px 16px 0; background:none; justify-content:flex-end; }
+body[data-game="tug"] .topline { justify-content:space-between; }
+body[data-game] #clock-value { display:inline-block; padding:1px 13px; border-radius:999px; background:#0005; font-size:20px; }
+body[data-game] #clock-value:empty { display:none; }
+body[data-game] .metrics:empty, body[data-game] .content > .metrics { display:none; }
+body[data-game] .crew-lower .metrics { min-height:0; }
+body[data-game] .guess small, body[data-game] .feedback, body[data-game] .choice p, body[data-game] .choice .votes { font-size:14px; }
+body[data-game] .choice code, body[data-game] .supply-card b, body[data-game] .shield-lane b, body[data-game] #puzzle-leaders span, body[data-game] .puzzle-status { font-size:15px; }
+body[data-game] .command code { font-size:20px; }
+body[data-game] .crew-heading strong, body[data-game] .pick-heading h2 { font-size:22px; }
+body[data-game] .sum-target small { font-size:26px; letter-spacing:0; line-height:1; }
+body[data-game="kitchen"] .crew-lower, body[data-game="shield"] .crew-lower, body[data-game="odd"] .crew-lower { display:none; }
+body[data-game] #wave-clock, body[data-game] #puzzle-timing { font-size:20px; font-weight:700; color:var(--ink); }
+body[data-game="tug"] #prompt-action { display:none; }

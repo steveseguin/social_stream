@@ -19,6 +19,7 @@
         * {
             -ms-overflow-style: none;  /* IE and Edge */
             scrollbar-width: none;  /* Firefox */
+            box-sizing: border-box;
         }
 
         @font-face {
@@ -29,218 +30,258 @@
             font-display: swap;
         }
 
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
         body {
             margin: 0;
             padding: 0;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             overflow: hidden;
-            font-family: 'Arial', 'NotoColorEmoji', sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'NotoColorEmoji', sans-serif;
+            color: #fff;
+        }
+
+        body.transparent {
+            background: transparent;
         }
 
         #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-        }
-
-        #race-track {
-            position: absolute;
-            top: 50%;
+            position: fixed;
+            top: 0;
             left: 0;
             width: 100%;
-            height: 400px;
-            transform: translateY(-50%);
-            background: linear-gradient(to bottom, 
-                #2d3436 0%, #34495e 10%, 
-                #27ae60 10%, #27ae60 90%, 
-                #34495e 90%, #2d3436 100%);
-            border-top: 5px solid #1e272e;
-            border-bottom: 5px solid #1e272e;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            height: 100%;
+            overflow: hidden;
         }
 
-        .pet {
+        /* The track is sized and placed from script so it fills either orientation. */
+        #race-track {
             position: absolute;
-            width: 60px;
-            height: 60px;
-            transition: left 0.1s linear;
-            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
-            animation: bounce 0.5s ease-in-out infinite alternate;
+            overflow: hidden;
+            border-radius: 3vmin;
+            background: #4fb862;
+            border: 1px solid rgba(0, 0, 0, 0.18);
+            box-shadow: 0 1vmin 2.4vmin rgba(0, 0, 0, 0.2);
         }
 
-        @keyframes bounce {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-5px); }
-        }
-
-        .pet-label {
+        .lane {
             position: absolute;
-            bottom: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 14px;
-            white-space: nowrap;
-            font-weight: bold;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .lane.alt {
+            background: rgba(255, 255, 255, 0.09);
+        }
+
+        .lane-slot {
+            position: absolute;
+            border: 0.5vmin dashed rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+        }
+
+        .lane.taken .lane-slot {
+            display: none;
         }
 
         .finish-line {
             position: absolute;
-            right: 50px;
+            background-color: #fff;
+            background-image:
+                linear-gradient(45deg, #23272f 25%, transparent 25%, transparent 75%, #23272f 75%),
+                linear-gradient(45deg, #23272f 25%, transparent 25%, transparent 75%, #23272f 75%);
+            background-size: 3vmin 3vmin;
+            background-position: 0 0, 1.5vmin 1.5vmin;
+        }
+
+        .pet {
+            position: absolute;
             top: 0;
-            width: 10px;
+            left: 0;
+            will-change: transform;
+        }
+
+        .pet-body {
+            width: 100%;
             height: 100%;
-            background: repeating-linear-gradient(
-                45deg,
-                #000,
-                #000 10px,
-                #fff 10px,
-                #fff 20px
-            );
-            border: 2px solid #FFD700;
-        }
-
-        #ui-overlay {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            background: rgba(0, 0, 0, 0.5);
-            padding: 15px 20px;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-        }
-
-        #race-status {
-            font-size: 36px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        #betting-board {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 20px;
-            border-radius: 15px;
-            color: white;
-            min-width: 300px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        #betting-board h3 {
-            margin-top: 0;
-            color: #FFD700;
-            text-align: center;
-            font-size: 20px;
-        }
-
-        .bet-entry {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin: 8px 0;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            transition: all 0.3s ease;
+            justify-content: center;
+            line-height: 1;
+            animation: pet-idle 1.4s ease-in-out infinite alternate;
         }
 
-        .bet-entry:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateX(5px);
+        .racing .pet-body {
+            animation: pet-run 0.32s ease-in-out infinite alternate;
+        }
+
+        .pet.finished .pet-body {
+            animation: pet-idle 0.5s ease-in-out infinite alternate;
+        }
+
+        /* Emoji animals look left; turn them to face the finish when they run to the right. */
+        .landscape .pet-emoji {
+            display: inline-block;
+            transform: scaleX(-1);
+        }
+
+        @keyframes pet-idle {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-4%); }
+        }
+
+        @keyframes pet-run {
+            0% { transform: translateY(2%) rotate(-5deg); }
+            100% { transform: translateY(-12%) rotate(5deg); }
+        }
+
+        .pet-label {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 26vmin;
+            padding: 0.3vmin 1.4vmin;
+            border-radius: 2vmin;
+            background: rgba(20, 24, 40, 0.82);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            color: #fff;
+            font-size: 2.5vmin;
+            font-weight: 700;
+            line-height: 1.35;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .portrait .pet-label {
+            max-width: 18.5vmin;
+            padding: 0.3vmin 1vmin;
+        }
+
+        .pet-medal {
+            position: absolute;
+            right: -14%;
+            top: -10%;
+            line-height: 1;
+            animation: medal-pop 0.5s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+        }
+
+        @keyframes medal-pop {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+        .dust {
+            position: absolute;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.75);
+            pointer-events: none;
+            animation: dust-puff 0.5s ease-out forwards;
+        }
+
+        @keyframes dust-puff {
+            0% { opacity: 0.9; transform: scale(0.4); }
+            100% { opacity: 0; transform: scale(1.6); }
+        }
+
+        #countdown {
+            position: absolute;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 34vmin;
+            font-weight: 900;
+            line-height: 1;
+            color: #fff;
+            text-shadow: 0 0.8vmin 0 rgba(0, 0, 0, 0.22);
+            font-variant-numeric: tabular-nums;
+            pointer-events: none;
+        }
+
+        #countdown.tick {
+            animation: count-pop 0.9s ease-out both;
+        }
+
+        @keyframes count-pop {
+            0% { transform: scale(1.5); opacity: 0; }
+            25% { transform: scale(1); opacity: 0.95; }
+            100% { transform: scale(0.9); opacity: 0.55; }
+        }
+
+        #hint {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.9vmin 3.2vmin;
+            border-radius: 5vmin;
+            background: rgba(20, 24, 40, 0.82);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: #fff;
+            font-size: 4vmin;
+            font-weight: 800;
+            line-height: 1.25;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+            transition: opacity 0.4s ease;
+        }
+
+        #hint.hidden {
+            opacity: 0;
         }
 
         #winner-announcement {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 48px;
-            font-weight: bold;
-            color: #FFD700;
-            text-shadow: 3px 3px 6px rgba(0,0,0,0.9);
             display: none;
-            animation: pulse 1s ease-in-out infinite;
+            min-width: 44vmin;
+            max-width: 88vmin;
+            padding: 3vmin 5vmin 3.4vmin;
+            transform: translate(-50%, -50%);
             text-align: center;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 30px 50px;
-            border-radius: 20px;
-            border: 3px solid #FFD700;
+            background: rgba(20, 24, 40, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 5vmin;
+            box-shadow: 0 1.4vmin 4vmin rgba(0, 0, 0, 0.3);
         }
 
-        @keyframes pulse {
-            0% { transform: translate(-50%, -50%) scale(1); }
-            50% { transform: translate(-50%, -50%) scale(1.1); }
-            100% { transform: translate(-50%, -50%) scale(1); }
+        #winner-announcement.show {
+            display: block;
+            animation: winner-pop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
         }
 
-        .boost-effect {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            background: radial-gradient(circle, rgba(255,255,0,0.8) 0%, rgba(255,165,0,0) 70%);
-            border-radius: 50%;
-            animation: boost 0.5s ease-out forwards;
-            pointer-events: none;
-            box-shadow: 0 0 20px rgba(255, 255, 0, 0.8);
+        @keyframes winner-pop {
+            0% { transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
 
-        @keyframes boost {
-            0% { 
-                transform: scale(0.5) translateX(0);
-                opacity: 1;
-            }
-            100% { 
-                transform: scale(2) translateX(-50px);
-                opacity: 0;
-            }
+        .winner-pet {
+            font-size: 20vmin;
+            line-height: 1.1;
         }
 
-        #instructions {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 15px 30px;
-            border-radius: 10px;
-            text-align: center;
-            font-size: 16px;
+        .winner-name {
+            font-size: 6vmin;
+            font-weight: 800;
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        #instructions strong {
-            color: #FFD700;
-            font-size: 18px;
-        }
-
-        .floating-points {
-            position: absolute;
-            font-size: 32px;
-            font-weight: bold;
-            color: #FFD700;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            animation: floatUp 2s ease-out forwards;
-            pointer-events: none;
-        }
-
-        @keyframes floatUp {
-            0% {
-                transform: translateY(0);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(-100px);
-                opacity: 0;
-            }
+        .runner-up {
+            margin-top: 1vmin;
+            font-size: 3.4vmin;
+            font-weight: 600;
+            line-height: 1.3;
+            opacity: 0.9;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
     </style>
 </head>
@@ -249,82 +290,64 @@
         <div id="race-track">
             <div class="finish-line"></div>
         </div>
-        
-        <div id="ui-overlay">
-            <div id="race-status">Waiting for racers...</div>
-            <div id="race-timer"></div>
-        </div>
-        
-        <div id="betting-board">
-            <h3>Current Racers</h3>
-            <div id="bet-list"></div>
-            <div id="total-racers" style="margin-top: 10px; font-weight: bold;">Racers: 0</div>
-        </div>
-        
-        <div id="instructions">
-            <div><strong>🏁 Pet Race - How to Play:</strong></div>
-            <div>Type <b>!join</b> to race with a random pet</div>
-            <div>OR <b>!join dog</b> (or cat, rabbit, turtle, hamster)</div>
-            <div style="margin-top: 5px; font-size: 14px; opacity: 0.8;">First 3 racers = Race starts automatically!</div>
-        </div>
-        
+        <div id="countdown"></div>
+        <div id="hint">!join</div>
         <div id="winner-announcement"></div>
     </div>
-    
+
     <script>
-    // Pet configurations
+    // Pet configurations. Pace is the range of track units per second a pet moves between;
+    // every pet averages about the same, the spread is its personality.
     const PET_TYPES = {
-        dog: { 
-            emoji: '🐕', 
-            baseSpeed: 1.2, 
-            baseStamina: 0.8, 
-            baseLuck: 0.5,
+        dog: {
+            emoji: '🐕',
+            pace: [6, 11],
             name: 'Dog'
         },
-        cat: { 
-            emoji: '🐈', 
-            baseSpeed: 1.0, 
-            baseStamina: 0.9, 
-            baseLuck: 0.7,
+        cat: {
+            emoji: '🐈',
+            pace: [4.5, 12.5],
             name: 'Cat'
         },
-        rabbit: { 
-            emoji: '🐰', 
-            baseSpeed: 1.5, 
-            baseStamina: 0.6, 
-            baseLuck: 0.4,
+        rabbit: {
+            emoji: '🐇',
+            pace: [1.5, 15.5],
             name: 'Rabbit'
         },
-        turtle: { 
-            emoji: '🐢', 
-            baseSpeed: 0.5, 
-            baseStamina: 1.5, 
-            baseLuck: 0.8,
+        turtle: {
+            emoji: '🐢',
+            pace: [7.9, 9],
             name: 'Turtle'
         },
-        hamster: { 
-            emoji: '🐹', 
-            baseSpeed: 0.9, 
-            baseStamina: 0.7, 
-            baseLuck: 1.0,
+        hamster: {
+            emoji: '🐹',
+            pace: [3.5, 13.5],
             name: 'Hamster'
         }
     };
-    
+
+    const MAX_RACERS = 5;
+    const TRACK_LENGTH = 100;
+
     // Game state
     let raceInProgress = false;
     let racers = new Map();
     let raceCountdown = null;
+    let countdownLeft = 0;
     let raceStartTime = null;
-    
+    let raceFrame = null;
+    let lastFrameTime = 0;
+    let resetTimer = null;
+    let view = null;
+
     // URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
     const sessionId = urlParams.get('session') || 'test';
     const password = urlParams.get('password') || 'false';
 
-    function escapeHtml(str) {
-        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    if (urlParams.has('transparent')) {
+        document.body.classList.add('transparent');
     }
 
     function stripHtml(html) {
@@ -332,6 +355,116 @@
         tmp.innerHTML = html;
         return tmp.textContent || tmp.innerText || '';
     }
+
+    // Lanes run left to right in landscape and bottom to top in portrait,
+    // so the track fills the window either way.
+    function layout() {
+        const W = window.innerWidth, H = window.innerHeight;
+        const portrait = H > W;
+        const unit = Math.min(W, H) / 100;
+        const margin = 3 * unit;
+        const trackW = W - margin * 2;
+        const trackH = H - margin * 2 - 9 * unit;
+        const laneSize = (portrait ? trackW : trackH) / MAX_RACERS;
+        const runLength = portrait ? trackH : trackW;
+        const labelH = 3.8 * unit;
+        const petSize = Math.max(8, Math.min(laneSize - labelH - 2.5 * unit, laneSize * 0.7, runLength * 0.12));
+        const finishThickness = 3 * unit;
+        // Leave room past the line for a long name tag under a pet that has finished.
+        const labelOverhang = Math.max(0, (26 * unit - petSize) / 2);
+        const finishAt = portrait ? 7 * unit : Math.max(7 * unit, labelOverhang + petSize * 0.55 - finishThickness + unit);
+
+        document.body.classList.toggle('portrait', portrait);
+        document.body.classList.toggle('landscape', !portrait);
+
+        const track = document.getElementById('race-track');
+        track.style.left = margin + 'px';
+        track.style.top = margin + 'px';
+        track.style.width = trackW + 'px';
+        track.style.height = trackH + 'px';
+
+        const countdown = document.getElementById('countdown');
+        countdown.style.left = margin + 'px';
+        countdown.style.top = margin + 'px';
+        countdown.style.width = trackW + 'px';
+        countdown.style.height = trackH + 'px';
+
+        document.getElementById('hint').style.bottom = (2.6 * unit) + 'px';
+
+        const finish = track.querySelector('.finish-line');
+        let start, end;
+        if (portrait) {
+            start = trackH - 2 * unit - labelH - petSize;
+            end = finishAt;
+            finish.style.left = '0';
+            finish.style.top = finishAt + 'px';
+            finish.style.width = '100%';
+            finish.style.height = finishThickness + 'px';
+        } else {
+            start = labelOverhang + unit;
+            end = trackW - finishAt - finishThickness - petSize * 0.45;
+            finish.style.left = (trackW - finishAt - finishThickness) + 'px';
+            finish.style.top = '0';
+            finish.style.width = finishThickness + 'px';
+            finish.style.height = '100%';
+        }
+
+        view = { portrait, unit, trackW, trackH, laneSize, labelH, petSize, start, end };
+
+        const slot = petSize * 0.8;
+        lanes.forEach((lane, index) => {
+            const offset = index * laneSize;
+            lane.style.left = (portrait ? offset : 0) + 'px';
+            lane.style.top = (portrait ? 0 : offset) + 'px';
+            lane.style.width = (portrait ? laneSize : trackW) + 'px';
+            lane.style.height = (portrait ? trackH : laneSize) + 'px';
+            const mark = lane.firstChild;
+            mark.style.width = slot + 'px';
+            mark.style.height = slot + 'px';
+            if (portrait) {
+                mark.style.left = ((laneSize - slot) / 2) + 'px';
+                mark.style.top = (start + (petSize - slot) / 2) + 'px';
+            } else {
+                mark.style.left = (start + (petSize - slot) / 2) + 'px';
+                mark.style.top = ((laneSize - slot) / 2) + 'px';
+            }
+        });
+
+        racers.forEach(racer => {
+            racer.resize();
+            placeRacer(racer);
+        });
+    }
+
+    function placeRacer(racer) {
+        const progress = Math.min(racer.position, TRACK_LENGTH) / TRACK_LENGTH;
+        const along = view.start + (view.end - view.start) * progress;
+        if (view.portrait) {
+            racer.x = racer.lane * view.laneSize + (view.laneSize - view.petSize) / 2;
+            racer.y = along;
+        } else {
+            racer.x = along;
+            racer.y = racer.lane * view.laneSize + (view.laneSize - view.petSize - view.labelH) / 2;
+        }
+        racer.element.style.transform = 'translate3d(' + racer.x.toFixed(1) + 'px,' + racer.y.toFixed(1) + 'px,0)';
+    }
+
+    const lanes = [];
+    (function buildLanes() {
+        const track = document.getElementById('race-track');
+        const finish = track.querySelector('.finish-line');
+        for (let i = 0; i < MAX_RACERS; i++) {
+            const lane = document.createElement('div');
+            lane.className = 'lane' + (i % 2 ? ' alt' : '');
+            const slot = document.createElement('div');
+            slot.className = 'lane-slot';
+            lane.appendChild(slot);
+            track.insertBefore(lane, finish);
+            lanes.push(lane);
+        }
+    })();
+    layout();
+    window.addEventListener('resize', layout);
 
     class Racer {
         constructor(username, type, laneNumber) {
@@ -341,269 +474,303 @@
             this.position = 0;
             this.finished = false;
             this.finishTime = null;
-            
-            // Use base stats only - no upgrades
-            const petConfig = PET_TYPES[type];
-            this.speed = petConfig.baseSpeed;
-            this.stamina = petConfig.baseStamina;
-            this.luck = petConfig.baseLuck;
-            
-            this.currentStamina = this.stamina;
+            this.x = 0;
+            this.y = 0;
+
+            const pace = PET_TYPES[type].pace;
+            this.pace = 0;
+            this.targetPace = (pace[0] + pace[1]) / 2;
+            this.paceTimer = 0.3 + Math.random() * 0.5;
+
             this.element = this.createElement();
+            placeRacer(this);
         }
-        
+
         createElement() {
             const petDiv = document.createElement('div');
             petDiv.className = 'pet';
-            petDiv.style.top = `${this.lane * 80 + 10}px`;
-            petDiv.style.left = '10px';
-            petDiv.style.fontSize = '50px';
-            petDiv.textContent = PET_TYPES[this.type].emoji;
-            
+
+            const body = document.createElement('div');
+            body.className = 'pet-body';
+            const emoji = document.createElement('span');
+            emoji.className = 'pet-emoji';
+            emoji.textContent = PET_TYPES[this.type].emoji;
+            body.appendChild(emoji);
+            petDiv.appendChild(body);
+
             const label = document.createElement('div');
             label.className = 'pet-label';
             label.textContent = this.username;
             petDiv.appendChild(label);
-            
-            // Remove stats display for simplicity
-            
+
+            this.element = petDiv;
+            this.resize();
             document.getElementById('race-track').appendChild(petDiv);
+            if (lanes[this.lane]) lanes[this.lane].classList.add('taken');
             return petDiv;
         }
-        
-        update() {
+
+        resize() {
+            this.element.style.width = view.petSize + 'px';
+            this.element.style.height = view.petSize + 'px';
+            this.element.style.fontSize = (view.petSize * 0.84) + 'px';
+        }
+
+        update(dt) {
             if (this.finished) return;
-            
-            // Calculate speed based on stamina
-            let currentSpeed = this.speed;
-            if (this.currentStamina < 0.3) {
-                currentSpeed *= 0.5; // Tired penalty
+
+            // Pick a new pace every moment or so; a big jump up is a visible burst of speed.
+            this.paceTimer -= dt;
+            if (this.paceTimer <= 0) {
+                const range = PET_TYPES[this.type].pace;
+                const previous = this.targetPace;
+                this.targetPace = range[0] + Math.random() * (range[1] - range[0]);
+                this.paceTimer = 0.5 + Math.random() * 0.8;
+                if (this.targetPace > 10 && this.targetPace > previous * 1.4) {
+                    this.createBoostEffect();
+                }
             }
-            
-            // Lucky boost chance
-            if (Math.random() < this.luck * 0.01) {
-                currentSpeed *= 2;
-                this.createBoostEffect();
-            }
-            
-            // Random events
-            if (Math.random() < 0.005) {
-                // Stumble
-                currentSpeed *= 0.1;
-            }
-            
-            this.position += currentSpeed;
-            this.currentStamina -= 0.005;
-            
-            // Update visual position
-            const trackWidth = window.innerWidth - 100;
-            const visualPosition = Math.min(this.position / 100 * trackWidth, trackWidth - 50);
-            this.element.style.left = `${visualPosition}px`;
-            
-            // Check if finished
-            if (this.position >= 100 && !this.finished) {
+
+            this.pace += (this.targetPace - this.pace) * Math.min(1, dt * 5);
+            this.position += this.pace * dt;
+
+            if (this.position >= TRACK_LENGTH) {
+                this.position = TRACK_LENGTH;
                 this.finished = true;
                 this.finishTime = Date.now() - raceStartTime;
+                this.element.classList.add('finished');
+                finishOrder.push(this);
+                if (finishOrder.length <= 3) {
+                    this.showMedal(['🥇', '🥈', '🥉'][finishOrder.length - 1]);
+                }
             }
+
+            placeRacer(this);
         }
-        
+
+        showMedal(medal) {
+            const badge = document.createElement('div');
+            badge.className = 'pet-medal';
+            badge.style.fontSize = (view.petSize * 0.46) + 'px';
+            badge.textContent = medal;
+            this.element.appendChild(badge);
+        }
+
         createBoostEffect() {
-            const boost = document.createElement('div');
-            boost.className = 'boost-effect';
-            boost.style.top = `${this.lane * 80 + 30}px`;
-            boost.style.left = this.element.style.left;
-            document.getElementById('race-track').appendChild(boost);
-            
-            setTimeout(() => boost.remove(), 500);
+            const size = view.petSize * 0.5;
+            const dust = document.createElement('div');
+            dust.className = 'dust';
+            dust.style.width = size + 'px';
+            dust.style.height = size + 'px';
+            if (view.portrait) {
+                dust.style.left = (this.x + (view.petSize - size) / 2) + 'px';
+                dust.style.top = (this.y + view.petSize * 0.8) + 'px';
+            } else {
+                dust.style.left = (this.x - size * 0.6) + 'px';
+                dust.style.top = (this.y + view.petSize * 0.5) + 'px';
+            }
+            document.getElementById('race-track').appendChild(dust);
+
+            setTimeout(() => dust.remove(), 500);
         }
-        
+
         remove() {
             if (this.element && this.element.parentNode) {
                 this.element.remove();
             }
         }
     }
-    
-    function updateBettingBoard() {
-        const betList = document.getElementById('bet-list');
-        betList.innerHTML = '';
-        
-        racers.forEach(racer => {
-            const betDiv = document.createElement('div');
-            betDiv.className = 'bet-entry';
-            betDiv.innerHTML = `
-                <span>${PET_TYPES[racer.type].emoji}</span>
-                <span>${escapeHtml(racer.username)}</span>
-                <span style="opacity: 0.7; font-size: 12px;">${PET_TYPES[racer.type].name}</span>
-            `;
-            betList.appendChild(betDiv);
-        });
-        
-        document.getElementById('total-racers').textContent = `Racers: ${racers.size}`;
+
+    let finishOrder = [];
+
+    function showCountdown(value) {
+        const countdown = document.getElementById('countdown');
+        countdown.textContent = value;
+        countdown.style.display = 'flex';
+        countdown.classList.remove('tick');
+        void countdown.offsetWidth; // restart the pop animation
+        countdown.classList.add('tick');
     }
-    
-    function startRaceCountdown() {
-        let countdown = 5; // Reduced from 30 to 5 seconds
-        document.getElementById('race-status').textContent = '🏁 Get Ready!';
-        
+
+    function hideCountdown() {
+        const countdown = document.getElementById('countdown');
+        countdown.style.display = 'none';
+        countdown.classList.remove('tick');
+    }
+
+    function startRaceCountdown(seconds) {
+        countdownLeft = seconds;
+        showCountdown(countdownLeft);
+
         raceCountdown = setInterval(() => {
-            countdown--;
-            document.getElementById('race-timer').textContent = `Starting in: ${countdown}s`;
-            
-            if (countdown <= 0) {
+            countdownLeft--;
+
+            if (countdownLeft <= 0) {
                 clearInterval(raceCountdown);
                 raceCountdown = null;
+                hideCountdown();
                 startRace();
+                return;
             }
+            showCountdown(countdownLeft);
         }, 1000);
     }
-    
+
     function startRace() {
         if (racers.size < 2) {
             // Cancel race if not enough participants
-            document.getElementById('race-status').textContent = 'Need at least 2 racers!';
-            document.getElementById('race-timer').textContent = 'Type !join to race';
-            
             resetRace(false);
             return;
         }
-        
+
         raceInProgress = true;
         raceStartTime = Date.now();
-        document.getElementById('race-status').textContent = '🏁 RACE IN PROGRESS! 🏁';
-        document.getElementById('race-timer').textContent = '';
-        
+        finishOrder = [];
+        document.body.classList.add('racing');
+        document.getElementById('hint').classList.add('hidden');
+
         // Main race loop
-        const raceInterval = setInterval(() => {
+        lastFrameTime = performance.now();
+        const step = now => {
+            raceFrame = requestAnimationFrame(step);
+            const dt = Math.max(0, Math.min(0.1, (now - lastFrameTime) / 1000));
+            lastFrameTime = now;
             let allFinished = true;
-            
+
             racers.forEach(racer => {
-                racer.update();
+                racer.update(dt);
                 if (!racer.finished) {
                     allFinished = false;
                 }
             });
-            
+
             if (allFinished) {
-                clearInterval(raceInterval);
+                cancelAnimationFrame(raceFrame);
+                raceFrame = null;
                 endRace();
             }
-        }, 50);
+        };
+        raceFrame = requestAnimationFrame(step);
     }
-    
+
     function endRace() {
         // Sort racers by finish time
         const results = Array.from(racers.values())
-            .sort((a, b) => a.finishTime - b.finishTime);
-        
-        const winner = results[0];
-        const second = results[1];
-        const third = results[2];
-        
-        // Display winner
-        const winnerDiv = document.getElementById('winner-announcement');
-        let winnerHtml = `
-            <div style="font-size: 64px;">${PET_TYPES[winner.type].emoji}</div>
-            <div>🏆 ${escapeHtml(winner.username)} WINS! 🏆</div>
-        `;
+            .sort((a, b) => a.finishTime - b.finishTime || finishOrder.indexOf(a) - finishOrder.indexOf(b));
 
-        if (second) {
-            winnerHtml += `<div style="font-size: 24px; margin-top: 10px;">🥈 ${escapeHtml(second.username)}</div>`;
+        const winner = results[0];
+        if (!winner) {
+            resetRace();
+            return;
         }
-        if (third) {
-            winnerHtml += `<div style="font-size: 20px;">🥉 ${escapeHtml(third.username)}</div>`;
-        }
-        
-        winnerDiv.innerHTML = winnerHtml;
-        winnerDiv.style.display = 'block';
-        
-        // Celebration effects for top 3
-        results.forEach((racer, index) => {
-            if (index < 3) {
-                const medals = ['🥇', '🥈', '🥉'];
-                createFloatingPoints(racer.element, medals[index]);
-            }
+        document.body.classList.remove('racing');
+
+        // Podium: the winner's pet and name, then the runners-up
+        const winnerDiv = document.getElementById('winner-announcement');
+        winnerDiv.textContent = '';
+
+        const pet = document.createElement('div');
+        pet.className = 'winner-pet';
+        pet.textContent = PET_TYPES[winner.type].emoji;
+        winnerDiv.appendChild(pet);
+
+        const name = document.createElement('div');
+        name.className = 'winner-name';
+        name.textContent = '🏆 ' + winner.username;
+        winnerDiv.appendChild(name);
+
+        ['🥈', '🥉'].forEach((medal, index) => {
+            const racer = results[index + 1];
+            if (!racer) return;
+            const row = document.createElement('div');
+            row.className = 'runner-up';
+            row.textContent = medal + ' ' + racer.username;
+            winnerDiv.appendChild(row);
         });
-        
+
+        winnerDiv.classList.add('show');
+
         // Reset after delay
-        setTimeout(() => {
-            winnerDiv.style.display = 'none';
+        clearTimeout(resetTimer);
+        resetTimer = setTimeout(() => {
             resetRace();
         }, 5000);
     }
-    
+
     function resetRace(updateStatus) {
         racers.forEach(racer => racer.remove());
         racers.clear();
         raceInProgress = false;
+        finishOrder = [];
         if (raceCountdown) {
             clearInterval(raceCountdown);
             raceCountdown = null;
         }
-        updateBettingBoard();
-        if (updateStatus !== false) {
-            document.getElementById('race-status').textContent = '🏁 Ready for next race!';
-            document.getElementById('race-timer').textContent = 'Type !join to race';
+        if (raceFrame) {
+            cancelAnimationFrame(raceFrame);
+            raceFrame = null;
         }
+        clearTimeout(resetTimer);
+        hideCountdown();
+        lanes.forEach(lane => lane.classList.remove('taken'));
+        document.body.classList.remove('racing');
+        document.getElementById('winner-announcement').classList.remove('show');
+        document.getElementById('hint').classList.remove('hidden');
     }
-    
-    function createFloatingPoints(element, text) {
-        const points = document.createElement('div');
-        points.className = 'floating-points';
-        points.textContent = text;
-        points.style.left = element.style.left;
-        points.style.top = `${parseInt(element.style.top) - 20}px`;
-        document.getElementById('race-track').appendChild(points);
-        
-        setTimeout(() => points.remove(), 2000);
-    }
-    
+
     function processJoinRace(username, petType, playerKey = username) {
         if (raceInProgress) {
             sendChatResponse(`@${username}, a race is already in progress! Wait for the next one.`);
             return;
         }
-        
+
         if (racers.has(playerKey)) {
             sendChatResponse(`@${username}, you're already in the race!`);
             return;
         }
-        
+
         // If no pet specified, pick a random one
         if (!petType) {
             const petTypes = Object.keys(PET_TYPES);
             petType = petTypes[Math.floor(Math.random() * petTypes.length)];
         }
-        
-        if (!PET_TYPES[petType]) {
+
+        if (!Object.prototype.hasOwnProperty.call(PET_TYPES, petType)) {
             sendChatResponse(`@${username}, pick: dog, cat, rabbit, turtle, or hamster`);
             return;
         }
-        
+
         // Add racer
         const laneNumber = racers.size;
-        if (laneNumber >= 5) {
+        if (laneNumber >= MAX_RACERS) {
             sendChatResponse(`@${username}, race is full! Wait for the next one.`);
             return;
         }
-        
+
         const racer = new Racer(username, petType, laneNumber);
         racers.set(playerKey, racer);
-        
-        updateBettingBoard();
+
         sendChatResponse(`${PET_TYPES[petType].emoji} ${username} joined with a ${PET_TYPES[petType].name}!`);
-        
-        // Auto-start when we have 3 racers
-        if (racers.size === 3 && !raceCountdown) {
-            sendChatResponse(`🏁 3 racers ready! Race starting...`);
-            startRaceCountdown();
-        } else if (racers.size < 3) {
-            sendChatResponse(`Need ${3 - racers.size} more racer${3 - racers.size > 1 ? 's' : ''}!`);
+
+        // Two racers open a 20 second gate for more to join; a third starts the race right away.
+        if (racers.size >= 3) {
+            if (!raceCountdown) {
+                startRaceCountdown(5);
+            } else if (countdownLeft > 5) {
+                countdownLeft = 5;
+                showCountdown(countdownLeft);
+            }
+            if (racers.size === 3) {
+                sendChatResponse(`🏁 3 racers ready! Race starting...`);
+            }
+        } else if (racers.size === 2 && !raceCountdown) {
+            startRaceCountdown(20);
+            sendChatResponse(`🏁 Race starts in 20 seconds! Type !join to race.`);
+        } else if (racers.size === 1) {
+            sendChatResponse(`Need 1 more racer!`);
         }
     }
-    
-    // Removed upgrade and mypets functions - no longer needed
-    
+
     function sendChatResponse(message) {
         if (urlParams.has('demo')) return;
         // Send response back through the overlay system
@@ -624,8 +791,6 @@
         
         console.log('Bot response:', message);
     }
-    
-    // Removed points-related functions - no longer needed
     
     function processData(data) {
         if (!data || typeof data !== 'object') return;
@@ -713,19 +878,20 @@
 
         connectWebSocket();
     }
-    
-    // Add sample races for testing
+
+    // Demo: a full field joins, races, and joins again once the track is clear
     if (urlParams.has('demo')) {
-        setTimeout(() => {
-            // Add demo racers
-            processJoinRace('DemoPlayer1', 'dog');
-            setTimeout(() => {
-                processJoinRace('DemoPlayer2', 'rabbit');
-            }, 2000);
-            setTimeout(() => {
-                processJoinRace('DemoPlayer3', 'turtle');
-            }, 4000);
-        }, 1000);
+        const demoNames = ['Mochi', 'Biscuit', 'Pepper', 'Noodle', 'Waffles'];
+        const demoPets = Object.keys(PET_TYPES);
+        const demoRound = () => {
+            demoNames.forEach((name, index) => {
+                setTimeout(() => processJoinRace(name, demoPets[index]), 600 + index * 700);
+            });
+        };
+        demoRound();
+        setInterval(() => {
+            if (!raceInProgress && racers.size === 0) demoRound();
+        }, 4500);
     }
     </script>
 </body>

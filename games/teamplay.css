@@ -7,7 +7,7 @@ body[data-game="shield"] {background:#171c32;--accent:#b6dcff;--panel:#252e4b;--
 div#teamplay-stage {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding:8px 28px 28px;}
 .supply-card,.shield-lane {text-align:center;border:1px solid #ffffff20;border-radius:18px;background:#0002;padding:24px 12px;display:flex;flex-direction:column;align-items:center;gap:12px;}
 .supply-icon {font-size:72px;line-height:1.6;filter:drop-shadow(0 8px 0 #0002);}.supply-card code,.shield-lane code {font-size:16px;color:var(--accent);white-space:nowrap;}.supply-card b,.shield-lane b {font-size:13px;color:var(--muted);}.supply-card.complete {border-color:#a6e1a1;background:#a6e1a10b;}.supply-card.complete b {color:#a6e1a1;}
-.feast {grid-column:1/-1;font-size:clamp(38px,8vw,90px);text-align:center;padding:40px 0;}
+.feast {grid-column:1/-1;font-size:62px;text-align:center;padding:40px 0;}
 .crew-lower {display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:22px 28px;border-top:1px solid #ffffff15;}.crew-lower p {font-size:14px;color:var(--muted);}.crew-lower h3 {font-size:14px;margin:0 0 10px;color:var(--accent);}
 .crew-history {display:flex;flex-direction:column;gap:6px;}.crew-contribution {display:flex;justify-content:space-between;gap:12px;font-size:12px;}.crew-contribution b {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%;}.crew-contribution span {color:var(--muted);text-align:right;}
 
@@ -19,7 +19,20 @@ div#teamplay-stage {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));g
 .meteor-field {height:130px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:5px;}.meteor {font-size:42px;line-height:1.1;}.lane-red {--lane:#ffada8;}.lane-blue {--lane:#a1d7ff;}.lane-gold {--lane:#ffe09b;}.shield-lane {color:var(--lane);border-bottom:4px solid var(--lane);}.shield-lane code {color:var(--lane);}.shield-lane.covered {background:#ffffff0b;}
 body[data-game="kitchen"].chroma,body[data-game="relay"].chroma,body[data-game="shield"].chroma {background:#00ff00;}
 body[data-game="kitchen"].transparent,body[data-game="relay"].transparent,body[data-game="shield"].transparent {background:transparent;}
-@media(max-width:700px){.crew-heading{padding:20px;align-items:flex-start;}.crew-heading h2{font-size:23px;}.crew-heading strong{font-size:14px;}.crew-lower{grid-template-columns:1fr;padding:20px;}div#teamplay-stage{gap:8px;padding:0 16px 20px;}.supply-card,.shield-lane{padding:16px 4px;gap:8px;}.supply-icon{font-size:44px;}.supply-card code,.shield-lane code{font-size:12px;white-space:normal;overflow-wrap:anywhere;}.supply-card b,.shield-lane b{font-size:11px;}.meteor{font-size:30px;}.meteor-field{height:95px;}.wave-status{padding:0 20px 16px;}}
+/* Portrait layout */
+body.portrait .crew-heading {padding:20px;align-items:flex-start; }
+body.portrait .crew-heading h2 {font-size:23px; }
+body.portrait .crew-heading strong {font-size:14px; }
+body.portrait .crew-lower {grid-template-columns:1fr;padding:20px; }
+body.portrait div#teamplay-stage {gap:8px;padding:0 16px 20px; }
+body.portrait .supply-card, body.portrait .shield-lane {padding:16px 4px;gap:8px; }
+body.portrait .supply-icon {font-size:44px; }
+body.portrait .supply-card code, body.portrait .shield-lane code {font-size:12px;white-space:normal;overflow-wrap:anywhere; }
+body.portrait .supply-card b, body.portrait .shield-lane b {font-size:11px; }
+body.portrait .meteor {font-size:30px; }
+body.portrait .meteor-field {height:95px; }
+body.portrait .wave-status {padding:0 20px 16px; }
+
 
 .crew-lower { display:block; padding:10px 18px; }
 .crew-lower .metrics { padding:0; border:0; }

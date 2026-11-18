@@ -34,7 +34,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
   if(slug==='wordshuffle')assert.equal(await page.locator('.command code').textContent(),'!solve');
   await page.screenshot({path:path.join(output,slug+'-desktop.png'),omitBackground:true});
   assert.equal(await page.locator('button, #controls, #host-controls, #connection').count(),0);
-  await app.evaluate(({BrowserWindow},url)=>BrowserWindow.getAllWindows().find(w=>w.webContents.getURL()===url).setContentSize(390,900),page.url());assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),slug+' no horizontal overflow');await page.screenshot({path:path.join(output,slug+'-mobile.png'),fullPage:true});
+  await app.evaluate(({BrowserWindow},url)=>BrowserWindow.getAllWindows().find(w=>w.webContents.getURL()===url).setContentSize(390,900),page.url());await page.waitForFunction(()=>innerWidth<=400);await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),slug+' no horizontal overflow');await page.screenshot({path:path.join(output,slug+'-mobile.png'),fullPage:true});
   await page.evaluate(()=>qaOffset+=200000);await page.waitForFunction(()=>!document.getElementById('result').hidden);assert((await page.locator('#result').textContent()).length>0);
   await page.evaluate(()=>qaOffset+=11000);await page.waitForFunction(()=>document.getElementById('result').hidden);assert.equal(await page.locator('#participants').textContent(),'0');
   await app.evaluate(({BrowserWindow},url)=>BrowserWindow.getAllWindows().find(w=>w.webContents.getURL()===url).setContentSize(1100,820),page.url());console.log('PASS '+slug+' relay, input, result, next round and layouts');

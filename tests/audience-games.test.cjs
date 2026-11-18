@@ -101,7 +101,7 @@ test('Real pages render safely, isolate demos, receive only their bridge, and su
             await page.waitForFunction(()=>document.getElementById('participants').textContent==='1');
             assert.equal(await page.locator('#history img').count(),0);
             assert.equal(await page.locator('button, #controls, #host-controls, #connection').count(),0);
-            for(const width of [390,1280]) {await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);}
+            for(const width of [390,1280]) {await page.setViewportSize({width,height:900});await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);}
         }
         assert.deepEqual(errors,[]);
     } finally {await browser.close();}
@@ -145,7 +145,7 @@ test('Word Chain retains its word validation, combo scoring, timer bonus and rea
         assert.equal(await page.locator('.chain-word').count(),2);
         await page.evaluate(()=>{for(let i=0;i<12;i++)addWordToChain('WORD'+i,'Long viewer name');});
         assert.equal(await page.locator('.chain-word').count(),8);
-        for(const width of [390,1280]) {await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);}
+        for(const width of [390,1280]) {await page.setViewportSize({width,height:900});await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);}
     } finally {await browser.close();}
 });
 

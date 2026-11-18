@@ -7,7 +7,7 @@ body[data-game="tug"] { background:#101e29; --accent:#ffe2a2; --muted:#a8bdc9; }
 .tug-teams b { margin-left:8px; display:block; margin:0; font-size:30px; line-height:1.1; font-variant-numeric:tabular-nums; }
 .prompt-card { position:absolute; width:max-content; max-width:54%; margin:0; background:#f8edce; color:#253946; border-radius:12px; padding:7px 16px 10px; box-shadow:0 8px 0 #0002; z-index:1; top:12px; left:50%; transform:translateX(-50%); min-width:130px; }
 .prompt-top { display:flex; justify-content:space-between; gap:8px; font-size:10px; text-transform:none; letter-spacing:0; font-weight:700; }
-#tug-prompt { font-size:clamp(20px,4.5vw,34px); font-weight:800; letter-spacing:-.035em; text-align:center; padding-top:0; overflow-wrap:anywhere; }
+#tug-prompt { font-size:34px; font-weight:800; letter-spacing:-.035em; text-align:center; padding-top:0; overflow-wrap:anywhere; }
 #tug-prompt.drop { animation:prompt-drop .35s ease-out; }
 @keyframes prompt-drop { from { opacity:0;transform:translateY(-12px); } to { opacity:1;transform:translateY(0); } }
 .arena { position:relative; height:150px; overflow:hidden; }
@@ -38,14 +38,16 @@ body[data-game="tug"] .shell { max-width:720px; background:#192e3b; }
 .tug-rosters ul:last-child { justify-content:flex-end; }
 .tug-rosters li { background:#0c1b24; }
 
-@media(max-width:440px) {
-    .tug-teams { padding:14px 12px 0; }
-    .tug-teams h2 { font-size:16px; }
-    .prompt-card { min-width:100px; padding:6px 8px 8px; }
-    .monster { width:80px; height:88px; top:26px; }
-    .coral { left:calc(22% - 64px); }.mint { right:calc(22% - 64px); }
-    .rope { top:80px; }.rope-flag { top:76px; }
-}
+/* Portrait layout */
+body.portrait .tug-teams {padding:14px 12px 0; }
+body.portrait .tug-teams h2 {font-size:16px; }
+body.portrait .prompt-card {min-width:100px; padding:6px 8px 8px; }
+body.portrait .monster {width:80px; height:88px; top:26px; }
+body.portrait .coral {left:calc(22% - 64px); }
+body.portrait .mint {right:calc(22% - 64px); }
+body.portrait .rope {top:80px; }
+body.portrait .rope-flag {top:76px; }
+
 
 .lobby-count { margin-left:auto; color:var(--muted); font-size:14px; }
 body:not([data-phase="waiting"]) .lobby-count { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }

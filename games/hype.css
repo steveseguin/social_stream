@@ -6,3 +6,48 @@ body.chroma { background: #00ff00; }
 [hidden] { display: none !important; }
 #playfield { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: block; }
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+#paper-panel {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 520px;
+    padding: 18px 20px;
+    border: 1px solid #a79e88;
+    border-radius: 5px;
+    box-shadow: 0 5px 22px #17171232;
+    background: repeating-linear-gradient(0deg, transparent 0 3px, #927e5b09 3px 4px), var(--paper);
+    color: var(--ink);
+    font: 13px/1.4 Consolas, monospace;
+}
+#paper-panel[data-size="s"] { width: 400px; }
+#paper-panel[data-size="l"] { width: 680px; }
+#paper-panel[data-position="tl"], #paper-panel[data-position="bl"] { left: 20px; right: auto; }
+#paper-panel[data-position="tl"], #paper-panel[data-position="tr"] { top: 20px; bottom: auto; }
+#paper-panel header, #paper-panel .readings, #paper-panel .axis, #paper-panel .event {
+    display: flex; justify-content: space-between; align-items: center;
+}
+#paper-panel header { border-bottom: 1px solid #91887370; padding-bottom: 10px; }
+#paper-panel header strong { font-size: 19px; letter-spacing: -1px; }
+#paper-panel header span, #paper-panel .magnitude, #paper-panel .event strong { color: var(--pen); }
+#paper-panel small { font-size: 10px; letter-spacing: .07em; }
+#paper-panel .readings { padding: 12px 0 8px; }
+#paper-panel .magnitude { font-size: 24px; }
+#paper-panel .magnitude b { font-size: 48px; line-height: 1.1; font-weight: 500; letter-spacing: -3px; }
+#paper-panel .rates { text-align: right; }
+#paper-panel #playfield {
+    position: static; width: 100%; height: 136px;
+    background-image: linear-gradient(to right, #8b816133 1px, transparent 1px), linear-gradient(to bottom, #8b816133 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+#paper-panel .axis { padding-top: 5px; }
+#paper-quake, #paper-recent { margin-top: 10px; border-top: 1px solid #9f947e88; padding-top: 9px; }
+#paper-panel .event strong { border: 3px double; padding: 1px 6px; font-size: 20px; transform: rotate(-2deg); }
+#paper-epicenter, #paper-history { overflow: hidden; text-overflow: ellipsis; }
+#paper-count, #paper-history { margin: 6px 0 0; }
+#paper-panel.graph-only > :not(#paper-graph) { display: none; }
+#paper-panel.clear { background: transparent; box-shadow: none; border-color: transparent; }
+@media (prefers-reduced-motion: no-preference) {
+    #paper-panel.shaking { animation: paper-jolt .13s alternate 8; }
+    @keyframes paper-jolt { to { transform: translate(2px,-1px); } }
+}

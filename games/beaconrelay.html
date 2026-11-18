@@ -5,16 +5,16 @@
     <meta name="description" content="Beacon Relay: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
     <meta name="robots" content="noindex">
 <script src="../js/local-server-url.js"></script><meta name="viewport" content="width=device-width, initial-scale=1"><title>Beacon Relay &middot; Social Stream Ninja</title><link rel="icon" href="../favicon.ico"><link rel="stylesheet" href="audience.css"><link rel="stylesheet" href="teamplay.css"></head>
-<body data-game="relay"><main class="shell">
-<div class="topline"><h1>Beacon Relay</h1><div class="clock"><span id="clock-value" aria-label="Time remaining"></span></div></div>
+<body data-game="relay"><main class="shell" aria-label="Beacon Relay">
+<div class="topline"><div class="clock"><span id="clock-value" aria-label="Time remaining"></span></div></div>
 <p id="result" class="result" role="status" hidden></p>
-<section class="crew-board" aria-label="Beacon Relay game"><div class="crew-heading"><div><p id="round" class="eyebrow">Round 1</p><h2 id="scene-title"></h2></div><strong id="teamplay-score"></strong></div><svg class="relay-map" viewBox="0 0 650 180" role="img" aria-label="Beacon trail">
+<section class="crew-board" aria-label="Beacon Relay game"><div class="crew-heading"><div><p id="round" class="eyebrow game-sr-only">Round 1</p><h2 id="scene-title"></h2></div><strong id="teamplay-score"></strong></div><svg class="relay-map" viewBox="0 0 650 180" role="img" aria-label="Beacon trail">
 <rect width="650" height="180" fill="#142b43"/>
 <circle cx="505" cy="39" r="19" fill="#ffe4a3"/>
 <path d="M0 126 120 45 235 116 344 44 480 127 595 61 650 99V180H0Z" fill="#28495f"/>
 <path d="M0 156 97 104 181 150 303 76 408 143 520 91 650 136V180H0Z" fill="#355d6c"/>
 <path d="M0 160Q85 106 176 147T363 133T535 122T650 116V180H0Z" fill="#203f4c"/>
 <path id="beacon-trail" d="M20 140Q74 102 138 132T262 130T394 111T514 101T630 77" fill="none" stroke="#96b9b1" stroke-width="2" stroke-dasharray="3 5"/>
-<g id="teamplay-stage"></g></svg><div class="crew-lower"><div class="metrics"><p class="command"><span>Take turns</span> <code>!pass</code></p><span><b id="participants">0</b> players</span></div><div id="history" class="crew-history"></div></div></section>
+<g id="teamplay-stage"></g></svg><div class="crew-lower"><div class="metrics"><p class="command"><code>!pass</code></p><span class="game-sr-only"><b id="participants">0</b> players</span></div><div id="history" class="crew-history game-sr-only"></div></div></section>
 
-</main><script src="teamplay-engine.js"></script><script src="teamplay-view.js"></script><script src="audience-page.js"></script></body></html>
+</main><script src="teamplay-engine.js"></script><script src="teamplay-view.js"></script><script src="fit-card.js"></script><script src="audience-page.js"></script></body></html>

@@ -10,12 +10,21 @@
     <title>Spam Power - Social Stream Ninja</title>
     <link rel="icon" href="./favicon.ico" />
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
         body {
             margin: 0;
             padding: 0;
             background: #0a0a0a;
             overflow: hidden;
-            font-family: 'Arial', sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             color: white;
         }
 
@@ -27,250 +36,253 @@
             background: #000000;
         }
 
+        body.transparent {
+            background: transparent;
+        }
+
         #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
         }
 
-        #power-core {
+        /* Sized from script; 1em inside is one hundredth of the core's width */
+        #core-wrap {
             position: relative;
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            background: radial-gradient(circle at center, 
-                rgba(255, 255, 255, 0.2) 0%, 
-                rgba(0, 150, 255, 0.3) 30%, 
-                rgba(0, 50, 150, 0.5) 60%, 
-                rgba(0, 0, 50, 0.8) 100%);
-            box-shadow: 0 0 50px rgba(0, 150, 255, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        #power-level {
-            font-size: 72px;
-            font-weight: bold;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
-            z-index: 10;
+            flex: none;
         }
 
         #progress-ring {
             position: absolute;
-            width: 320px;
-            height: 320px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        #progress-ring svg {
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             transform: rotate(-90deg);
-			overflow:visible;
+            overflow: visible;
         }
 
         #progress-ring circle {
             fill: none;
-            stroke-width: 20;
+            stroke-width: 13;
             stroke-linecap: round;
         }
 
         #progress-bg {
-            stroke: rgba(255, 255, 255, 0.1);
+            stroke: #2a3050;
         }
 
         #progress-fill {
-            stroke: #00ff88;
-            stroke-dasharray: 1005;
-            stroke-dashoffset: 1005;
-            transition: stroke-dashoffset 0.5s ease;
+            stroke: #3ddc97;
+            stroke-dasharray: 565.49;
+            stroke-dashoffset: 565.49;
+            transition: stroke-dashoffset 0.4s ease, stroke 0.4s ease;
         }
 
-        .power-particle {
+        #power-core {
             position: absolute;
-            width: 4px;
-            height: 4px;
-            background: #00ff88;
+            top: 13%;
+            left: 13%;
+            width: 74%;
+            height: 74%;
             border-radius: 50%;
-            pointer-events: none;
-            animation: float-up 2s ease-out forwards;
+            background: radial-gradient(circle at 50% 38%, #3f4fb8 0%, #2a2f7a 55%, #1c1f55 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
         }
 
-        @keyframes float-up {
-            0% {
-                opacity: 1;
-                transform: translate(0, 0) scale(1);
-            }
-            100% {
-                opacity: 0;
-                transform: translate(var(--dx), -200px) scale(0);
-            }
+        #power-core.bump {
+            animation: core-bump 0.22s ease-out;
         }
 
-        #stats {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px 20px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        @keyframes core-bump {
+            0% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
 
-        .stat-line {
-            margin: 5px 0;
-            font-size: 16px;
+        #power-core.lost {
+            animation: core-lost 0.6s ease-in-out;
         }
 
-        #goal-display {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px 20px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            text-align: center;
+        @keyframes core-lost {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-3%); }
+            40%, 80% { transform: translateX(3%); }
         }
 
-        #goal-text {
-            font-size: 24px;
-            font-weight: bold;
-            color: #00ff88;
-            margin-bottom: 5px;
+        #power-level {
+            font-size: 27em;
+            font-weight: 800;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        #goal-line {
+            margin-top: 1em;
+            font-size: 7.5em;
+            font-weight: 700;
+            line-height: 1;
+            color: #aeb6e8;
+            font-variant-numeric: tabular-nums;
         }
 
         #multiplier {
             position: absolute;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 36px;
-            font-weight: bold;
-            color: #ffaa00;
-            text-shadow: 0 0 20px rgba(255, 170, 0, 0.8);
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            top: 3%;
+            right: 3%;
+            width: 22%;
+            height: 22%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffb02e;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            color: #2a1a00;
+            font-size: 10em;
+            font-weight: 800;
+            line-height: 1;
+            transform: scale(0);
+            transition: transform 0.25s cubic-bezier(0.2, 1.5, 0.4, 1);
+        }
+
+        #multiplier.active {
+            transform: scale(1);
+        }
+
+        #timer-chip {
+            flex: none;
+            margin-top: 4vmin;
+            padding: 0.8vmin 3.2vmin;
+            border-radius: 5vmin;
+            background: rgba(20, 24, 40, 0.86);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            font-size: 5.4vmin;
+            font-weight: 800;
+            line-height: 1.25;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        #timer-chip.low #timer {
+            color: #ff8a70;
         }
 
         #win-animation {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 120px;
-            font-weight: bold;
-            color: #00ff88;
-            text-shadow: 0 0 40px rgba(0, 255, 136, 0.8);
+            font-size: 44vmin;
+            line-height: 1;
             opacity: 0;
             pointer-events: none;
+            transform: translate(-50%, -50%);
+        }
+
+        #win-animation.show {
             animation: win-burst 2s ease-out;
         }
 
         @keyframes win-burst {
-            0% { 
-                opacity: 0; 
-                transform: translate(-50%, -50%) scale(0.5);
-            }
-            50% { 
-                opacity: 1; 
-                transform: translate(-50%, -50%) scale(1.2);
-            }
-            100% { 
-                opacity: 0; 
-                transform: translate(-50%, -50%) scale(1.5);
-            }
-        }
-
-        .message-burst {
-            position: absolute;
-            padding: 8px 15px;
-            background: rgba(0, 255, 136, 0.2);
-            border: 1px solid rgba(0, 255, 136, 0.5);
-            border-radius: 20px;
-            font-size: 14px;
-            pointer-events: none;
-            animation: burst-fade 1s ease-out forwards;
-        }
-
-        @keyframes burst-fade {
             0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.3);
+            }
+            30% {
                 opacity: 1;
-                transform: translate(0, 0) scale(1);
+                transform: translate(-50%, -50%) scale(1.1);
             }
             100% {
                 opacity: 0;
-                transform: translate(var(--burst-x), var(--burst-y)) scale(0.5);
+                transform: translate(-50%, -50%) scale(1.4);
             }
         }
 
-        #instructions {
+        .power-particle {
             position: absolute;
-            bottom: 20px;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 15px 30px;
-            border-radius: 10px;
-            text-align: center;
-            font-size: 16px;
+            width: 1.6vmin;
+            height: 1.6vmin;
+            margin: -0.8vmin 0 0 -0.8vmin;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: spark-out 0.8s ease-out forwards;
         }
 
-        #instructions strong {
-            color: #00ff88;
-            font-size: 18px;
+        @keyframes spark-out {
+            0% {
+                opacity: 1;
+                transform: translate(var(--sx), var(--sy)) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--ex), var(--ey)) scale(0.3);
+            }
+        }
+
+        /* Each chatter's name flies in and feeds the ring */
+        .message-burst {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            max-width: 34vmin;
+            padding: 0.5vmin 1.8vmin;
+            background: rgba(20, 24, 40, 0.86);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 3vmin;
+            font-size: 3vmin;
+            font-weight: 700;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            pointer-events: none;
+            animation: burst-in 1s ease-in forwards;
+        }
+
+        @keyframes burst-in {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) translate(var(--burst-x), var(--burst-y)) scale(1);
+            }
+            20% {
+                opacity: 1;
+                transform: translate(-50%, -50%) translate(var(--burst-x), var(--burst-y)) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) translate(var(--end-x), var(--end-y)) scale(0.5);
+            }
         }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <div id="stats">
-            <div class="stat-line">Messages/sec: <span id="msg-rate">0</span></div>
-            <div class="stat-line">Peak Rate: <span id="peak-rate">0</span></div>
-            <div class="stat-line">Total Power: <span id="total-power">0</span></div>
-            <div class="stat-line">Win Streak: <span id="win-streak">0</span></div>
-        </div>
-        
-        <div id="goal-display">
-            <div id="goal-text">GOAL: <span id="goal-value">100</span></div>
-            <div>Time: <span id="timer">60</span>s</div>
-        </div>
-        
-        <div id="power-core">
-            <div id="power-level">0</div>
-        </div>
-        
-        <div id="progress-ring">
-            <svg width="320" height="320">
-                <circle id="progress-bg" cx="160" cy="160" r="160"></circle>
-                <circle id="progress-fill" cx="160" cy="160" r="160"></circle>
+        <div id="core-wrap">
+            <svg id="progress-ring" viewBox="0 0 200 200">
+                <circle id="progress-bg" cx="100" cy="100" r="90"></circle>
+                <circle id="progress-fill" cx="100" cy="100" r="90"></circle>
             </svg>
+            <div id="power-core">
+                <div id="power-level">0</div>
+                <div id="goal-line">/ <span id="goal-value">100</span></div>
+            </div>
+            <div id="multiplier">x2</div>
         </div>
-        
-        <div id="multiplier">x1</div>
-        <div id="win-animation">WIN!</div>
-        
-        <div id="instructions">
-            <div><strong>⚡ Spam Power - How to Play:</strong></div>
-            <div>Chat spams to build power! The more everyone chats, the higher the power grows!</div>
-            <div style="margin-top: 5px; font-size: 14px; opacity: 0.8;">Goal increases based on your community's peak activity</div>
-        </div>
+
+        <div id="timer-chip">⏳ <span id="timer">60</span></div>
+        <div id="win-animation">🎉</div>
     </div>
 
     <script>
@@ -324,6 +336,10 @@
         } else if (urlParams.has('darkmode')) {
             document.body.classList.add('darkmode');
         }
+        if (urlParams.has('transparent')) {
+            document.body.classList.remove('chroma', 'darkmode');
+            document.body.classList.add('transparent');
+        }
 
         // Game state
         let gameState = {
@@ -339,38 +355,72 @@
             messageTimestamps: [],
             lastWinTime: 0
         };
-        
+
+        // Saved history is optional; the game still runs when storage is blocked or holds bad data
+        function readStored(key, fallback) {
+            try {
+                const value = localStorage.getItem(key);
+                return value === null ? fallback : value;
+            } catch (e) {
+                return fallback;
+            }
+        }
+
+        function writeStored(key, value) {
+            try {
+                localStorage.setItem(key, value);
+            } catch (e) {}
+        }
+
+        function readStoredGoals() {
+            try {
+                const goals = JSON.parse(readStored('spamPowerRecentGoals', '[]'));
+                return Array.isArray(goals) ? goals.filter(goal => typeof goal === 'number' && isFinite(goal)) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
         // Load historical data
         const historicalData = {
-            peakActivity: parseInt(localStorage.getItem('spamPowerPeakActivity') || '10'),
-            totalWins: parseInt(localStorage.getItem('spamPowerTotalWins') || '0'),
-            bestStreak: parseInt(localStorage.getItem('spamPowerBestStreak') || '0'),
-            averageWinRate: parseFloat(localStorage.getItem('spamPowerAvgWinRate') || '10'),
-            recentGoals: JSON.parse(localStorage.getItem('spamPowerRecentGoals') || '[]')
+            peakActivity: parseInt(readStored('spamPowerPeakActivity', '10')) || 10,
+            totalWins: parseInt(readStored('spamPowerTotalWins', '0')) || 0,
+            bestStreak: parseInt(readStored('spamPowerBestStreak', '0')) || 0,
+            averageWinRate: parseFloat(readStored('spamPowerAvgWinRate', '10')) || 10,
+            recentGoals: readStoredGoals()
         };
-        
+
         // Calculate dynamic goal based on history
         function calculateDynamicGoal() {
             let baseGoal = 100;
-            
+
             // Increase based on peak activity
             if (historicalData.peakActivity > 20) {
                 baseGoal = Math.floor(historicalData.peakActivity * 5);
             }
-            
+
             // Adjust based on recent performance
             if (historicalData.recentGoals.length > 0) {
                 const avgGoal = historicalData.recentGoals.reduce((a, b) => a + b, 0) / historicalData.recentGoals.length;
                 baseGoal = Math.floor(avgGoal * 1.1); // 10% harder each time
             }
-            
+
             // Add streak bonus difficulty
             baseGoal += gameState.winStreak * 20;
-            
+
             // Ensure reasonable bounds
             return Math.max(50, Math.min(baseGoal, 1000));
         }
-        
+
+        // The core fills the short side of the window in either orientation
+        function layout() {
+            const size = Math.max(60, Math.min(window.innerWidth * 0.84, window.innerHeight * 0.68));
+            const wrap = document.getElementById('core-wrap');
+            wrap.style.width = size + 'px';
+            wrap.style.height = size + 'px';
+            wrap.style.fontSize = (size / 100) + 'px';
+        }
+
         // Initialize game
         function initGame() {
             gameState.goal = calculateDynamicGoal();
@@ -378,43 +428,53 @@
             gameState.timeLeft = 60;
             gameState.isActive = true;
             gameState.multiplier = 1;
-            
+            document.getElementById('power-core').classList.remove('lost');
+
             updateDisplay();
             startTimer();
         }
-        
+
+        const RING_LENGTH = 2 * Math.PI * 90;
+        let shownPower = -1;
+
         // Update display
         function updateDisplay() {
-            document.getElementById('power-level').textContent = Math.floor(gameState.power);
+            const power = Math.floor(gameState.power);
+            const core = document.getElementById('power-core');
+            document.getElementById('power-level').textContent = power;
             document.getElementById('goal-value').textContent = gameState.goal;
             document.getElementById('timer').textContent = gameState.timeLeft;
-            document.getElementById('msg-rate').textContent = gameState.messagesPerSecond.toFixed(1);
-            document.getElementById('peak-rate').textContent = gameState.peakRate.toFixed(1);
-            document.getElementById('total-power').textContent = gameState.totalPower;
-            document.getElementById('win-streak').textContent = gameState.winStreak;
-            
+            document.getElementById('timer-chip').classList.toggle('low', gameState.timeLeft <= 10);
+
             // Update progress ring
             const progressPercent = Math.min(gameState.power / gameState.goal, 1);
-            const circumference = 2 * Math.PI * 160;
-            const offset = circumference - (progressPercent * circumference);
-            document.getElementById('progress-fill').style.strokeDashoffset = offset;
-            
-            // Update core intensity based on power
-            const intensity = Math.min(gameState.power / gameState.goal, 1);
-            const core = document.getElementById('power-core');
-            core.style.boxShadow = `0 0 ${50 + intensity * 100}px rgba(0, ${150 + intensity * 105}, 255, ${0.5 + intensity * 0.5})`;
-            core.style.transform = `scale(${1 + intensity * 0.2})`;
-            
+            const fill = document.getElementById('progress-fill');
+            fill.style.strokeDashoffset = RING_LENGTH - (progressPercent * RING_LENGTH);
+            fill.style.opacity = progressPercent > 0 ? '1' : '0'; // a round line cap would leave a dot at zero
+
             // Color change as approaching goal
             if (progressPercent > 0.8) {
-                document.getElementById('progress-fill').style.stroke = '#ffaa00';
+                fill.style.stroke = '#ff7b54';
             } else if (progressPercent > 0.5) {
-                document.getElementById('progress-fill').style.stroke = '#00ffff';
+                fill.style.stroke = '#ffd23f';
             } else {
-                document.getElementById('progress-fill').style.stroke = '#00ff88';
+                fill.style.stroke = '#3ddc97';
+            }
+
+            // The core nudges on every point gained
+            if (power > shownPower && shownPower >= 0) {
+                core.classList.remove('bump');
+                void core.offsetWidth;
+                core.classList.add('bump');
+            }
+            shownPower = power;
+
+            // Reaching the goal ends the round right away instead of waiting for the next clock tick
+            if (gameState.isActive && gameState.power >= gameState.goal) {
+                endGame(true);
             }
         }
-        
+
         // Timer
         function startTimer() {
             const timerInterval = setInterval(() => {
@@ -422,52 +482,57 @@
                     clearInterval(timerInterval);
                     return;
                 }
-                
+
                 gameState.timeLeft--;
                 document.getElementById('timer').textContent = gameState.timeLeft;
-                
-                if (gameState.timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    endGame(false);
-                }
-                
+                document.getElementById('timer-chip').classList.toggle('low', gameState.timeLeft <= 10);
+
                 // Check win condition
                 if (gameState.power >= gameState.goal) {
                     clearInterval(timerInterval);
                     endGame(true);
+                    return;
+                }
+
+                if (gameState.timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endGame(false);
                 }
             }, 1000);
         }
-        
+
         // Calculate messages per second
+        let multiplierShownUntil = 0;
         function updateMessageRate() {
             const now = Date.now();
             gameState.messageTimestamps = gameState.messageTimestamps.filter(t => now - t < 1000);
             gameState.messagesPerSecond = gameState.messageTimestamps.length;
-            
+
             if (gameState.messagesPerSecond > gameState.peakRate) {
                 gameState.peakRate = gameState.messagesPerSecond;
                 if (gameState.peakRate > historicalData.peakActivity) {
                     historicalData.peakActivity = gameState.peakRate;
-                    localStorage.setItem('spamPowerPeakActivity', gameState.peakRate.toString());
+                    writeStored('spamPowerPeakActivity', gameState.peakRate.toString());
                 }
             }
-            
+
             // Update multiplier based on message rate
+            const badge = document.getElementById('multiplier');
             if (gameState.messagesPerSecond >= 10) {
                 gameState.multiplier = 3;
-                document.getElementById('multiplier').textContent = 'x3';
-                document.getElementById('multiplier').style.opacity = '1';
             } else if (gameState.messagesPerSecond >= 5) {
                 gameState.multiplier = 2;
-                document.getElementById('multiplier').textContent = 'x2';
-                document.getElementById('multiplier').style.opacity = '1';
             } else {
                 gameState.multiplier = 1;
-                document.getElementById('multiplier').style.opacity = '0';
             }
+            if (gameState.multiplier > 1) {
+                badge.textContent = 'x' + gameState.multiplier;
+                multiplierShownUntil = now + 1500;
+            }
+            // Hold the badge briefly so it does not flicker when the rate hovers at a threshold
+            badge.classList.toggle('active', now < multiplierShownUntil);
         }
-        
+
         // Handle incoming messages (compatible with Social Stream format)
         // Cross-transport dedupe: in server mode the same feed message can arrive over both
         // the websocket relay and the VDO.Ninja bridge; render only the first copy.
@@ -535,61 +600,67 @@
             
             updateDisplay();
         }
-        
-        // Particle effects
+
+        // Particle effects: a spark leaves the ring for every message
         function createPowerParticle() {
+            const container = document.getElementById('game-container');
+            if (container.querySelectorAll('.power-particle').length >= 30) return;
+
             const particle = document.createElement('div');
             particle.className = 'power-particle';
-            
+
+            const radius = document.getElementById('core-wrap').offsetWidth * 0.46;
             const angle = Math.random() * Math.PI * 2;
-            const distance = 150 + Math.random() * 50;
-            const x = Math.cos(angle) * distance;
-            const y = Math.sin(angle) * distance;
-            
-            particle.style.setProperty('--dx', x + 'px');
-            particle.style.left = '50%';
-            particle.style.top = '50%';
-            particle.style.transform = 'translate(-50%, -50%)';
-            
-            document.getElementById('power-core').appendChild(particle);
-            
-            setTimeout(() => particle.remove(), 2000);
+            const reach = radius * (1.25 + Math.random() * 0.3);
+
+            particle.style.setProperty('--sx', (Math.cos(angle) * radius) + 'px');
+            particle.style.setProperty('--sy', (Math.sin(angle) * radius) + 'px');
+            particle.style.setProperty('--ex', (Math.cos(angle) * reach) + 'px');
+            particle.style.setProperty('--ey', (Math.sin(angle) * reach) + 'px');
+            particle.style.backgroundColor = document.getElementById('progress-fill').style.stroke || '#3ddc97';
+
+            container.appendChild(particle);
+
+            setTimeout(() => particle.remove(), 800);
         }
-        
-        // Message burst effect
+
+        // Message burst effect: the chatter's name is pulled into the ring
         function createMessageBurst(username) {
+            const container = document.getElementById('game-container');
+            if (container.querySelectorAll('.message-burst').length >= 14) return;
+
             const burst = document.createElement('div');
             burst.className = 'message-burst';
             burst.textContent = username;
-            
+
+            const size = document.getElementById('core-wrap').offsetWidth;
+            const unit = Math.min(window.innerWidth, window.innerHeight) / 100;
+            const reachX = Math.min(size * 0.72, window.innerWidth / 2 - 14 * unit);
+            const reachY = Math.min(size * 0.66, window.innerHeight / 2 - 5 * unit);
             const angle = Math.random() * Math.PI * 2;
-            const distance = 200 + Math.random() * 100;
-            const x = Math.cos(angle) * distance;
-            const y = Math.sin(angle) * distance;
-            
-            burst.style.setProperty('--burst-x', x + 'px');
-            burst.style.setProperty('--burst-y', y + 'px');
-            burst.style.left = '50%';
-            burst.style.top = '50%';
-            burst.style.transform = 'translate(-50%, -50%)';
-            
-            document.getElementById('game-container').appendChild(burst);
-            
+
+            burst.style.setProperty('--burst-x', (Math.cos(angle) * reachX) + 'px');
+            burst.style.setProperty('--burst-y', (Math.sin(angle) * reachY) + 'px');
+            burst.style.setProperty('--end-x', (Math.cos(angle) * size * 0.45) + 'px');
+            burst.style.setProperty('--end-y', (Math.sin(angle) * size * 0.45) + 'px');
+
+            container.appendChild(burst);
+
             setTimeout(() => burst.remove(), 1000);
         }
-        
+
         // End game
         function endGame(won) {
             gameState.isActive = false;
-            
+            updateDisplay();
+
             if (won) {
                 // Show win animation
                 const winAnim = document.getElementById('win-animation');
-                winAnim.style.animation = 'none';
-                setTimeout(() => {
-                    winAnim.style.animation = 'win-burst 2s ease-out';
-                }, 10);
-                
+                winAnim.classList.remove('show');
+                void winAnim.offsetWidth;
+                winAnim.classList.add('show');
+
                 // Update streak
                 const now = Date.now();
                 if (now - gameState.lastWinTime < 300000) { // 5 minutes
@@ -598,7 +669,7 @@
                     gameState.winStreak = 1;
                 }
                 gameState.lastWinTime = now;
-                
+
                 // Update historical data
                 historicalData.totalWins++;
                 historicalData.averageWinRate = (historicalData.averageWinRate + gameState.messagesPerSecond) / 2;
@@ -609,22 +680,24 @@
                 if (gameState.winStreak > historicalData.bestStreak) {
                     historicalData.bestStreak = gameState.winStreak;
                 }
-                
-                // Save to localStorage
-                localStorage.setItem('spamPowerTotalWins', historicalData.totalWins.toString());
-                localStorage.setItem('spamPowerAvgWinRate', historicalData.averageWinRate.toString());
-                localStorage.setItem('spamPowerRecentGoals', JSON.stringify(historicalData.recentGoals));
-                localStorage.setItem('spamPowerBestStreak', historicalData.bestStreak.toString());
+
+                // Save for the next session
+                writeStored('spamPowerTotalWins', historicalData.totalWins.toString());
+                writeStored('spamPowerAvgWinRate', historicalData.averageWinRate.toString());
+                writeStored('spamPowerRecentGoals', JSON.stringify(historicalData.recentGoals));
+                writeStored('spamPowerBestStreak', historicalData.bestStreak.toString());
             } else {
                 gameState.winStreak = 0;
+                document.getElementById('power-core').classList.remove('bump');
+                document.getElementById('power-core').classList.add('lost');
             }
-            
+
             // Restart after delay
             setTimeout(() => {
                 initGame();
             }, 3000);
         }
-        
+
         // Setup iframe communication (same as petrace.html)
         if (!urlParams.has('demo') && !useServerOnlyTransport()) {
             const iframe = document.createElement("iframe");
@@ -692,23 +765,27 @@
             }
             connect();
         })();
-        
-        // Demo mode
+
+        // Demo mode: chat comes in waves so the ring, the multiplier and a win all get shown
         if (urlParams.has('demo')) {
+            const demoStart = Date.now();
             setInterval(() => {
-                if (gameState.isActive && Math.random() < 0.3) {
+                const wave = 0.45 + 0.4 * Math.sin((Date.now() - demoStart) / 2600);
+                if (gameState.isActive && Math.random() < wave) {
                     processData({
                         chatname: ['DemoUser', 'TestBot', 'Spammer', 'ChatHero', 'PowerPlayer'][Math.floor(Math.random() * 5)],
                         chatmessage: ['GO!', 'POWER!', '⚡', 'SPAM!', 'ENERGY!'][Math.floor(Math.random() * 5)]
                     });
                 }
-            }, 200);
+            }, 140);
         }
-        
+
         // Start game
+        layout();
+        window.addEventListener('resize', layout);
         initGame();
-        
-        // Update rate display
+
+        // Keep the rate and multiplier current between messages
         setInterval(updateMessageRate, 100);
     </script>
 </body>

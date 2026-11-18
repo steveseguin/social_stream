@@ -1,4 +1,11 @@
 window.SSNGamesCatalog = [
+  {"id":"pegdrop","title":"Peg Drop","category":"Party","description":"Drop your ball from the moving chute and let the pegs decide your score. Built for portrait streams.","command":"!drop","path":"games/pegdrop.html","image":"images/games/pegdrop.jpg","demo":true,"audience":"Solo-friendly"},
+  {"id":"chatblocks","title":"Chat Blocks","category":"Cooperative","description":"A falling-block puzzle the whole chat steers by voting for a column. Built for portrait streams.","command":"1 to 8, or spin","path":"games/chatblocks.html","image":"images/games/chatblocks.jpg","demo":true,"audience":"Solo-friendly"},
+  {"id":"skydrop","title":"Sky Drop","category":"Party","description":"Jump from the airship, steer left and right against the wind, and land on the bullseye. Built for portrait streams.","command":"!jump","path":"games/skydrop.html","image":"images/games/skydrop.jpg","demo":true,"audience":"Solo-friendly"},
+  {"id":"towerduel","title":"Tower Duel","category":"Teams","description":"Chat splits into two teams that stack towers down each side of the screen, leaving the middle clear.","command":"Say anything in chat","path":"games/towerduel.html","image":"images/games/towerduel.jpg","demo":true,"audience":"2+ chatters"},
+  {"id":"frontrow","title":"Front Row","category":"Show","description":"A starting-soon countdown where every chatter takes a seat and the crowd goes wild when the show begins.","command":"Say anything in chat","path":"games/frontrow.html","image":"images/games/frontrow.jpg","demo":true,"audience":"Solo-friendly"},
+  {"id":"keepitup","title":"Keep It Up","category":"Show","description":"A break-time game: every message bumps the balloon, and chat tries to beat its longest rally.","command":"Say anything in chat","path":"games/keepitup.html","image":"images/games/keepitup.jpg","demo":true,"audience":"Solo-friendly"},
+  {"id":"encore","title":"Encore","category":"Show","description":"An end-of-show send-off where every chatter launches a firework with their picture in it.","command":"Say anything in chat","path":"games/encore.html","image":"images/games/encore.jpg","demo":true,"audience":"Solo-friendly"},
   {"id":"quickcall","title":"Quick Call","category":"Party","description":"Wait for your name, type your random code, and race for the fastest reply.","command":"!quick","path":"games/quickcall.html","image":"images/games/quickcall.jpg","demo":true,"audience":"Solo-friendly"},
   {
     "id": "mazeraid",
@@ -306,7 +313,7 @@ window.SSNGamesCatalog = [
     "path": "games/petrace.html",
     "image": "images/games/petrace.jpg",
     "demo": true,
-    "audience": "3+ chatters"
+    "audience": "2+ chatters"
   },
   {
     "id": "wordchain",
@@ -379,6 +386,10 @@ window.SSNGamesCatalog = [
     "title": "Chat Seismograph",
     "category": "Hype",
     "description": "Turn chat excitement into a live seismograph with quakes, magnitudes, and a record to beat.",
+    "inspiration": {
+      "name": "ChatQuake by Matthew Busel",
+      "url": "https://github.com/Mattbusel/chatquake"
+    },
     "command": "Say anything in chat",
     "path": "games/seismograph.html",
     "image": "images/games/seismograph.jpg",

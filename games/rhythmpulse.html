@@ -23,6 +23,7 @@
             -moz-user-select: none;  /* Firefox */
             -ms-user-select: none;  /* IE10+/Edge */
             user-select: none;  /* Standard */
+            box-sizing: border-box;
         }
 
         @font-face {
@@ -31,12 +32,17 @@
             src: url(../thirdparty/NotoColorEmoji.ttf);
         }
 
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
         body {
             margin: 0;
             padding: 0;
             background: radial-gradient(circle at center, #0f0f23 0%, #000 100%);
             overflow: hidden;
-            font-family: 'NotoColorEmojiLimited', 'Arial', sans-serif;
+            font-family: 'NotoColorEmojiLimited', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             color: white;
         }
 
@@ -48,367 +54,279 @@
             background: #000000;
         }
 
+        body.transparent {
+            background: transparent;
+        }
+
         #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-        }
-
-        #rhythm-stage {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90%;
-            height: 80%;
-            border: 3px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            overflow: hidden;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-        }
-
-        .beat-circle {
-            position: absolute;
-            border-radius: 50%;
-            animation: beat-pulse 1s ease-out forwards;
-            pointer-events: none;
-        }
-
-        @keyframes beat-pulse {
-            0% {
-                width: 20px;
-                height: 20px;
-                opacity: 1;
-                transform: translate(-50%, -50%) scale(1);
-            }
-            100% {
-                width: 200px;
-                height: 200px;
-                opacity: 0;
-                transform: translate(-50%, -50%) scale(1.5);
-            }
-        }
-
-        .rhythm-wave {
-            position: absolute;
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            animation: wave-travel 2s ease-out forwards;
-            box-shadow: 0 0 15px currentColor;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding-bottom: 15vmin;
+            overflow: hidden;
         }
 
-        @keyframes wave-travel {
-            0% {
-                transform: translateX(-100%);
-                opacity: 1;
-            }
-            100% {
-                transform: translateX(100vw);
-                opacity: 0;
-            }
+        /* Tempo: the number is the beats per minute, and the disc pulses at that speed */
+        #tempo {
+            flex: none;
+            width: 27vmin;
+            height: 27vmin;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #20243a;
+            border: 1.2vmin solid #3a4061;
+            animation: tempo-pulse 0.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes tempo-pulse {
+            0% { transform: scale(0.96); }
+            100% { transform: scale(1.04); }
+        }
+
+        #bpm-display {
+            font-size: 9.5vmin;
+            font-weight: 800;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        #bpm-unit {
+            margin-top: 0.4vmin;
+            font-size: 2.6vmin;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: #aab1cf;
+        }
+
+        #pads {
+            flex: none;
+            display: grid;
+            grid-template-columns: repeat(4, 34vmin);
+            grid-gap: 4vmin;
+            margin-top: 5vmin;
+        }
+
+        .pad {
+            position: relative;
+            width: 34vmin;
+            height: 34vmin;
+        }
+
+        .pad-face {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1.6vmin solid rgba(0, 0, 0, 0.22);
+        }
+
+        .pad.hit .pad-face {
+            animation: pad-hit 0.3s ease-out;
+        }
+
+        @keyframes pad-hit {
+            0% { transform: scale(1); }
+            30% { transform: scale(0.88); }
+            65% { transform: scale(1.07); }
+            100% { transform: scale(1); }
+        }
+
+        .pad svg {
+            width: 44%;
+            height: 44%;
+            fill: none;
+            stroke: #fff;
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .pad-word {
+            margin-top: 0.4vmin;
+            font-size: 5vmin;
+            font-weight: 800;
+            line-height: 1.1;
+            color: #fff;
+        }
+
+        .drum-kick .pad-face { background: #f2545f; }
+        .drum-snare .pad-face { background: #4f6df5; }
+        .drum-hihat .pad-face { background: #27b877; }
+        .drum-crash .pad-face { background: #f59f1a; }
+
+        .pad-ring {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 1vmin solid #fff;
+            pointer-events: none;
+            animation: pad-ring 0.6s ease-out forwards;
+        }
+
+        @keyframes pad-ring {
+            0% { transform: scale(1); opacity: 0.85; }
+            100% { transform: scale(1.4); opacity: 0; }
         }
 
         .note-particle {
             position: absolute;
-            font-size: 32px;
+            font-size: 7vmin;
+            line-height: 1;
             font-family: 'NotoColorEmojiLimited', 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
-            animation: note-float 3s ease-out forwards;
+            animation: note-float 1.8s ease-out forwards;
             pointer-events: none;
             z-index: 20;
         }
 
         @keyframes note-float {
             0% {
+                opacity: 0;
+                transform: translate(-50%, 0) scale(0.6);
+            }
+            15% {
                 opacity: 1;
-                transform: translateY(0) rotate(0deg) scale(1);
+                transform: translate(-50%, -4vmin) scale(1);
             }
             100% {
                 opacity: 0;
-                transform: translateY(-150px) rotate(360deg) scale(0.5);
+                transform: translate(-50%, -22vmin) scale(0.9);
             }
-        }
-
-        #beat-visualizer {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80%;
-            height: 100px;
-            display: flex;
-            align-items: end;
-            justify-content: center;
-            gap: 4px;
-        }
-
-        .frequency-bar {
-            width: 8px;
-            background: linear-gradient(to top, #ff0066, #00ff88);
-            border-radius: 4px 4px 0 0;
-            transition: height 0.1s ease;
-            height: 10px;
-            animation: freq-pulse 0.5s ease-in-out infinite alternate;
-        }
-
-        @keyframes freq-pulse {
-            0% { opacity: 0.7; }
-            100% { opacity: 1; }
-        }
-
-        #rhythm-stats {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px 20px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 100;
-        }
-
-        .stat-line {
-            margin: 5px 0;
-            font-size: 16px;
-        }
-
-        #tempo-meter {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px 20px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 100;
-            text-align: center;
-        }
-
-        #bpm-display {
-            font-size: 48px;
-            font-weight: bold;
-            color: #00ff88;
-            text-shadow: 0 0 20px #00ff88;
-            margin: 10px 0;
-            animation: bpm-glow 1s ease-in-out infinite alternate;
-        }
-
-        @keyframes bpm-glow {
-            0% { text-shadow: 0 0 20px #00ff88; }
-            100% { text-shadow: 0 0 30px #00ff88, 0 0 40px #00ff88; }
-        }
-
-        #drum-kit {
-            position: absolute;
-            bottom: 140px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px 20px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 100;
-        }
-
-        .drum-pad {
-            display: flex;
-            width: 60px;
-            height: 60px;
-            margin: 5px;
-            border-radius: 10px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .drum-pad:hover {
-            border-color: #fff;
-            transform: scale(1.1);
-        }
-
-        .drum-pad.active {
-            border-color: #00ff88;
-            box-shadow: 0 0 20px #00ff88;
-            animation: drum-hit 0.2s ease-out;
-        }
-
-        @keyframes drum-hit {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-
-        .drum-kick { background: #ff4757; }
-        .drum-snare { background: #3742fa; }
-        .drum-hihat { background: #2ed573; }
-        .drum-crash { background: #ffa502; }
-
-        #genre-indicator {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px 20px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 100;
-            text-align: center;
-        }
-
-        #current-genre {
-            font-size: 24px;
-            font-weight: bold;
-            color: #ff6b7a;
-            margin-bottom: 5px;
-        }
-
-        #genre-emoji {
-            font-size: 48px;
-            margin: 10px 0;
-        }
-
-        #instructions {
-            position: absolute;
-            bottom: 240px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            text-align: left;
-            font-size: 16px;
-            z-index: 100;
-            transition: opacity 1s ease-out;
-        }
-
-        #instructions.fade-out {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        #instructions strong {
-            color: #00ff88;
-            font-size: 18px;
         }
 
         .sync-burst {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 72px;
-            font-weight: bold;
-            color: #00ff88;
-            text-shadow: 0 0 30px #00ff88;
+            font-size: 26vmin;
+            line-height: 1;
             z-index: 60;
             pointer-events: none;
-            animation: sync-explosion 1.5s ease-out forwards;
+            animation: sync-explosion 1.1s ease-out forwards;
         }
 
         @keyframes sync-explosion {
-            0% { 
-                opacity: 0; 
-                transform: translate(-50%, -50%) scale(0) rotate(0deg);
-            }
-            50% { 
-                opacity: 1; 
-                transform: translate(-50%, -50%) scale(1.2) rotate(180deg);
-            }
-            100% { 
-                opacity: 0; 
-                transform: translate(-50%, -50%) scale(0.8) rotate(360deg);
-            }
-        }
-
-        .metronome {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100px;
-            height: 100px;
-            border: 4px solid #00ff88;
-            border-radius: 50%;
-            animation: metronome-tick 1s linear infinite;
-            opacity: 0.3;
-        }
-
-        @keyframes metronome-tick {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-
-        .beat-trail {
-            position: absolute;
-            width: 3px;
-            height: 3px;
-            background: #00ff88;
-            border-radius: 50%;
-            pointer-events: none;
-            animation: trail-decay 2s ease-out forwards;
-        }
-
-        @keyframes trail-decay {
             0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.2);
+            }
+            35% {
                 opacity: 1;
-                transform: scale(1);
+                transform: translate(-50%, -50%) scale(1.1);
             }
             100% {
                 opacity: 0;
-                transform: scale(0.1) translateY(-100px);
+                transform: translate(-50%, -50%) scale(1.5);
+            }
+        }
+
+        #beat-visualizer {
+            position: absolute;
+            left: 3vmin;
+            right: 3vmin;
+            bottom: 3vmin;
+            height: 12vmin;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .frequency-bar {
+            flex: 1 1 0;
+            height: 100%;
+            margin: 0 0.4vmin;
+            border-radius: 1vmin 1vmin 0 0;
+            transform: scaleY(0.08);
+            transform-origin: 50% 100%;
+            transition: transform 0.12s ease-out;
+        }
+
+        @media (orientation: portrait) {
+            #game-container {
+                padding-bottom: 20vmin;
+            }
+
+            #tempo {
+                width: 34vmin;
+                height: 34vmin;
+            }
+
+            #bpm-display {
+                font-size: 13vmin;
+            }
+
+            #bpm-unit {
+                font-size: 3.4vmin;
+            }
+
+            #pads {
+                grid-template-columns: repeat(2, 44vmin);
+                margin-top: 7vmin;
+            }
+
+            .pad {
+                width: 44vmin;
+                height: 44vmin;
+            }
+
+            .pad-word {
+                font-size: 6.4vmin;
+            }
+
+            #beat-visualizer {
+                height: 17vmin;
             }
         }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <div id="rhythm-stats">
-            <div class="stat-line">🎵 Beats: <span id="beat-count">0</span></div>
-            <div class="stat-line">🎤 Musicians: <span id="musician-count">0</span></div>
-            <div class="stat-line">🔥 Combo: <span id="combo-count">0</span></div>
-            <div class="stat-line">🎼 Sync Level: <span id="sync-level">0</span>%</div>
-        </div>
-        
-        <div id="tempo-meter">
-            <h4 style="margin-top: 0; color: #00ff88;">Tempo</h4>
+        <div id="tempo">
             <div id="bpm-display">120</div>
-            <div>BPM</div>
+            <div id="bpm-unit">BPM</div>
         </div>
-        
-        <div id="drum-kit">
-            <h4 style="margin-top: 0; color: #00ff88;">Drum Kit</h4>
-            <div class="drum-pad drum-kick" data-sound="kick">🥁</div>
-            <div class="drum-pad drum-snare" data-sound="snare">🔊</div>
-            <div class="drum-pad drum-hihat" data-sound="hihat">⚡</div>
-            <div class="drum-pad drum-crash" data-sound="crash">💥</div>
+
+        <div id="pads">
+            <div class="pad drum-kick" data-sound="kick">
+                <div class="pad-face">
+                    <svg viewBox="0 0 100 100"><circle cx="50" cy="48" r="34"/><circle cx="50" cy="48" r="11" fill="#fff" stroke="none"/><path d="M24 78L15 93M76 78L85 93"/></svg>
+                    <div class="pad-word">kick</div>
+                </div>
+            </div>
+            <div class="pad drum-snare" data-sound="snare">
+                <div class="pad-face">
+                    <svg viewBox="0 0 100 100"><ellipse cx="50" cy="46" rx="33" ry="11"/><path d="M17 46V72M83 46V72M17 72A33 11 0 0 0 83 72M28 8L50 34M72 8L50 34"/></svg>
+                    <div class="pad-word">snare</div>
+                </div>
+            </div>
+            <div class="pad drum-hihat" data-sound="hihat">
+                <div class="pad-face">
+                    <svg viewBox="0 0 100 100"><ellipse cx="50" cy="32" rx="35" ry="8"/><ellipse cx="50" cy="46" rx="35" ry="8"/><path d="M50 12V24M50 54V92M33 92H67"/></svg>
+                    <div class="pad-word">hihat</div>
+                </div>
+            </div>
+            <div class="pad drum-crash" data-sound="crash">
+                <div class="pad-face">
+                    <svg viewBox="0 0 100 100"><ellipse cx="50" cy="34" rx="38" ry="10" transform="rotate(-12 50 34)"/><path d="M50 44V92M32 92H68"/><circle cx="50" cy="34" r="4" fill="#fff" stroke="none"/></svg>
+                    <div class="pad-word">crash</div>
+                </div>
+            </div>
         </div>
-        
-        <div id="genre-indicator">
-            <div id="current-genre">Electronic</div>
-            <div id="genre-emoji">🎧</div>
-        </div>
-        
-        <div id="rhythm-stage">
-            <div class="metronome" id="metronome"></div>
-        </div>
-        
+
         <div id="beat-visualizer"></div>
-        
-        <div id="instructions">
-            <div><strong>🎵 Rhythm Pulse - How to Play:</strong></div>
-            <div>Chat to create beats and rhythm!</div>
-            <div>Type <strong>kick</strong>, <strong>snare</strong>, <strong>beat</strong></div>
-            <div>Emojis create musical notes!</div>
-            <div>Sync with others for combos!</div>
-        </div>
     </div>
 
     <script>
@@ -423,6 +341,10 @@
             document.body.classList.add('chroma');
         } else if (urlParams.has('darkmode')) {
             document.body.classList.add('darkmode');
+        }
+        if (urlParams.has('transparent')) {
+            document.body.classList.remove('chroma', 'darkmode');
+            document.body.classList.add('transparent');
         }
 
         // Game state
@@ -629,42 +551,40 @@
             sound: { type: 'kick', color: '#ff4757', note: '🔊' }
         };
 
-        // Musical genres with BPM ranges
-        const genres = {
-            electronic: { bpm: [120, 140], emoji: '🎧', color: '#00ff88' },
-            house: { bpm: [120, 130], emoji: '🏠', color: '#ff6b7a' },
-            techno: { bpm: [130, 150], emoji: '🤖', color: '#74b9ff' },
-            dubstep: { bpm: [140, 150], emoji: '🔥', color: '#fd79a8' },
-            trap: { bpm: [70, 80], emoji: '🎪', color: '#fdcb6e' },
-            dnb: { bpm: [160, 180], emoji: '⚡', color: '#a29bfe' },
-            chill: { bpm: [80, 100], emoji: '😌', color: '#55efc4' },
-            jazz: { bpm: [90, 140], emoji: '🎷', color: '#fab1a0' },
-            rock: { bpm: [120, 140], emoji: '🎸', color: '#e17055' },
-            pop: { bpm: [100, 130], emoji: '🌟', color: '#ff7675' }
-        };
+        // Equalizer along the bottom: one group of bars per drum, in the drum's color
+        const frequencyBars = [];
+        const drumGroups = { kick: 0, snare: 1, hihat: 2, crash: 3 };
+        const groupColors = ['#f2545f', '#4f6df5', '#27b877', '#f59f1a'];
+        const groupEnergy = [0, 0, 0, 0];
+        let visualizerIdle = true;
 
-        // Initialize frequency visualizer
         function initFrequencyBars() {
             const visualizer = document.getElementById('beat-visualizer');
             for (let i = 0; i < 32; i++) {
                 const bar = document.createElement('div');
                 bar.className = 'frequency-bar';
-                bar.id = `freq-bar-${i}`;
+                bar.style.backgroundColor = groupColors[Math.floor(i / 8)];
                 visualizer.appendChild(bar);
+                frequencyBars.push(bar);
             }
         }
 
         // Update frequency visualizer
-        function updateFrequencyBars(intensity) {
-            const bars = document.querySelectorAll('.frequency-bar');
-            bars.forEach((bar, index) => {
-                const baseHeight = 10;
-                const randomHeight = Math.random() * intensity * 80;
-                const heightMultiplier = Math.sin((index / bars.length) * Math.PI * 2) * 0.5 + 0.5;
-                const finalHeight = baseHeight + (randomHeight * heightMultiplier);
-                
-                bar.style.height = finalHeight + 'px';
-                bar.style.animationDelay = (index * 0.05) + 's';
+        function updateFrequencyBars() {
+            const floor = (gameState.syncLevel / 100) * 0.35;
+            let active = false;
+            for (let group = 0; group < groupEnergy.length; group++) {
+                groupEnergy[group] *= 0.86;
+                if (groupEnergy[group] > 0.02 || floor > 0.02) active = true;
+            }
+            if (!active && visualizerIdle) return;
+            visualizerIdle = !active;
+
+            frequencyBars.forEach((bar, index) => {
+                const energy = active ? Math.max(groupEnergy[Math.floor(index / 8)], floor) : 0;
+                const shape = Math.sin(((index % 8) + 0.5) / 8 * Math.PI) * 0.5 + 0.5;
+                const level = 0.08 + energy * shape * (0.55 + Math.random() * 0.45) * 0.92;
+                bar.style.transform = 'scaleY(' + level.toFixed(3) + ')';
             });
         }
 
@@ -702,73 +622,65 @@
             return analysis;
         }
 
-        // Create beat circle
+        // processData reports each beat in pieces: the strength and the note first,
+        // then the drum that was hit. They are collected here and drawn on the pad.
+        let pendingIntensity = 1;
+        const pendingNotes = [];
+
         function createBeatCircle(x, y, color, size = 1) {
-            const circle = document.createElement('div');
-            circle.className = 'beat-circle';
-            circle.style.left = x + '%';
-            circle.style.top = y + '%';
-            circle.style.border = `4px solid ${color}`;
-            circle.style.boxShadow = `0 0 20px ${color}`;
-            circle.style.animationDuration = (2 / size) + 's';
-            
-            document.getElementById('rhythm-stage').appendChild(circle);
-            
-            setTimeout(() => circle.remove(), 2000);
+            pendingIntensity = size;
         }
 
-        // Create rhythm wave
         function createRhythmWave(color, intensity) {
-            const wave = document.createElement('div');
-            wave.className = 'rhythm-wave';
-            wave.style.backgroundColor = color;
-            wave.style.top = Math.random() * 80 + '%';
-            wave.style.height = (4 + intensity * 2) + 'px';
-            wave.style.animationDuration = (3 - intensity * 0.5) + 's';
-            
-            document.getElementById('rhythm-stage').appendChild(wave);
-            
-            setTimeout(() => wave.remove(), 3000);
+            pendingIntensity = intensity;
         }
 
-        // Create note particle
-        function createNoteParticle(note, x, y) {
+        function createNoteParticle(note) {
+            pendingNotes.push(note);
+        }
+
+        function createBeatTrail() {}
+
+        // Float a note up from a drum pad, or from around the tempo disc when no drum was hit
+        function spawnNote(note, pad) {
+            const container = document.getElementById('game-container');
+            if (!note || container.querySelectorAll('.note-particle').length >= 24) return;
+
+            const anchor = (pad || document.getElementById('tempo')).getBoundingClientRect();
             const particle = document.createElement('div');
             particle.className = 'note-particle';
             particle.textContent = note;
-            particle.style.left = x + '%';
-            particle.style.top = y + '%';
-            particle.style.color = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6,'0');
-            
-            document.getElementById('rhythm-stage').appendChild(particle);
-            
-            setTimeout(() => particle.remove(), 3000);
-        }
+            particle.style.left = (anchor.left + anchor.width * (pad ? 0.3 + Math.random() * 0.4 : Math.random() * 1.6 - 0.3)) + 'px';
+            particle.style.top = (anchor.top + anchor.height * (pad ? 0.02 : 0.2 + Math.random() * 0.3)) + 'px';
 
-        // Create beat trail
-        function createBeatTrail(x, y) {
-            for (let i = 0; i < 5; i++) {
-                setTimeout(() => {
-                    const trail = document.createElement('div');
-                    trail.className = 'beat-trail';
-                    trail.style.left = (x + Math.random() * 10 - 5) + '%';
-                    trail.style.top = (y + Math.random() * 10 - 5) + '%';
-                    
-                    document.getElementById('rhythm-stage').appendChild(trail);
-                    
-                    setTimeout(() => trail.remove(), 2000);
-                }, i * 100);
-            }
+            container.appendChild(particle);
+
+            setTimeout(() => particle.remove(), 1800);
         }
 
         // Trigger drum pad
         function triggerDrumPad(soundType) {
             const drumPad = document.querySelector(`[data-sound="${soundType}"]`);
+            const note = pendingNotes.shift();
             if (drumPad) {
-                drumPad.classList.add('active');
-                setTimeout(() => drumPad.classList.remove('active'), 200);
+                drumPad.classList.remove('hit');
+                void drumPad.offsetWidth; // restart the bounce
+                drumPad.classList.add('hit');
+
+                if (drumPad.querySelectorAll('.pad-ring').length < 3) {
+                    const ring = document.createElement('div');
+                    ring.className = 'pad-ring';
+                    drumPad.appendChild(ring);
+                    setTimeout(() => ring.remove(), 600);
+                }
+
+                spawnNote(note, drumPad);
             }
-            
+
+            if (soundType in drumGroups) {
+                groupEnergy[drumGroups[soundType]] = Math.min(1, 0.6 + pendingIntensity * 0.14);
+            }
+
             // Play the sound
             playDrumSound(soundType);
         }
@@ -794,41 +706,33 @@
             return gameState.currentBPM;
         }
 
-        // Determine genre from BPM
-        function updateGenre() {
-            const bpm = gameState.currentBPM;
-            
-            for (const [genreName, genreData] of Object.entries(genres)) {
-                if (bpm >= genreData.bpm[0] && bpm <= genreData.bpm[1]) {
-                    if (gameState.currentGenre !== genreName) {
-                        gameState.currentGenre = genreName;
-                        document.getElementById('current-genre').textContent = genreName.charAt(0).toUpperCase() + genreName.slice(1);
-                        document.getElementById('genre-emoji').textContent = genreData.emoji;
-                        document.getElementById('current-genre').style.color = genreData.color;
-                    }
-                    break;
-                }
-            }
-        }
-
         // Check for sync/combo
         function checkSync() {
+            // Notes that came without a drum word float up around the tempo disc
+            while (pendingNotes.length) {
+                spawnNote(pendingNotes.shift(), null);
+            }
+
             const now = Date.now();
             const syncWindow = 1000; // 1 second window
-            
+
             const recentBeats = gameState.recentBeats.filter(beat => now - beat.timestamp < syncWindow);
-            
+
             if (recentBeats.length >= 3) {
                 gameState.comboCount++;
-                
+
                 // Create sync burst
                 const burst = document.createElement('div');
                 burst.className = 'sync-burst';
-                burst.textContent = 'SYNC!';
+                burst.textContent = '🔥';
                 document.getElementById('game-container').appendChild(burst);
-                
-                setTimeout(() => burst.remove(), 1500);
-                
+
+                setTimeout(() => burst.remove(), 1100);
+
+                for (let group = 0; group < groupEnergy.length; group++) {
+                    groupEnergy[group] = 1;
+                }
+
                 // Clear recent beats to avoid duplicate combos
                 gameState.recentBeats = [];
             }
@@ -843,25 +747,19 @@
         }
 
         // Update display
+        let shownPulse = '';
         function updateDisplay() {
-            document.getElementById('beat-count').textContent = gameState.beatCount;
-            document.getElementById('musician-count').textContent = gameState.musicians.size;
-            document.getElementById('combo-count').textContent = gameState.comboCount;
-            document.getElementById('sync-level').textContent = Math.floor(gameState.syncLevel);
-            
             const bpm = calculateBPM();
             document.getElementById('bpm-display').textContent = bpm;
-            
-            // Update metronome speed
-            const metronome = document.getElementById('metronome');
-            metronome.style.animationDuration = (60 / bpm) + 's';
-            
-            updateGenre();
+
+            // The tempo disc swells and settles once per beat
+            const pulse = (30 / bpm).toFixed(3) + 's';
+            if (pulse !== shownPulse) {
+                shownPulse = pulse;
+                document.getElementById('tempo').style.animationDuration = pulse;
+            }
+
             calculateSyncLevel();
-            
-            // Update frequency visualizer
-            const intensity = gameState.syncLevel / 100;
-            updateFrequencyBars(intensity);
         }
 
         // Process incoming message
@@ -1033,39 +931,16 @@
             }
             setTimeout(demoBeat, 600 + Math.random() * 800);
         }
-        
-        // Drum pad click handlers
-        document.querySelectorAll('.drum-pad').forEach(pad => {
-            pad.addEventListener('click', () => {
-                const soundType = pad.dataset.sound;
-                const beatData = Object.values(beatKeywords).find(b => b.type === soundType);
-                
-                if (beatData) {
-                    // Simulate a beat message
-                    processData({
-                        chatname: 'Manual',
-                        chatmessage: soundType
-                    });
-                }
-            });
-        });
-        
+
         // Initialize
         initFrequencyBars();
         updateDisplay();
         initAudio();
-        
+
         // Keep decaying BPM/sync display even when chat goes idle
         setInterval(updateDisplay, 1000);
-        
-        // Fade out instructions after 30 seconds
-        setTimeout(() => {
-            const instructions = document.getElementById('instructions');
-            if (instructions) {
-                instructions.classList.add('fade-out');
-            }
-        }, 30000);
-        
+        setInterval(updateFrequencyBars, 120);
+
         // Clean up old data periodically
         setInterval(() => {
             const now = Date.now();

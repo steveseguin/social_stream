@@ -16,7 +16,25 @@
 	function off(name) { var v = (params.get(name) || '').toLowerCase(); return v === '0' || v === 'false' || v === 'off' || v === 'no'; }
 	var scale = number('scale', 1, 0.4, 3), accent = hex('color', ''), only = list('onlytype'), hide = list('hidetype');
 	var showHud = !off('hud'), shakeOn = !off('shake'), showBand = !off('bg');
-	var align = (params.get('align') || params.get('side') || '').toLowerCase(), span = number('window', 60, 15, 300);
+	var paperPanel = mode === 'seismo' && params.get('style') === 'paper' && document.getElementById('paper-panel');
+	var align = (params.get('align') || params.get('side') || '').toLowerCase(), span = number('window', paperPanel ? 90 : 60, 15, 300);
+	var paperPen, lastPaperUpdate = -1;
+	if (paperPanel) {
+		var night = params.get('theme') === 'night';
+		paperPen = hex('accent', accent || (night ? '#ff8977' : '#b43d30'));
+		paperPanel.style.setProperty('--pen', paperPen);
+		paperPanel.style.setProperty('--paper', hex('paper', night ? '#202d30' : '#f2ecdc'));
+		paperPanel.style.setProperty('--ink', hex('ink', night ? '#e2e9df' : '#353429'));
+		paperPanel.style.zoom = scale;
+		paperPanel.dataset.size = params.get('size') || 'm';
+		paperPanel.dataset.position = params.get('position') || 'br';
+		paperPanel.classList.toggle('graph-only', !showHud);
+		paperPanel.classList.toggle('clear', !showBand);
+		document.getElementById('paper-graph').appendChild(canvas);
+		document.getElementById('paper-span').textContent = span + ' SECONDS';
+		document.getElementById('paper-demo').hidden = !demo;
+		paperPanel.hidden = false;
+	}
 	var W = 1, H = 1, dpr = 1, view = { x: 0, y: 0, w: 1, h: 1 };
 	// Each game only draws in part of the window (a strip along the bottom, a column, a corner). The canvas covers just that
 	// part, so the browser has far fewer pixels to push every frame. Positions are still worked out against the whole window.
@@ -32,6 +50,13 @@
 		dpr = Math.min(2, window.devicePixelRatio || 1);
 		W = Math.max(1, window.innerWidth / scale);
 		H = Math.max(1, window.innerHeight / scale);
+		if (paperPanel) {
+			paperPanel.style.maxWidth = Math.max(1, W - 40) + 'px';
+			view = { x: 0, y: 0, w: canvas.clientWidth, h: canvas.clientHeight };
+			canvas.width = Math.max(1, Math.round(view.w * scale * dpr));
+			canvas.height = Math.max(1, Math.round(view.h * scale * dpr));
+			return;
+		}
 		var r = region(), x0 = Math.max(0, Math.floor(r[0])), y0 = Math.max(0, Math.floor(r[1])), x1 = Math.min(W, Math.ceil(r[0] + r[2])), y1 = Math.min(H, Math.ceil(r[1] + r[3]));
 		view = { x: x0, y: y0, w: Math.max(1, x1 - x0), h: Math.max(1, y1 - y0) };
 		canvas.style.left = view.x * scale + "px"; canvas.style.top = view.y * scale + "px";
@@ -94,18 +119,17 @@
 		if (value > 0.005) { rr(x, y, Math.max(h, w * clamp(value, 0, 1)), h, h / 2); ctx.fillStyle = color; ctx.fill(); }
 	}
 	// A small info card. Drawn upward from its bottom edge; returns its height.
-	function plate(x, bottom, w, title, lines, bar, barColor) {
-		if (!showHud) return 0;
-		var h = 30 + lines.length * 19 + (bar == null ? 0 : 16);
+	function plate(x, bottom, w, lines, bar, barColor) {
+		if (!showHud || (!lines.length && bar == null)) return 0;
+		var h = 14 + lines.length * 22 + (bar == null ? 0 : 16);
 		rr(x, bottom - h, w, h, 10);
 		ctx.fillStyle = PLATE;
 		ctx.fill();
 		ctx.lineWidth = 1;
 		ctx.strokeStyle = EDGE;
 		ctx.stroke();
-		var y = bottom - h + 19;
-		text(title, x + 12, y, 10.5, MUTED, 'left', 700);
-		for (var i = 0; i < lines.length; i++) { y += 19; text(lines[i], x + 12, y, i ? 12 : 15, i ? MUTED : INK, 'left', i ? 500 : 700); }
+		var y = bottom - h + 4;
+		for (var i = 0; i < lines.length; i++) { y += 22; text(lines[i], x + 12, y, i ? 14 : 18, i ? MUTED : INK, 'left', 700); }
 		if (bar != null) meterBar(x + 12, y + 9, w - 24, 6, bar, barColor || INK);
 		return h;
 	}
@@ -160,7 +184,7 @@
 	function floatText(value, x, y, color, size) { emit({ kind: 'text', text: value, x: x, y: y, vx: 0, vy: -34, life: 1.6, size: size || 14, color: color || '#ffffff' }); }
 
 	var banner = null;
-	function announce(title, sub, color, y, x) { banner = { title: title, sub: sub || '', color: color || INK, y: y, x: x, until: performance.now() / 1000 + 4.5 }; }
+	function announce(title, color, y, x) { banner = { title: title, sub: '', color: color || INK, y: y, x: x, until: performance.now() / 1000 + 4.5 }; }
 	function drawBanner(now) {
 		if (!banner) return;
 		var left = banner.until - now;
@@ -184,13 +208,46 @@
 
 	// ---- Chat Seismograph ----
 	var trace = [], marks = [], pen = { env: 0, phase: 0, kick: 0, heat: 0, sampled: -1 };
+	function paperText(id, value) {
+		var field = document.getElementById(id);
+		if (field.textContent !== value) field.textContent = value;
+	}
+	function drawPaper(now) {
+		var mid = view.h / 2;
+		ctx.beginPath();
+		ctx.moveTo(0, mid);
+		for (var i = 0; i < trace.length; i++) {
+			var x = view.w * (1 - (game.time - trace[i].t) / span);
+			ctx.lineTo(x, mid - trace[i].v * (mid - 8));
+		}
+		ctx.lineWidth = 1.8;
+		ctx.strokeStyle = paperPen;
+		ctx.stroke();
+		if (!showHud || now - lastPaperUpdate < 0.15) return;
+		lastPaperUpdate = now;
+		var quake = game.hype.burst, history = game.state.quakes;
+		var latest = quake || history[history.length - 1];
+		paperText('paper-magnitude', latest ? latest.magnitude.toFixed(1) : '0.0');
+		paperText('paper-rate', game.hype.rate.toFixed(1) + ' hype/s');
+		paperText('paper-relative', game.hype.ratio.toFixed(1) + 'x normal');
+		paperPanel.classList.toggle('shaking', !!quake && shakeOn);
+		document.getElementById('paper-quake').hidden = !quake;
+		if (quake) {
+			paperText('paper-epicenter', quake.word ? 'Epicenter: ' + quake.word : '');
+			paperText('paper-count', quake.messages + ' messages / ' + quake.chatters + ' chatters');
+		}
+		document.getElementById('paper-recent').hidden = !history.length;
+		paperText('paper-history', history.slice(-3).reverse().map(function (item) {
+			return 'M' + item.magnitude.toFixed(1) + '   ' + (item.word || 'Quake') + '   ' + clock(item.start);
+		}).join('\n'));
+	}
 	RENDER.seismo = function (dt, now) {
 		var st = game.state, s = game.hype, color = accent || '#5eead4';
 		game.takeEffects().forEach(function (e) {
 			if (e.type === 'burst') marks.push({ id: e.data.id, start: e.data.start, end: null, magnitude: 0, word: '' });
 			if (e.type === 'quake') {
 				marks.forEach(function (m) { if (m.id === e.data.quake.id) { m.end = e.data.quake.end; m.magnitude = e.data.quake.magnitude; m.word = e.data.quake.word; } });
-				if (e.data.record && st.count > 1) announce('NEW RECORD  M' + e.data.quake.magnitude.toFixed(1), e.data.quake.word ? 'Chat was shouting "' + e.data.quake.word + '"' : '', '#ffd166', Math.max(70, H - 230));
+				if (!paperPanel && e.data.record && st.count > 1) announce('\u2605 M' + e.data.quake.magnitude.toFixed(1), '#ffd166', Math.max(70, H - 230));
 			}
 		});
 		if (dt > 0) {
@@ -207,6 +264,7 @@
 			while (trace.length && trace[0].t < game.time - span - 1) trace.shift();
 			while (marks.length && marks[0].end !== null && marks[0].end < game.time - span - 1) marks.shift();
 		}
+		if (paperPanel) { drawPaper(now); return; }
 		var bh = 150, m = 14, bw = W - m * 2, x0 = m, y0 = H - bh - m, side = showHud ? (W < 700 ? 132 : 204) : 16;
 		ctx.save();
 		if (s.burst && shakeOn) ctx.translate((Math.random() - 0.5) * (1 + s.burst.magnitude * 0.9), (Math.random() - 0.5) * (1 + s.burst.magnitude * 0.6));
@@ -214,10 +272,8 @@
 		var live = mix(color, HOT, pen.heat);
 		if (showHud) {
 			var last = st.quakes[st.quakes.length - 1], shown = s.burst ? s.burst.magnitude : last ? last.magnitude : 0, small = W < 700;
-			text('CHAT SEISMOGRAPH', x0 + 16, y0 + 25, small ? 9 : 10.5, MUTED, 'left', 700);
-			text('M' + shown.toFixed(1), x0 + 16, y0 + 78, small ? 38 : 48, s.burst ? live : INK, 'left', 800);
-			text(s.burst ? 'QUAKE!  ' + s.burst.messages + ' msgs' : s.rate.toFixed(1) + ' msg/s', x0 + 16, y0 + 103, small ? 11 : 13, s.burst ? live : INK, 'left', 600);
-			text(st.record ? 'Record M' + st.record.magnitude.toFixed(1) + (st.record.word && !small ? ' "' + st.record.word.slice(0, 12) + '"' : '') : 'No quakes yet', x0 + 16, y0 + 126, small ? 10 : 12, MUTED, 'left', 500);
+			text('M' + shown.toFixed(1), x0 + 16, y0 + 70, small ? 40 : 52, s.burst ? live : INK, 'left', 800);
+			if (st.record) text('\u2605 M' + st.record.magnitude.toFixed(1), x0 + 16, y0 + 112, small ? 15 : 19, '#ffd166', 'left', 700);
 		}
 		var tx0 = x0 + side, tx1 = x0 + bw - 18, ty = y0 + bh / 2, th = bh / 2 - 18;
 		function xAt(t) { return tx1 - (game.time - t) / span * (tx1 - tx0); }
@@ -285,8 +341,8 @@
 				for (var i = 0; i < 9; i++) emit({ kind: 'rect', x: x + rand(-slot * 0.3, slot * 0.3), y: groundY - rand(0, top), vx: rand(-120, 120), vy: rand(-260, -40), g: 620, life: rand(0.7, 1.3), size: rand(4, 9), color: pal.body, spin: rand(-9, 9) });
 			}
 			if (e.type === 'repair') sparkle((e.data.index + 0.5) * slot, groundY - 20, 6, '#ffe9a8', 90);
-			if (e.type === 'knockdown') announce('CITY DOWN!', 'Level ' + e.data.level + ' flattened by chat', HOT, Math.max(70, groundY - 250));
-			if (e.type === 'rebuild') announce('REBUILT STRONGER', 'Level ' + e.data.level + ' city: it takes more chat to topple', '#9be7a8', Math.max(70, groundY - 250));
+			if (e.type === 'knockdown') 
+			if (e.type === 'rebuild') announce('\u25B2 ' + e.data.level, '#9be7a8', Math.max(70, groundY - 250));
 		});
 		if (dt > 0 && shake > 0.25 && Math.random() < dt * 9 * shake) puff(rand(0, W), groundY - 4, 1, '#b9ad9f', 9, 30);
 		for (var i = 0; i < n; i++) {
@@ -359,10 +415,9 @@
 		ctx.fillRect(0, groundY, W, 1);
 		if (!showHud) return;
 		var small = W < 700, strength = st.phase === 'rubble' ? 0 : st.integrity, barW = Math.min(260, W * 0.3), barX = (W - barW) / 2;
-		text(small ? 'LV ' + st.level : 'QUAKE CITY   Level ' + st.level, 14, groundY + 21, 13, INK, 'left', 700);
+		text('\u25B2 ' + st.level, 14, groundY + 21, 17, INK, 'left', 700);
 		meterBar(barX, groundY + 13, barW, 7, strength, mix('#ff6b4a', '#9be7a8', strength));
-		if (!small) text(st.phase === 'rubble' ? 'Flattened!' : st.phase === 'rebuilding' ? 'Rebuilding' : 'Strength ' + Math.round(strength * 100) + '%', barX - 10, groundY + 21, 12, MUTED, 'right', 500);
-		text(small ? st.knockdowns + ' down' : 'Knocked down ' + st.knockdowns + (st.knockdowns === 1 ? ' time' : ' times'), W - 14, groundY + 21, 12, MUTED, 'right', 500);
+		if (st.knockdowns) text('\u25BC ' + st.knockdowns, W - 14, groundY + 21, 17, MUTED, 'right', 700);
 	};
 	SUMMARY.city = function () { var st = game.state; return 'Quake City: level ' + st.level + ', strength ' + Math.round(st.integrity * 100) + ' percent, knocked down ' + st.knockdowns + ' times'; };
 
@@ -374,7 +429,7 @@
 		var by = yAt(st.alt), climb = dt > 0 ? (st.alt - flight.alt) / dt : 0;
 		flight.alt = st.alt;
 		game.takeEffects().forEach(function (e) {
-			if (e.type === 'gate') { floatText('+1', bx + 30, by - 18, '#9be7a8', 16); sparkle(bx + 20, by, 6, '#fff2a8', 120); if (e.data.streak % 10 === 0) announce(e.data.streak + ' IN A ROW!', 'Chat is keeping it in the air', '#9be7a8', Math.max(60, groundY - fh - 30)); }
+			if (e.type === 'gate') { floatText('+1', bx + 30, by - 18, '#9be7a8', 16); sparkle(bx + 20, by, 6, '#fff2a8', 120); if (e.data.streak % 10 === 0) announce('\u00D7' + e.data.streak, '#9be7a8', Math.max(60, groundY - fh - 30)); }
 			if (e.type === 'bonk') { floatText('bonk!', bx, by - 26, '#ffb4a2', 15); sparkle(bx, by, 10, '#ffd166', 170); }
 			if (e.type === 'takeoff') puff(bx, groundY - 6, 6, '#c9d6df', 10, 60);
 		});
@@ -454,9 +509,8 @@
 		ctx.fillStyle = 'rgba(127,207,121,.75)';
 		ctx.fillRect(0, groundY, W, 2);
 		if (!showHud) return;
-		text(W < 700 ? 'FLIGHT' : 'HYPE FLIGHT', 14, groundY + 21, 13, INK, 'left', 700);
-		text('Streak ' + st.streak, W / 2, groundY + 21, 13, st.streak >= 5 ? '#9be7a8' : INK, 'center', 700);
-		text('Best ' + st.best, W - 14, groundY + 21, 12, MUTED, 'right', 500);
+		text(String(st.streak), W / 2, groundY + 22, 20, st.streak >= 5 ? '#9be7a8' : INK, 'center', 800);
+		if (st.best) text('\u2605 ' + st.best, W - 14, groundY + 21, 17, '#ffd166', 'right', 700);
 	};
 	SUMMARY.flight = function () { var st = game.state; return 'Hype Flight: ' + (st.phase === 'resting' ? 'resting' : 'streak ' + st.streak) + ', best ' + st.best; };
 
@@ -468,8 +522,8 @@
 		var heat = erupting ? 1 : st.pressure, rumble = !shakeOn ? 0 : erupting ? 3 : st.pressure > 0.7 ? (st.pressure - 0.7) * 7 : 0;
 		var jx = (Math.random() - 0.5) * rumble, jy = (Math.random() - 0.5) * rumble;
 		game.takeEffects().forEach(function (e) {
-			if (e.type === 'erupt') announce('ERUPTION!', 'Keep chatting to keep it going', HOT, Math.max(70, topY - 250), cx);
-			if (e.type === 'cool') announce('Lasted ' + Math.round(e.data.seconds) + ' seconds', 'The volcano grows: next one needs more chat', '#ffd166', Math.max(70, topY - 250), cx);
+			if (e.type === 'erupt') 
+			if (e.type === 'cool') announce(Math.round(e.data.seconds) + 's', '#ffd166', Math.max(70, topY - 250), cx);
 		});
 		if (dt > 0) {
 			var smoke = erupting ? 9 : 0.5 + st.pressure * 4;
@@ -538,8 +592,8 @@
 		}
 		ctx.restore();
 		drawParts();
-		var pw = Math.min(210, W - 20), px = align === 'left' ? Math.min(W - pw - 10, cx + bw / 2 - 30) : align === 'center' ? 12 : Math.max(10, cx - bw / 2 - pw + 30);
-		plate(px, H - 14, pw, 'CHAT VOLCANO', [erupting ? 'ERUPTING!' : st.phase === 'cooling' ? 'Cooling off' : 'Pressure ' + Math.round(st.pressure * 100) + '%', 'Eruptions ' + st.eruptions + (st.longest ? '   Longest ' + Math.round(st.longest) + 's' : '')], heat, mix('#ffd166', HOT, heat));
+		var pw = Math.min(170, W - 20), px = align === 'left' ? Math.min(W - pw - 10, cx + bw / 2 - 30) : align === 'center' ? 12 : Math.max(10, cx - bw / 2 - pw + 30);
+		plate(px, H - 14, pw, st.longest ? ['\u2605 ' + Math.round(st.longest) + 's'] : [], heat, mix('#ffd166', HOT, heat));
 	};
 	SUMMARY.volcano = function () { var st = game.state; return 'Chat Volcano: ' + (st.phase === 'erupting' ? 'erupting' : 'pressure ' + Math.round(st.pressure * 100) + ' percent') + ', ' + st.eruptions + ' eruptions'; };
 
@@ -564,7 +618,7 @@
 		var yPad = H - 96, yTop = Math.min(yPad - 120, 170), y = yPad + (yTop - yPad) * st.progress, arrived = st.phase === 'arrived';
 		var falling = !arrived && s.level < 0.03 && st.progress > 0.02, flame = arrived ? 0 : st.thrust;
 		game.takeEffects().forEach(function (e) {
-			if (e.type === 'arrive') { announce('ARRIVED: ' + e.data.destination.toUpperCase(), 'Chat got it there', '#ffd166', Math.max(70, H * 0.34), tx + 260 * inward); sparkle(tx, yTop, 26, '#fff2a8', 260); }
+			if (e.type === 'arrive') { announce(e.data.destination.toUpperCase(), '#ffd166', Math.max(70, H * 0.34), tx + 260 * inward); sparkle(tx, yTop, 26, '#fff2a8', 260); }
 			if (e.type === 'launch') puff(tx, yPad + 26, 10, '#d5dde3', 16, 90);
 		});
 		if (dt > 0 && flame > 0.04 && Math.random() < dt * (10 + flame * 40)) emit({ kind: 'smoke', x: tx + rand(-4, 4), y: y + 46, vx: rand(-16, 16), vy: rand(50, 130), life: rand(0.6, 1.3), size: rand(4, 8), grow: 2, color: '#d5dde3', alpha: 0.34 });
@@ -622,8 +676,8 @@
 		circle(0, -5, 4.5); ctx.fill();
 		ctx.restore();
 		if (showHud && !arrived) text(Math.round(st.progress * 100) + '%', tx + 40 * inward, y + 2, 13, flame > 0.5 ? '#ffd166' : INK, right ? 'right' : 'left', 700);
-		var pw = Math.min(220, W - 20);
-		plate(right ? Math.max(10, tx - 46 - pw) : Math.min(W - pw - 10, tx + 46), H - 12, pw, 'HYPE ROCKET', ['To ' + st.destination, arrived ? 'Arrived! Next launch soon' : falling ? 'Drifting back: chat to boost' : 'Missions flown ' + st.completed]);
+		var pw = Math.min(170, W - 20);
+		plate(right ? Math.max(10, tx - 46 - pw) : Math.min(W - pw - 10, tx + 46), H - 12, pw, [st.destination]);
 	};
 	SUMMARY.rocket = function () { var st = game.state; return 'Hype Rocket: ' + Math.round(st.progress * 100) + ' percent of the way to ' + st.destination + ', ' + st.completed + ' missions flown'; };
 
@@ -635,8 +689,8 @@
 		fire.flare = Math.max(0, fire.flare - dt * 2.5);
 		fire.label -= dt;
 		game.takeEffects().forEach(function (e) {
-			if (e.type === 'lit') announce('The fire is lit', 'Keep chatting to keep it burning', '#ffd166', Math.max(70, baseY - 400), cx);
-			if (e.type === 'out') announce('Down to embers', 'It burned for ' + clock(e.data.seconds), MUTED, Math.max(70, baseY - 400), cx);
+			if (e.type === 'lit') 
+			if (e.type === 'out') announce(clock(e.data.seconds), '#ffd166', Math.max(70, baseY - 400), cx);
 		});
 		if (dt > 0) {
 			if (logs) {
@@ -691,8 +745,8 @@
 		ctx.fillStyle = '#868c96';
 		for (var front = 0; front < 4; front++) { ctx.beginPath(); ctx.ellipse(cx - 42 + front * 28, baseY + 5, 16, 9, 0, 0, Math.PI * 2); ctx.fill(); }
 		drawParts();
-		var pw = Math.min(200, W - 20), px = align === 'right' ? Math.max(10, cx - 96 - pw) : Math.min(W - pw - 10, cx + 96);
-		plate(px, H - 14, pw, 'CHAT CAMPFIRE', [Hype.STAGES[st.stage], st.lit ? 'Burning ' + clock(st.burning) + (st.best > st.burning + 1 ? '   Best ' + clock(st.best) : '') : st.best ? 'Best ' + clock(st.best) + '   Chat to relight' : 'Chat to light it'], f, mix('#ffd166', HOT, f));
+		var pw = Math.min(170, W - 20), px = align === 'right' ? Math.max(10, cx - 96 - pw) : Math.min(W - pw - 10, cx + 96);
+		plate(px, H - 14, pw, st.lit ? [clock(st.burning) + (st.best > st.burning + 1 ? '   \u2605 ' + clock(st.best) : '')] : st.best ? ['\u2605 ' + clock(st.best)] : [], f, mix('#ffd166', HOT, f));
 	};
 	SUMMARY.campfire = function () { var st = game.state; return 'Chat Campfire: ' + Hype.STAGES[st.stage] + (st.lit ? ', burning for ' + clock(st.burning) : ''); };
 

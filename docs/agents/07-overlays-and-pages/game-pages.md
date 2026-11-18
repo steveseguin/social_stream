@@ -31,6 +31,24 @@ These pages are output/control surfaces. They do not capture platform chat by th
 
 ## Shared Runtime Pattern
 
+### Stream presentation rules (November 2026)
+
+Game pages are OBS Browser Sources watched at stream size, at 16:9 (usually 1920x1080) or 9:16 portrait. Nobody can click or type into them.
+
+- Show only the game. No titles, taglines, instruction sentences, round labels, player counts, activity logs, stats panels, buttons or connection status. Allowed text: digits (score, timer), short chatter names where a player must find themself, and the literal chat command as a small chip.
+- Check every change at 1920x1080 and 1080x1920. A small card in the corner of a 1080p window is a bug.
+- The card games (Quick Call and the pages that load `games/audience-page.js`) are laid out once at a fixed width (780px, or 460px when the window is portrait) and scaled to the window by `games/fit-card.js`. Portrait-only rules use the `body.portrait` class it sets, not viewport media queries. `scale=0.2..1` shrinks the card and `align=left|right|top|bottom` (combinable) moves it. Elements the scripts or tests still read (`#round`, `#participants`, history logs) stay in the page as screen-reader-only text.
+
+### Arcade games (November 2026)
+
+`games/pegdrop.html`, `chatblocks.html`, `skydrop.html`, `towerduel.html`, `frontrow.html`, `keepitup.html` and `encore.html` are canvas games on the shared classic script `games/arcade-kit.js` (`window.SSNArcade`) with `games/arcade.css`. Each page is a shell plus one script named after the game.
+
+- Peg Drop, Chat Blocks and Sky Drop are designed for 9:16 and keep a 720x1280 design box in any window (`align` moves it). Tower Duel uses only the sides of a 16:9 window so a 9:16 video fits in the middle (`gap` sets the clear share of the width); in a portrait window its two towers share the screen. Front Row (starting soon), Keep It Up (break) and Encore (end of show) fill any window.
+- Commands: Peg Drop `!drop`; Chat Blocks a column number `1`-`8` or `spin`; Sky Drop `!jump`, then `left` / `right`; Tower Duel, Front Row, Keep It Up and Encore react to any chat message (Tower Duel can be limited with `command=!build`).
+- The kit handles the chat transport the same way as the other games: `demo` never connects; `server` joins the relay with out 2 / in 1; otherwise the hidden dock-label iframe bridge is used, and only that iframe may deliver window messages. Chat names and messages are reduced to text; avatars load only from http(s) URLs and are drawn to canvas.
+- Identity is platform type plus user ID (falling back to the display name). State is in memory and resets on reload. Idle games show a bobbing chat bubble instead of an instruction.
+- Tests: `tests/arcade-games.test.cjs` (each game exposes a read-only `state()` hook such as `window.SSNPegDrop`).
+
 ### Cooperative games (September 2026)
 
 `games/signallock.html` and `games/crowdquest.html` share the classic scripts `games/audience-engine.js` and `games/audience-page.js`, with `games/audience.css`. The public setup guide is `docs/chat-games.html`; both are in the existing popup game selector.

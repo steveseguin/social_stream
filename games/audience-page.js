@@ -14,6 +14,7 @@
     var history = document.getElementById('history');
     function el(tag, text, className) { var node = document.createElement(tag); if (text != null) node.textContent = text; if (className) node.className = className; return node; }
     if (params.has('chroma')) document.body.classList.add('chroma');
+    SSNFitCard(document.querySelector('.shell'), params);
     if (params.has('transparent')) document.body.classList.add('transparent');
     function render() {
         var remaining = game.phase === 'active' ? Math.max(0, Math.ceil((game.deadline - Date.now()) / 1000)) : game.seconds;

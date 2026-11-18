@@ -9,7 +9,17 @@ body[data-game="sum"]{background:#252237;--panel:#38344c;--accent:#ffd8a8;--mute
 .puzzle-status{display:flex;justify-content:space-between;gap:14px;color:var(--muted);font-size:13px;padding:0 28px 20px;min-height:40px;}.puzzle-status p{max-width:75%;}#puzzle-leaders{display:flex;flex-wrap:wrap;gap:8px;padding:0 28px 20px;}#puzzle-leaders span{font-size:12px;border:1px solid #ffffff22;border-radius:6px;padding:4px 8px;max-width:100%;overflow-wrap:anywhere;}
 body[data-game="memory"].transparent,body[data-game="odd"].transparent,body[data-game="sum"].transparent{background:transparent;}
 body[data-game="memory"].chroma,body[data-game="odd"].chroma,body[data-game="sum"].chroma{background:#00ff00;}
-@media(max-width:700px){#puzzle-board{padding:24px 16px;gap:8px;min-height:130px;}.memory-tile{height:75px;min-width:0;flex:1;border-radius:12px;font-size:32px;}.odd-card{padding:18px 5px;}.odd-card h3{font-size:18px;overflow-wrap:anywhere;}.odd-card code{font-size:12px;}.sum-current,.sum-target{padding:18px 12px;}.sum-current b,.sum-target b{font-size:65px;}.puzzle-status{padding:0 20px 20px;flex-direction:column;gap:6px;}.puzzle-status p{max-width:100%;}}
+/* Portrait layout */
+body.portrait #puzzle-board {padding:24px 16px;gap:8px;min-height:130px; }
+body.portrait .memory-tile {height:75px;min-width:0;flex:1;border-radius:12px;font-size:32px; }
+body.portrait .odd-card {padding:18px 5px; }
+body.portrait .odd-card h3 {font-size:18px;overflow-wrap:anywhere; }
+body.portrait .odd-card code {font-size:12px; }
+body.portrait .sum-current, body.portrait .sum-target {padding:18px 12px; }
+body.portrait .sum-current b, body.portrait .sum-target b {font-size:65px; }
+body.portrait .puzzle-status {padding:0 20px 20px;flex-direction:column;gap:6px; }
+body.portrait .puzzle-status p {max-width:100%; }
+
 
 #puzzle-board { min-height:0; padding:10px 16px 16px; }
 .puzzle-status { min-height:0; padding:0 16px; }

@@ -1,11 +1,12 @@
 (function(){'use strict';
 var params=new URLSearchParams(location.search),demo=params.has('demo'),game=new SSNQuickCall({now:function(){return performance.now();}}),revision=-1;
+SSNFitCard(document.querySelector('main'),params);
 var chatRelay = SocialStreamLocalServer.getChatRelayConfig(params);
 if(demo)document.body.classList.add('demo');if(params.has('chroma'))document.body.classList.add('chroma');
 function el(tag,value,cls){var e=document.createElement(tag);e.textContent=value;if(cls)e.className=cls;return e;}
 function render(){document.getElementById('clock').textContent=game.phase==='waiting'?'':Math.max(0,Math.ceil((game.deadline-performance.now())/1000))+'s';if(revision===game.revision)return;revision=game.revision;
 document.getElementById('round').textContent=game.phase==='waiting'?'':game.phase==='joining'?'⏳':'Call '+game.round;document.getElementById('queue').textContent=game.queue.length+' waiting';
-var calls=document.getElementById('calls');calls.textContent='';game.calls.forEach(function(c){var row=el('article','','call'+(c.time!==null?' done':''));row.appendChild(el('span',c.name,'name'));row.appendChild(el('strong',c.code,'code'));row.appendChild(el('span',c.time!==null?(c.time/1000).toFixed(2)+'s ✓':game.phase==='result'?'Missed':'Reply in chat','outcome'));calls.appendChild(row);});
+var calls=document.getElementById('calls');calls.textContent='';game.calls.forEach(function(c){var row=el('article','','call'+(c.time!==null?' done':''));row.appendChild(el('span',c.name,'name'));row.appendChild(el('strong',c.code,'code'));row.appendChild(el('span',c.time!==null?(c.time/1000).toFixed(2)+'s ✓':game.phase==='result'?'✕':'','outcome'));calls.appendChild(row);});
 var leaders=document.getElementById('leaders');leaders.textContent='';game.leaders().forEach(function(p,i){var row=el('li','');row.appendChild(el('span',(i+1)+'. '+p.name));row.appendChild(el('b',(p.best/1000).toFixed(2)+'s'));leaders.appendChild(row);});document.querySelector('.scores').hidden=!leaders.children.length;
 }
 function receive(payload){(Array.isArray(payload)?payload.slice(0,100):[payload]).forEach(function(m){if(m&&m.content)m=m.content;if(!m||typeof m.chatmessage!=='string'||m.chatmessage.length>2000)return;var copy=Object.assign({},m);/* Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary. */ if(!copy.textonly){var t=document.createElement('template');t.innerHTML=copy.chatmessage;copy.chatmessage=t.content.textContent||'';}game.input(copy);});render();}
