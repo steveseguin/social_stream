@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="robots" content="noindex">
+	<meta name="referrer" content="no-referrer">
+	<title>X Live - Social Stream Ninja</title>
+	<link rel="stylesheet" href="websocket-responsive.css">
+	<style>
+		:root { color-scheme: dark; font: 16px system-ui, sans-serif; }
+		body { margin: 1.25rem auto; padding: 0 1rem; max-width: 38rem; background: #171717; color: #eee; }
+		h1 { font-size: 1.4rem; }
+		a { color: #9bc8ff; }
+		button, input { font: inherit; padding: .45rem .65rem; }
+		form, #messages { margin: 1rem 0; }
+		#messages { max-height: 45vh; overflow-y: auto; overflow-wrap: anywhere; }
+	</style>
+	<script src="x.js" defer></script>
+</head>
+<body>
+	<h1>X Live</h1>
+	<p id="status" role="status">Connecting to X Live...</p>
+	<button id="login" hidden>Link X account</button>
+	<a id="authorize" target="_blank" rel="noopener noreferrer" hidden>Continue to X</a>
+	<form id="pair" hidden>
+		<label>Sign-in code <input id="code" required autocomplete="off" spellcheck="false"></label>
+		<button>Connect</button>
+	</form>
+	<div id="messages" role="log" aria-label="X live chat"></div>
+	<form id="compose" hidden>
+		<label>Message <input id="message" required autocomplete="off"></label>
+		<button>Send</button>
+	</form>
+	<button id="forget" hidden>Forget sign-in</button>
+</body>
+</html>

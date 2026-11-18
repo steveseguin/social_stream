@@ -2,6 +2,11 @@
 
 Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command list is authoritative, including when development builds share an application version.
 
+## X Live API capture
+
+- Minimum for the built-in X relay is the updated SSApp 0.4.51 with matching Social Stream sources. Check that the X platform advertises `websocket` before selecting it.
+- Use the broadcaster's X handle. The WebSocket source requires a configured X relay and creator sign-in. Standard capture uses `classic`.
+
 ## Local audio in Flow Actions
 
 - Minimum: updated SSApp 0.4.50 with the `localMedia.readAudio` desktop bridge and matching Event Flow/Flow Actions pages. REST and MCP commands are unchanged.
