@@ -42,3 +42,9 @@ jobs:
 
     - name: Validate documentation search index
       run: python3 scripts/build-docs-search-index.py --docs-root docs --output /tmp/social-stream-docs-search-index.json
+
+    - name: Test Event Flow regressions
+      timeout-minutes: 2
+      run: |
+        node --test tests/eventflow-raid.test.cjs tests/eventflow-action-traversal.test.cjs tests/eventflow-workflow.test.cjs
+        node tests/eventflow-template-vars.test.js
