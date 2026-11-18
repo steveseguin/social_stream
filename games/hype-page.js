@@ -206,7 +206,7 @@
 
 	var RENDER = {}, SUMMARY = {};
 
-	// ---- Chat Seismograph ----
+	// ---- Chat Quake ----
 	var trace = [], marks = [], pen = { env: 0, phase: 0, kick: 0, heat: 0, sampled: -1 };
 	function paperText(id, value) {
 		var field = document.getElementById(id);
@@ -320,7 +320,7 @@
 		ctx.restore();
 		ctx.restore();
 	};
-	SUMMARY.seismo = function () { var st = game.state; return 'Chat Seismograph: ' + game.hype.rate.toFixed(1) + ' messages per second, ' + st.count + ' quakes' + (st.record ? ', record magnitude ' + st.record.magnitude.toFixed(1) : ''); };
+	SUMMARY.seismo = function () { var st = game.state; return 'Chat Quake: ' + game.hype.rate.toFixed(1) + ' messages per second, ' + st.count + ' quakes' + (st.record ? ', record magnitude ' + st.record.magnitude.toFixed(1) : ''); };
 
 	// ---- Quake City ----
 	var CITY = [

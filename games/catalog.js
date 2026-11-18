@@ -383,7 +383,7 @@ window.SSNGamesCatalog = [
   },
   {
     "id": "seismograph",
-    "title": "Chat Seismograph",
+    "title": "Chat Quake",
     "category": "Hype",
     "description": "Turn chat excitement into a live seismograph with quakes, magnitudes, and a record to beat.",
     "inspiration": {
