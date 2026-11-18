@@ -17,14 +17,14 @@
     if (params.has('transparent')) document.body.classList.add('transparent');
     function render() {
         var remaining = game.phase === 'active' ? Math.max(0, Math.ceil((game.deadline - Date.now()) / 1000)) : game.seconds;
-        document.getElementById('clock-value').textContent = game.phase === 'result' ? 'Complete' : remaining + 's';
-        document.getElementById('clock-label').textContent = game.phase === 'waiting' ? 'Starts with chat' : game.phase === 'result' ? 'Next round shortly' : 'Remaining';
-        if (game.tug) { SSNTugView.clock(game, Date.now()); if (game.phase === 'waiting') document.getElementById('clock-label').textContent = 'Join both teams to start'; }
+        document.getElementById('clock-value').textContent = game.phase === 'active' ? remaining + 's' : '';
+        if (game.tug) SSNTugView.clock(game, Date.now());
         if (game.teamplay) SSNTeamplayView.clock(game, Date.now());
         if (window.SSNGameView) SSNGameView.clock(game, Date.now());
         var key = JSON.stringify([game.phase, game.round, game.history, Array.from(game.votes), game.supplies, game.discoveries, game.scrambled, game.revision]);
         if (key === lastRender) return;
         lastRender = key;
+        document.body.dataset.phase = game.phase;
         var result = document.getElementById('result'); result.hidden = game.phase !== 'result'; result.textContent = game.result;
         document.getElementById('participants').textContent = game.users.size;
         if (game.phase === 'result' && !nextAt) nextAt = Date.now() + 10000;
@@ -38,47 +38,51 @@
         } else if (game.card) {
             document.getElementById('round').textContent = 'Round ' + String(game.round).padStart(2, '0');
             if (mode === 'number') document.querySelector('.command code').textContent = '!guess ' + Math.floor((game.low + game.high) / 2);
-            var art = document.getElementById('party-art');
-            art.textContent = mode === 'number' ? game.low + '\u2013' + game.high : mode === 'shuffle' ? game.scrambled.toUpperCase() : game.phase === 'result' && mode === 'showdown' ? game.card.labels[game.secret].toUpperCase() : mode === 'showdown' ? '\u270a \u270b \u270c' : '\u2600 \u263e \u2606';
             if (game.card.labels.length) {
                 var totals = [0, 0, 0]; game.votes.forEach(function (v) { totals[v]++; });
                 game.card.labels.forEach(function (label, index) {
-                    var row = el('div', null, 'guess'); row.appendChild(el('code', (mode === 'showdown' ? '!throw ' : '!pick ') + label));
-                    row.appendChild(el('b', game.phase === 'result' ? totals[index] + ' picked' : 'Hidden until reveal')); history.appendChild(row);
+                    var row = el('div', null, 'pick-option');
+                    var symbols = mode === 'showdown' ? ['✊', '✋', '✌'] : ['☀', '☾', '★'];
+                    row.appendChild(el('span', symbols[index], 'choice-symbol'));
+                    row.appendChild(el('code', (mode === 'showdown' ? '!throw ' : '!pick ') + label));
+                    if (game.phase === 'result') row.appendChild(el('b', totals[index] + ' picked'));
+                    history.appendChild(row);
                 });
             } else {
-                if (!game.history.length) history.appendChild(el('p', 'The first guess starts the clock. Your whole chat can join in.', 'empty'));
-                game.history.forEach(function (item) {
+                var art = document.getElementById('party-art');
+                if (game.phase === 'result') art.textContent = String(game.secret).toUpperCase();
+                else art.textContent = mode === 'number' ? game.low + '–' + game.high : game.scrambled.toUpperCase();
+                game.history.slice(0, 3).forEach(function (item) {
                     var row = el('div', null, 'guess'), left = el('div'); left.appendChild(el('code', item.code)); left.appendChild(el('small', item.name));
-                    row.appendChild(left); row.appendChild(el('b', item.feedback)); history.appendChild(row);
+                    row.appendChild(left);
+                    if (mode === 'number') row.appendChild(el('b', item.feedback));
+                    history.appendChild(row);
                 });
             }
         } else if (mode === 'signal') {
             document.getElementById('round').textContent = 'Transmission ' + String(game.round).padStart(2, '0');
             document.querySelectorAll('.digit').forEach(function (digit, index) { digit.textContent = game.phase === 'result' ? game.secret[index] : '?'; });
-            if (!game.history.length) history.appendChild(el('p', 'The first guess starts the clock. Every clue helps the whole chat.', 'empty'));
             game.history.forEach(function (item) {
                 var row = el('div', null, 'guess'), left = el('div'), right = el('div', null, 'feedback');
                 left.appendChild(el('code', item.code)); left.appendChild(el('small', item.name));
-                right.appendChild(el('b', item.exact + ' exact')); right.appendChild(el('div', item.misplaced + ' right digit, wrong place'));
+                right.appendChild(el('b', item.exact + ' exact')); right.appendChild(el('div', item.misplaced + ' misplaced'));
                 row.appendChild(left); row.appendChild(right); history.appendChild(row);
             });
         } else {
             var chapter = SSNAudienceGame.chapters[game.stage], counts = [0, 0, 0]; game.votes.forEach(function (v) { counts[v]++; });
             document.getElementById('round').textContent = 'Chapter ' + (game.stage + 1) + ' of 5';
             document.getElementById('scene-title').textContent = chapter.title;
-            document.getElementById('story').textContent = chapter.story;
             document.getElementById('supplies').textContent = game.supplies;
             document.getElementById('discoveries').textContent = game.discoveries;
             document.querySelectorAll('.progress span').forEach(function (part, i) { part.className = i <= game.stage ? 'done' : ''; });
             chapter.choices.forEach(function (choice, index) {
                 var unavailable = game.supplies + choice[2] < 0, card = el('div', null, 'choice' + (unavailable ? ' unavailable' : ''));
                 var bar = el('div', null, 'choice-bar'); bar.style.width = (game.votes.size ? counts[index] / game.votes.size * 100 : 0) + '%'; card.appendChild(bar);
-                var body = el('div'); body.appendChild(el('span', counts[index] + (counts[index] === 1 ? ' vote' : ' votes'), 'votes'));
+                var body = el('div'); body.appendChild(el('span', counts[index], 'votes'));
                 body.appendChild(el('code', '!vote ' + (index + 1))); body.appendChild(el('h3', choice[0]));
-                body.appendChild(el('p', unavailable ? 'Not enough supplies for this route' : choice[1])); card.appendChild(body); history.appendChild(card);
+                body.appendChild(el('p', unavailable ? '🔒' : [choice[2] ? '📦 ' + (choice[2] > 0 ? '+' : '') + choice[2] : '', choice[3] ? '💎 +' + choice[3] : ''].filter(Boolean).join('   '))); card.appendChild(body); history.appendChild(card);
             });
-            if (game.phase === 'result' && game.stage === 4) result.textContent += ' Expedition complete: ' + game.discoveries + ' discoveries. A new voyage starts shortly.';
+            if (game.phase === 'result' && game.stage === 4) result.textContent += ' · ' + game.discoveries + ' discoveries';
         }
     }
     function receive(payload) {

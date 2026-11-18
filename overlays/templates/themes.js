@@ -740,7 +740,7 @@
 	]);
 
 	add("pets", [
-		{ name: "Halloween black cat", tags: ["halloween"], values: { coat: "black", bed: "box", line: "lights", linecolor: "1a1a1a", tagbg: "1a0b26", tagfg: "ff9a3c", clip: "ff7a00", font: "Creepster", fontsize: 18 } },
-		{ name: "Christmas pup", tags: ["christmas"], values: { animal: "dog", coat: "golden", line: "lights", linecolor: "1d3b26", tagbg: "b3000c", tagfg: "ffffff", clip: "ffd166", font: "Mountains of Christmas", fontsize: 20, toy: "ball" } }
+		{ name: "Halloween black cat", tags: ["halloween"], values: { coat: "black", hat: "witch", bed: "box", line: "lights", linecolor: "1a1a1a", tagbg: "1a0b26", tagfg: "ff9a3c", clip: "ff7a00", font: "Creepster", fontsize: 18 } },
+		{ name: "Christmas pup", tags: ["christmas"], values: { animal: "dog", coat: "golden", hat: "santa", line: "lights", linecolor: "1d3b26", tagbg: "b3000c", tagfg: "ffffff", clip: "ffd166", font: "Mountains of Christmas", fontsize: 20, toy: "ball" } }
 	]);
 })();

@@ -89,9 +89,13 @@
 			if (req && req.type === "SOURCE_CONTROL" && req.platform === "x" && req.control === "deleteMessage") {
 				var id = req.payload && req.payload.messageId;
 				var known = seen.get(id);
-				if (!enabled || !account || !broadcast || !get("sync-delete").checked || !known || known.removed ||
+				if (!enabled || !account || !broadcast || !get("sync-delete").checked || !known || known.removed || known.deleting ||
 					known.type !== req.payload.type || id.indexOf(broadcast + ":") !== 0) { respond(false); return; }
-				command({ op: "delete", broadcast: broadcast, messageId: id.slice(broadcast.length + 1) }).then(respond);
+				known.deleting = true;
+				command({ op: "delete", broadcast: broadcast, messageId: id.slice(broadcast.length + 1) }).then(function (ok) {
+					if (!ok) known.deleting = false;
+					respond(ok);
+				});
 				return true;
 			}
 			if (req && typeof req === "object") applySettings(req);

@@ -44,6 +44,16 @@
 					<button class="btn small" type="button" data-obs="obsStreamingStopped">End stream</button>
 					<button class="btn small" type="button" data-obs="obsRecordingStarted">Record</button>
 					<button class="btn small" type="button" data-obs="obsReplaybufferSaved">Save replay</button>
+					<select id="obsMore" aria-label="More OBS events to test">
+						<option value="">More…</option>
+						<option value="obsStreamingStarting">Stream starting</option>
+						<option value="obsRecordingStopped">Stop recording</option>
+						<option value="obsRecordingPaused">Pause recording</option>
+						<option value="obsRecordingUnpaused">Resume recording</option>
+						<option value="obsVirtualcamStarted">Virtual camera on</option>
+						<option value="obsVirtualcamStopped">Virtual camera off</option>
+						<option value="obsSourceVisibleChanged">Source shown</option>
+					</select>
 				</div>
 			</div>
 			<div class="stage" id="stage"><div class="frame-box" id="box"><iframe id="preview" title="Overlay preview"></iframe></div></div>
@@ -59,7 +69,7 @@
 	</div>
 	<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-	<script src="core.js?v=19"></script>
+	<script src="core.js?v=20"></script>
 	<script src="templates/countries.js?v=15"></script>
 	<script src="templates/engines.js?v=19"></script>
 	<script src="templates/socials.js?v=18"></script>
@@ -69,10 +79,11 @@
 	<script src="templates/fun.js?v=15"></script>
 	<script src="templates/text.js?v=15"></script>
 	<script src="templates/gaming.js?v=17"></script>
-	<script src="templates/obs.js?v=15"></script>
-	<script src="templates/pets.js?v=15"></script>
+	<script src="templates/obs.js?v=16"></script>
+	<script src="templates/petrig.js?v=1"></script>
+	<script src="templates/pets.js?v=16"></script>
 	<script src="templates/extra.js?v=24"></script>
-	<script src="templates/themes.js?v=18"></script>
+	<script src="templates/themes.js?v=19"></script>
 	<script src="templates/music.js?v=16"></script>
 	<script src="templates/promo.js?v=15"></script>
 	<script src="templates/live.js?v=16"></script>
@@ -435,16 +446,21 @@
 			timer = setTimeout(function () { $("preview").src = "view.html?" + query + "&preview"; }, now ? 0 : 300);
 		}
 		$("replay").addEventListener("click", function () { update(true); });
-		var demoScenes = ["Gameplay", "Just Chatting", "Be Right Back", "Starting Soon"];
+		// Scene changes step through a typical show, so every scene-aware reaction gets its turn.
+		var demoScenes = ["Just Chatting", "Gameplay", "Be Right Back", "Ending", "Starting Soon"], demoAt = 0;
+		function sendObs(name, label) {
+			var detail = name === "obsSceneChanged" ? { name: demoScenes[demoAt++ % demoScenes.length] } : name === "obsSourceVisibleChanged" ? { visible: true } : {};
+			try { $("preview").contentWindow.postMessage({ ssoObsEvent: name, detail: detail }, "*"); } catch (e) {}
+			toast(name === "obsSceneChanged" ? "Sent: scene changed to " + detail.name : "Sent: " + label);
+		}
 		var obsBtns = document.querySelectorAll("[data-obs]");
 		for (var ob = 0; ob < obsBtns.length; ob++) {
-			obsBtns[ob].addEventListener("click", function () {
-				var name = this.getAttribute("data-obs");
-				var detail = name === "obsSceneChanged" ? { name: demoScenes[Math.floor(Math.random() * demoScenes.length)] } : {};
-				try { $("preview").contentWindow.postMessage({ ssoObsEvent: name, detail: detail }, "*"); } catch (e) {}
-				toast(name === "obsSceneChanged" ? "Sent: scene changed to " + detail.name : "Sent: " + this.textContent);
-			});
+			obsBtns[ob].addEventListener("click", function () { sendObs(this.getAttribute("data-obs"), this.textContent); });
 		}
+		$("obsMore").addEventListener("change", function () {
+			if (this.value) { sendObs(this.value, this.options[this.selectedIndex].text); }
+			this.value = "";
+		});
 		$("copy").addEventListener("click", function () {
 			var input = $("url");
 			var done = function () { toast("Link copied. Paste it into an OBS Browser Source."); };

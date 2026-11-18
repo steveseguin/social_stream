@@ -10,3 +10,9 @@ body[data-game="sum"]{background:#252237;--panel:#38344c;--accent:#ffd8a8;--mute
 body[data-game="memory"].transparent,body[data-game="odd"].transparent,body[data-game="sum"].transparent{background:transparent;}
 body[data-game="memory"].chroma,body[data-game="odd"].chroma,body[data-game="sum"].chroma{background:#00ff00;}
 @media(max-width:700px){#puzzle-board{padding:24px 16px;gap:8px;min-height:130px;}.memory-tile{height:75px;min-width:0;flex:1;border-radius:12px;font-size:32px;}.odd-card{padding:18px 5px;}.odd-card h3{font-size:18px;overflow-wrap:anywhere;}.odd-card code{font-size:12px;}.sum-current,.sum-target{padding:18px 12px;}.sum-current b,.sum-target b{font-size:65px;}.puzzle-status{padding:0 20px 20px;flex-direction:column;gap:6px;}.puzzle-status p{max-width:100%;}}
+
+#puzzle-board { min-height:0; padding:10px 16px 16px; }
+.puzzle-status { min-height:0; padding:0 16px; }
+#puzzle-leaders { padding:0 16px; }
+#puzzle-leaders:not(:empty), .puzzle-status p:not(:empty), .puzzle-status span:not(:empty) { margin-bottom:8px; }
+.memory-tile { max-width:15%; }

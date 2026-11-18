@@ -50,3 +50,49 @@ a { color:inherit; } a:focus-visible { outline:2px solid var(--accent); outline-
 .progress { display:flex; gap:7px; }.progress span { width:26px; height:4px; background:#ffffff25; border-radius:2px; }.progress .done { background:var(--accent); }
 @media(max-width:760px) { .shell { width:calc(100% - 32px); margin:20px auto; }.topline { margin-top:28px; }.board { grid-template-columns:1fr; }.scene { padding:24px; gap:16px; }.scene h2 { max-width:none; }.scene p { max-width:none; }.signal-art,.planet-art { min-height:140px; height:140px; }.signal-art:before { width:140px;height:140px; }.signal-art:after { width:200px;height:200px; }.digit { height:65px;width:52px;font-size:32px; }.planet { width:110px;height:110px; }.planet-art:after { width:200px;height:50px;border-width:9px; }.content { border-left:0;border-top:1px solid #ffffff15;padding:22px; }.history { min-height:80px; }.empty { margin:20px 0; }.footer { flex-direction:column;gap:16px; }.clock { font-size:21px; }.masthead { gap:10px; } }
 @media(prefers-reduced-motion:reduce) { *,*:before,*:after { transition:none!important;animation:none!important; } }
+
+/* Keep the stream visible around the board. The guide uses .shell as well. */
+body[data-game]:not(.chroma) { background:transparent; }
+body[data-game] .shell { width:calc(100% - 16px); max-width:780px; margin:8px auto; padding:0 0 5px; background:var(--panel); border-radius:18px; overflow:hidden; }
+body[data-game] .topline { margin:0; padding:10px 18px; align-items:center; background:#0003; }
+body[data-game] h1 { margin:0; font-size:clamp(20px,3vw,29px); letter-spacing:-.035em; }
+body[data-game] .clock { font-size:18px; font-weight:700; }
+body[data-game] .board, body[data-game] .crew-board { min-height:0; border:0; border-radius:0; }
+body[data-game] .scene { gap:12px; padding:18px; }
+body[data-game] .scene h2 { font-size:22px; margin:4px 0; }
+body[data-game] .content { padding:18px; gap:8px; }
+body[data-game] .history { min-height:0; }
+body[data-game] .guess { padding:7px 0; gap:8px; }
+body[data-game] .guess code { letter-spacing:0; }
+body[data-game] .result { margin:0; border:0; border-radius:0; text-align:center; background:#fff1; font-size:19px; font-weight:bold; }
+body[data-game] .command { color:var(--muted); font-size:14px; }
+body[data-game] .command code, #join-hint code { display:inline-block; padding:2px 8px; border-radius:5px; background:#0004; color:var(--accent); font-weight:700; }
+/* One symbol, one move, one chat command. */
+.pick-board { padding:12px 16px; }
+.pick-heading,.pick-footer { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.pick-heading h2 { margin:0; font-size:18px; }
+.pick-heading span,.pick-footer { font-size:13px; color:var(--muted); }
+.pick-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:10px 0; }
+.pick-option { border-radius:14px; padding:10px 3px; background:#ffffff0b; text-align:center; }
+.pick-option code,.pick-option b { display:block; font-size:clamp(12px,2.6vw,20px); color:var(--accent); }
+.choice-symbol { display:block; font-size:clamp(28px,5vw,54px); color:var(--accent); }
+.pick-option b { color:var(--ink); font-size:14px; }
+body[data-phase="result"] .command, body[data-phase="result"] .pick-footer > :first-child { visibility:hidden; }
+body[data-game="signal"][data-phase="waiting"] .content,
+body[data-game="shuffle"][data-phase="waiting"] .content,
+body[data-game="number"][data-phase="waiting"] .content { display:none; }
+body[data-game="signal"][data-phase="waiting"] .scene,
+body[data-game="shuffle"][data-phase="waiting"] .scene,
+body[data-game="number"][data-phase="waiting"] .scene { grid-column:1/-1; align-items:center; }
+body[data-game] .party-art { width:100%; padding:14px 10px; }
+body[data-game] .signal-art, body[data-game] .planet-art { min-height:110px; height:110px; }
+body[data-game] .planet { width:96px; height:96px; }
+body[data-game] .planet-art:after { width:155px; height:40px; border-width:7px; }
+body[data-game] .choice { padding:10px 14px; }
+body[data-game] .choice + .choice { margin-top:6px; }
+body[data-game] .choice h3 { margin:2px 0; }
+body[data-game] .eyebrow { letter-spacing:.06em; }
+@media(max-width:760px) and (min-width:540px) {
+    body[data-game] .board { grid-template-columns:1fr 1fr; }
+}
+.game-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }

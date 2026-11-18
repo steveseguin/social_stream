@@ -548,8 +548,9 @@
 
 
 	// ---------- OBS browser source events ----------
-	// OBS fires obsSceneChanged, obsStreamingStarted/Stopped, obsRecordingStarted/Stopped, obsReplaybufferSaved,
-	// obsSourceVisibleChanged… on window. The editor simulates them with postMessage({ssoObsEvent}).
+	// OBS fires obsSceneChanged, obsStreamingStarting/Started/Stopped, obsRecordingStarted/Paused/Unpaused/Stopped,
+	// obsReplaybufferSaved, obsVirtualcamStarted/Stopped, obsSourceVisibleChanged… on window.
+	// The editor simulates them with postMessage({ssoObsEvent}).
 	SSO.obs = {
 		available: function () { return !!global.obsstudio; },
 		on: function (name, fn) {
@@ -573,7 +574,7 @@
 	global.addEventListener("message", function (e) {
 		var d = e.data;
 		if (new URLSearchParams(global.location.search).has("preview") && e.source === global.parent && e.origin === global.location.origin &&
-			d && typeof d.ssoObsEvent === "string" && /^obs(?:SceneChanged|StreamingStarted|StreamingStopped|RecordingStarted|RecordingStopped|ReplaybufferSaved|SourceVisibleChanged)$/.test(d.ssoObsEvent)) {
+			d && typeof d.ssoObsEvent === "string" && /^obs(?:SceneChanged|Source(?:Visible|Active)Changed|Streaming(?:Starting|Started|Stopping|Stopped)|Recording(?:Starting|Started|Paused|Unpaused|Stopping|Stopped)|Replaybuffer(?:Started|Saved|Stopped)|Virtualcam(?:Started|Stopped))$/.test(d.ssoObsEvent)) {
 			var ev;
 			try { ev = new CustomEvent(d.ssoObsEvent, { detail: d.detail || {} }); } catch (err) { ev = document.createEvent("CustomEvent"); ev.initCustomEvent(d.ssoObsEvent, false, false, d.detail || {}); }
 			global.dispatchEvent(ev);

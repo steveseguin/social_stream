@@ -33,9 +33,9 @@
     Game.prototype.next=function(){if(this.phase==='result')this.begin();};
     Game.prototype.finish=function(){
         if(this.phase!=='active')return;this.phase='result';this.revision++;
-        if(this.mode==='sum'){this.result=this.stage===3?'Three targets, one brilliant crew. You did it!':this.stage+' of 3 targets reached. Try another team effort.';return;}
+        if(this.mode==='sum'){this.result=this.stage===3?'You did it!':this.stage+' / 3 targets';return;}
         var best=0,names=[];this.users.forEach(function(p){if(p.score>best){best=p.score;names=[p.name];}else if(p.score===best&&best)names.push(p.name);});
-        this.result=best?'Top score: '+best+' / '+(this.mode==='memory'?4:5)+' — '+names.slice(0,3).join(', ')+(names.length>3?' and '+(names.length-3)+' more':'')+'.':'Thanks for playing! A fresh challenge starts shortly.';
+        this.result=best?'Top score: '+best+' / '+(this.mode==='memory'?4:5)+' · '+names.slice(0,3).join(', ')+(names.length>3?' and '+(names.length-3)+' more':'')+'.':'No correct answers';
     };
     Game.prototype.resolve=function(){
         var answer=this.mode==='memory'?this.sequence:String(this.question()[2]+1),correct=0,self=this;
