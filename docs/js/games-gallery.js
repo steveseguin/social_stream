@@ -30,12 +30,14 @@
         var copy=el('div',null,'game-copy');copy.appendChild(el('span',game.category,'game-type'));copy.appendChild(el('h2',game.title));copy.appendChild(el('span',game.audience,'game-audience'));copy.appendChild(el('p',game.description));
         if (game.inspiration) {
             card.id = game.id;
-            var credit = el('p', 'Inspired by');
+            var credit = el('p');
+            credit.textContent = siteText("Inspired by {0}'s", [game.inspiration.author]);
             var project = el('a', game.inspiration.name, 'guide');
             project.href = game.inspiration.url;
             project.rel = 'noreferrer';
             credit.appendChild(document.createTextNode(' '));
             credit.appendChild(project);
+            credit.appendChild(document.createTextNode('.'));
             copy.appendChild(credit);
         }
         var favorite=el('button',null,'game-favorite');favorite.type='button';

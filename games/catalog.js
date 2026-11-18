@@ -387,8 +387,9 @@ window.SSNGamesCatalog = [
     "category": "Hype",
     "description": "Turn chat excitement into a live seismograph with quakes, magnitudes, and a record to beat.",
     "inspiration": {
-      "name": "ChatQuake by Matthew Busel",
-      "url": "https://github.com/Mattbusel/chatquake"
+      "author": "Matthew Busel",
+      "name": "ChatQuake",
+      "url": "https://github.com/Mattbusel/chatquake/tree/b9750522acdc00aa96dc0d4b91a90402599c5dc8"
     },
     "command": "Say anything in chat",
     "path": "games/seismograph.html",
