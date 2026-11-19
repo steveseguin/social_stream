@@ -41,14 +41,15 @@
 
       this.vdo = new VDONinjaSDK({
         wss: this.opts.wss,
+        lanOnly: this.opts.lanOnly,
         debug: !!this.opts.debug,
         password: this.password !== false ? this.password : false,
         // Ensure VDO.Ninja salt behaviour
         salt: 'vdo.ninja',
         // Default our identity label for downstream connections
         label: this.opts.label || 'SocialStream',
-        // Be kind to infra: conservative reconnects with exponential backoff
-        maxReconnectAttempts: 7,
+        // Keep retrying with backoff until the user stops the service.
+        maxReconnectAttempts: Infinity,
         reconnectDelay: 2000,
       });
 
@@ -293,7 +294,13 @@
     }
 
     isReady() {
-      return !!(this.vdo && this.connected);
+      if (!this.vdo) return false;
+      if (this.connected) return true;
+      // Established data channels can still carry chat while signaling reconnects.
+      for (const { publisher, viewer } of this.vdo.connections.values()) {
+        if (publisher?.dataChannel?.readyState === 'open' || viewer?.dataChannel?.readyState === 'open') return true;
+      }
+      return false;
     }
 
     getPeers() {

@@ -15320,7 +15320,7 @@ async function initializeTransport(roomStreamID, pass, sdkEnabled, generation) {
 				await new Promise(r => setTimeout(r, 600));
 			} catch (e) {}
 			if (!isCurrent()) return;
-			bridge = new NinjaBridge({ debug: devmode });
+			bridge = new NinjaBridge({ debug: devmode, lanOnly: getSettingFlag("lanonly") });
 			ninjaBridge = bridge;
 			try {
 				window.ninjaBridge = ninjaBridge;
@@ -15375,7 +15375,7 @@ async function initializeTransport(roomStreamID, pass, sdkEnabled, generation) {
 					await bridge.destroy();
 				} catch (e) {}
 				if (!isCurrent()) return;
-				bridge = new NinjaBridge({ debug: devmode });
+				bridge = new NinjaBridge({ debug: devmode, lanOnly: getSettingFlag("lanonly") });
 				ninjaBridge = bridge;
 				try {
 					window.ninjaBridge = ninjaBridge;

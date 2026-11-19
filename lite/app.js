@@ -97,7 +97,11 @@ if (storedOverlayToggleState && typeof storedOverlayToggleState === 'object' && 
 }
 
 
-let youtubeStreamingEnabled = Boolean(storage.get(youtubeStreamingStorageKey, false));
+let youtubeStreamingEnabled = storage.get(youtubeStreamingStorageKey, null);
+if (youtubeStreamingEnabled === null) {
+  youtubeStreamingEnabled = !storage.get(sessionKey, '') && !storage.get('youtube.token', null);
+  storage.set(youtubeStreamingStorageKey, youtubeStreamingEnabled);
+}
 
 const debugParam = url.searchParams.get('debug');
 const storedDebugPreference = storage.get(debugPreferenceKey, null);

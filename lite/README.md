@@ -6,7 +6,7 @@ A lightweight web page that replaces the extension workflow by connecting to cha
 
 - One-page experience for managing chat relays.
 - Session generator with clipboard-ready dock link.
-- YouTube Data API polling plus an optional low-latency streaming mode.
+- YouTube live chat streams by default, with polling available in the YouTube source settings.
 - Direct Twitch chat integration via `tmi.js`.
 - Kick chat via public metadata lookup plus direct WebSocket subscription.
 - A proxy-based TikTok integration exists, but its card is currently hidden by the Lite stylesheet.

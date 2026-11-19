@@ -371,6 +371,20 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
 (function (global) {
     'use strict';
 
+    // Match the VDO.Ninja iframe's LAN policy for both SDP and trickled candidates.
+    function isLanCandidate(line) {
+        if (typeof line !== 'string') return false;
+        const fields = line.trim().split(/\s+/);
+        if (fields[6] !== 'typ' || fields[7] !== 'host') return false;
+        const address = fields[4];
+        if (/^[\w.-]+\.local$/i.test(address)) return true;
+        if (!/^\d{1,3}(?:\.\d{1,3}){3}$/.test(address)) return false;
+        const octets = address.split('.').map(Number);
+        if (octets.some(octet => octet > 255)) return false;
+        return octets[0] === 10 || (octets[0] === 192 && octets[1] === 168) ||
+            (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31);
+    }
+
     class VDONinjaSDK extends EventTarget {
         /**
          * SDK Version
@@ -584,6 +598,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          *   - null/undefined: Auto-fetch optimal TURN servers from API (default)
          *   - false: Disable TURN servers, use only STUN
          *   - Array: Custom TURN server configuration
+         * @param {boolean} options.lanOnly - Use only private IPv4 or mDNS host candidates (default: false)
          * @param {boolean} options.forceTURN - Force relay mode through TURN servers for privacy (default: false)
          * @param {number} options.turnCacheTTL - TURN server cache time-to-live in minutes (default: 5)
          * @param {Array} options.stunServers - STUN server configuration (default: Google & VDO.Ninja STUN)
@@ -703,6 +718,10 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             
             // Configuration
             this.turnServers = options.turnServers !== undefined ? options.turnServers : null; // null = auto fetch, false = none, array = custom
+            this.lanOnly = options.lanOnly === true;
+            if (this.lanOnly && (options.forceTURN || options.configuration?.iceTransportPolicy === 'relay')) {
+                throw new TypeError('lanOnly and relay-only mode cannot be combined');
+            }
             this.forceTURN = options.forceTURN || false; // Force relay mode for privacy
             this.turnCacheTTL = options.turnCacheTTL || 5; // TURN cache time-to-live in minutes
             this.stunServers = options.stunServers || [
@@ -755,7 +774,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
 
             // Peer recovery is local-only and uses the existing SDP/ICE messages.
             this.autoRecover = options.autoRecover !== false;
-            this.autoRelay = options.autoRelay !== false;
+            this.autoRelay = !this.lanOnly && options.autoRelay !== false;
             this.disconnectGracePeriod = Number.isFinite(options.disconnectGracePeriod) ?
                 Math.max(0, options.disconnectGracePeriod) : 5000;
             this.recoveryTimeout = Number.isFinite(options.recoveryTimeout) ?
@@ -4625,6 +4644,20 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             }
         }
 
+        _filterLanDescription(description) {
+            if (!this.lanOnly) return description;
+            const sdp = description.sdp.split('\n').filter(line =>
+                !/^a=candidate:/i.test(line.trimStart()) || isLanCandidate(line)
+            ).join('\n');
+            return { type: description.type, sdp };
+        }
+
+        async _createLocalOffer(pc, options) {
+            const offer = await pc.createOffer(options);
+            await pc.setLocalDescription(offer);
+            return this._filterLanDescription(offer);
+        }
+
         /**
          * Create an offer for a connection
          * @private
@@ -4665,8 +4698,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 await this._applyEncodingPreferencesToConnection(connection);
 
                 // Create offer
-                const offer = await connection.pc.createOffer();
-                await connection.pc.setLocalDescription(offer);
+                const offer = await this._createLocalOffer(connection.pc);
 
                 this._log('Created offer successfully');
                 return offer;
@@ -5252,7 +5284,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             const answer = await connection.pc.createAnswer();
             await connection.pc.setLocalDescription(answer);
 
-            return answer;
+            return this._filterLanDescription(answer);
         }
 
         /**
@@ -5266,6 +5298,8 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 this._log('Empty ICE candidate, gathering complete');
                 return;
             }
+
+            if (this.lanOnly && !isLanCandidate(event.candidate.candidate)) return;
 
             // Try data channel first for individual candidates; if it succeeds, do NOT also send via WebSocket.
             // This matches reference webrtc.js behavior: once DC is open, signaling uses DC instead of WSS.
@@ -5918,7 +5952,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
 
             try {
                 // Set remote description
-                await connection.pc.setRemoteDescription(new RTCSessionDescription(msg.description));
+                await connection.pc.setRemoteDescription(new RTCSessionDescription(this._filterLanDescription(msg.description)));
                 await this._drainPendingICE(msg.UUID, 'local', connection);
 
                 // Create and send answer
@@ -6001,7 +6035,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             }
 
             try {
-                await connection.pc.setRemoteDescription(new RTCSessionDescription(msg.description));
+                await connection.pc.setRemoteDescription(new RTCSessionDescription(this._filterLanDescription(msg.description)));
                 await this._drainPendingICE(msg.UUID, 'remote', connection);
                 this._log('Remote description set successfully');
             } catch (error) {
@@ -6112,6 +6146,8 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 }
             }
 
+            if (this.lanOnly && !isLanCandidate(msg.candidate?.candidate)) return;
+
             // Find the correct connection based on type field
             // IMPORTANT: VDO.Ninja uses the 'type' field to route messages when you have both 
             // viewing and publishing connections to the same peer UUID.
@@ -6190,6 +6226,12 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 }
             }
             
+            if (this.lanOnly) {
+                if (!Array.isArray(msg.candidates)) return;
+                msg.candidates = msg.candidates.filter(candidate => isLanCandidate(candidate?.candidate));
+                if (!msg.candidates.length) return;
+            }
+
             this._log(`Received ICE candidates bundle - type: ${msg.type}, UUID: ${msg.UUID}, session: ${msg.session}`);
             this._log(`Candidates count: ${msg.candidates ? msg.candidates.length : 0}`);
 
@@ -7731,6 +7773,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          * @returns {Promise<Object>} RTCConfiguration object
          */
         async _getICEConfiguration() {
+            if (this.lanOnly) return { iceServers: [], sdpSemantics: 'unified-plan' };
             // Setup TURN servers if not already done
             if (this._turnList === null) {
                 await this._setupTURNServers();
@@ -7820,8 +7863,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                         await this._applyEncodingPreferencesToConnection(connection);
                         
                         // Renegotiate connection
-                        const offer = await connection.pc.createOffer();
-                        await connection.pc.setLocalDescription(offer);
+                        const offer = await this._createLocalOffer(connection.pc);
                         
                         const offerMsg = {
                             UUID: connection.uuid,
@@ -7892,8 +7934,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                             connection.pc.removeTrack(sender);
                             
                             // Renegotiate connection
-                            const offer = await connection.pc.createOffer();
-                            await connection.pc.setLocalDescription(offer);
+                            const offer = await this._createLocalOffer(connection.pc);
                             
                             const offerMsg = {
                                 UUID: connection.uuid,
@@ -8840,8 +8881,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 }
                 
                 // Also initiate from our side
-                const offer = await connection.pc.createOffer({ iceRestart: true });
-                await connection.pc.setLocalDescription(offer);
+                const offer = await this._createLocalOffer(connection.pc, { iceRestart: true });
                 
                 // Compute streamID to send for ICE restart via WebSocket
                 let streamIDToSend = connection.streamID;
