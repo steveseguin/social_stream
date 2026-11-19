@@ -13,7 +13,7 @@ var iframe = null;
 var ninjaBridge = null;
 var transportGeneration = 0;
 var transportTask = null;
-var useNinjaSDK = false; // toggled via URL params &sdk/&beta, or can be wired to settings in future
+var useNinjaSDK = true;
 
 var settings = {};
 var messageTimeout = {};
@@ -630,13 +630,6 @@ async function restoreBrowserHandle(key, mode = "readwrite") {
 
 var urlParams = new URLSearchParams(window.location.search);
 var devmode = urlParams.has("devmode") || false;
-function isTruthyUrlFlag(name) {
-	return urlParams.has(name) && !/^(0|false|off|no)$/i.test(urlParams.get(name) || "1");
-}
-var forceNinjaSDKFromUrl = isTruthyUrlFlag("sdk") || isTruthyUrlFlag("beta");
-var lastUseNinjaSDK = undefined; // track effective SDK usage across settings loads
-// initial default (may be recalculated when settings load)
-useNinjaSDK = false;
 
 var FacebookDupes = "";
 var FacebookDupesTime = null;
@@ -1887,20 +1880,11 @@ function loadSettings(item, resave = false) {
 		reloadNeeded = true;
 		persistSession({ state: isExtensionOn });
 	}
-	// Recompute effective SDK usage on settings load
-	try {
-		const settingsSDK = settings?.sdk?.setting === true || settings?.sdk === true || settings?.usesdk?.setting === true;
-		const effective = !!(forceNinjaSDKFromUrl || settingsSDK);
-		if (lastUseNinjaSDK === undefined) {
-			lastUseNinjaSDK = effective;
-		} else if (effective !== lastUseNinjaSDK) {
-			lastUseNinjaSDK = effective;
-			useNinjaSDK = effective;
-			reloadNeeded = true; // transport mode changed → reinit
-		} else {
-			useNinjaSDK = effective;
-		}
-	} catch (e) {}
+	const sdkEnabled = !getSettingFlag("legacyiframe");
+	if (useNinjaSDK !== sdkEnabled) {
+		useNinjaSDK = sdkEnabled;
+		reloadNeeded = true;
+	}
 
 	if (reloadNeeded) {
 		updateExtensionState(false);
@@ -6167,7 +6151,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 
 			// If SDK setting changed, reinitialize transport if extension is ON
 			try {
-				if (request.setting === "sdk" && isExtensionOn && streamID) {
+				if (request.setting === "legacyiframe" && isExtensionOn && streamID) {
 					initTransport(streamID, password);
 				}
 			} catch (e) {
@@ -15247,25 +15231,7 @@ async function destroyNinjaTransport() {
 }
 
 function initTransport(roomStreamID, pass = false) {
-	// Re-evaluate effective SDK flag each init, based on flexible truthy parsing
-	try {
-		const raw = settings && (settings.sdk !== undefined ? settings.sdk : settings.usesdk);
-		let flag = !!forceNinjaSDKFromUrl;
-		if (typeof raw === "boolean") {
-			flag = flag || raw;
-		} else if (raw && typeof raw === "object") {
-			// supports { setting: true/"true"/1 }
-			const v = raw.setting;
-			flag = flag || v === true || v === 1 || (typeof v === "string" && /^(1|true|on|yes)$/i.test(v));
-		} else if (typeof raw === "string") {
-			flag = flag || /^(1|true|on|yes)$/i.test(raw);
-		} else if (raw === 1) {
-			flag = true;
-		}
-		useNinjaSDK = !!flag;
-	} catch (e) {
-		useNinjaSDK = false;
-	}
+	useNinjaSDK = !getSettingFlag("legacyiframe");
 
 	log("Init transport for VDO", useNinjaSDK ? "SDK" : "IFRAME");
 	const generation = cancelPendingNinjaTransport();

@@ -73,13 +73,14 @@ async function run() {
         pathToFileURL(path.join(social, 'aioverlay.html')).href + '?session=' + room + '&overlay=fixture');
     let overlay = await pendingWindow;
     overlay.on('pageerror', error => errors.push(error.message));
-    const loaded = () => overlay.waitForFunction(() => document.getElementById('overlayFrame')?.contentDocument?.body?.textContent.includes('Lifecycle overlay ready'), null, { timeout: 60000 });
+    const loaded = () => overlay.frameLocator('#overlayFrame').getByText('Lifecycle overlay ready', { exact: false }).first().waitFor({ timeout: 60000 });
     const fake = async () => {
-        await overlay.evaluate(() => { document.getElementById('overlayFrame').contentWindow.received = []; });
+        const frame = await (await overlay.locator('#overlayFrame').elementHandle()).contentFrame();
+        await frame.evaluate(() => { window.received = []; });
         await main.evaluate(() => ipcRenderer.sendSync('fromPopup', { cmd: 'fakemsg' }));
-        await overlay.waitForFunction(() => document.getElementById('overlayFrame').contentWindow.received.length > 0, null, { timeout: 15000 });
+        await frame.waitForFunction(() => window.received.length > 0, null, { timeout: 15000 });
         await delay(1000);
-        assert.equal(await overlay.evaluate(() => document.getElementById('overlayFrame').contentWindow.received.length), 1, 'One fake message, with no duplicate delivery');
+        assert.equal(await frame.evaluate(() => window.received.length), 1, 'One fake message, with no duplicate delivery');
     };
 
     await main.evaluate(() => {
@@ -126,7 +127,7 @@ async function run() {
     await setOn(false);
     await settled();
     await setOn(true);
-    await main.evaluate(() => ipcRenderer.sendSync('fromPopup', { cmd: 'saveSetting', setting: 'sdk', type: 'setting', value: false }));
+    await main.evaluate(() => ipcRenderer.sendSync('fromPopup', { cmd: 'saveSetting', setting: 'legacyiframe', type: 'setting', value: true }));
     await bg.waitForFunction(() => !useNinjaSDK);
     await settled();
     await overlay.reload();
@@ -138,8 +139,8 @@ async function run() {
 
     await setOn(false);
     await settled();
-    await main.evaluate(() => ipcRenderer.sendSync('fromPopup', { cmd: 'saveSetting', setting: 'sdk', type: 'setting', value: true }));
-    await bg.waitForFunction(() => settings.sdk?.setting === true);
+    await main.evaluate(() => ipcRenderer.sendSync('fromPopup', { cmd: 'saveSetting', setting: 'legacyiframe', type: 'setting', value: false }));
+    await bg.waitForFunction(() => !getSettingFlag('legacyiframe'));
     await setOn(true);
     await settled();
     await overlay.reload();

@@ -1499,10 +1499,10 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "streaming_chat_dock_overlay",
     description: "Set emoji scale 1.00x."
   },
-  "sdk": {
+  "legacyiframe": {
     type: "boolean",
     category: "global_settings_and_tools",
-    description: "When enabled, use SDK transport (beta)."
+    description: "Use the legacy iframe connection."
   },
   "seventv": {
     type: "boolean",

@@ -350,7 +350,7 @@ Category key: `global_settings_and_tools`. Settings: 2.
 | Key | Type | Short Description |
 | --- | --- | --- |
 | `disableRelayThrottle` | boolean | Send relayed chat messages without per-site throttling or queues. |
-| `sdk` | boolean | When enabled, use SDK transport (beta). |
+| `legacyiframe` | boolean | Use the legacy iframe connection. |
 
 ## Opt-in options
 

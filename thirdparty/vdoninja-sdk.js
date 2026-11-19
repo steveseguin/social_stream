@@ -736,6 +736,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             
             this._turnPromise = null; // For caching TURN server fetch
             this._turnList = null; // Cached TURN servers
+            this._turnExpiresAt = 0;
             
             // Reconnection settings
             this._reconnectAttempts = 0;
@@ -5502,38 +5503,29 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             }
         }
 
-        _hasTurnServer(configuration) {
-            const servers = configuration && Array.isArray(configuration.iceServers) ? configuration.iceServers : [];
-            return servers.some(server => {
-                const urls = Array.isArray(server.urls) ? server.urls : [server.urls || server.url];
-                return urls.some(url => typeof url === 'string' && /^turns?:/i.test(url));
-            });
-        }
-
-        _escalateConnectionToRelay(connection) {
-            if (!connection.pc || typeof connection.pc.setConfiguration !== 'function') return false;
+        _escalateConnectionToRelay(connection, iceServers) {
+            if (this.lanOnly || !connection.pc || typeof connection.pc.setConfiguration !== 'function') return false;
             const current = (typeof connection.pc.getConfiguration === 'function') ?
                 connection.pc.getConfiguration() : this.configuration;
-            if (!this._hasTurnServer(current)) return false;
-            if (current.iceTransportPolicy === 'relay') return true;
-
-            const next = { ...current };
-            if (Array.isArray(current.iceServers)) {
-                const stuns = [];
-                const turns = [];
-                for (const server of current.iceServers) {
-                    const urls = Array.isArray(server.urls) ? server.urls : [server.urls || server.url];
-                    if (urls.some(url => typeof url === 'string' && /^turns?:/i.test(url))) turns.push(server);
-                    else stuns.push(server);
-                }
-                if (turns.length > 1) turns.push(turns.shift());
-                next.iceServers = stuns.concat(turns);
-            }
-            next.iceTransportPolicy = 'relay';
+            const isTurn = server => {
+                const urls = Array.isArray(server.urls) ? server.urls : [server.urls || server.url];
+                return urls.some(url => typeof url === 'string' && /^turns?:/i.test(url));
+            };
+            const existing = current.iceServers || [];
+            const turns = (iceServers || existing).filter(isTurn);
+            if (!turns.length) return false;
+            const stuns = existing.filter(server => !isTurn(server));
+            const refreshed = { ...current, iceServers: stuns.concat(turns) };
+            if (turns.length > 1) turns.push(turns.shift());
+            const next = { ...current, iceServers: stuns.concat(turns), iceTransportPolicy: 'relay' };
 
             try {
                 connection.pc.setConfiguration(next);
-                connection.originalConfiguration = current;
+                if (current.iceTransportPolicy === 'relay') {
+                    if (connection.originalConfiguration) connection.originalConfiguration.iceServers = refreshed.iceServers;
+                    return true;
+                }
+                connection.originalConfiguration = refreshed;
                 connection.relayEscalated = true;
                 this._emit('relayEscalated', {
                     uuid: connection.uuid,
@@ -5613,7 +5605,19 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             } else if (connection.recoveryStage === 1 && this.autoRelay) {
                 phase = 'relay';
                 connection.recoveryStage = 2;
-                if (this._escalateConnectionToRelay(connection)) {
+                // A long-lived peer can still have the credentials from its first negotiation.
+                let iceServers;
+                if (this.turnServers !== false) {
+                    try {
+                        const config = await this._getICEConfiguration();
+                        iceServers = config.iceServers;
+                    } catch (error) {
+                        this._log('TURN lookup during peer recovery failed:', error.message || error);
+                    }
+                }
+                if (this._intentionalDisconnect || !this._isCurrentConnection(connection) ||
+                    connection._finalized || !connection.recovering || connection.recoveryStage !== 2) return;
+                if (this._escalateConnectionToRelay(connection, iceServers)) {
                     started = await this._requestConnectionICERestart(connection, `${reason}-relay`);
                 }
             }
@@ -7573,9 +7577,9 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          * Get from local storage
          * @private
          * @param {string} key - Storage key
-         * @returns {any} Stored value or null
+         * @returns {Object|null} Stored value and expiry, or null
          */
-        _getStorage(key) {
+        _getStorageEntry(key) {
             if (typeof localStorage === 'undefined') return null;
             
             try {
@@ -7585,12 +7589,12 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 const data = JSON.parse(item);
                 
                 // Check if expired
-                if (data.expiry && Date.now() > data.expiry) {
+                if (data.expiry && Date.now() >= data.expiry) {
                     localStorage.removeItem(key);
                     return null;
                 }
                 
-                return data.value;
+                return data;
             } catch (e) {
                 this._log('Storage read error:', e);
                 return null;
@@ -7624,13 +7628,6 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          * @returns {Promise<Array>} TURN server list
          */
         async _fetchTURNServers() {
-            // Check cache first
-            const cached = this._getStorage('turnlist');
-            if (cached) {
-                this._log('Using cached TURN servers');
-                return cached;
-            }
-
             const timestamp = Date.now();
             let getTurnURL = "https://turnservers.vdo.ninja/";
             
@@ -7644,16 +7641,13 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 }
             }
 
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000);
             try {
-                // Fetch with timeout
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2000);
-                
+
                 const response = await fetch(`${getTurnURL}?ts=${timestamp}`, {
                     signal: controller.signal
                 });
-                
-                clearTimeout(timeoutId);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -7672,6 +7666,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 
             } catch (error) {
                 this._log('Failed to fetch TURN servers, using fallback:', error.message);
+                this._turnFetchFailed = true;
                 
                 // Fallback TURN servers
                 return [
@@ -7732,6 +7727,8 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                         locale: "use1"
                     }
                 ];
+            } finally {
+                clearTimeout(timeoutId);
             }
         }
 
@@ -7755,13 +7752,21 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 return;
             }
 
-            // Otherwise, fetch from API
+            if (this._turnList !== null && Date.now() < this._turnExpiresAt) return;
             if (!this._turnPromise) {
+                const cached = this._getStorageEntry('turnlist');
+                if (Array.isArray(cached?.value) && cached.expiry > Date.now()) {
+                    this._turnList = this._processTURNs(cached.value);
+                    this._turnExpiresAt = Math.min(cached.expiry, Date.now() + this.turnCacheTTL * 60000);
+                    return;
+                }
+                this._turnFetchFailed = false;
                 this._turnPromise = this._fetchTURNServers().then(servers => {
                     this._turnList = this._processTURNs(servers);
+                    this._turnExpiresAt = Date.now() + (this._turnFetchFailed ? 30000 : this.turnCacheTTL * 60000);
                     this._log('TURN servers loaded:', this._turnList.length);
                     return this._turnList;
-                });
+                }).finally(() => { this._turnPromise = null; });
             }
 
             await this._turnPromise;
@@ -7774,10 +7779,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          */
         async _getICEConfiguration() {
             if (this.lanOnly) return { iceServers: [], sdpSemantics: 'unified-plan' };
-            // Setup TURN servers if not already done
-            if (this._turnList === null) {
-                await this._setupTURNServers();
-            }
+            await this._setupTURNServers();
 
             const iceServers = [...this.stunServers];
             
