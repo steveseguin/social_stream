@@ -49,6 +49,18 @@ Game pages are OBS Browser Sources watched at stream size, at 16:9 (usually 1920
 - Identity is platform type plus user ID (falling back to the display name). State is in memory and resets on reload. Idle games show a bobbing chat bubble instead of an instruction.
 - Tests: `tests/arcade-games.test.cjs` (each game exposes a read-only `state()` hook such as `window.SSNPegDrop`).
 
+### Arcade games, second batch, and drawn scenes (November 2026)
+
+More pages on `games/arcade-kit.js`: `marblerace.html` (`!play`), `cliffclimb.html` (any chat; sides of a 16:9 frame), `streamboss.html` (any chat; paid messages and sub/raid events hit hard), `trivia.html` (`a`-`d`, packs in `games/trivia-packs.js`), `streambingo.html` (a square number `1`-`25`), `chatcrowd.html` (`!jump`, `!wave`, `!dance`, `!hug`, `!duel`), `rollcall.html`, `aquarium.html`, `groupphoto.html`, `podium.html` (`!stars`) and `rotation.html`.
+
+- Kit options on every arcade page: `membersonly` (aliases `showonlymembers`, `subsonly`; passes messages with `membership` or `hasDonation`), `scale`, `align`, `calm`, `onlytype`, `hidetype`, `fps` (`full`, or 15-60), `quality` (0.3-1). `membersonly` also works on the card, strip, hype and Quick Call games.
+- Load governor: the kit lowers canvas resolution (1, 0.75, 0.56) and then the drawn frame rate (30, 20, 15) when the main thread is over about 70% busy, and remembers the level per page for 30 minutes in localStorage key `ssnArcade:load:<path>`. `K.load()` reports it. Chat bursts beyond 150 messages a frame are queued, and avatars load two at a time.
+- Season stars: `games/season.js` (`window.SSNSeason`) keeps a per-session tally in localStorage key `ssnSeason:<session>`; games add to it at the end of a round and `podium.html` shows it. It ends after `season` quiet hours (default 12); `season=0` keeps nothing. Demo play never writes to it. It is shared only between pages on the same origin in the same browser profile (all browser sources in one OBS).
+- `rotation.html` shows one game at a time in an iframe and passes its own query string on, minus `games`, `every`, `vote` and `shuffle`. It only opens a chat connection of its own with `vote`. It is listed in the catalog without a demo flag because its demo uses iframes.
+- Hype games accept `skin=winter|spooky|autumn|spring|love|party`.
+- Tug of War, Rock Paper Showdown, Minority Club, Meteor Shield, Beacon Relay, Crew Kitchen, Sum Squad, Memory Parade and Odd One Out keep their engines and hidden card (for screen readers and tests) but are drawn by a scene script (`tugofwar-scene.js`, `party-scene.js`, `shield-scene.js`, `relay-scene.js`, `kitchen-scene.js`, `sum-scene.js`, `memory-scene.js`, `odd-scene.js`). `audience-page.js` calls `window.SSNScene.sync(game, now)`, `.chat(message, game)` and, in demo, `.demo(receive, game)`; a scene uses the arcade kit for drawing only and must not open a second chat connection. Scene pages are transparent by default.
+- Tests: `tests/arcade-games.test.cjs`.
+
 ### Cooperative games (September 2026)
 
 `games/signallock.html` and `games/crowdquest.html` share the classic scripts `games/audience-engine.js` and `games/audience-page.js`, with `games/audience.css`. The public setup guide is `docs/chat-games.html`; both are in the existing popup game selector.

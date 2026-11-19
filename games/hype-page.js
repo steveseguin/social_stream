@@ -15,7 +15,13 @@
 	function list(name) { return (params.get(name) || '').toLowerCase().split(',').map(function (v) { return v.trim(); }).filter(Boolean); }
 	function off(name) { var v = (params.get(name) || '').toLowerCase(); return v === '0' || v === 'false' || v === 'off' || v === 'no'; }
 	var scale = number('scale', 1, 0.4, 3), accent = hex('color', ''), only = list('onlytype'), hide = list('hidetype');
+	// &membersonly: only members and subscribers (and paid messages) move the meter.
+	var membersOnly = params.has('membersonly') || params.has('showonlymembers') || params.has('subsonly');
 	var showHud = !off('hud'), shakeOn = !off('shake'), showBand = !off('bg');
+	// &skin=winter|spooky|autumn|spring|love|party: a light drift of themed pieces over the game, and a matching colour unless &color is set.
+	var SKINS = { winter: ['\u2744', '#8fd3ff', 0, 1], spooky: ['\uD83E\uDD87', '#ff922b', 1, 0], autumn: ['\uD83C\uDF42', '#f59f00', 0, 1], spring: ['\uD83C\uDF38', '#ff8fab', 0, 1], love: ['\uD83D\uDC97', '#ff6b9d', 0, -1], party: ['\uD83C\uDF89', '#ffd43b', 0, 1] };
+	var skinName = (params.get('skin') || '').toLowerCase(), skin = Object.prototype.hasOwnProperty.call(SKINS, skinName) ? SKINS[skinName] : null, drift = [], driftSprite = null;
+	if (skin && !accent) accent = skin[1];
 	var paperPanel = mode === 'seismo' && params.get('style') === 'paper' && document.getElementById('paper-panel');
 	var align = (params.get('align') || params.get('side') || '').toLowerCase(), span = number('window', paperPanel ? 90 : 60, 15, 300);
 	var paperPen, lastPaperUpdate = -1;
@@ -758,12 +764,33 @@
 		while (left > 0.0001) { var step = Math.min(0.1, left); game.tick(step); left -= step; }
 		return Math.min(gap, 0.1);
 	}
+	function drawSkin(dt) {
+		var n, f, g, want = Math.round(clamp(view.w * view.h / 30000, 8, 30));
+		if (!driftSprite) {
+			driftSprite = document.createElement('canvas'); driftSprite.width = driftSprite.height = 64; g = driftSprite.getContext('2d');
+			g.font = '44px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(skin[0], 32, 35);
+		}
+		while (drift.length < want) drift.push({ x: view.x + Math.random() * view.w, y: view.y + Math.random() * view.h, s: 9 + Math.random() * 13, v: 20 + Math.random() * 34, p: Math.random() * 6.28 });
+		if (drift.length > want) drift.length = want;
+		for (n = 0; n < drift.length; n++) {
+			f = drift[n]; f.p += dt * 1.4; f.x += skin[2] * f.v * 2.2 * dt; f.y += skin[3] * f.v * dt;
+			// Anything that leaves the game's area comes back in on the other side.
+			if (f.y > view.y + view.h + 24) { f.y = view.y - 24; f.x = view.x + Math.random() * view.w; }
+			else if (f.y < view.y - 24) { f.y = view.y + view.h + 24; f.x = view.x + Math.random() * view.w; }
+			if (f.x > view.x + view.w + 24) { f.x = view.x - 24; f.y = view.y + Math.random() * view.h * 0.6; }
+			ctx.save(); ctx.globalAlpha = 0.85;
+			ctx.translate(f.x + (skin[2] ? 0 : Math.sin(f.p) * 14), f.y + (skin[2] ? Math.sin(f.p * 1.7) * 16 : 0));
+			if (skin[2]) ctx.scale(1, 0.7 + Math.abs(Math.sin(f.p * 6)) * 0.45); else ctx.rotate(Math.sin(f.p * 0.8) * 0.5);
+			ctx.drawImage(driftSprite, -f.s, -f.s, f.s * 2, f.s * 2); ctx.restore();
+		}
+	}
 	function frame() {
 		var dt = advance(), now = performance.now() / 1000;
 		if (dt > 0) stepParts(dt);
 		ctx.setTransform(dpr * scale, 0, 0, dpr * scale, -view.x * dpr * scale, -view.y * dpr * scale);
 		ctx.clearRect(view.x, view.y, view.w, view.h);
 		RENDER[mode](dt, now);
+		if (skin && !paperPanel) drawSkin(dt);
 		drawBanner(now);
 		requestAnimationFrame(frame);
 	}
@@ -779,6 +806,7 @@
 			if (!m || typeof m !== 'object') return;
 			var type = String(m.type || '').toLowerCase();
 			if ((only.length && only.indexOf(type) < 0) || hide.indexOf(type) >= 0) return;
+			if (membersOnly && !m.membership && !m.hasDonation && type !== 'demo') return;
 			var copy = Object.assign({}, m);
 			/* Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary. */
 			if (typeof copy.chatmessage === 'string' && copy.chatmessage.length <= 2000 && !copy.textonly) {

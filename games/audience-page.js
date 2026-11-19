@@ -14,9 +14,9 @@
     var history = document.getElementById('history');
     function el(tag, text, className) { var node = document.createElement(tag); if (text != null) node.textContent = text; if (className) node.className = className; return node; }
     if (params.has('chroma')) document.body.classList.add('chroma');
-    SSNFitCard(document.querySelector('.shell'), params);
+    /* A page with a drawn scene (window.SSNScene) keeps this card for screen readers only, so it is not fitted to the window. */ if (!window.SSNScene) SSNFitCard(document.querySelector('.shell'), params);
     if (params.has('transparent')) document.body.classList.add('transparent');
-    function render() {
+    function render() { if (window.SSNScene) window.SSNScene.sync(game, Date.now());
         var remaining = game.phase === 'active' ? Math.max(0, Math.ceil((game.deadline - Date.now()) / 1000)) : game.seconds;
         document.getElementById('clock-value').textContent = game.phase === 'active' ? remaining + 's' : '';
         if (game.tug) SSNTugView.clock(game, Date.now());
@@ -86,11 +86,14 @@
             if (game.phase === 'result' && game.stage === 4) result.textContent += ' · ' + game.discoveries + ' discoveries';
         }
     }
+    var membersOnly = (params.has('membersonly') || params.has('showonlymembers') || params.has('subsonly'));
     function receive(payload) {
         var changed = false;
         var batch = Array.isArray(payload) ? payload.slice(0, 100) : [payload];
         batch.forEach(function (message) {
             if (message && message.content) message = message.content;
+            // &membersonly: only members and subscribers (and paid messages) take part.
+            if (membersOnly && message && !message.membership && !message.hasDonation && message.type !== 'demo') return;
             if (!message || typeof message.chatmessage !== 'string' || message.chatmessage.length > 2000) return;
             var copy = Object.assign({}, message);
             // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
@@ -98,7 +101,7 @@
                 var template = document.createElement('template'); template.innerHTML = copy.chatmessage;
                 copy.chatmessage = template.content.textContent || '';
             }
-            if (game.input(copy)) changed = true;
+            if (game.input(copy)) changed = true; if (window.SSNScene) window.SSNScene.chat(copy, game);
         });
         if (changed) render();
     }
@@ -107,7 +110,7 @@
         game.tick(); if (nextAt && Date.now() >= nextAt) { game.next(); nextAt = 0; } render();
     }, 250);
     if (demo) {
-        var counter = 0;
+        if (window.SSNScene && window.SSNScene.demo) { window.SSNScene.demo(receive, game); return; } var counter = 0;
         setInterval(function () {
             counter++;
             receive({ type: 'demo', chatname: ['Juniper', 'CosmicCat', 'River', 'Milo', 'Nova'][counter % 5], /* textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload. */ textonly: true, id: counter,

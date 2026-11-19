@@ -2,14 +2,12 @@
 // Built for portrait (9:16). In a wide window the board keeps its shape; place it with &align=left|center|right.
 (function () {
 	'use strict';
-	var K = window.SSNArcade, st = K.stage(), box;
+	var K = window.SSNArcade, st = K.stage({ w: 720, h: 1280 });
 	var DW = 720, DH = 1280, L = 30, R = 690, SLOTS = 7, SW = (R - L) / SLOTS;
 	var VALUES = [10, 30, 5, 100, 5, 30, 10], TILE = { 100: '#ff6b6b', 30: '#4dabf7', 10: '#38d9a9', 5: '#66728f' };
 	var PEG_R = 9, BALL_R = 26, TOP = 330, ROW = 62, ROWS = 11, WALL_TOP = 1020, FLOOR = 1190, RAIL = 215;
 	var roundSecs = K.num('round', 180, 0, 3600), command = K.word('command', 'drop').replace(/^!/, '');
 	if (K.params.has('chroma')) document.body.classList.add('chroma');
-	st.onresize = function () { box = K.fit(st, DW, DH, 'center', 0); };
-	st.onresize();
 
 	var pegs = [], r, i;
 	for (r = 0; r < ROWS; r++) {
@@ -31,13 +29,13 @@
 		b.done = 1;
 		flash[b.slot] = 1;
 		K.fx.pop('+' + value, b.x, FLOOR - 90, value >= 90 ? '#ffe066' : '#fff', value >= 90 ? 58 : 42);
-		if (value >= 90) K.fx.burst(b.x, FLOOR - 60, null, 26, 520);
+		if (value >= 90) { K.fx.burst(b.x, FLOOR - 60, null, 26, 520); K.fx.spark(b.x, FLOOR - 40, '#ffd43b', 22, 480, 6, 0.6); K.shake(st, 7); }
 		rank();
 	}
 	function stepBall(b, dt) {
 		var n, p, dx, dy, d2, d, min = BALL_R + PEG_R, nx, ny, vn, left, right;
 		b.vy += 1500 * dt;
-		b.x += b.vx * dt; b.y += b.vy * dt;
+		b.x += b.vx * dt; b.y += b.vy * dt; b.rot += b.vx * dt / BALL_R;
 		if (b.x < L + BALL_R) { b.x = L + BALL_R; b.vx = Math.abs(b.vx) * 0.5; }
 		if (b.x > R - BALL_R) { b.x = R - BALL_R; b.vx = -Math.abs(b.vx) * 0.5; }
 		for (n = 0; n < pegs.length; n++) {
@@ -48,7 +46,7 @@
 			d = Math.sqrt(d2) || 0.01; nx = dx / d; ny = dy / d;
 			b.x = p.x + nx * min; b.y = p.y + ny * min;
 			vn = b.vx * nx + b.vy * ny;
-			if (vn < 0) { b.vx -= 1.5 * vn * nx; b.vy -= 1.5 * vn * ny; b.vx += K.rand(-45, 45); p.hit = 1; }
+			if (vn < 0) { b.vx -= 1.5 * vn * nx; b.vy -= 1.5 * vn * ny; b.vx += K.rand(-45, 45); if (p.hit < 0.3 && vn < -260) K.fx.spark(p.x, p.y, '#ffe9b0', 4, 200, 4, 0.3); p.hit = 1; }
 		}
 		if (b.y > WALL_TOP) {
 			if (b.slot < 0) b.slot = K.clamp(Math.floor((b.x - L) / SW), 0, SLOTS - 1);
@@ -64,7 +62,7 @@
 		if (balls.length >= 40) return;
 		for (var n = 0; n < balls.length; n++) if (balls[n].p === msg.player && !balls[n].done) return;
 		if (!roundEnd && roundSecs) roundEnd = Date.now() + roundSecs * 1000;
-		balls.push({ p: msg.player, x: chuteX, y: RAIL + 50, vx: chuteV * 0.12, vy: 0, slot: -1, done: 0 });
+		balls.push({ p: msg.player, x: chuteX, y: RAIL + 50, vx: chuteV * 0.12, vy: 0, slot: -1, done: 0, rot: 0 });
 	});
 
 	function update(dt) {
@@ -81,7 +79,7 @@
 		for (n = 0; n < SLOTS; n++) if (flash[n] > 0) flash[n] = Math.max(0, flash[n] - dt * 2.5);
 		if (roundEnd && !cheer && Date.now() >= roundEnd) {
 			roundEnd = 0;
-			if (top.length) cheer = { s: top[0], until: clock + 7, next: 0 }; else { scores = {}; top = []; }
+			if (top.length) { cheer = { s: top[0], until: clock + 7, next: 0 }; K.awardRound(top.map(function (s) { return s.p; }), Object.keys(scores).map(function (k) { return scores[k].p; })); } else { scores = {}; top = []; }
 		}
 		if (cheer) {
 			if (clock > cheer.next) { cheer.next = clock + 0.45; K.fx.burst(K.rand(160, 560), K.rand(360, 640), null, 22, 520); }
@@ -91,7 +89,7 @@
 	}
 
 	function draw() {
-		var ctx = K.begin(st, box), n, p, b, x, value, isGold, a;
+		var ctx = K.begin(st), n, p, b, x, value, isGold, a;
 		K.top3(ctx, top, L, 40, R - L);
 		// Board
 		K.panel(ctx, L, 150, R - L, 1100, 40, 'rgba(14,19,33,.8)');
@@ -116,13 +114,15 @@
 		// Pegs
 		for (n = 0; n < pegs.length; n++) {
 			p = pegs[n]; if (p.cap) continue;
+			if (p.hit > 0.05) K.glow(ctx, p.x, p.y, 16 + p.hit * 30, '#ffe066', p.hit, true);
 			ctx.beginPath(); ctx.arc(p.x, p.y, PEG_R + p.hit * 5, 0, 6.2832); ctx.fillStyle = p.hit > 0.05 ? '#ffe066' : '#dfe6f5'; ctx.fill();
+			K.gloss(ctx, p.x, p.y, PEG_R + p.hit * 5);
 		}
 		// Balls
 		for (n = 0; n < balls.length; n++) {
 			b = balls[n];
 			if (b.done) { ctx.globalAlpha = K.clamp(2 - b.done, 0, 1); }
-			K.face(ctx, b.p, b.x, b.y, BALL_R);
+			K.ball(ctx, b.p, b.x, b.y, BALL_R, b.rot);
 			ctx.globalAlpha = 1;
 		}
 		K.hint(ctx, '!' + command, DW / 2, 1238, 30);
@@ -139,6 +139,6 @@
 
 	if (K.demo) K.every(function () { K.say(K.pick(K.names), '!' + command); }, 500, 1500);
 	window.SSNPegDrop = { state: function () { var totals = {}; Object.keys(scores).forEach(function (k) { totals[scores[k].p.name] = scores[k].total; }); return { balls: balls.filter(function (b) { return !b.done; }).length, totals: totals, cheering: !!cheer }; } };
-	K.loop(function (dt) { update(dt); draw(); });
+	K.loop(update, draw);
 	K.start();
 })();

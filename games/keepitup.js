@@ -119,6 +119,6 @@
 		if (clock % 26 < 20) K.say(K.pick(K.names), 'hi');
 	}, 350, 2100);
 	window.SSNKeepItUp = { state: function () { return { air: !!(ball && ball.air && !ball.popped), rally: rally, best: best, jumpers: jumpers.length }; } };
-	K.loop(function (dt) { update(dt); draw(); });
+	K.loop(update, draw);
 	K.start();
 })();

@@ -111,6 +111,6 @@
 		if (rush) K.say(K.pick(people.length ? people : [{ p: { name: 'Nova' } }]).p.name, 'hype');
 	}, 250, 1100);
 	window.SSNFrontRow = { state: function () { return { seated: people.length, seats: seats.length, done: done, wave: clock - waveAt < 2.2 }; } };
-	K.loop(function (dt) { update(dt); draw(); });
+	K.loop(update, draw);
 	K.start();
 })();

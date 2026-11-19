@@ -57,6 +57,7 @@
 		var loser = rails[1 - winner.i], n, b;
 		winner.wins++;
 		over = { winner: winner, until: clock + 6.5, next: 0 };
+		for (n = 0; n < winner.crew.length; n++) K.award(winner.crew[n], 2, true);
 		for (n = 0; n < loser.blocks.length; n++) {
 			b = loser.blocks[n];
 			falling.push({ r: loser, p: b.p, off: b.off, y: baseY - (n + 0.5) * bh, vy: K.rand(-500, -100) * u, vx: K.rand(-1.6, 1.6), rot: 0, vr: K.rand(-5, 5), miss: true });
@@ -177,6 +178,6 @@
 
 	if (K.demo) K.every(function () { K.say(K.pick(K.names), command ? '!' + command : 'go'); }, 150, 700);
 	window.SSNTowerDuel = { state: function () { return { teams: [rails[0].size, rails[1].size], blocks: [rails[0].blocks.length, rails[1].blocks.length], wins: [rails[0].wins, rails[1].wins], falling: falling.length, over: !!over }; } };
-	K.loop(function (dt) { update(dt); draw(); });
+	K.loop(update, draw);
 	K.start();
 })();

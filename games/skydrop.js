@@ -2,14 +2,12 @@
 // No board: the stream is the sky. Built for portrait (9:16); in a wide window the play area keeps its shape (&align=left|center|right).
 (function () {
 	'use strict';
-	var K = window.SSNArcade, st = K.stage(), box;
+	var K = window.SSNArcade, st = K.stage({ w: 720, h: 1280 });
 	var DW = 720, L = 30, R = 690, SHIP_Y = 212, EXIT_Y = 306, DECK = 1080, SEA = 1140, FACE = 24;
 	var FALL = 64, NUDGE = 24, MAX_STEER = 90, RINGS = [36, 84, 132], POINTS = [100, 50, 20];
 	var RAFT_MIN = L + RINGS[2] + 14, RAFT_MAX = R - RINGS[2] - 14;
 	var roundSecs = K.num('round', K.demo ? 25 : 75, 30, 600);
 	if (K.params.has('chroma')) document.body.classList.add('chroma');
-	st.onresize = function () { box = K.fit(st, DW, 1280, 'center', 0); };
-	st.onresize();
 
 	// The airship, raft and cloud are painted once at double size and stamped each frame.
 	function sprite(w, h, paint) {
@@ -153,7 +151,7 @@
 		// Time up: nobody new may jump, and once the sky is empty the podium comes out.
 		if (roundEnd && clock >= roundEnd && !cheer && !busy) {
 			roundEnd = 0;
-			if (top.length) cheer = { list: top, at: clock, until: clock + 7, next: 0 }; else next();
+			if (top.length) { cheer = { list: top, at: clock, until: clock + 7, next: 0 }; K.awardRound(top.map(function (s) { return s.p; }), Object.keys(scores).map(function (k) { return scores[k].p; })); } else next();
 		}
 		if (cheer) {
 			if (clock > cheer.next) { cheer.next = clock + 0.45; K.fx.burst(K.rand(160, 560), K.rand(420, 640), null, 22, 480); }
@@ -236,7 +234,7 @@
 	var CHIPS = ['!jump', 'left', 'right'], STEP = [1, 0, 2], TALL = [250, 190, 140];
 
 	function draw() {
-		var ctx = K.begin(st, box), bob = Math.sin(clock * 1.6) * 3, n, c, a, r, w;
+		var ctx = K.begin(st), bob = Math.sin(clock * 1.6) * 3, n, c, a, r, w;
 		// Wind-blown wisps, faded out at the edges of the play area
 		for (n = 0; n < clouds.length; n++) {
 			c = clouds[n]; a = K.clamp((c.x - c.edge) / 110, 0, 1) * K.clamp((DW - c.edge - c.x) / 110, 0, 1);
@@ -309,6 +307,6 @@
 		}
 	};
 
-	K.loop(function (dt) { update(dt); draw(); });
+	K.loop(update, draw);
 	K.start();
 })();

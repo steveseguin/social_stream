@@ -96,6 +96,6 @@
 		if (rush) K.say(K.pick(K.names), 'thank you!');
 	}, 300, 1500);
 	window.SSNEncore = { state: function () { return { rockets: rockets.length, faces: faces.length, sparks: sparks.length, finale: clock < finaleUntil }; } };
-	K.loop(function (dt) { update(dt); draw(); });
+	K.loop(update, draw);
 	K.start();
 })();

@@ -2,7 +2,7 @@
 // Built for portrait (9:16). In a wide window the board keeps its shape; place it with &align=left|center|right.
 (function () {
 	'use strict';
-	var K = window.SSNArcade, st = K.stage(), box;
+	var K = window.SSNArcade, st = K.stage({ w: 720, h: 1280 });
 	var DW = 720, L = 30, R = 690, COLS = 8, ROWS = 13, C = 66;
 	var WX = (DW - COLS * C) / 2, WY = 312, WB = WY + ROWS * C, LID = WY - 20;
 	// Pieces of 2-4 cells: pair, bar of 3, corner, bar of 4, square, tee, two hooks, two steps.
@@ -12,8 +12,6 @@
 	];
 	var baseTurn = K.num('turn', 8, 4, 20);
 	if (K.params.has('chroma')) document.body.classList.add('chroma');
-	st.onresize = function () { box = K.fit(st, DW, 1280, 'center', 0); };
-	st.onresize();
 
 	function mix(hex, to, a) {
 		var n = parseInt(hex.slice(1), 16);
@@ -69,6 +67,7 @@
 
 	function gameOver() {
 		phase = 'over'; phaseAt = clock; deadline = 0; games++;
+		K.awardRound(top.map(function (s) { return s.p; }), Object.keys(helpers).map(function (k) { return helpers[k].p; }));
 		if (score > best) best = score;
 	}
 	function deal() {
@@ -210,7 +209,7 @@
 	var CHIPS = ['1-8', 'spin'], DIGITS = ['1', '2', '3', '4', '5', '6', '7', '8'];
 
 	function draw() {
-		var ctx = K.begin(st, box), live = phase === 'aim' || phase === 'fall', grey = ROWS + 1, n, x, y, v, t = 0, a, s, w, pile, show, cx, gy, hot, cells, label;
+		var ctx = K.begin(st), live = phase === 'aim' || phase === 'fall', grey = ROWS + 1, n, x, y, v, t = 0, a, s, w, pile, show, cx, gy, hot, cells, label;
 		K.top3(ctx, top, L, 40, R - L);
 		// Board and well
 		K.panel(ctx, L, 142, R - L, 1108, 40, 'rgba(14,19,33,.8)');
@@ -357,6 +356,6 @@
 		}
 	};
 
-	K.loop(function (dt) { update(dt); draw(); });
+	K.loop(update, draw);
 	K.start();
 })();
