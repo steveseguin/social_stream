@@ -380,6 +380,7 @@ export function createYouTubeLiveChat(options = {}) {
       let errBody = null;
       try {
         errBody = await res.json();
+        if (Array.isArray(errBody)) errBody = errBody.find(item => item?.error);
       } catch (_) {
         errBody = null;
       }
@@ -410,6 +411,33 @@ export function createYouTubeLiveChat(options = {}) {
     state.streamReader = reader;
     const decoder = new TextDecoder();
     let buffer = '';
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    // The REST stream may wrap responses in a JSON array and split objects across reads.
+    async function readObjects(text) {
+      let start = depth ? 0 : -1;
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        if (inString) {
+          if (escaped) escaped = false;
+          else if (char === '\\') escaped = true;
+          else if (char === '"') inString = false;
+        } else if (char === '{') {
+          if (!depth) start = i;
+          depth++;
+        } else if (depth && char === '"') {
+          inString = true;
+        } else if (depth && char === '}' && --depth === 0) {
+          const object = buffer + text.slice(start, i + 1);
+          buffer = '';
+          start = -1;
+          if (signal.aborted) return;
+          await handleStreamChunk(object);
+        }
+      }
+      if (start >= 0) buffer += text.slice(start);
+    }
 
     while (state.status === STATUS.RUNNING && !signal.aborted) {
       const { value, done } = await reader.read();
@@ -418,38 +446,11 @@ export function createYouTubeLiveChat(options = {}) {
         logDebug('Streaming reader reported completion');
         break;
       }
-      buffer += decoder.decode(value, { stream: true });
-      buffer = await processStreamBuffer(buffer);
+      await readObjects(decoder.decode(value, { stream: true }));
     }
 
-    buffer += decoder.decode();
-    await processStreamBuffer(buffer, { flush: true });
+    await readObjects(decoder.decode());
     logDebug('Finished consuming YouTube streaming response');
-  }
-
-  async function processStreamBuffer(buffer, options = {}) {
-    const { flush = false } = options;
-    let remainder = buffer;
-    let newlineIndex = remainder.indexOf('\n');
-
-    while (newlineIndex !== -1) {
-      const chunk = remainder.slice(0, newlineIndex).trim();
-      remainder = remainder.slice(newlineIndex + 1);
-      if (chunk) {
-        await handleStreamChunk(chunk);
-      }
-      newlineIndex = remainder.indexOf('\n');
-    }
-
-    if (flush) {
-      const finalChunk = remainder.trim();
-      if (finalChunk) {
-        await handleStreamChunk(finalChunk);
-      }
-      return '';
-    }
-
-    return remainder;
   }
 
   async function handleStreamChunk(rawChunk) {
@@ -459,15 +460,32 @@ export function createYouTubeLiveChat(options = {}) {
 
     let payload = null;
     try {
-      payload = JSON.parse(rawChunk);
+      payload = JSON.parse(rawChunk, (key, value) => {
+        if (key === 'type' && typeof value === 'string' && /^[A-Z_]+$/.test(value)) {
+          return value.toLowerCase().replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+        }
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          for (const name of Object.keys(value)) {
+            if (!/^[a-z][a-z0-9]*(_[a-z0-9]+)+$/.test(name)) continue;
+            value[name.replace(/_([a-z0-9])/g, (_, c) => c.toUpperCase())] = value[name];
+          }
+        }
+        return value;
+      });
     } catch (error) {
       logDebug('Failed to parse YouTube streaming chunk', { error, rawChunk });
       return;
     }
 
+    if (payload.error) {
+      const error = new Error(payload.error.message || 'YouTube live chat stream failed.');
+      error.status = payload.error.code;
+      error.detail = payload;
+      throw error;
+    }
     // A new attempt is not recovery: reset backoff only after receiving data.
     state.retryCount = 0;
-    state.pageToken = payload.nextPageToken || null;
+    if (payload.nextPageToken) state.pageToken = payload.nextPageToken;
     emitter.emit(EVENTS.DEBUG, { type: 'stream_chunk', payload });
 
     if (Array.isArray(payload.items) && payload.items.length) {

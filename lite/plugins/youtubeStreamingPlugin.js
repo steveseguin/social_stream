@@ -101,6 +101,14 @@ export class YoutubeStreamingPlugin extends YoutubePlugin {
         if (this.state !== 'connected') {
           return;
         }
+        const reason = error.detail?.error?.errors?.[0]?.reason;
+        if (error.code !== 'TOKEN_EXPIRED' && (!error.status || error.status === 408 ||
+            error.status === 429 || error.status >= 500 || reason === 'rateLimitExceeded' || reason === 'userRateLimitExceeded')) {
+          this.debugLog('YouTube streaming interrupted; retrying.', { status: error.status });
+          return;
+        }
+        this.stopListening();
+        this.stopSubscriberWatcher();
         this.reportError(error);
       })
     );

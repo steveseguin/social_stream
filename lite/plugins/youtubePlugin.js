@@ -442,7 +442,7 @@ export class YoutubePlugin extends BasePlugin {
         if (!this.messenger.getSessionId()) {
           return;
         }
-        await this.setupLiveChat();
+        await this.setupLiveChat(previousChatState.id);
       } catch (err) {
         if (canRecoverManual && previousChatState.id) {
           this.rememberLiveChatId(previousChatState.id, {
@@ -721,7 +721,7 @@ export class YoutubePlugin extends BasePlugin {
     this.refreshStatus();
   }
 
-  async setupLiveChat() {
+  async setupLiveChat(unavailableChatId = '') {
     if (!this.messenger.getSessionId()) {
       throw new Error('Start a session before connecting YouTube.');
     }
@@ -734,7 +734,7 @@ export class YoutubePlugin extends BasePlugin {
       const chatLegacy = typeof resolvedChat === 'object' && resolvedChat !== null && Object.prototype.hasOwnProperty.call(resolvedChat, 'legacy')
         ? Boolean(resolvedChat.legacy)
         : false;
-      if (!chatId) {
+      if (!chatId || chatId === unavailableChatId) {
         throw new Error('No active live chat found. Start a broadcast or provide a Live Chat ID.');
       }
       this.rememberLiveChatId(chatId, { source: chatSource, legacy: chatLegacy, silent: true });

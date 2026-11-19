@@ -738,7 +738,13 @@ try {
 	var liveChatStreamStopping = false;
 	var liveChatStreamReadBuffer = '';
 	var liveChatPollingFallbackActive = false;
+	var liveChatStreamRetries = 0;
+	var liveChatStreamRetryAt = 0;
+	const LIVE_CHAT_STREAM_RECHECK_MS = 5 * 60 * 1000;
 	var liveChatPollingActive = false;
+	var missingLiveChatCount = 0;
+	var checkingMissingChat = false;
+	const quotaPausedUntil = new Map();
 	var tokenRefreshPromise = null;
 	const DEFAULT_QUOTA_WARNING_TEXT = "We've hit the default YouTube API quota. In the desktop app, you can add your own YouTube project to use your own quota.";
 	const INNERTUBE_EMOJI_CACHE_TTL = 14 * 24 * 60 * 60 * 1000;
@@ -3681,6 +3687,44 @@ function enableBackgroundKeepAlive() {
 		fetchTimeout = setTrackedTimeout(startLiveChatPolling, delayMs, !isPageVisible);
 	}
 
+	async function recoverMissingLiveChat(connection) {
+		if (++missingLiveChatCount < 2 || checkingMissingChat) return;
+		checkingMissingChat = true;
+		try {
+			const newId = connection.videoId && await getLiveChatId(connection.videoId, true);
+			if (!isCurrentLiveChatConnection(connection)) return;
+			if (newId && newId !== connection.chatId) {
+				liveChatId = newId;
+				nextPageToken = null;
+				initialBacklogProcessing = true;
+				initialBacklogTimestamp = null;
+				liveChatPollingFallbackActive = false;
+				liveChatStreamRetryAt = 0;
+				liveChatStreamRetries = 0;
+				missingLiveChatCount = 0;
+				quickPollCount = 0;
+				scheduleLiveChatStreamReconnect();
+				return;
+			}
+			clearPolling();
+			const button = document.getElementById('connect-button');
+			button.textContent = 'Connect';
+			button.style.backgroundColor = '#2255dd';
+			const message = 'YouTube could not find this live chat. Reconnect when chat is available.';
+			updateHeaderInfo(username, 'Chat unavailable');
+			addEvent(message);
+			updateLookForYouTubeStreamsButton();
+			notifyYouTubeWssStatus('error', message, { code: 'youtube_chat_not_found' });
+		} catch (error) {
+			if (isCurrentLiveChatConnection(connection)) {
+				// A failed video lookup does not confirm the chat is gone.
+				scheduleLiveChatStreamReconnect(error.quotaRetryAt ? Math.max(1000, error.quotaRetryAt - Date.now()) : 60000);
+			}
+		} finally {
+			if (connection.generation === liveChatConnectionGeneration) checkingMissingChat = false;
+		}
+	}
+
 	function stopLiveChatStream() {
 		liveChatStreamStopping = true;
 		const controller = liveChatStreamAbortController;
@@ -3853,6 +3897,8 @@ function enableBackgroundKeepAlive() {
 			throw error;
 		}
 		const data = normalizeLiveChatStreamPayload(payload);
+		liveChatStreamRetries = 0;
+		liveChatStreamRetryAt = 0;
 		await processLiveChatResponseData(data, { scheduleNextPoll: false, connection: connection });
 		if (!isCurrentLiveChatConnection(connection)) return;
 		if (data.offlineAt) {
@@ -3914,6 +3960,7 @@ function enableBackgroundKeepAlive() {
 	function switchLiveChatStreamToPollingFallback(error, delayMs) {
 		if (!liveChatId) return;
 		liveChatPollingFallbackActive = true;
+		liveChatStreamRetryAt = Date.now() + LIVE_CHAT_STREAM_RECHECK_MS;
 		updateLiveChatStreamIndicator('polling');
 		console.warn('YouTube live chat stream unavailable; falling back to liveChat/messages polling:', error && error.message ? error.message : error);
 		if (!fetchTimeout) {
@@ -3923,6 +3970,10 @@ function enableBackgroundKeepAlive() {
 
 	async function handleLiveChatStreamError(error, connection = getLiveChatConnection()) {
 		if (!isCurrentLiveChatConnection(connection)) return;
+		if (error?.ytStatus === 404 && error.ytReason === 'liveChatNotFound') {
+			await recoverMissingLiveChat(connection);
+			if (!isCurrentLiveChatConnection(connection) || fetchTimeout || checkingMissingChat) return;
+		}
 		if (error && error.name === 'AbortError') {
 			return;
 		}
@@ -3940,7 +3991,7 @@ function enableBackgroundKeepAlive() {
 		if (error && error.ytStatus === 403) {
 			if (isQuotaError(error)) {
 				showLiveChatQuotaExceededMessage();
-				scheduleLiveChatStreamReconnect(300000);
+				scheduleLiveChatStreamReconnect(error.quotaRetryAt ? Math.max(1000, error.quotaRetryAt - Date.now()) : 300000);
 				return;
 			}
 			console.warn('Access forbidden - chat may be disabled or restricted');
@@ -3956,6 +4007,12 @@ function enableBackgroundKeepAlive() {
 			return;
 		}
 		console.error('Error streaming YouTube chat messages:', error);
+		const transient = error && (error.name === 'TypeError' || error.ytStatus === 408 || error.ytStatus >= 500);
+		if (transient && !liveChatStreamRetryAt && liveChatStreamRetries < 2) {
+			liveChatStreamRetries++;
+			scheduleLiveChatStreamReconnect(Math.max(youtubeRecommendedInterval, 5000 * liveChatStreamRetries));
+			return;
+		}
 		const backoffTime = Math.min(10000 * Math.pow(2, quickPollCount), 60000);
 		quickPollCount++;
 		switchLiveChatStreamToPollingFallback(error, backoffTime);
@@ -3963,6 +4020,10 @@ function enableBackgroundKeepAlive() {
 
 	async function handleLiveChatPollingError(error, connection = getLiveChatConnection()) {
 		if (!isCurrentLiveChatConnection(connection)) return;
+		if (error?.ytStatus === 404 && error.ytReason === 'liveChatNotFound') {
+			await recoverMissingLiveChat(connection);
+			if (!isCurrentLiveChatConnection(connection) || fetchTimeout || checkingMissingChat) return;
+		}
 		if (isLiveChatEndedStreamError(error)) {
 			console.log('YouTube reported live chat ended; stopping polling.');
 			handleLiveChatEnded();
@@ -3977,7 +4038,7 @@ function enableBackgroundKeepAlive() {
 		if (error && error.ytStatus === 403) {
 			if (isQuotaError(error)) {
 				showLiveChatQuotaExceededMessage();
-				scheduleLiveChatPolling(300000);
+				scheduleLiveChatPolling(error.quotaRetryAt ? Math.max(1000, error.quotaRetryAt - Date.now()) : 300000);
 				return;
 			}
 			console.warn('Access forbidden while polling YouTube chat');
@@ -4001,8 +4062,19 @@ function enableBackgroundKeepAlive() {
 	async function readLiveChatStream(controller, token) {
 		const connection = getLiveChatConnection(controller);
 		let streamError = null;
+		const url = buildLiveChatStreamUrl();
+		const quotaKey = getYouTubeQuotaKey(url);
+		// A stalled recovery attempt must give the working polling fallback another turn.
+		let recoveryTimedOut = false;
+		const recoveryTimeout = liveChatStreamRetryAt && setTimeout(() => {
+			if (liveChatStreamRetryAt && isCurrentLiveChatConnection(connection)) {
+				recoveryTimedOut = true;
+				controller.abort();
+			}
+		}, 30000);
 		try {
-			const response = await fetch(buildLiveChatStreamUrl(), {
+			checkYouTubeQuota(quotaKey);
+			const response = await fetch(url, {
 				signal: controller.signal,
 				headers: {
 					'Authorization': `Bearer ${token}`,
@@ -4033,8 +4105,14 @@ function enableBackgroundKeepAlive() {
 			liveChatStreamReadBuffer += decoder.decode();
 			await processLiveChatStreamBuffer(true, connection);
 		} catch (error) {
+			rememberDailyQuotaError(quotaKey, error);
 			streamError = error;
 		} finally {
+			clearTimeout(recoveryTimeout);
+			if (recoveryTimedOut && liveChatStreamAbortController === controller) {
+				connection.controller = null;
+				streamError = new Error('YouTube chat streaming did not resume within 30 seconds.');
+			}
 			if (!isCurrentLiveChatConnection(connection)) return;
 			liveChatStreamAbortController = null;
 			liveChatStreamActive = false;
@@ -4061,7 +4139,7 @@ function enableBackgroundKeepAlive() {
 		if (liveChatPollingFallbackActive) {
 			return startLiveChatPolling();
 		}
-		if (!liveChatId || liveChatStreamActive || liveChatStreamAbortController) {
+		if (!liveChatId || checkingMissingChat || liveChatStreamActive || liveChatStreamAbortController) {
 			return false;
 		}
 		const connection = getLiveChatConnection();
@@ -4092,8 +4170,13 @@ function enableBackgroundKeepAlive() {
 	}
 
 	async function startLiveChatPolling() {
-		if (!liveChatId || liveChatStreamActive || liveChatStreamAbortController || liveChatPollingActive) {
+		if (!liveChatId || checkingMissingChat || liveChatStreamActive || liveChatStreamAbortController || liveChatPollingActive) {
 			return false;
+		}
+		// Use the next scheduled read to try streaming with the current page token.
+		if (liveChatPollingFallbackActive && Date.now() >= liveChatStreamRetryAt) {
+			liveChatPollingFallbackActive = false;
+			return startLiveChatStream();
 		}
 		const connection = getLiveChatConnection();
 		liveChatPollingActive = true;
@@ -4412,6 +4495,7 @@ function enableBackgroundKeepAlive() {
 	async function processLiveChatResponseData(data, options = {}) {
 		const connection = options.connection || getLiveChatConnection();
 		if (!isCurrentLiveChatConnection(connection)) return;
+		missingLiveChatCount = 0;
 		data = data && typeof data === 'object' ? data : {};
 		const shouldScheduleNextPoll = options.scheduleNextPoll === true;
 		const awaitRichChatSync = options.awaitRichChatSync === true;
@@ -5852,7 +5936,7 @@ function enableBackgroundKeepAlive() {
             return null;
         }
     }
-    async function getLiveChatId(videoIdForChat) {
+    async function getLiveChatId(videoIdForChat, reportFailure = false) {
         const token = getStoredToken();
         if (!token) return null;
         try {
@@ -5867,6 +5951,8 @@ function enableBackgroundKeepAlive() {
             return null;
         } catch (error) {
             console.error('Error fetching live chat ID:', error);
+            if (error.ytStatus === 404 && error.ytReason === 'videoNotFound') return null;
+            if (reportFailure) throw error;
             return null;
         }
     }
@@ -6596,6 +6682,8 @@ function enableBackgroundKeepAlive() {
 		updateYouTubePrivacyWarning('');
 		// Reconnecting to the same video also invalidates requests from the previous connection.
 		liveChatConnectionGeneration++;
+		missingLiveChatCount = 0;
+		checkingMissingChat = false;
 		const preserveBroadcastMonitorLease = !!(options && options.preserveBroadcastMonitorLease);
 		if (!preserveBroadcastMonitorLease) {
 			releaseYouTubeBroadcastMonitorLease();
@@ -6640,6 +6728,8 @@ function enableBackgroundKeepAlive() {
 		document.getElementById('textarea').setAttribute('data-connected', 'false');
 		nextPageToken = null;
 		liveChatPollingFallbackActive = false;
+		liveChatStreamRetries = 0;
+		liveChatStreamRetryAt = 0;
 		lastMessageTime = null;
 		lastMessageTimeIds.clear();
 		currentStream = null;
@@ -8532,9 +8622,13 @@ function enableBackgroundKeepAlive() {
 					console.log('EMOTELIST updated:', EMOTELIST);
 				}
 				if ("settings" in e.detail) {
+					const trackedViewers = isViewerTrackingEnabled();
+					const trackedLikes = isYouTubeLikeCountEnabled();
 					settings = e.detail.settings;
 					console.log('settings updated:', settings);
-					syncStreamStatsPolling();
+					if (trackedViewers !== isViewerTrackingEnabled() || trackedLikes !== isYouTubeLikeCountEnabled()) {
+						syncStreamStatsPolling();
+					}
 				}
 			}
 		};
@@ -8643,8 +8737,49 @@ function enableBackgroundKeepAlive() {
 		}
 	}
 
+	function getYouTubeQuotaKey(url) {
+		const api = /^https:\/\/(?:www|youtube)\.googleapis\.com\/youtube\/v3\/([^/?]+)/.exec(url);
+		if (!api) return '';
+		const project = getStoredAuthSource() === YT_AUTH_SOURCE_CUSTOM ? clientId : DEFAULT_YT_CLIENT_ID;
+		return 'youtubeQuotaReset.' + project + (api[1] === 'search' ? '.search' : '.general');
+	}
+
+	function checkYouTubeQuota(key) {
+		if (!key) return;
+		let until = quotaPausedUntil.get(key) || 0;
+		try { until = Math.max(until, Number(localStorage.getItem(key)) || 0); } catch (_) {}
+		if (until > Date.now()) {
+			const error = new Error('YouTube daily quota exhausted. Requests resume at midnight Pacific.');
+			error.ytStatus = 403;
+			error.ytReason = 'quotaExceeded';
+			error.quotaRetryAt = until;
+			throw error;
+		}
+	}
+
+	function rememberDailyQuotaError(key, error) {
+		if (!key || !error || error.quotaRetryAt || error.ytStatus !== 403 ||
+			!['quotaExceeded', 'dailyLimitExceeded', 'dailyLimitExceededUnreg'].includes(error.ytReason)) return;
+		if (error.ytReason === 'quotaExceeded' && /per (?:second|minute|hour)|rate limit/i.test(error.ytMessage || error.message)) return;
+		// Pacific midnight is either 07:00 or 08:00 UTC. Check the offset on the reset date.
+		const now = Date.now();
+		const reset = new Date(now);
+		reset.setUTCHours(8, 0, 0, 0);
+		const hour = new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Los_Angeles', hour: '2-digit', hourCycle: 'h23' });
+		let until = reset.getTime() - Number(hour.format(reset)) * 3600000;
+		if (until <= now) {
+			reset.setUTCDate(reset.getUTCDate() + 1);
+			until = reset.getTime() - Number(hour.format(reset)) * 3600000;
+		}
+		error.quotaRetryAt = until;
+		quotaPausedUntil.set(key, until);
+		try { localStorage.setItem(key, String(until)); } catch (_) {}
+	}
+
 	async function fetchWithTimeout(URL, timeout = 8000, headers = false) {
 		const requestUrl = applyApiKeyOverride(URL);
+		const quotaKey = getYouTubeQuotaKey(requestUrl);
+		checkYouTubeQuota(quotaKey);
 		const controller = new AbortController();
 		const friendlyTimeoutMessage = `YouTube request timed out after ${timeout}ms (auto-retrying): ${requestUrl}`;
 		const abortReason = (typeof DOMException === 'function')
@@ -8706,6 +8841,7 @@ function enableBackgroundKeepAlive() {
 				if (reason) err.ytReason = reason;
 				if (message) err.ytMessage = message;
 				if (fullPayload) err.ytPayload = fullPayload;
+				rememberDailyQuotaError(quotaKey, err);
 				throw err;
 			}
 			return response;
