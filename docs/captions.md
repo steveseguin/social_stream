@@ -2,11 +2,13 @@
 
 <a id="browser-microphone"></a>
 
-Each sentence you finish appears in your Social Stream Ninja dock. Follow step 3 if you also want it posted to chat.
+**Start in the Social Stream Ninja app or browser extension.** SSN opens a second page called **Captions** in your browser. Keep both open while you stream. [Get Social Stream Ninja](https://socialstream.ninja/docs/download.html)
 
 ## 1. 🎙️ Open the mic
 
-With SSN on, search settings for **browser's microphone instead**. Select the result and open the mic link in Chrome or Edge.
+In the **desktop app**, turn on **Enable Beta Mode** above **Added Sources**. If you use the **beta browser extension**, click its SSN toolbar icon.
+
+Switch SSN on. In its **Search settings** box, type **browser's microphone instead**. Select the result, then click **Use my browser's microphone instead** to open your session's **Captions** page in Chrome or Edge.
 
 If the desktop app shows **Copy this page's link**, paste that link into your browser.
 
@@ -14,15 +16,17 @@ If the desktop app shows **Copy this page's link**, paste that link into your br
 
 ## 2. Start listening
 
-Choose your language, click **Start listening** and allow microphone access. Keep the mic tab open.
+On the **Captions** browser tab, choose your language. Below **Name shown**, click **Start listening** and allow microphone access.
 
-![The microphone page with the language picker, optional display name and Start listening button.](images/captions/microphone.png)
+Say a short sentence, then pause. The **Last heard** box directly below the buttons shows your words.
 
-Say a short sentence, then pause. Look for your words under **Last heard** and in the SSN dock.
+![The Captions browser tab while listening. Below the buttons, Last heard shows the example sentence "Welcome to the stream!"](images/captions/microphone.png)
+
+**Want to see the same words in the dock?** Back in SSN, select the **Chat** tab and open the link under **Main chat overlay & control dock**.
 
 ## 3. 💬 Post to chat (optional)
 
-Back in the same SSN settings, turn on **Post my captions to chat**, choose a connected chat from **Select source**, and click **Add**. Speak again to send your next sentence there.
+In SSN, open **Settings** and search for **Post my captions to chat**. Turn it on, choose a connected chat from **Select source**, and click **Add**. Speak again to send your next sentence there.
 
 ![Post my captions to chat switched on. The selected chats appear above the Select source menu and Add button.](images/captions/chat-picker.png)
 
