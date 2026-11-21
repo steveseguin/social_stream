@@ -47,6 +47,7 @@ Add `?session=XXXXXXX` to these URLs. Both accept `&style=` with any matching co
 Add `?session=XXXXXXX` to these URLs, replacing XXXXXXX with your session ID:
 
 - [Sample Theme](https://socialstream.ninja/sampleoverlay.html)
+- [Subscriber Race](https://socialstream.ninja/beta/themes/subscriber-race.html) counts new subscribers and shows the latest name. Paste your dock link, choose your platform, and click **Copy OBS link**.
 - [Pretty Theme](https://socialstream.ninja/themes/pretty.html)
 - [t3nk3y's Theme](https://socialstream.ninja/themes/t3nk3y/)
 

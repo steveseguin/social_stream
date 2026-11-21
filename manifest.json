@@ -452,8 +452,14 @@
 			"matches": ["https://kiwiirc.com/nextclient/*"]
 		},
 		{
+			"js": ["./sources/inject/loco-history.js"],
+			"matches": ["https://*.loco.gg/*", "https://loco.gg/streamers/*", "https://*.loco.com/*", "https://loco.com/stream/*", "https://loco.com/streamers/*", "https://loco.com/chat/streamers/*"],
+			"world": "MAIN",
+			"run_at": "document_start"
+		},
+		{
 			"js": ["./sources/loco.js"],
-			"matches": ["https://*.loco.gg/*", "https://loco.gg/streamers/*", "https://*.loco.com/*", "https://loco.com/streamers/*", "https://loco.com/chat/streamers/*"]
+			"matches": ["https://*.loco.gg/*", "https://loco.gg/streamers/*", "https://*.loco.com/*", "https://loco.com/stream/*", "https://loco.com/streamers/*", "https://loco.com/chat/streamers/*"]
 		},
 		{
 			"js": ["./sources/joystick.js"],

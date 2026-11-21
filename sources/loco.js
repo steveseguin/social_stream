@@ -1,293 +1,176 @@
 (function () {
-	
-	
-	
-	var isExtensionOn = true;
-async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlutin.com/timeout-fetch-request/
-		try {
-			const controller = new AbortController();
-			const timeout_id = setTimeout(() => controller.abort(), timeout);
-			const response = await fetch(URL, {...{timeout:timeout}, signal: controller.signal});
-			clearTimeout(timeout_id);
-			return response;
-		} catch(e){
-			errorlog(e);
-			return await fetch(URL); // iOS 11.x/12.0
-		}
-	}
+	if (window.__ssnLocoCapture) return;
+	window.__ssnLocoCapture = true;
 
-
-	function escapeHtml(unsafe){
-		try {
-			// Capture contract: textonly=true means a literal chatmessage string, not HTML.
-			// Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
-			// HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
-			// Plain capture returns literal characters for text rendering; HTML mode escapes text for markup construction. Do not HTML-sanitize the plain string.
-			if (settings.textonlymode){ // Literal text stays unencoded at capture; escape only when a renderer constructs HTML.
-				return unsafe;
-			}
-			return unsafe
-				 .replace(/&/g, "&amp;")
-				 .replace(/</g, "&lt;")
-				 .replace(/>/g, "&gt;")
-				 .replace(/"/g, "&quot;")
-				 .replace(/'/g, "&#039;") || "";
-		} catch(e){
-			return "";
-		}
-	}
-
-	function getAllContentNodes(element) { // takes an element.
-		var resp = "";
-		
-		if (!element){return resp;}
-		
-		if (!element.childNodes || !element.childNodes.length){
-			if (element.textContent){
-				return escapeHtml(element.textContent) || "";
-			} else {
-				return "";
-			}
-		}
-		
-		element.childNodes.forEach(node=>{
-			if (node.childNodes.length){
-				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-				resp += escapeHtml(node.textContent.trim())+" ";
-			} else if (node.nodeType === 1){
-				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
-				if (!settings.textonlymode){
-					if ((node.nodeName == "IMG") && node.src){
-						node.src = node.src+"";
-					}
-					resp += node.outerHTML;
-				}
-			}
-		});
-		return resp;
-	}
-	
-	
-	var lastMessage = "";
-	var lastUser  = "";
-	
-	async function processMessage(ele){	// twitch
-	//	console.log(ele);
-	  var chatsticker = false;
-	  var chatmessage = "";
-	  var nameColor = "";
-	  var chatname= "";
-	  
-	  try {
-		var nameEle = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(1)") || ele.querySelector("[alt='avatar']").parentNode.nextSibling.childNodes[0].childNodes[0];
-		if (nameEle?.textContent){
-			chatname = escapeHtml(nameEle.textContent);
-		} else if (nameEle){
-			chatname = escapeHtml(nameEle);
-		}
-	 } catch(e){
-		try {
-			var nameEle = ele.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)") || ele.querySelector("[alt='avatar']").parentNode.nextSibling.childNodes[0].childNodes[0];;
-			chatname = escapeHtml(nameEle.innerText);
-		  } catch(e){
-			//   console.warn(e);
-			return;
-		  }
-	  }
-	  
-	  chatname = chatname.trim();
-	  chatname = chatname.replaceAll('"','');
-	  if (!chatname){
-	//	   console.warn("1");
-		  return;}
-	  
-	  var chatbadges = [];
-	  var hasDonation = '';
-	  var contentimg = "";
-	  
-	  try {
-		var eleContent = ele.querySelector("span[class]:not([role])") || ele.querySelector("[alt='avatar']").parentNode.nextSibling.childNodes[1];
-		chatmessage = getAllContentNodes(eleContent).trim();
-	  } catch(e){ // donation?
-	 // console.warn("123");
-	  }
-	  
-	  if (!chatmessage){
-		  try {
-			contentimg = ele.querySelector("button>img[src][alt='stickers']").src;
-		  } catch(e){
-			//  console.warn("21");
-		  }
-	  }
-	  
-	 if (chatmessage){
-		 chatmessage = chatmessage.trim();
-	 }
-	 
-	  if (chatmessage && chatmessage.startsWith("[Message ")){
-		 // console.warn("144");
-		  return; // I'm assuming this is a deleted message
-	  }
-	 
-	 if (chatmessage && (lastMessage === chatmessage) && (lastUser === chatname)){
-		  lastMessage = "";
-		  chatname = "";
-		 // console.warn("144");
-		  return;
-	  } else {
-		lastMessage = chatmessage;
-		lastUser = chatname;
-	  }
-	  
-	  
-	  var chatimg = "";
-	  try {
-			chatimg =  ele.querySelector("div:nth-of-type(1) > span>img[src]").src;
-			
-			 if (chatimg.startsWith("data:")){
-				  try {
-					 await new Promise(r => setTimeout(r, 100));
-					 chatimg =  ele.querySelector("div:nth-of-type(1) > span>img[src]").src;
-					  if (chatimg.startsWith("data:")){
-						  await new Promise(r => setTimeout(r, 200));
-						  chatimg =  ele.querySelector("div:nth-of-type(1) > span>img[src]").src;
-						  if (chatimg.startsWith("data:")){
-								await new Promise(r => setTimeout(r, 700));
-								chatimg =  ele.querySelector("div:nth-of-type(1) > span>img[src]").src;
-								if (chatimg.startsWith("data:")){
-									chatimg = ""; // and I give up if it still isn't loaded.
-								}
-						  }
-					  }
-				  } catch(e){
-					  chatimg = "";
-				  }
-			}
-			if (chatimg && !chatimg.startsWith("https://")){
-				chatimg = "https://loco.com" + chatimg;
-				chatimg = chatimg.replace(".jpg&w=48&q=25", ".jpg&w=128&q=80");
-			}
-			
-	  } catch(e){}
-
-	  
-	 
-	  if (!chatmessage && !hasDonation && !contentimg){
-		//  console.warn("1345345");
-		return;
-	  }
-
-	  var data = {};
-	  data.chatname = chatname;
-	  data.chatbadges = chatbadges;
-	  data.nameColor = nameColor;
-	  data.chatmessage = chatmessage;
-	  data.chatimg = chatimg;
-	  data.contentimg = contentimg;
-	  data.hasDonation = hasDonation;
-	  data.membership = "";
-	  // Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
-	  data.textonly = settings.textonlymode || false;
-	  data.type = "loco";
-	  
-	  console.log(data);
-	 
-	  try {
-		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
-	  } catch(e){
-		  //
-	  }
-	}
-
-	chrome.runtime.onMessage.addListener(
-		function (request, sender, sendResponse) {
-			try{
-				if ("getSource" == request){sendResponse("loco");	return;	}
-				if ("focusChat" == request){
-					document.querySelector('input[placeholder][maxlength="200"]').focus();
-					sendResponse(true);
-					return;
-				}
-				if (typeof request === "object"){
-					if ("settings" in request){
-						settings = request.settings;
-						sendResponse(true);
-						return;
-					}
-				}
-				// twitch doesn't capture avatars already.
-			} catch(e){}
-			sendResponse(false);
-		}
-	);
-	
 	var settings = {};
-	// textonlymode capture contract: literal chatmessage string, no app-added markup; render as text, not HTML.
-	// settings.captureevents
-	
-	
-	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-		if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) { return; }
-		response = response || {};
-		if ("settings" in response){
-			settings = response.settings;
-		}
-	});
+	var list;
+	var observer;
+	var streamKey;
+	var seen = new Map();
+	var legacyRows = new WeakSet();
+	var rowSelector = "[data-chat-message-id], [data-chat-variant], [data-test-id^='chat-msg-']";
 
-	function onElementInserted(target) {
-		var onMutationsObserved = function(mutations) {
-			
-			mutations.forEach(function(mutation) {
-			//	console.log(mutation.addedNodes);
-				if (mutation.addedNodes.length) {
-					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						try {
-							//if (mutation.addedNodes[i].nodeName.toLowerCase() !== "div"){continue;}
-							if (mutation.addedNodes[i].ignore){continue;}
-							mutation.addedNodes[i].ignore=true;
-							processMessage(mutation.addedNodes[i]);
-								
-						} catch(e){}
-					}
-				}
-			});
-		};
-		
-		var config = { childList: true, subtree: false };
-		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-		var observer = new MutationObserver(onMutationsObserved);
-		observer.observe(target, config);
+	function escapeHtml(text) {
+		if (settings.textonlymode) return text;
+		return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 	}
-	
-	console.log("Social Stream injected");
-	
-	var checkReady = setInterval(function(){
-		
-		if (!window.location.pathname.startsWith("/streamers/") && !window.location.pathname.startsWith("/chat/") && !window.location.pathname.startsWith("/dashboard/")){return;}
-		
-		var mainChat = document.querySelector(".chat-elements-list");
-		if (mainChat){ // just in case 
-			
-			if (mainChat.set){
+
+	function messageContent(node) {
+		if (node.nodeType === 3) return escapeHtml(node.textContent);
+		if (node.nodeName === "IMG") {
+			if (settings.textonlymode) return node.alt || "";
+			if (node.src) return '<img src="' + escapeHtml(node.src) + '" alt="' + escapeHtml(node.alt || "") + '">';
+		}
+		return Array.from(node.childNodes, messageContent).join("");
+	}
+
+	function send(request) {
+		try {
+			chrome.runtime.sendMessage(chrome.runtime.id, request, function () {});
+		} catch (e) {}
+	}
+
+	function remember(id, state) {
+		seen.set(id, state);
+		if (seen.size > 5000) seen.delete(seen.keys().next().value);
+	}
+
+	function capture(row, initial) {
+		var id = row.getAttribute("data-chat-message-id");
+		if (!id) return;
+		var messageId = (list.id.replace(/^chat-(?:container|popup)-/, "") || location.pathname) + ":" + id;
+		var variant = row.getAttribute("data-chat-variant");
+		if (variant === "deleted") {
+			if (seen.get(id) === "sent") {
+				send({ delete: { type: "loco", meta: { messageId: messageId } } });
+			}
+			remember(id, "deleted");
+			return;
+		}
+		if (seen.has(id)) return;
+		if (initial || !row.dispatchEvent(new Event("ssn-loco-history-check", { bubbles: true, cancelable: true }))) {
+			remember(id, "history");
+			return;
+		}
+		var name = row.querySelector(".loco-chat-message-user-name");
+		if (!name || !name.textContent.trim()) return;
+		var body = row.querySelector(".loco-chat-message-text");
+		var message = body && body.contains(name) && name.parentElement.nextElementSibling;
+		var sticker = null;
+		if (variant === "sticker-gold" || variant === "sticker-diamond") {
+			sticker = row.querySelector("button:not([data-test-id]) img");
+		}
+		var text = message ? messageContent(message).trim() : "";
+		if (!text && !(sticker && sticker.src)) return;
+		var avatar = row.querySelector('[data-test-id="loco-chat-user-avatar"] img');
+		remember(id, "sent");
+		sendChat(name.textContent.trim(), text, avatar, sticker, messageId);
+	}
+
+	function sendChat(name, text, avatar, sticker, id) {
+		var data = {
+			chatname: name, chatmessage: text, chatimg: avatar && !avatar.src.startsWith("data:") ? avatar.src : "",
+			contentimg: sticker ? sticker.src : "", chatbadges: [], nameColor: "", hasDonation: "", membership: "",
+			textonly: !!settings.textonlymode, type: "loco"
+		};
+		if (id) data.meta = { messageId: id };
+		send({ message: data });
+	}
+
+	// Older dashboard rows have an avatar beside the author and message.
+	async function captureLegacy(row) {
+		if (legacyRows.has(row)) return;
+		var avatar = row.querySelector("[alt='avatar']");
+		var fields = avatar && avatar.parentNode.nextElementSibling;
+		var name = row.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(1)") ||
+			row.querySelector("div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)") ||
+			(fields && fields.firstChild && fields.firstChild.firstChild);
+		if (!name || !name.textContent.trim()) return;
+		var body = row.querySelector("span[class]:not([role])") || (fields && fields.childNodes[1]);
+		var text = body && messageContent(body).trim();
+		var sticker = row.querySelector("button > img[src][alt='stickers']");
+		if ((!text && !sticker) || (text && text.startsWith("[Message "))) return;
+		legacyRows.add(row);
+		var chatname = name.textContent.trim();
+		var originalStream = streamKey;
+		avatar = avatar || row.querySelector("div:nth-of-type(1) > span > img[src]");
+		for (var delay of [100, 200, 700]) {
+			if (!avatar || !avatar.src.startsWith("data:")) break;
+			await new Promise(function (resolve) { setTimeout(resolve, delay); });
+			avatar = row.querySelector("[alt='avatar'], div:nth-of-type(1) > span > img[src]");
+		}
+		if (originalStream === streamKey) sendChat(chatname, text || "", avatar, sticker);
+	}
+
+	function scan(node, initial) {
+		if (node.nodeType !== 1) node = node.parentElement;
+		if (!node || !list.contains(node)) return;
+		var row = node.closest(rowSelector);
+		if (row) {
+			capture(row, initial);
+			return;
+		}
+		var rows = node.querySelectorAll(rowSelector);
+		if (rows.length) {
+			rows.forEach(function (item) { capture(item, initial); });
+		} else if (node !== list) {
+			while (node.parentElement !== list) node = node.parentElement;
+			if (initial) legacyRows.add(node);
+			else captureLegacy(node);
+		}
+	}
+
+	function attach() {
+		var target = /^\/(stream|streamers|chat|dashboard)\//.test(location.pathname) ?
+			document.querySelector(".chat-elements-list") : null;
+		var key = target && location.pathname + "/" + target.id;
+		if (target === list && (!target || key === streamKey)) return;
+		if (observer) observer.disconnect();
+		list = target;
+		if (!list) return;
+		var initial = key !== streamKey;
+		if (initial) seen.clear();
+		streamKey = key;
+		Array.from(list.children).forEach(function (node) { scan(node, initial); });
+		observer = new MutationObserver(function (mutations) {
+			if (location.pathname + "/" + list.id !== streamKey) {
+				attach();
 				return;
 			}
-			console.log("Social Stream Start");
-			mainChat.set = true;
-			
-			setTimeout(()=>{
-				var clear = document.querySelector(".chat-elements-list").childNodes;
-				for (var i = 0;i<clear.length;i++){
-					clear[i].ignore = true; // don't let already loaded messages to re-load.
-					//processMessage(clear[i]);
+			mutations.forEach(function (change) {
+				if (change.type === "childList") {
+					change.addedNodes.forEach(function (node) { scan(node, false); });
+				} else {
+					scan(change.target, false);
 				}
-				console.log("Social Stream ready to go");
-				onElementInserted(document.querySelector(".chat-elements-list"));
-			},1000);
-		} 
-	},500);
-	
-	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
+			});
+		});
+		observer.observe(list, { childList: true, subtree: true, characterData: true, attributes: true,
+			attributeFilter: ["id", "data-chat-message-id", "data-chat-variant", "src"] });
+	}
+
+	chrome.runtime.onMessage.addListener(function (request, sender, respond) {
+		if (request === "getSource") return respond("loco");
+		if (request === "focusChat") {
+			var input = document.querySelector('input[placeholder][maxlength="200"]');
+			if (input) input.focus();
+			return respond(!!input);
+		}
+		if (request && request.settings) {
+			settings = request.settings;
+			return respond(true);
+		}
+		respond(false);
+	});
+	chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
+		if (!chrome.runtime.lastError && response && response.settings) settings = response.settings;
+	});
+
+	attach();
+	setInterval(attach, 500);
+
+	// Keep the source active when the chat tab is hidden.
 	try {
 		var receiveChannelCallback = function(event){
 			remoteConnection.datachannel = event.channel;

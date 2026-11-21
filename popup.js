@@ -326,7 +326,10 @@ function openEventFlowEditor() {
         alert('In the desktop app, use the 🪤 Event Flow Editor option in the navigation menu.');
         return;
     }
-    // For extension context, open actions/index.html
+    if (location.protocol === 'chrome-extension:' || location.protocol === 'moz-extension:') {
+        chrome.runtime.sendMessage({ type: 'openEventFlowEditor' });
+        return;
+    }
     window.open('actions/index.html', '_blank');
 }
 // Make function available globally
