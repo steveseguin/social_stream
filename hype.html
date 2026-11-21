@@ -4,6 +4,7 @@
     <meta name="description" content="Viewer Count &amp; Chat Activity. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
     <meta name="robots" content="noindex">
 <script src="shared/overlay-control-transport.js"></script>
+<script src="shared/utils/viewerCountOrder.js"></script>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
 
@@ -1106,6 +1107,29 @@ var lastUpdated = {};
 var hasViewerCount = {};
 var activeChatters = {};
 var aggregatedViewers = {};
+// Platform order: the app's shared setting, or &viewercountorder on this link.
+// Alphabetical stays the default, and is how unlisted platforms are arranged.
+var viewerCountOrder = SSNViewerCountOrder.create(urlParams);
+
+function sortSourceTypes(types) {
+    return viewerCountOrder.sort(types.slice().sort());
+}
+
+// Several render passes append holders one after another; put the row in the chosen order once they are done.
+function applyViewerCountOrder(container) {
+    if (!container || !viewerCountOrder.active()) {
+        return;
+    }
+    const holders = Array.prototype.slice.call(container.querySelectorAll(".sourceStatHolder"));
+    const ordered = viewerCountOrder.sortBy(holders, function(holder) {
+        return holder.dataset.type;
+    });
+    if (ordered.some(function(holder, index) { return holder !== holders[index]; })) {
+        ordered.forEach(function(holder) {
+            container.appendChild(holder);
+        });
+    }
+}
 
 function renderAggregatedViewerSnapshot() {
     if (!showViewers || !aggregatedViewers || typeof aggregatedViewers !== "object") {
@@ -1129,7 +1153,7 @@ function renderAggregatedViewerSnapshot() {
         }
     });
 
-    const types = Object.keys(normalizedViewers).sort();
+    const types = sortSourceTypes(Object.keys(normalizedViewers));
     if (!types.length) {
         return;
     }
@@ -1180,6 +1204,7 @@ function renderAggregatedViewerSnapshot() {
             }
         });
     }
+    applyViewerCountOrder(hypeEl);
 
     parentEl.classList.remove("hidden");
 }
@@ -1223,6 +1248,7 @@ function processInput(data) {
         console.error("hype.html: 'parentHolder' element not found!");
         return;
     }
+    viewerCountOrder.setAppOrder(data.hype.order);
     const viewerSources = (data.hype.viewers && typeof data.hype.viewers === "object") ? data.hype.viewers : {};
     const chatterSources = (data.hype.chatters && typeof data.hype.chatters === "object") ? data.hype.chatters : {};
     let combinedData = data.hype.combined || {};
@@ -1319,8 +1345,7 @@ function processInput(data) {
         combinedData = normalizedCombined;
     }
     
-    const sourceKeys = Object.keys(combinedData);
-	sourceKeys.sort();
+    const sourceKeys = sortSourceTypes(Object.keys(combinedData));
     let hasContentToDisplay = false;
     const now = Date.now();
     // Track which sources are present this tick for cleanup/reordering (normalized)
@@ -1412,8 +1437,7 @@ function processInput(data) {
     }
     // Also reflect any aggregated viewer updates (ensures 0s still display like dock.html)
     if (showViewers && aggregatedViewers && typeof aggregatedViewers === 'object') {
-        const aggKeys = Object.keys(aggregatedViewers);
-        aggKeys.sort();
+        const aggKeys = sortSourceTypes(Object.keys(aggregatedViewers));
         for (let i = 0; i < aggKeys.length; i++) {
             const type = aggKeys[i];
             // Skip if normalized base already represented by any existing holder (eg: kick-123 present)
@@ -1470,6 +1494,7 @@ function processInput(data) {
             node.remove();
         }
     });
+    applyViewerCountOrder(hypeContainer);
     if (hasContentToDisplay) {
         parentHolder.classList.remove("hidden");
     } else {
@@ -1546,6 +1571,7 @@ if (!useServerOnlyTransport()) {
             if (data.event === "viewer_updates" && data.meta && typeof data.meta === "object") {
                 const meta = data.meta || {};
                 const now = Date.now();
+                viewerCountOrder.setAppOrder(data.order);
 
                 // Build aggregated viewers map honoring combine flags
                 let nextAgg = {};

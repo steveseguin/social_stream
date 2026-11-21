@@ -3,6 +3,7 @@
 <head>
 <script src="shared/overlay-control-transport.js"></script>
 <script src="shared/alerts/event-board.js"></script>
+<script src="shared/utils/viewerCountOrder.js"></script>
     <meta charset="UTF-8">
     <meta name="description" content="Activity Feed / Events. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
     <meta name="robots" content="noindex">
@@ -1177,6 +1178,8 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 	var fontFamily = urlParams.has("font") ? urlParams.get("font") : "Roboto";
 	var googleFont = urlParams.has("googlefont") ? urlParams.get("googlefont") : "";
 	const showViewerCount = urlParams.has("showviewercount");
+	// Platform order for the viewer count bar: the app's shared setting, or &viewercountorder on this link.
+	const viewerCountOrder = SSNViewerCountOrder.create(urlParams);
 	const compactHeightThreshold = 520;
 	const viewerBarBg = normalizeColorParam(urlParams.get("viewerbarbg") || urlParams.get("viewerbarbackground") || urlParams.get("topbarbg"));
 	if (viewerBarBg) {
@@ -1828,6 +1831,7 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 			ele.classList.add("viewerIcons");
 			ele.title = "Viewer count for " + type;
 			ele.style.backgroundImage = "url(./sources/images/" + type + ".png)";
+			ele.style.order = viewerCountOrder.cssOrder(type);
 			topBarElement.prepend(ele);
 		}
 		ele.innerText = Number.isFinite(count) ? count.toLocaleString() : String(count || 0);
@@ -1851,6 +1855,11 @@ body.feed-noheader #topbar, body.events-styled.obsstudio-mode #topbar, body.even
 			viewerCounts[data.type] = count;
 			upsertViewerIcon(data.type, count);
 		} else if (normalizedEvent === 'viewer_updates' && data.meta && typeof data.meta === 'object') {
+			if (viewerCountOrder.setAppOrder(data.order)) {
+				topBarElement.querySelectorAll(".viewerIcons[data-type]").forEach(ele => {
+					ele.style.order = viewerCountOrder.cssOrder(ele.dataset.type);
+				});
+			}
 			const incomingTypes = Object.keys(data.meta);
 			const allowedTypes = new Set(incomingTypes);
 			topBarElement.querySelectorAll(".viewerIcons").forEach(ele => {

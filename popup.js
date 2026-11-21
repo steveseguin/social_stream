@@ -2511,6 +2511,242 @@ function setupViewerCountSourceTags() {
     updateSourceTypeList(inputId);
 }
 
+// Viewer count order: one shared setting, edited by dragging platform chips into place.
+// The control appears in each overlay section that lists viewer counts; every copy edits
+// the same hidden input, so they always match.
+let viewerCountOrderLiveSources = [];
+let viewerCountOrderLastLookup = 0;
+let viewerCountOrderDrag = null;
+
+function getViewerCountOrderInput() {
+    return document.getElementById('viewerCountOrder');
+}
+
+function getViewerCountOrder() {
+    const input = getViewerCountOrderInput();
+    return Array.from(new Set(normalizeCommaValues(input ? input.value.toLowerCase() : '')));
+}
+
+// Placed platforms first, then any that are reporting viewers but have no position yet.
+function getViewerCountOrderChips() {
+    const placed = getViewerCountOrder();
+    const unplaced = viewerCountOrderLiveSources.filter(type => !placed.includes(type)).sort();
+    return { placed: placed, all: placed.concat(unplaced) };
+}
+
+function saveViewerCountOrder(types) {
+    const input = getViewerCountOrderInput();
+    if (!input) return;
+    if (types.join(',') !== getViewerCountOrder().join(',')) {
+        input.value = types.join(', ');
+        updateSettings(input);
+    }
+    renderViewerCountOrder();
+}
+
+function moveViewerCountOrderChip(type, offset) {
+    const order = getViewerCountOrderChips().all;
+    const from = order.indexOf(type);
+    const to = from + offset;
+    if (from === -1 || to < 0 || to >= order.length) return;
+    order.splice(to, 0, order.splice(from, 1)[0]);
+    saveViewerCountOrder(order);
+}
+
+function removeViewerCountOrderChip(type) {
+    saveViewerCountOrder(getViewerCountOrder().filter(placed => placed !== type));
+}
+
+function renderViewerCountOrder() {
+    const chips = getViewerCountOrderChips();
+    document.querySelectorAll('[data-viewer-count-order]').forEach(container => {
+        const list = container.querySelector('.viewer-count-order-list');
+        // Never rebuild a row while one of its chips is being dragged.
+        if (!list || (viewerCountOrderDrag && viewerCountOrderDrag.list === list)) return;
+
+        list.textContent = '';
+        chips.all.forEach((type, index) => {
+            const isPlaced = chips.placed.includes(type);
+            const label = formatSourceLabel(type);
+            const chip = document.createElement('div');
+            chip.className = 'viewer-count-order-chip' + (isPlaced ? '' : ' is-unplaced');
+            chip.draggable = true;
+            chip.tabIndex = 0;
+            chip.dataset.sourceType = type;
+            chip.setAttribute('role', 'listitem');
+            chip.setAttribute('aria-label', `${label}, position ${index + 1} of ${chips.all.length}. Use the left and right arrow keys to move it.`);
+            chip.title = isPlaced ? 'Drag to reorder' : 'Reporting viewers, but not placed yet, so it follows the others. Drag it to give it a position.';
+
+            const icon = document.createElement('img');
+            icon.alt = '';
+            icon.addEventListener('error', () => icon.remove());
+            icon.src = `./sources/images/${encodeURIComponent(type)}.png`;
+            chip.appendChild(icon);
+
+            const name = document.createElement('span');
+            name.textContent = label;
+            chip.appendChild(name);
+
+            if (isPlaced) {
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'viewer-count-order-remove';
+                remove.textContent = '×';
+                remove.title = `Remove ${label} from the order`;
+                remove.setAttribute('aria-label', remove.title);
+                chip.appendChild(remove);
+            }
+            list.appendChild(chip);
+        });
+
+        const hint = container.querySelector('.viewer-count-order-hint');
+        if (hint) {
+            hint.textContent = (chips.all.length ? 'Drag to reorder.' : 'Add your platforms, then drag them into order.') + ' Used by every overlay that shows viewer counts.';
+        }
+        const reset = container.querySelector('.viewer-count-order-reset');
+        if (reset) {
+            reset.classList.toggle('hidden', !chips.placed.length);
+        }
+    });
+}
+
+// Ask the background which platforms are reporting viewers, so they can be offered without any typing.
+function refreshViewerCountOrderSources() {
+    if (Date.now() - viewerCountOrderLastLookup < 3000) return;
+    viewerCountOrderLastLookup = Date.now();
+    try {
+        chrome.runtime.sendMessage({ cmd: 'getViewerCountSources' }, function(response) {
+            chrome.runtime.lastError;
+            if (!response || !Array.isArray(response.viewerCountSources)) return;
+            const sources = Array.from(new Set(response.viewerCountSources.map(type => String(type || '').trim().toLowerCase()).filter(Boolean)));
+            if (sources.join(',') === viewerCountOrderLiveSources.join(',')) return;
+            viewerCountOrderLiveSources = sources;
+            renderViewerCountOrder();
+        });
+    } catch (e) {
+        console.warn('Unable to look up viewer count sources:', e);
+    }
+}
+
+function setupViewerCountOrder() {
+    if (!getViewerCountOrderInput()) return;
+
+    document.querySelectorAll('[data-viewer-count-order]').forEach(container => {
+        if (container.dataset.viewerCountOrderReady === 'true') return;
+        container.dataset.viewerCountOrderReady = 'true';
+        container.innerHTML = `
+            <div class="viewer-count-order-title">
+                <span><span class="popup-control-icon" aria-hidden="true">↔️</span>Viewer count order</span>
+                <span class="viewer-count-order-hint"></span>
+            </div>
+            <div class="viewer-count-order-list" role="list" aria-label="Viewer count order"></div>
+            <div class="add-source-container">
+                <select aria-label="Add a platform to the viewer count order">
+                    <option value="" selected>Add platform…</option>
+                </select>
+                <button type="button" class="viewer-count-order-reset hidden" title="Clear the order and go back to the default">Reset</button>
+            </div>
+        `;
+
+        const list = container.querySelector('.viewer-count-order-list');
+        const select = container.querySelector('select');
+        const chipFrom = function(node) {
+            return node && node.closest ? node.closest('.viewer-count-order-chip') : null;
+        };
+
+        list.addEventListener('dragstart', function(event) {
+            const chip = chipFrom(event.target);
+            if (!chip) return;
+            viewerCountOrderDrag = { list: list, chip: chip };
+            event.dataTransfer.effectAllowed = 'move';
+            try {
+                event.dataTransfer.setData('text/plain', chip.dataset.sourceType);
+            } catch (e) {}
+            // Dim the chip only after the browser has captured it as the drag image.
+            setTimeout(function() {
+                if (viewerCountOrderDrag && viewerCountOrderDrag.chip === chip) chip.classList.add('is-dragging');
+            }, 0);
+        });
+
+        // The chip follows the pointer through the row as it is dragged.
+        container.addEventListener('dragover', function(event) {
+            if (!viewerCountOrderDrag || viewerCountOrderDrag.list !== list) return;
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'move';
+            const dragged = viewerCountOrderDrag.chip;
+            const target = chipFrom(event.target);
+            if (!target || target === dragged || target.parentNode !== list) return;
+            const box = target.getBoundingClientRect();
+            const reference = event.clientX > box.left + box.width / 2 ? target.nextSibling : target;
+            if (reference !== dragged && reference !== dragged.nextSibling) {
+                list.insertBefore(dragged, reference);
+            }
+        });
+
+        container.addEventListener('drop', function(event) {
+            if (viewerCountOrderDrag) event.preventDefault();
+        });
+
+        list.addEventListener('dragend', function() {
+            if (!viewerCountOrderDrag) return;
+            viewerCountOrderDrag.chip.classList.remove('is-dragging');
+            viewerCountOrderDrag = null;
+            const shown = Array.from(list.querySelectorAll('.viewer-count-order-chip')).map(chip => chip.dataset.sourceType);
+            if (shown.join(',') === getViewerCountOrderChips().all.join(',')) {
+                renderViewerCountOrder(); // Nothing moved.
+                return;
+            }
+            // Whatever the row shows is what gets saved, including platforms that had no position before.
+            saveViewerCountOrder(shown);
+        });
+
+        list.addEventListener('click', function(event) {
+            if (!event.target.classList.contains('viewer-count-order-remove')) return;
+            const chip = chipFrom(event.target);
+            if (chip) removeViewerCountOrderChip(chip.dataset.sourceType);
+        });
+
+        list.addEventListener('keydown', function(event) {
+            if (!event.target.classList.contains('viewer-count-order-chip')) return;
+            const type = event.target.dataset.sourceType;
+            if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+                moveViewerCountOrderChip(type, -1);
+            } else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+                moveViewerCountOrderChip(type, 1);
+            } else if (event.key === 'Delete' || event.key === 'Backspace') {
+                removeViewerCountOrderChip(type);
+            } else {
+                return;
+            }
+            event.preventDefault();
+            // The row was rebuilt; keep the keyboard on the same platform.
+            const moved = Array.from(list.children).find(chip => chip.dataset.sourceType === type);
+            if (moved) moved.focus();
+        });
+
+        setupLazySourceSelect(select);
+        ensureLazySourcesLoaded(function() {
+            appendSourceOptions(select);
+        });
+        select.addEventListener('change', function() {
+            const type = select.value.trim().toLowerCase();
+            select.value = '';
+            if (!type) return;
+            const placed = getViewerCountOrder();
+            if (!placed.includes(type)) saveViewerCountOrder(placed.concat(type));
+        });
+
+        container.querySelector('.viewer-count-order-reset').addEventListener('click', function() {
+            saveViewerCountOrder([]);
+        });
+
+        container.addEventListener('pointerenter', refreshViewerCountOrderSources);
+    });
+
+    renderViewerCountOrder();
+    refreshViewerCountOrderSources();
+}
+
 // Templates for different event types
 const eventTemplates = {
   botReply: (id) => `
@@ -4650,6 +4886,8 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 updateUsernameList(key);
             } else if (sourceTypes.includes(key) || sourceSelectTagInputs.includes(key)) {
                 updateSourceTypeList(key);
+            } else if (key === 'viewerCountOrder') {
+                renderViewerCountOrder();
             } else if (commaTagInputs.includes(key)) {
                 updateCommaTagList(key);
             } else if (commaTagInputs.includes(ele.id)) {
@@ -12430,6 +12668,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	// Initialize blocked words tag input
 	setupBlockedWordsInput();
 	setupViewerCountSourceTags();
+	setupViewerCountOrder();
 	commaTagInputs.forEach((inputId) => {
 		setupCommaTagInput(inputId);
 	});
@@ -13304,6 +13543,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		if (!element) {
 			return 'Open matching option';
 		}
+		// A composite control (chips, pickers) names itself instead of listing its contents.
+		var explicitLabel = element.getAttribute('data-search-label');
+		if (explicitLabel) {
+			return explicitLabel;
+		}
 		// Read the complete row: its first span may be an icon or an empty switch slider.
 		var parts = [];
 		var walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
@@ -13664,7 +13908,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		// Discover fields at any depth, including controls inside closed details.
 		// Keep a complete toggle/field row, but never promote it to a settings panel.
 		wrapper.querySelectorAll('input:not(.collapsible-input):not([type="hidden"]), select, textarea, button').forEach(function(control) {
-			var row = control.closest('.colorInputRow, .textInputContainer, .popup-toggle-row');
+			// [data-search-row] marks a composite control whose inner buttons and selects are one result.
+			var row = control.closest('.colorInputRow, .textInputContainer, .popup-toggle-row, [data-search-row]');
 			if (!row || !wrapper.contains(row)) {
 				row = control.parentElement;
 				if (row && row.classList.contains('switch')) row = row.parentElement;

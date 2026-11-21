@@ -194,6 +194,83 @@
     cursor: pointer;
 }
 
+/* Viewer count order: platform chips the user drags into place. One setting, shown in each overlay section that lists viewer counts. */
+.viewer-count-order {
+    padding: 0 4px;
+    text-align: left;
+}
+
+.viewer-count-order-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 8px;
+}
+
+.viewer-count-order-hint {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+}
+
+.viewer-count-order-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 0;
+}
+
+.viewer-count-order-list:empty {
+    display: none;
+}
+
+.viewer-count-order-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 30px;
+    box-sizing: border-box;
+    padding: 2px 3px 2px 8px;
+    border: 1px solid #443;
+    border-radius: 4px;
+    background-color: #443;
+    color: white;
+    cursor: grab;
+    user-select: none;
+}
+
+/* A platform that is live but not placed yet: it follows the placed ones until it is moved. */
+.viewer-count-order-chip.is-unplaced {
+    padding-right: 8px;
+    border: 1px dashed var(--text-secondary);
+    background-color: transparent;
+    color: var(--default-text-color);
+}
+
+.viewer-count-order-chip.is-dragging {
+    opacity: 0.35;
+}
+
+.viewer-count-order-chip:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+}
+
+.viewer-count-order-chip img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    pointer-events: none;
+}
+
+/* The remove button keeps the standard settings-button look used by the other source tags. */
+.viewer-count-order-chip .viewer-count-order-remove {
+    margin: 0;
+}
+
+.viewer-count-order .add-source-container select {
+    width: 170px;
+}
+
 .username-list-container {
 	max-height: 80px;
 	overflow-y: auto;
@@ -2781,6 +2858,10 @@ details.wrapper[open] > .collapsible-text {
                                     </label>
 									<span data-translate="show-viewer-count">🔢 Show viewer count per source; top-right</span>
                                 </div>
+								<div class="isolate">
+									<input type="text" id="viewerCountOrder" class="hidden" autocomplete="off" tabindex="-1" aria-hidden="true" data-textsetting="viewerCountOrder" />
+									<div class="viewer-count-order" data-viewer-count-order data-search-row data-search-label="Viewer count order" data-keywords="viewer count platform source order sort reorder arrange drag icons"></div>
+								</div>
 								<div data-keywords="like count likes reactions stats analytics tally" title="Enabling this also enables Send platform like totals in Global Settings.">
 									<label class="switch">
 										<input type="checkbox" data-param1="showlikecount" />
@@ -12004,6 +12085,7 @@ details.wrapper[open] > .collapsible-text {
 <div> <label class="switch"> <input data-param17="currency" type="checkbox"/> <span class="slider round"></span> </label> <span data-translate="show-usd-conversion">💵 Show USD conversion for all donations</span> </div>
 <div> <label class="switch"> <input data-param17="highlightvalue" type="checkbox"/> <span class="slider round"></span> </label> <span data-translate="highlight-high-value">✨ Highlight high-value donations</span> </div>
 <div> <label class="switch"> <input data-param17="showviewercount" type="checkbox"/> <span class="slider round"></span> </label> <span data-translate="popup-show-viewer-count-bar-in-the-top-right">👀 Show viewer count bar in the top-right</span> </div>
+<div class="isolate"><div class="viewer-count-order" data-viewer-count-order data-search-row data-search-label="Viewer count order" data-keywords="viewer count platform source order sort reorder arrange drag icons"></div></div>
 <div> <label class="switch"> <input data-param17="hidemeta" type="checkbox"/> <span class="slider round"></span> </label> <span data-translate="popup-hide-metadata-details-under-messages">🗂️ Hide metadata details under messages</span> </div>
 <div> <label class="switch"> <input data-param17="notime" type="checkbox"/> <span class="slider round"></span> </label> <span data-translate="hide-timestamp">🕘 Hide timestamp </span> </div>
 </div>
@@ -12533,6 +12615,9 @@ details.wrapper[open] > .collapsible-text {
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="show-only-active-chatters">💬 Show only active chatters</span>
+								</div>
+								<div class="isolate">
+									<div class="viewer-count-order" data-viewer-count-order data-search-row data-search-label="Viewer count order" data-keywords="viewer count platform source order sort reorder arrange drag icons"></div>
 								</div>
 								<div class="textInputContainer">
 									<select class="textInput" id="hype-display-style" data-optionparam4="style">

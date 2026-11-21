@@ -88,6 +88,35 @@ function filterViewerCountSnapshotMeta(meta) {
 	return filtered;
 }
 
+// The "Viewer count order" setting: source types in the order the user wants their viewer counts listed.
+function getViewerCountOrder() {
+	return getCachedCommaList(getSettingTextValue("viewerCountOrder"), true);
+}
+
+// Adds the chosen order to a viewer_updates snapshot. Overlays read `order` (see
+// shared/utils/viewerCountOrder.js); the counts are also listed in that order so a page
+// that simply loops over them matches. Nothing changes when no order is set.
+function applyViewerCountOrder(viewerEvent) {
+	const order = getViewerCountOrder();
+	const meta = viewerEvent && viewerEvent.meta;
+	if (!order.length || !meta || typeof meta !== "object" || Array.isArray(meta)) {
+		return viewerEvent;
+	}
+	const rank = function (sourceType) {
+		const type = normalizeSourceType(sourceType);
+		const index = order.findIndex(source => type === source || type.startsWith(source + "-"));
+		return index === -1 ? order.length : index;
+	};
+	const orderedMeta = {};
+	Object.keys(meta)
+		.map((type, index) => ({ type, index, rank: rank(type) }))
+		.sort((a, b) => a.rank - b.rank || a.index - b.index)
+		.forEach(entry => {
+			orderedMeta[entry.type] = meta[entry.type];
+		});
+	return Object.assign({}, viewerEvent, { meta: orderedMeta, order: order.slice() });
+}
+
 function getCachedRoleList(value) {
 	const raw = String(value || "");
 	const cached = settingRoleListCache.get(raw);
@@ -5965,6 +5994,11 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode() });
 		} else if (request.cmd && request.cmd === "getDockTransportHealth") {
 			sendResponse({ state: isExtensionOn, dockTransportHealth: getDockTransportHealth() });
+		} else if (request.cmd && request.cmd === "getViewerCountSources") {
+			// Source types currently reporting a viewer count, for the popup's order control.
+			const activeViewerCountTypes = new Set(Object.keys(buildViewerCountsFromMetaStore()));
+			Object.keys(viewerCounts).forEach(sourceKey => activeViewerCountTypes.add(sourceKey.split("-")[0]));
+			sendResponse({ state: isExtensionOn, viewerCountSources: Array.from(activeViewerCountTypes).filter(Boolean) });
 		} else if (request.cmd && request.cmd === "getSettings") {
 			ensureHandleStatusCache();
 			const cohostCapability = await getOpenAIRealtimeCohostCapability();
@@ -6500,7 +6534,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			if (request.setting == "showviewercount" || request.setting == "showlikecount") {
 				pushSettingChange();
 			}
-			if (request.setting == "hideViewerCountSources") {
+			if (request.setting == "hideViewerCountSources" || request.setting == "viewerCountOrder") {
 				publishViewerCountsFromMetaStore();
 			}
 
@@ -8159,7 +8193,7 @@ function publishViewerCountsFromMetaStore() {
 	var counts = buildViewerCountsFromMetaStore();
 	updateViewerCount({ event: "viewer_updates", meta: counts });
 
-	var viewerUpdateEvent = { event: "viewer_updates", meta: counts };
+	var viewerUpdateEvent = applyViewerCountOrder({ event: "viewer_updates", meta: counts });
 	sendDataP2P(viewerUpdateEvent);
 	sendTargetP2P(viewerUpdateEvent, "meta");
 	sendTargetP2P(viewerUpdateEvent, "aioverlay");
@@ -8291,9 +8325,9 @@ async function sendToDestinations(message, individualLikeAlreadyRouted, pendingC
 		}
 
 		if (message.event === "viewer_updates" && message.meta && typeof message.meta === "object") {
-			message = Object.assign({}, message, {
+			message = applyViewerCountOrder(Object.assign({}, message, {
 				meta: filterViewerCountSnapshotMeta(message.meta)
-			});
+			}));
 		}
 		if (message.event === "viewer_update" && !message.tid && isViewerCountSourceHidden(message.type)) {
 			return true;
@@ -13581,6 +13615,12 @@ function combineHypeData() {
 			result.combined[sourceType] = { chatters: 0, viewers: 0 };
 		}
 		result.combined[sourceType].viewers = viewerCounts[sourceType];
+	}
+
+	// The viewer overlay arranges its platforms itself; hand it the chosen order.
+	const viewerCountOrder = getViewerCountOrder();
+	if (viewerCountOrder.length) {
+		result.order = viewerCountOrder.slice();
 	}
 
 	// Add unique ID if specified

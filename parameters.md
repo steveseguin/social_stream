@@ -147,6 +147,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `hidenumbers` | boolean | Hides messages that contain only digits |
 | `showsourcename` | boolean | Displays the originating platform label on each card |
 | `showviewercount` | boolean | Shows the current viewer count indicator |
+| `viewercountorder` | comma-separated source types | Orders viewer counts from left to right, e.g. `twitch,youtube,kick`; other sources follow. Normally set by dragging platforms under **Viewer count order** in the app, which applies to every viewer-count overlay; this parameter overrides that for one link |
 | `reserveviewercountspace` | boolean | Reserves vertical space so the viewer count bar does not cover chat messages |
 | `nocolon` | boolean | Removes the colon between username and message body |
 | `namefilter` | boolean | Applies filters to usernames instead of message text |
@@ -434,6 +435,7 @@ Original styles keep their existing sizing. New badge styles shrink to fit; Card
 | `vieweraccent` | CSS color | Border/highlight color in accented new styles, e.g. `&vieweraccent=ffcc66` |
 | `viewercolumns` | integer, 1–12 | Column count for Cards or a grid layout; omitted means automatic |
 | `viewermotion` | `slow`, `fast` | Ticker speed or rotation interval. Default rotation is 6 seconds per platform; slow is 10 seconds and fast is 3 seconds |
+| `viewercountorder` | comma-separated source types | Platform order, e.g. `twitch,youtube,kick`; other sources follow alphabetically. Normally set by dragging platforms under **Viewer count order** in the app; this parameter overrides that for one link |
 | `scale` | positive number | Overall size; fitting layouts can shrink below this size to stay within the browser-source area |
 | `title` | string | Overrides the title with plain text, e.g. `&title=Watching%20now`. Missing, empty, or whitespace-only values keep the default title for the selected viewer/chatter mode |
 | `hidetitle` | boolean | Hides the title, including a custom title. Minimal and Dock Style also hide the title |

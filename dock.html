@@ -17,6 +17,7 @@
 <script src="./shared/utils/chatHtml.js"></script>
 <link rel="stylesheet" href="./shared/utils/chatBadges.css">
 		<script src="./shared/utils/contentImage.js"></script>
+		<script src="./shared/utils/viewerCountOrder.js"></script>
 
 		<style>
 			:root {
@@ -4374,6 +4375,8 @@
 				showviewercount = true;
 			}
 			var reserveviewercountspace = showviewercount && urlParams.has("reserveviewercountspace");
+			// Platform order for the viewer count bar: the app's shared setting, or &viewercountorder on this link.
+			var viewerCountOrder = SSNViewerCountOrder.create(urlParams);
 			var showlikecount = false;
 			if (urlParams.has("showlikecount")) {
 				showlikecount = true;
@@ -7401,6 +7404,28 @@
 				return true;
 			}
 
+			function updateViewerCountIcon(type, count){
+				let ele = topBarElement.querySelector(dataAttributeSelector("data-type", type));
+				if (!ele){
+					ele = document.createElement("div");
+					ele.dataset.type = type;
+					ele.classList.add("viewerIcons");
+					ele.title = "Viewer count for "+type;
+					ele.style.backgroundImage = "url(./sources/images/"+type+".png)";
+					ele.style.order = viewerCountOrder.cssOrder(type);
+					topBarElement.prepend(ele);
+				}
+				ele.innerText = count;
+				clearTimeout(ele.timeout);
+				ele.timeout = setTimeout(() => ele.remove(), 130000);
+			}
+
+			function applyViewerCountOrder(){
+				topBarElement.querySelectorAll(".viewerIcons[data-type]").forEach(ele => {
+					ele.style.order = viewerCountOrder.cssOrder(ele.dataset.type);
+				});
+			}
+
 			function updateMeta(data){
 				if (data && data.event && ("meta" in data)){
 					if (data.event == "video_stats"){
@@ -7435,29 +7460,15 @@
 						viewers[data.type] = parseInt(data.meta) || 0;
 						
 						if (showviewercount){
-							let ele = topBarElement.querySelector(dataAttributeSelector("data-type", data.type));
-							if (ele){
-								ele.innerText = viewers[data.type];
-							} else {
-								ele = document.createElement("div");
-								ele.dataset.type = data.type;
-								ele.classList.add("viewerIcons");
-								ele.title = "Viewer count for "+data.type;
-								ele.innerText = viewers[data.type];
-								ele.style.backgroundImage = "url(./sources/images/"+data.type+".png)";
-								topBarElement.prepend(ele);
-							}
-							clearTimeout(ele.timeout);
-							ele.timeout = setTimeout(function(ele){
-								if (ele){
-									ele.remove();
-								}
-							},130000,ele)
+							updateViewerCountIcon(data.type, viewers[data.type]);
 						}
 						return true;
 					} else if (data.event == "viewer_updates"){
 						if (showviewercount){
 							if (data.meta && typeof data.meta == "object"){
+								if (viewerCountOrder.setAppOrder(data.order)){
+									applyViewerCountOrder();
+								}
 								// First, remove any viewer elements not in the current update
 								topBarElement.querySelectorAll(".viewerIcons[data-type]").forEach(ele => {
 									if (!data.meta.hasOwnProperty(ele.dataset.type)) {
@@ -7468,24 +7479,7 @@
 								
 								// Then update or create elements for types in the current update
 								Object.keys(data.meta).forEach(type=>{
-									let ele = topBarElement.querySelector(dataAttributeSelector("data-type", type));
-									if (ele){
-										ele.innerText = data.meta[type];
-									} else {
-										ele = document.createElement("div");
-										ele.dataset.type = type;
-										ele.classList.add("viewerIcons");
-										ele.title = "Viewer count for "+type;
-										ele.innerText = data.meta[type];
-										ele.style.backgroundImage = "url(./sources/images/"+type+".png)";
-										topBarElement.prepend(ele);
-									}
-									clearTimeout(ele.timeout);
-									ele.timeout = setTimeout(function(ele){
-										if (ele){
-											ele.remove();
-										}
-									},130000,ele)
+									updateViewerCountIcon(type, data.meta[type]);
 								});
 							}
 						}
