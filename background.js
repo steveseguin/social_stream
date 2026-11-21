@@ -5667,9 +5667,12 @@ async function sendIndividualLikeAlert(message, tab = false) {
 
 // Only captures still being processed are retained; completed messages need no tombstone cache.
 const pendingModeratedCaptures = new Set();
+function tracksPendingModeration(message) {
+	if (["loco", "x", "twitter"].includes(message.type)) return !!message.meta?.messageId;
+	return ["youtube", "youtubeshorts", "twitch", "kick", "vpzone"].includes(message.type);
+}
 function cancelPendingModeratedCaptures(deletion) {
-	const xApiDeletion = (deletion.type === "x" || deletion.type === "twitter") && deletion.meta?.messageId;
-	if (!xApiDeletion && !["youtube", "youtubeshorts", "twitch", "kick", "vpzone"].includes(deletion.type)) return;
+	if (!tracksPendingModeration(deletion)) return;
 	const matches = [];
 	pendingModeratedCaptures.forEach(function (pending) {
 		const message = pending.message;
@@ -5839,8 +5842,7 @@ async function processIncomingMessage(message, sender = null) {
 			noteTabActivity(tabIdForActivity, message);
 		}
 
-		const xApiCapture = (message.type === "x" || message.type === "twitter") && message.meta?.messageId;
-		const pendingCapture = (xApiCapture || ["youtube", "youtubeshorts", "twitch", "kick", "vpzone"].includes(message.type))
+		const pendingCapture = tracksPendingModeration(message)
 			? { message: Object.assign({}, message), cancelled: false } : null;
 		if (pendingCapture) pendingModeratedCaptures.add(pendingCapture);
 		try {

@@ -10,7 +10,7 @@
 		var params = new URLSearchParams(location.search);
 		var channel = (params.get("channel") || "").replace(/^@/, "").toLowerCase();
 		var relay;
-		try { relay = new URL(params.get("relay") || "ws://127.0.0.1:38178/x/live"); } catch (_) {}
+		try { relay = new URL(params.get("relay") || "wss://api.socialstream.ninja/x/live"); } catch (_) {}
 		if (!relay || (relay.protocol !== "wss:" && relay.href !== "ws://127.0.0.1:38178/x/live")) {
 			get("status").textContent = "Invalid X relay address."; return;
 		}

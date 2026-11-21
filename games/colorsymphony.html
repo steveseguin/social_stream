@@ -165,7 +165,7 @@
             
             words.forEach(word => {
                 // Direct color matches
-                if (colors[word]) {
+                if (keyOrder.includes(word)) {
                     foundColors.push(word);
                 }
                 // Color variations
@@ -187,7 +187,7 @@
         // Stage
         const canvas = document.getElementById('symphony-stage');
         const ctx = canvas.getContext('2d');
-        const view = { width: 0, height: 0, unit: 0, keys: {} };
+        const view = { width: 0, height: 0, unit: 0, keys: Object.create(null) };
 
         // One bar per colour along the bottom, getting shorter toward the high notes
         function layoutStage() {
