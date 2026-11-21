@@ -5,6 +5,7 @@
         ['ring', 'Progress Ring', 'A circular percentage above the total.', '340 × 420'],
         ['lowerthird', 'Lower Third', 'A low, wide panel for the bottom of your scene.', '880 × 180'],
         ['segmented', 'Segmented Bar', 'Twenty segments for easy-to-read progress.', '600 × 300'],
+        ['counter', 'Counter', 'A running total with no goal, plus the latest supporter.', '380 × 240'],
         ['jar', 'Classic Jar', 'The original cup with falling donation items.', '400 × 600'],
         ['glassjar', 'Glass Tip Jar', 'A lidded jar that fills as tips drop through the slot.', '400 × 620'],
         ['jar3d', '3D Rotating Jar', 'A turning glass cylinder with a real 3D liquid level.', '380 × 540'],
@@ -43,7 +44,7 @@
         params.set('style', style);
         params.set('theme', el('theme').value);
         if (el('refresh').checked) params.set('refresh', '');
-        var isPanel = ['card', 'ring', 'lowerthird', 'segmented'].indexOf(style) !== -1;
+        var isPanel = ['card', 'ring', 'lowerthird', 'segmented', 'counter'].indexOf(style) !== -1;
         var isVessel = ['glassjar', 'jar3d', 'beermug', 'coffeemug', 'potion', 'piggybank', 'chest', 'thermometer',
             'battery', 'xpbar', 'healthbar', 'pixelbar', 'neonbar', 'terminal', 'milestones', 'gauge'].indexOf(style) !== -1;
         if (isPanel) {

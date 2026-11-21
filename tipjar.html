@@ -853,6 +853,34 @@
         mask-image: repeating-linear-gradient(90deg, #000 0, #000 calc(5% - 3px), transparent calc(5% - 3px), transparent 5%);
     }
     .layout-segmented .summary-fill { border-radius: 0; }
+    /* Counter: a running total with no target, plus whoever was counted last. */
+    .summary-latest { display: none; }
+    #summary-style.layout-counter { max-width: 380px; }
+    .layout-counter .summary-panel { text-align: center; padding: 22px 28px 24px; }
+    .layout-counter .summary-ring, .layout-counter .summary-goal, .layout-counter .summary-track, .layout-counter .summary-footer { display: none; }
+    .layout-counter .summary-title { font-size: 15px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; }
+    .layout-counter.hide-title .summary-title { display: none; }
+    .layout-counter.hide-title .summary-amount { margin-top: 0; }
+    .layout-counter .summary-amount { color: var(--goal-accent); font-size: 88px; font-weight: 800; line-height: 1; letter-spacing: -2px; margin: 10px 0 0; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35); transform-origin: 50% 60%; }
+    .layout-counter .summary-amount.long { font-size: 60px; letter-spacing: -1px; }
+    .layout-counter .summary-amount.bump { animation: counterBump 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3); }
+    .layout-counter .summary-latest.show { display: flex; align-items: center; justify-content: center; min-width: 0; margin-top: 16px; font-size: 17px; line-height: 1.3; }
+    .layout-counter .summary-latest.enter { animation: counterLatestIn 0.4s ease-out; }
+    .summary-latest-avatar { flex: 0 0 auto; width: 30px; height: 30px; margin-right: 10px; border-radius: 50%; object-fit: cover; background: var(--goal-track); }
+    .summary-latest-avatar.missing { display: none; }
+    .summary-latest-name { min-width: 0; font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .summary-latest-name img { height: 1.2em; width: auto; vertical-align: middle; }
+    .summary-latest-detail { flex: 0 0 auto; margin-left: 8px; color: var(--goal-muted); font-weight: 600; }
+    .summary-latest-detail:empty { display: none; }
+    @keyframes counterBump {
+        0% { transform: scale(1); }
+        35% { transform: scale(1.16); }
+        100% { transform: scale(1); }
+    }
+    @keyframes counterLatestIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
     @media (max-width: 420px) {
         body.tipjar-refresh #meter-style, body.tipjar-refresh #bar-style { padding: 12px; }
         body.tipjar-refresh .goal-meter-container { padding: 16px; }
@@ -1612,6 +1640,11 @@
                 <h2 class="summary-title" id="summary-title">Stream Goal</h2>
                 <div class="summary-amount" id="summary-amount">$0</div>
                 <div class="summary-goal" id="summary-goal">of $250 goal</div>
+                <div class="summary-latest" id="summary-latest">
+                    <img class="summary-latest-avatar" id="summary-latest-avatar" alt="">
+                    <span class="summary-latest-name" id="summary-latest-name"></span>
+                    <span class="summary-latest-detail" id="summary-latest-detail"></span>
+                </div>
             </div>
             <div class="summary-track">
                 <div class="summary-fill" id="summary-fill"></div>
@@ -1709,7 +1742,8 @@
         }
         const previewMode = urlParams.has('preview');
         const refreshedAppearance = urlParams.has('refresh');
-        const summaryStyles = ['card', 'ring', 'lowerthird', 'segmented'];
+        // counter is the panel with no target: a running total and the latest supporter.
+        const summaryStyles = ['card', 'ring', 'lowerthird', 'segmented', 'counter'];
         // Physical jars share one container and one renderer; see VESSEL_PRESETS.
         const vesselStyles = ['glassjar', 'beermug', 'coffeemug', 'potion', 'piggybank', 'chest', 'thermometer', 'jar3d'];
         // Goal bars share a second container and renderer; see METER_PRESETS.
@@ -1718,10 +1752,16 @@
         const style = ['jar', 'meter', 'minimal', 'bar', 'banner', 'compact', 'vertical', 'text'].concat(summaryStyles).concat(vesselStyles).concat(meterStyles).indexOf(requestedStyle) !== -1 ? requestedStyle : 'jar';
         const theme = urlParams.get('theme') || 'default'; // default, neon, gold
         const hideCurrency = urlParams.has('hidecurrency');
-        // Follower goal preset: hype-mode points where each follow/subscribe is worth 1 and paid events are off unless asked for.
-        const followerGoalPreset = urlParams.has('followergoal') || String(urlParams.get('goalmetric') || '').toLowerCase() === 'followers';
-        const requestedHypeMode = urlParams.has('hype') || urlParams.get('mode') === 'hype' || followerGoalPreset;
-        const goalMetric = followerGoalPreset ? 'value' : normalizeGoalMetric(urlParams.get('goalmetric') || (urlParams.has('countdonations') ? 'count' : 'value'));
+        // The counter style has no target, so nothing fills, completes or levels up.
+        const noGoal = style === 'counter';
+        // Supporter presets: hype-mode points where each new supporter is worth 1 and paid events are off unless asked for.
+        // Followers = Twitch/Kick follows and public YouTube subscribers. Subscribers = paid subs and YouTube members.
+        const requestedGoalMetric = String(urlParams.get('goalmetric') || '').trim().toLowerCase();
+        const subscriberGoalPreset = isSubscriberGoalMetric(requestedGoalMetric) || (urlParams.has('subscribergoal') && requestedGoalMetric !== 'followers');
+        const followerGoalPreset = !subscriberGoalPreset && (urlParams.has('followergoal') || requestedGoalMetric === 'followers');
+        const supporterGoalPreset = followerGoalPreset || subscriberGoalPreset;
+        const requestedHypeMode = urlParams.has('hype') || urlParams.get('mode') === 'hype' || supporterGoalPreset;
+        const goalMetric = supporterGoalPreset ? 'value' : normalizeGoalMetric(urlParams.get('goalmetric') || (urlParams.has('countdonations') ? 'count' : 'value'));
         const countMode = goalMetric === 'count';
         const hypeMode = requestedHypeMode && !countMode;
         const eventTypeFilter = normalizeEventFilterList(urlParams.get('tipjarevent') || urlParams.get('tipjarevents') || '');
@@ -1729,30 +1769,32 @@
         const countLabel = String(urlParams.get('countlabel') || getDefaultCountLabel(eventTypeFilter)).trim() || 'donations';
         const countSingularLabel = String(urlParams.get('countsingular') || getDefaultCountSingularLabel(eventTypeFilter, countLabel)).trim() || 'donation';
         const parsedGoal = readNumberParam('goal', hypeMode ? 100 : 250, countMode ? 1 : 0.01);
-        const goal = countMode ? Math.max(1, Math.round(parsedGoal)) : parsedGoal;
+        const goal = noGoal ? 0 : (countMode ? Math.max(1, Math.round(parsedGoal)) : parsedGoal);
         const celebration = urlParams.get('celebration') || 'hearts'; // hearts, confetti, fireworks, none
         const goalResetDaily = !previewMode && urlParams.get('goalreset') === 'daily';
         const persistent = !previewMode && (urlParams.has('persistent') || goalResetDaily); // Keep amount between sessions
         const sound = !previewMode && urlParams.has('sound'); // Play sound on donation
         const hasCustomTitle = urlParams.has('title');
-        let customTitle = urlParams.get('title') || (followerGoalPreset ? 'Follower Goal' : hypeMode ? 'Hype Goal' : (countMode ? getDefaultCountTitle(eventTypeFilter) : 'Stream Goal'));
+        const unitLabel = urlParams.get('unit') || (subscriberGoalPreset ? 'subscribers' : (followerGoalPreset ? 'followers' : 'pts'));
+        const unitSingularLabel = urlParams.get('unit') ? unitLabel : (subscriberGoalPreset ? 'subscriber' : (followerGoalPreset ? 'follower' : unitLabel));
+        let customTitle = urlParams.get('title') || (noGoal ? getDefaultCounterTitle() : (subscriberGoalPreset ? 'Subscriber Goal' : followerGoalPreset ? 'Follower Goal' : hypeMode ? 'Hype Goal' : (countMode ? getDefaultCountTitle(eventTypeFilter) : 'Stream Goal')));
         const baseGoalTitle = customTitle;
         const goalEndDate = parseGoalEndDate(urlParams.get('goalend'));
         const goalRewards = parseGoalRewards(urlParams.get('goalrewards'));
         const showControls = urlParams.has('controls'); // Show control panel
         const customJarUrl = urlParams.get('jarimage'); // Custom jar image URL
         const alignRight = urlParams.has('alignright');
-        const unitLabel = urlParams.get('unit') || (followerGoalPreset ? 'followers' : 'pts');
-        const subPoints = readNumberParam('subpoints', followerGoalPreset ? 0 : 2.5, 0);
+        const subPoints = readNumberParam('subpoints', subscriberGoalPreset ? 1 : (followerGoalPreset ? 0 : 2.5), 0);
         const giftPoints = readNumberParam('giftpoints', subPoints, 0);
         const donationPointRate = readNumberParam('donationpoints', 1, 0);
         const followPoints = readNumberParam('followpoints', followerGoalPreset ? 1 : 0, 0);
-        const countTips = !urlParams.has('notips') && (!followerGoalPreset || urlParams.has('donationpoints'));
+        const countTips = !urlParams.has('notips') && (!supporterGoalPreset || urlParams.has('donationpoints'));
         const countSubs = !urlParams.has('nosubs');
         const countGifts = !urlParams.has('nogifts');
-        const countResubs = !urlParams.has('noresubs');
+        // A subscriber count is about new subs, so renewals only count when asked for.
+        const countResubs = subscriberGoalPreset ? urlParams.has('countresubs') : !urlParams.has('noresubs');
         const countGiftRedemptions = urlParams.has('countgiftredemptions');
-        const resetOnComplete = hypeMode && !followerGoalPreset ? !urlParams.has('noresetoncomplete') : urlParams.has('resetoncomplete');
+        const resetOnComplete = hypeMode && !supporterGoalPreset ? !urlParams.has('noresetoncomplete') : urlParams.has('resetoncomplete');
         const carryOverGoal = urlParams.has('carryover');
         const showCompletions = hypeMode && !urlParams.has('hidecompletions');
         const completionDelayMs = readNumberParam('completiondelay', 3000, 0);
@@ -1775,8 +1817,8 @@
         const barRadius = urlParams.get('barradius'); // "0" for square edges, "12" for rounded, etc.
         const barOnly = urlParams.has('baronly');
         const parsedLevelSize = readNumberParam('levelsize', readNumberParam('increment', 0, 0.0001), 0.0001);
-        const levelSize = countMode && parsedLevelSize > 0 ? Math.max(1, Math.round(parsedLevelSize)) : parsedLevelSize;
-        const rollingGoal = urlParams.has('rollinggoal') || urlParams.has('cumulativegoal') || urlParams.has('goalladder');
+        const levelSize = noGoal ? 0 : (countMode && parsedLevelSize > 0 ? Math.max(1, Math.round(parsedLevelSize)) : parsedLevelSize);
+        const rollingGoal = !noGoal && (urlParams.has('rollinggoal') || urlParams.has('cumulativegoal') || urlParams.has('goalladder'));
         const parsedRollingGoalSize = readOptionalNumberParam(['rollinggoal', 'cumulativegoal', 'goalladder', 'goalstep', 'goalincrement'], 0.01) || goal;
         const rollingGoalSize = countMode ? Math.max(1, Math.round(parsedRollingGoalSize)) : parsedRollingGoalSize;
         const parsedStartAmount = readOptionalNumberParam(['startamount', 'initialamount', 'currentamount'], 0);
@@ -1834,6 +1876,14 @@
             const amountSize = readOptionalNumberParam(['amountsize'], 12);
             if (amountSize !== null) document.getElementById('summary-amount').style.fontSize = Math.min(96, amountSize) + 'px';
             if (urlParams.has('hidepercent')) activeStyle.classList.add('hide-percentage');
+            if (noGoal) {
+                if (urlParams.has('hidetitle')) activeStyle.classList.add('hide-title');
+                // Nothing is filling up, so this panel is a live readout instead of a progress bar.
+                panel.setAttribute('role', 'status');
+                panel.removeAttribute('aria-valuemin');
+                panel.removeAttribute('aria-valuemax');
+                panel.removeAttribute('aria-valuenow');
+            }
         }
 
         // Optional corner-friendly square (or custom) edges for any bar-based style.
@@ -1908,6 +1958,8 @@
         let completionResetTimer = null;
         let levelRolloverTimer = null;
         let levelCompletionState = null;
+        let counterShownTotal = null;
+        const showLatestSupporter = noGoal && !urlParams.has('hidelatest');
         const recentTips = [];
         const maxRecentTips = 4; // .recent-tips (max-height 200px) fits four rows
         const donationHistory = persistent ? readStoredHistory() : [];
@@ -1989,7 +2041,7 @@
         }
 
         const dropItem = normalizeDropItem(urlParams.get('dropitem'));
-        const jarLabel = urlParams.has('jarlabel') ? String(urlParams.get('jarlabel')).slice(0, 12) : (followerGoalPreset ? 'FOLLOWS' : (hypeMode ? 'HYPE' : 'TIPS'));
+        const jarLabel = urlParams.has('jarlabel') ? String(urlParams.get('jarlabel')).slice(0, 12) : (subscriberGoalPreset ? 'SUBS' : (followerGoalPreset ? 'FOLLOWS' : (hypeMode ? 'HYPE' : 'TIPS')));
         const hidePercent = urlParams.has('hidepercent');
         const hideTitle = urlParams.has('hidetitle');
 
@@ -2969,6 +3021,7 @@
             }
             renderAmount();
             clearJarContents();
+            clearLatestSupporter();
             if (showNotice) {
                 showNotification(hypeMode ? 'Hype goal reset.' : (countMode ? 'Donation count reset.' : 'Tip jar amount reset.'));
             }
@@ -3079,7 +3132,11 @@
 
         function commandMatchesTipJarFilters(data) {
             const commandMetric = normalizeGoalMetric(data.goalmetric || (data.countdonations ? 'count' : ''));
-            if (data.goalmetric || data.countdonations) {
+            if (isSubscriberGoalMetric(data.goalmetric)) {
+                if (!subscriberGoalPreset) return false;
+            } else if (normalizeFilterValue(data.goalmetric) === 'followers') {
+                if (!followerGoalPreset) return false;
+            } else if (data.goalmetric || data.countdonations) {
                 if ((commandMetric === 'count') !== countMode) return false;
             }
 
@@ -3213,7 +3270,74 @@
             updateCompletionDisplay();
         }
 
+        // Bare number for things being counted (the caption names them); money keeps its currency.
+        function formatCounterValue(value) {
+            if (countMode) return formatNumber(Math.max(0, Math.ceil(Number(value) || 0)));
+            if (hypeMode) return formatNumber(value);
+            return formatGoalValue(value, true);
+        }
+
+        function renderCounter(state) {
+            const text = formatCounterValue(state.total);
+            const amount = document.getElementById('summary-amount');
+            const gained = counterShownTotal !== null && state.total > counterShownTotal;
+            counterShownTotal = state.total;
+            setElText('summary-title', customTitle);
+            amount.textContent = text;
+            amount.classList.toggle('long', text.length > 5);
+            if (gained) {
+                // Restart the pop even when gains arrive back to back.
+                amount.classList.remove('bump');
+                void amount.offsetWidth;
+                amount.classList.add('bump');
+            }
+            document.getElementById('summary-progress').setAttribute('aria-label', `${customTitle}: ${text}`);
+        }
+
+        function safeAvatarUrl(value) {
+            const raw = String(value || '').trim();
+            if (!raw) return '';
+            if (/^data:image\/(png|jpe?g|gif|webp);base64,/i.test(raw)) return raw;
+            try {
+                const parsed = new URL(raw, window.location.href);
+                return /^(https?:|file:|chrome-extension:)$/.test(parsed.protocol) ? parsed.href : '';
+            } catch (e) {
+                return '';
+            }
+        }
+
+        // The counter names whoever was counted last: face, name, and what they added when it is more than one.
+        function setLatestSupporter(name, avatar, detail) {
+            if (!showLatestSupporter) return;
+            const row = document.getElementById('summary-latest');
+            const image = document.getElementById('summary-latest-avatar');
+            if (!row || !image) return;
+            const src = safeAvatarUrl(avatar);
+            image.onerror = function() { image.classList.add('missing'); };
+            image.classList.toggle('missing', !src);
+            image.referrerPolicy = 'no-referrer';
+            if (src) image.src = src;
+            else image.removeAttribute('src');
+            // Names can carry entities or emotes, so they go through the same display filter as the recent tips list.
+            const label = String(name || 'Anonymous');
+            document.getElementById('summary-latest-name').innerHTML = window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(label) : fallbackEscapeHtml(label);
+            setElText('summary-latest-detail', detail || '');
+            row.classList.add('show');
+            row.classList.remove('enter');
+            void row.offsetWidth;
+            row.classList.add('enter');
+        }
+
+        function clearLatestSupporter() {
+            const row = document.getElementById('summary-latest');
+            if (row) row.classList.remove('show', 'enter');
+        }
+
         function renderSummary(state) {
+            if (noGoal) {
+                renderCounter(state);
+                return;
+            }
             const percentage = Math.max(0, Math.min(100, state.percentage));
             const title = state.isLevel ? `${customTitle} (Lvl ${state.level})` : customTitle;
             setElText('summary-title', title);
@@ -3492,6 +3616,25 @@
             return 'Donation Count Goal';
         }
 
+        function isSubscriberGoalMetric(value) {
+            return ['subscribers', 'subs', 'members', 'subscriptions', 'memberships'].indexOf(normalizeFilterValue(value)) !== -1;
+        }
+
+        function capitalizeWords(value) {
+            return String(value || '').replace(/(^|\s)([a-z])/g, function(match, space, letter) {
+                return space + letter.toUpperCase();
+            });
+        }
+
+        // The counter shows one caption above the number, so the caption names what is being counted.
+        function getDefaultCounterTitle() {
+            if (subscriberGoalPreset) return 'New Subscribers';
+            if (followerGoalPreset) return 'New Followers';
+            if (countMode) return capitalizeWords(countLabel);
+            if (hypeMode) return unitLabel === 'pts' ? 'Hype Points' : capitalizeWords(unitLabel);
+            return 'Total Raised';
+        }
+
         function normalizeTipJarSourceValue(value) {
             const source = normalizeFilterValue(value).replace(/[\s_-]+/g, '');
             if (source === 'youtubeshort' || source === 'youtubeshorts') {
@@ -3512,6 +3655,9 @@
             const parts = [];
             if (countMode) {
                 parts.push('metric_count');
+            }
+            if (subscriberGoalPreset) {
+                parts.push('metric_subscribers');
             }
             if (eventTypeFilter.length) {
                 parts.push('events_' + eventTypeFilter.join('_').replace(/[^a-z0-9_-]/g, ''));
@@ -3703,7 +3849,7 @@
                 return formatCountGoalValue(value);
             }
             if (hypeMode) {
-                return `${formatNumber(value)} ${unitLabel}`;
+                return `${formatNumber(value)} ${Number(value) === 1 ? unitSingularLabel : unitLabel}`;
             }
             if (nativeUnitMode) {
                 return `${formatNumber(value)} ${nativeUnitLabel}`;
@@ -4124,15 +4270,18 @@
 
             if (eventName === 'new_follower' || eventName === 'follow' || eventName === 'followed') {
                 if (!followPoints) return null;
+                // YouTube sends a burst of new subscribers as one grouped event; count every person in it.
+                const followMeta = getMeta(data);
+                const followCount = followMeta.grouped === true ? Math.max(1, Math.floor(Number(followMeta.count) || 1)) : 1;
                 return {
                     kind: 'follow',
                     donator: name,
                     recipient: '',
                     source,
                     event: eventName,
-                    count: 1,
-                    points: followPoints,
-                    label: `+${formatGoalValue(followPoints)} follow`,
+                    count: followCount,
+                    points: followCount * followPoints,
+                    label: `+${formatGoalValue(followCount * followPoints)} ${followCount === 1 ? 'follow' : 'follows'}`,
                     raw: data.chatmessage || ''
                 };
             }
@@ -4207,6 +4356,8 @@
 
             updateAmount(contribution.points);
             addRecentTip(contribution.donator, contribution.label);
+            // A grouped follow already reads "Name +5", so it needs no extra tally.
+            setLatestSupporter(contribution.donator, contribution.avatar, contribution.kind !== 'follow' && contribution.points > 1 ? `+${formatNumber(contribution.points)}` : '');
             playDonationSound();
 
             if (isVesselStyle || isMeterStyle) {
@@ -4227,12 +4378,30 @@
                 triggerFireworks();
             }
 
-            showNotification(contribution.kind === 'follow' ? `${contribution.donator} just followed!` : `${contribution.donator} added ${formatGoalValue(contribution.points)}!`);
+            showNotification(describeHypeContribution(contribution));
+        }
+
+        // Each platform has its own word for the same thing: a free YouTube follow is a subscribe, a paid one is a membership.
+        function describeHypeContribution(contribution) {
+            const youtube = contribution.source === 'youtube';
+            if (contribution.kind === 'follow') {
+                return `${contribution.donator} just ${youtube ? 'subscribed' : 'followed'}!`;
+            }
+            if (subscriberGoalPreset && contribution.kind === 'sub') {
+                return `${contribution.donator} just ${youtube ? 'became a member' : 'subscribed'}!`;
+            }
+            if (subscriberGoalPreset && contribution.kind === 'gift') {
+                const gifts = contribution.count || 1;
+                const noun = youtube ? (gifts === 1 ? 'membership' : 'memberships') : (gifts === 1 ? 'sub' : 'subs');
+                return `${contribution.donator} gifted ${formatNumber(gifts)} ${noun}!`;
+            }
+            return `${contribution.donator} added ${formatGoalValue(contribution.points)}!`;
         }
 
         function processHypeContribution(data) {
             const contribution = buildHypeContribution(data);
             if (!contribution) return;
+            contribution.avatar = data.chatimg || '';
             if (contribution.kind === 'gift' && contribution.count === 0) return;
             if (donationTypeFilter && contribution.kind !== 'donation') return;
             if (isDuplicateContribution(data, contribution)) return;
@@ -4242,7 +4411,7 @@
                 return;
             }
 
-            if (followerGoalPreset && !contribution.points) return;
+            if (supporterGoalPreset && !contribution.points) return;
 
             recordHypeContribution(contribution);
         }
@@ -4300,6 +4469,7 @@
                 ? `+1 ${countSingularLabel} (${displayLabel})`
                 : (hypeMode ? `+${formatGoalValue(goalValue)} (${displayLabel})` : displayLabel);
             addRecentTip(donator, recentLabel);
+            setLatestSupporter(donator, contribution ? (contribution.avatar || contribution.chatimg) : '', countMode ? '' : displayLabel);
             playDonationSound();
 
             if (isVesselStyle || isMeterStyle) {

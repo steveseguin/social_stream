@@ -2910,8 +2910,8 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "aliases": [
               "style"
             ],
-            "values": "jar, meter, bar, compact, vertical, minimal, text, card, ring, lowerthird, segmented, glassjar, jar3d, beermug, coffeemug, potion, piggybank, chest, thermometer, battery, xpbar, healthbar, pixelbar, neonbar, terminal, milestones, gauge",
-            "description": "Selects the tip jar display style. bar is the fluid goal bar; compact/vertical are simple square-edged bars for corners; text is a one-line readout; card/ring/lowerthird/segmented are panel layouts; glassjar, jar3d, beermug, coffeemug, potion, piggybank, chest and thermometer are physical containers that fill as the goal rises; battery, xpbar, healthbar, pixelbar, neonbar, terminal, milestones and gauge are goal bars"
+            "values": "jar, meter, bar, compact, vertical, minimal, text, card, ring, lowerthird, segmented, counter, glassjar, jar3d, beermug, coffeemug, potion, piggybank, chest, thermometer, battery, xpbar, healthbar, pixelbar, neonbar, terminal, milestones, gauge",
+            "description": "Selects the tip jar display style. bar is the fluid goal bar; compact/vertical are simple square-edged bars for corners; text is a one-line readout; card/ring/lowerthird/segmented are panel layouts; counter is a panel with a running total, no target, and the latest supporter; glassjar, jar3d, beermug, coffeemug, potion, piggybank, chest and thermometer are physical containers that fill as the goal rises; battery, xpbar, healthbar, pixelbar, neonbar, terminal, milestones and gauge are goal bars"
           },
           {
             "key": "goal",
@@ -2920,7 +2920,7 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
               "goal"
             ],
             "values": "number",
-            "description": "Sets the target amount for the bar or jar"
+            "description": "Sets the target amount for the bar or jar. Not used by counter"
           },
           {
             "key": "title",
@@ -2937,8 +2937,8 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "aliases": [
               "goalmetric"
             ],
-            "values": "value, count",
-            "description": "Uses donation value by default. count adds one per qualifying donation event regardless of its monetary value and takes priority over Hype scoring"
+            "values": "value, count, followers, subscribers",
+            "description": "Uses donation value by default. count adds one per qualifying donation event regardless of its monetary value and takes priority over Hype scoring. followers adds one per new follower (Twitch/Kick follows, public YouTube subscribers via the API source). subscribers adds one per new paid sub or YouTube member and per gifted sub; renewals are left out. Both ignore donations unless donationpoints is set"
           },
           {
             "key": "countdonations",
@@ -2948,6 +2948,33 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "boolean",
             "description": "Alias for goalmetric=count"
+          },
+          {
+            "key": "followergoal",
+            "displayName": "followergoal",
+            "aliases": [
+              "followergoal"
+            ],
+            "values": "boolean",
+            "description": "Alias for goalmetric=followers"
+          },
+          {
+            "key": "subscribergoal",
+            "displayName": "subscribergoal",
+            "aliases": [
+              "subscribergoal"
+            ],
+            "values": "boolean",
+            "description": "Alias for goalmetric=subscribers"
+          },
+          {
+            "key": "countresubs",
+            "displayName": "countresubs",
+            "aliases": [
+              "countresubs"
+            ],
+            "values": "boolean",
+            "description": "With goalmetric=subscribers, also counts renewals and resubscriptions"
           },
           {
             "key": "tipjarevent",
@@ -3219,7 +3246,16 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
               "hidetitle"
             ],
             "values": "boolean",
-            "description": "Hides the goal title above the physical jar styles"
+            "description": "Hides the goal title above the physical jar styles and the caption on counter"
+          },
+          {
+            "key": "hidelatest",
+            "displayName": "hidelatest",
+            "aliases": [
+              "hidelatest"
+            ],
+            "values": "boolean",
+            "description": "Hides the latest supporter's picture and name on counter"
           },
           {
             "key": "hidepercent",

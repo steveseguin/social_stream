@@ -50,7 +50,7 @@
         .style-tile code { font-size: 1.2rem; }
         .setup-screenshots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6rem; align-items: start; }
         .setup-screenshots > .guide-figure { min-width: 0; margin: 1rem 0; }
-        .count-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.4rem; margin: 1.4rem 0; }
+        .count-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.4rem; margin: 1.4rem 0; }
         .count-picker > div { padding: 1.4rem 1.6rem; border: 1px solid var(--border-color); border-radius: 1.2rem; background: var(--background-card); }
         .count-picker strong { display: block; margin-bottom: .4rem; font-size: 1.65rem; }
         .count-picker p { margin: 0; font-size: 1.45rem; line-height: 1.5; }
@@ -161,6 +161,7 @@
                         <li><div class="style-tile"><img src="images/guides/tipjar-styles/card.jpg" alt="Goal Card" loading="lazy" width="480" height="320"><div><strong>Goal Card</strong><span>Big total, slim bar.</span><code>style=card</code></div></div></li>
                         <li><div class="style-tile"><img src="images/guides/tipjar-styles/ring.jpg" alt="Progress Ring" loading="lazy" width="480" height="320"><div><strong>Progress Ring</strong><span>Circle with a percentage.</span><code>style=ring</code></div></div></li>
                         <li><div class="style-tile"><img src="images/guides/tipjar-styles/lowerthird.jpg" alt="Lower Third" loading="lazy" width="480" height="320"><div><strong>Lower Third</strong><span>Low and wide.</span><code>style=lowerthird</code></div></div></li>
+                        <li><div class="style-tile"><img src="images/guides/tipjar-styles/counter.jpg" alt="Counter" loading="lazy" width="480" height="320"><div><strong>Counter</strong><span>Running total, no goal.</span><code>style=counter</code></div></div></li>
                         <li><div class="style-tile"><img src="images/guides/tipjar-styles/minimal.jpg" alt="Minimal" loading="lazy" width="480" height="320"><div><strong>Minimal</strong><span>Just big numbers.</span><code>style=minimal</code></div></div></li>
                         <li><div class="style-tile"><img src="images/guides/tipjar-styles/text.jpg" alt="Text Only" loading="lazy" width="480" height="320"><div><strong>Text Only</strong><span>One line of text.</span><code>style=text</code></div></div></li>
                     </ul>
@@ -178,6 +179,7 @@
                             <tr><td data-label="I want to">Change the Fluid Goal Bar fill colours</td><td data-label="Add to the link"><code>&amp;fillstart=%2366d9b2&amp;fillend=%23ffcc88</code> (hex colours, with <code>%23</code> instead of <code>#</code>)</td></tr>
                             <tr><td data-label="I want to">Set an accent on newer panels, jars, or meters</td><td data-label="Add to the link"><code>&amp;accent=%23ffcc88</code>. Use the fill colours above for Fluid Goal Bar.</td></tr>
                             <tr><td data-label="I want to">Hide the title or percentage on newer jars and meters</td><td data-label="Add to the link"><code>&amp;hidetitle</code> &middot; <code>&amp;hidepercent</code>. These do not apply to every style; check the preview. The four panels below also support <code>hidepercent</code>.</td></tr>
+                            <tr><td data-label="I want to">Show the Counter number without the latest supporter</td><td data-label="Add to the link"><code>&amp;hidelatest</code></td></tr>
                             <tr><td data-label="I want to">Change the Glass Tip Jar label</td><td data-label="Add to the link"><code>&amp;jarlabel=TIPS</code></td></tr>
                             <tr><td data-label="I want to">Stop the 3D jar spinning</td><td data-label="Add to the link"><code>&amp;nospin</code></td></tr>
                             <tr><td data-label="I want to">Use my own jar picture (Classic Jar only)</td><td data-label="Add to the link"><code>&amp;jarimage=https://&hellip;</code></td></tr>
@@ -205,6 +207,7 @@
                         <div><strong>Money</strong><p>Super Chats, Bits, tips, and other donations add their value.</p><p class="example">$63.50 / $100</p></div>
                         <div><strong>Number of donations</strong><p>Every donation adds one, whatever the amount.</p><p class="example">7 / 20 Super Chats</p></div>
                         <div><strong>Hype points</strong><p>Donations <em>plus</em> subs, memberships, and gifted subs.</p><p class="example">340 / 1000 points</p></div>
+                        <div><strong>New followers or subscribers</strong><p>Every new follower or subscriber adds one.</p><p class="example">12 / 50 subscribers</p></div>
                     </div>
                     <figure class="guide-figure">
                         <img src="images/guides/goal-meter-bar-demo.png" alt="Goal meter bar showing $63.50 of a $100 goal with recent supporters" class="guide-image guide-image-medium" loading="lazy">
@@ -220,6 +223,15 @@
                         <li>Set the goal, for example <code>20</code>.</li>
                     </ol>
                     <p>A $1 and a $100 Super Chat each add one. To count Super Stickers too, change the paid event filter. <strong>Count unit label</strong> changes the word shown.</p>
+
+                    <h3 id="count-supporters">Count new followers or subscribers</h3>
+                    <ol class="guide-steps">
+                        <li>Set <strong>Goal measures</strong> to <strong>New followers / YouTube subscribers</strong> or <strong>New paid subs / YouTube members</strong>.</li>
+                        <li>Set the goal, for example <code>50</code>.</li>
+                        <li>For a running total with no goal, set <strong>Display Style</strong> to <strong>Counter</strong>.</li>
+                    </ol>
+                    <p>Each new supporter adds one, and donations are ignored. The paid option also adds one for each gifted sub and leaves out renewals. The Counter shows the picture and name of the latest supporter, and takes the same theme, accent, opacity, and total size options as the panels.</p>
+                    <p>YouTube subscribers need the YouTube WebSocket (API) source. YouTube is checked every five minutes and only reports people whose subscriptions are public, so that count can run late and low.</p>
 
                     <h3>Count subs and memberships too</h3>
                     <ol class="guide-steps">

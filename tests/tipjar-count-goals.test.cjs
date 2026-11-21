@@ -281,11 +281,150 @@ async function testFollowerTipExclusion(baseUrl, browser) {
 	}
 }
 
+const supporterEvents = [
+	{ id: 'sub-1', type: 'twitch', event: 'new_subscriber', chatname: 'Zoe', chatimg: './media/user1.jpg', membership: 'Tier 1' },
+	{ id: 'member-1', type: 'youtube', event: 'sponsorship', chatname: 'Eli', membership: 'Member' },
+	{ id: 'resub-1', type: 'twitch', event: 'resub', chatname: 'Old Timer', membership: 'Tier 1' },
+	{ id: 'follow-1', type: 'twitch', event: 'new_follower', chatname: 'Follower' },
+	{ id: 'tip-1', type: 'twitch', chatname: 'Tipper', hasDonation: '$5.00', donoValue: 5 },
+	{ id: 'gift-1', type: 'twitch', event: 'subscription_gift', chatname: 'Riley', chatimg: './media/user2.jpg', total: 5 }
+];
+
+async function testSubscriberGoal(baseUrl, browser) {
+	const context = await makeContext(browser);
+	try {
+		for (const [params, expected] of [
+			['goalmetric=subscribers', 7],
+			['goalmetric=members', 7],
+			['subscribergoal', 7],
+			['goalmetric=subscribers&countresubs', 8],
+			['goalmetric=subscribers&nogifts', 2],
+			['goalmetric=subscribers&donationpoints=1', 12],
+			['goalmetric=subscribers&followergoal', 7],
+			['goalmetric=followers&subscribergoal', 1],
+			['goalmetric=followers', 1]
+		]) {
+			const { page, errors } = await openTipJar(context, baseUrl + '/tipjar.html?preview&style=bar&goal=100&' + params);
+			await page.evaluate(events => events.forEach(processData), supporterEvents);
+			assert.strictEqual(await page.evaluate(() => currentAmount), expected, params);
+			assert.deepStrictEqual(errors, [], params + ' browser errors');
+			await page.close();
+		}
+
+		const goal = await openTipJar(context, baseUrl + '/tipjar.html?session=sub-goal&style=bar&goal=20&goalmetric=subscribers&persistent');
+		assert.strictEqual(await goal.page.textContent('#bar-title'), 'Subscriber Goal');
+		await goal.page.evaluate(event => processData(event), supporterEvents[0]);
+		assert.strictEqual(await goal.page.textContent('#bar-text'), '1 subscriber / 20 subscribers');
+		assert.strictEqual(await goal.page.textContent('#notification'), 'Zoe just subscribed!');
+		await goal.page.evaluate(event => processData(event), supporterEvents[1]);
+		assert.strictEqual(await goal.page.textContent('#bar-text'), '2 subscribers / 20 subscribers');
+		assert.strictEqual(await goal.page.textContent('#notification'), 'Eli just became a member!');
+		// Saved subscriber totals stay apart from Hype and follower totals.
+		assert.strictEqual(await goal.page.evaluate(() => localStorage.getItem('tipjar_hype_amount_metric_subscribers')), '2');
+		assert.strictEqual(await goal.page.evaluate(() => localStorage.getItem('tipjar_hype_amount')), null);
+		// A "set amount" aimed at another measure must not move this one.
+		await goal.page.evaluate(() => processData({ cmd: 'settipjaramount', value: 9, goalmetric: 'followers' }));
+		assert.strictEqual(await goal.page.evaluate(() => currentAmount), 2);
+		await goal.page.evaluate(() => processData({ cmd: 'settipjaramount', value: 9, goalmetric: 'count' }));
+		assert.strictEqual(await goal.page.evaluate(() => currentAmount), 2);
+		await goal.page.evaluate(() => processData({ cmd: 'settipjaramount', value: 9, goalmetric: 'subscribers' }));
+		assert.strictEqual(await goal.page.evaluate(() => currentAmount), 9);
+		assert.deepStrictEqual(goal.errors, [], 'Subscriber goal browser errors');
+
+		const follower = await openTipJar(context, baseUrl + '/tipjar.html?preview&style=bar&goal=20&followergoal');
+		await follower.page.evaluate(() => processData({ cmd: 'settipjaramount', value: 4, goalmetric: 'subscribers' }));
+		assert.strictEqual(await follower.page.evaluate(() => currentAmount), 0);
+		await follower.page.evaluate(() => processData({ id: 'yt-follow', type: 'youtube', event: 'new_follower', chatname: 'Public Sub' }));
+		assert.strictEqual(await follower.page.textContent('#bar-text'), '1 follower / 20 followers');
+		assert.strictEqual(await follower.page.textContent('#notification'), 'Public Sub just subscribed!');
+		// YouTube reports a burst of new subscribers as one grouped event.
+		await follower.page.evaluate(() => processData({ id: 'yt-burst', type: 'youtube', event: 'new_follower', chatname: 'First +5', meta: { grouped: true, count: 6, others: 5 } }));
+		assert.strictEqual(await follower.page.textContent('#bar-text'), '7 followers / 20 followers');
+		assert.deepStrictEqual(follower.errors, [], 'Follower goal browser errors');
+	} finally {
+		await context.close();
+	}
+}
+
+async function testCounterStyle(baseUrl, browser) {
+	const context = await makeContext(browser);
+	try {
+		// 150 would complete a default goal of 100 and reset it; the counter has no target.
+		const { page, errors } = await openTipJar(context, baseUrl + '/tipjar.html?preview&style=counter&goalmetric=subscribers&goal=5&levelsize=2&rollinggoal=3&startamount=150&panelopacity=0.5&accent=%23ffcc88');
+		assert.strictEqual(await page.locator('.style-container.active').count(), 1);
+		assert.strictEqual(await page.textContent('#summary-title'), 'New Subscribers');
+		assert.strictEqual(await page.textContent('#summary-amount'), '150');
+		assert.strictEqual(await page.getAttribute('#summary-progress', 'role'), 'status');
+		assert.strictEqual(await page.getAttribute('#summary-progress', 'aria-valuenow'), null);
+		for (const hidden of ['#summary-goal', '.summary-track', '.summary-footer', '.summary-ring', '#summary-latest']) {
+			assert.strictEqual(await page.locator(hidden).isVisible(), false, hidden + ' must stay hidden on the counter');
+		}
+		assert.strictEqual(await page.locator('.summary-panel').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(18, 24, 34, 0.5)');
+		assert.strictEqual(await page.locator('#summary-amount').evaluate(el => getComputedStyle(el).color), 'rgb(255, 204, 136)');
+
+		await page.evaluate(events => events.forEach(processData), supporterEvents);
+		assert.strictEqual(await page.textContent('#summary-amount'), '157');
+		assert.strictEqual(await page.evaluate(() => currentAmount), 157, 'The counter never resets or levels up');
+		assert.strictEqual(await page.textContent('#notification'), 'Riley gifted 5 subs!');
+		assert.strictEqual(await page.locator('#summary-latest').isVisible(), true);
+		assert.strictEqual(await page.textContent('#summary-latest-name'), 'Riley');
+		assert.strictEqual(await page.textContent('#summary-latest-detail'), '+5');
+		assert((await page.getAttribute('#summary-latest-avatar', 'src')).endsWith('/media/user2.jpg'));
+		assert.strictEqual(await page.getAttribute('#summary-progress', 'aria-label'), 'New Subscribers: 157');
+
+		// Names go through the display filter, and only web or packaged image addresses reach the picture.
+		await page.evaluate(() => processData({ id: 'sub-x', type: 'kick', event: 'new_subscriber', chatname: 'Tom &amp; Jerry<img src=x onerror="window.nameProbe=1"><script>window.nameProbe=1</script>', chatimg: 'javascript:window.avatarProbe=1' }));
+		assert.strictEqual(await page.textContent('#summary-latest-name'), 'Tom & Jerry');
+		assert.strictEqual(await page.locator('#summary-latest [onerror], #summary-latest script').count(), 0);
+		assert.strictEqual(await page.getAttribute('#summary-latest-avatar', 'src'), null);
+		assert.strictEqual(await page.locator('#summary-latest-avatar').isVisible(), false);
+		assert.strictEqual(await page.evaluate(() => window.nameProbe || window.avatarProbe), undefined);
+
+		await page.evaluate(() => processData({ cmd: 'resettipjar' }));
+		assert.strictEqual(await page.textContent('#summary-amount'), '0');
+		assert.strictEqual(await page.locator('#summary-latest').isVisible(), false);
+		await page.setViewportSize({ width: 320, height: 400 });
+		await page.evaluate(() => processData({ id: 'sub-long', type: 'twitch', event: 'new_subscriber', chatname: 'A supporter with a very long display name that keeps on going' }));
+		assert(await page.locator('.summary-panel').evaluate(el => el.scrollWidth <= el.clientWidth), 'counter overflows at 320px');
+		assert.deepStrictEqual(errors, [], 'Counter browser errors');
+		await page.close();
+
+		for (const [params, title, amount, detail] of [
+			['', 'Total Raised', '$125.00', '$125.00'],
+			['&goalmetric=count&tipjarevent=superchat', 'Super Chats', '1', ''],
+			['&hype', 'Hype Points', '125', '$125.00'],
+			['&title=Team%20Amethyst', 'Team Amethyst', '$125.00', '$125.00']
+		]) {
+			const next = await openTipJar(context, baseUrl + '/tipjar.html?preview&style=counter' + params);
+			await next.page.evaluate(() => processData({ id: 'sc-1', type: 'youtube', event: 'superchat', chatname: 'Maya', hasDonation: '$125.00' }));
+			assert.strictEqual(await next.page.textContent('#summary-title'), title, params);
+			assert.strictEqual(await next.page.textContent('#summary-amount'), amount, params);
+			assert.strictEqual(await next.page.textContent('#summary-latest-name'), 'Maya', params);
+			assert.strictEqual(await next.page.textContent('#summary-latest-detail'), detail, params);
+			assert((await next.page.textContent('#notification')).indexOf('% of goal') === -1, params + ' showed a goal milestone');
+			assert.deepStrictEqual(next.errors, [], params + ' browser errors');
+			await next.page.close();
+		}
+
+		const bare = await openTipJar(context, baseUrl + '/tipjar.html?preview&style=counter&goalmetric=followers&hidelatest&hidetitle');
+		await bare.page.evaluate(event => processData(event), supporterEvents[3]);
+		assert.strictEqual(await bare.page.textContent('#summary-amount'), '1');
+		assert.strictEqual(await bare.page.locator('#summary-latest').isVisible(), false);
+		assert.strictEqual(await bare.page.locator('#summary-title').isVisible(), false);
+		assert.deepStrictEqual(bare.errors, [], 'Bare counter browser errors');
+	} finally {
+		await context.close();
+	}
+}
+
 function testPopupContract() {
 	const popupHtml = fs.readFileSync(path.join(repoRoot, "popup.html"), "utf8");
 	const popupSource = fs.readFileSync(path.join(repoRoot, "popup.js"), "utf8");
 	assert(popupHtml.includes('data-optionparam12="goalmetric"'));
 	assert(popupHtml.includes('<option value="count">Number of qualifying donations</option>'));
+	assert(popupHtml.includes('<option value="followers">New followers / YouTube subscribers</option>'));
+	assert(popupHtml.includes('<option value="subscribers">New paid subs / YouTube members</option>'));
+	assert(popupHtml.includes('<option value="counter">Counter (running total, no goal)</option>'));
 	assert(popupHtml.includes('data-optionparam12="tipjarevent"'));
 	assert(popupHtml.includes('<option value="superchat">Super Chats only</option>'));
 	assert(popupHtml.includes('data-optionparam12="countlabel"'));
@@ -310,6 +449,10 @@ async function main() {
 		console.log("PASS Tip Jar gifted-membership exclusion works in Hype mode");
 		await testFollowerTipExclusion(baseUrl, browser);
 		console.log("PASS Follower and Hype goals honor tip exclusion while preserving follower contributions");
+		await testSubscriberGoal(baseUrl, browser);
+		console.log("PASS Subscriber goals count new subs, members and gifts only, with their own saved total");
+		await testCounterStyle(baseUrl, browser);
+		console.log("PASS Counter shows a running total and the latest supporter with no goal behavior");
 		await testJarPrefillReset(baseUrl, browser);
 		console.log("PASS Reset clears prefilled jars and cancels queued donation hearts in donation and Hype modes");
 		await testGoalLayouts(baseUrl, browser);

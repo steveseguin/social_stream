@@ -444,11 +444,14 @@ Original styles keep their existing sizing. New badge styles shrink to fit; Card
 
 | Parameter | Values | Description |
 |-----------|--------|-------------|
-| `style` | `jar`, `meter`, `bar`, `compact`, `vertical`, `minimal`, `text`, `card`, `ring`, `lowerthird`, `segmented`, `glassjar`, `jar3d`, `beermug`, `coffeemug`, `potion`, `piggybank`, `chest`, `thermometer`, `battery`, `xpbar`, `healthbar`, `pixelbar`, `neonbar`, `terminal`, `milestones`, `gauge` | Selects the tip jar display style. `bar` is the fluid goal bar; `compact`/`vertical` are simple square-edged bars for corners; `text` is a one-line readout; `card`/`ring`/`lowerthird`/`segmented` are panel layouts; `glassjar`, `jar3d`, `beermug`, `coffeemug`, `potion`, `piggybank`, `chest` and `thermometer` are physical containers that fill as the goal rises; `battery`, `xpbar`, `healthbar`, `pixelbar`, `neonbar`, `terminal`, `milestones` and `gauge` are goal bars |
-| `goal` | number | Sets the target amount for the bar or jar |
+| `style` | `jar`, `meter`, `bar`, `compact`, `vertical`, `minimal`, `text`, `card`, `ring`, `lowerthird`, `segmented`, `counter`, `glassjar`, `jar3d`, `beermug`, `coffeemug`, `potion`, `piggybank`, `chest`, `thermometer`, `battery`, `xpbar`, `healthbar`, `pixelbar`, `neonbar`, `terminal`, `milestones`, `gauge` | Selects the tip jar display style. `bar` is the fluid goal bar; `compact`/`vertical` are simple square-edged bars for corners; `text` is a one-line readout; `card`/`ring`/`lowerthird`/`segmented` are panel layouts; `counter` is a panel with a running total, no target, and the latest supporter; `glassjar`, `jar3d`, `beermug`, `coffeemug`, `potion`, `piggybank`, `chest` and `thermometer` are physical containers that fill as the goal rises; `battery`, `xpbar`, `healthbar`, `pixelbar`, `neonbar`, `terminal`, `milestones` and `gauge` are goal bars |
+| `goal` | number | Sets the target amount for the bar or jar. Not used by `counter` |
 | `title` | string | Sets the visible goal title (e.g. `Star Goal`, `SuperChat Goal`) |
-| `goalmetric` | `value`, `count` | Uses donation value by default. `count` adds one per qualifying donation event regardless of its monetary value and takes priority over Hype scoring |
+| `goalmetric` | `value`, `count`, `followers`, `subscribers` | Uses donation value by default. `count` adds one per qualifying donation event regardless of its monetary value and takes priority over Hype scoring. `followers` adds one per new follower (Twitch/Kick follows, public YouTube subscribers via the API source). `subscribers` adds one per new paid sub or YouTube member and per gifted sub; renewals are left out. Both ignore donations unless `donationpoints` is set |
 | `countdonations` | boolean | Alias for `goalmetric=count` |
+| `followergoal` | boolean | Alias for `goalmetric=followers` |
+| `subscribergoal` | boolean | Alias for `goalmetric=subscribers` |
+| `countresubs` | boolean | With `goalmetric=subscribers`, also counts renewals and resubscriptions |
 | `tipjarevent` or `tipjarevents` | comma-separated event names | Counts only matching paid event types, such as `superchat`, `supersticker`, or `superchat,supersticker` |
 | `countlabel` | string | Overrides the plural unit label used by count goals, such as `Super Chats` |
 | `countsingular` | string | Optional singular label used for one counted event, such as `Super Chat` |
@@ -477,7 +480,8 @@ Original styles keep their existing sizing. New badge styles shrink to fit; Card
 | `celebration` | `hearts`, `confetti`, `fireworks`, `none` | Effect played on milestones/level-ups |
 | `dropitem` | `hearts`, `coins`, `gems`, `stars`, `bills` | Item that falls into the `jar` physics cup and drops into the physical jar styles. Defaults to the golden heart on `jar` and a coin elsewhere |
 | `jarlabel` | string | Sticker text on the `glassjar` style, up to 12 characters (default `TIPS`) |
-| `hidetitle` | boolean | Hides the goal title above the physical jar styles |
+| `hidetitle` | boolean | Hides the goal title above the physical jar styles and the caption on `counter` |
+| `hidelatest` | boolean | Hides the latest supporter's picture and name on `counter` |
 | `hidepercent` | boolean | Hides the percentage on the physical jars and on the `card`/`ring`/`lowerthird`/`segmented` panels |
 | `nospin` | boolean | Stops the `jar3d` cylinder from rotating |
 | `accent` | six-digit hex color | Panel accent color, and the liquid color for the physical jars when no `fillstart`/`fillend` is set |

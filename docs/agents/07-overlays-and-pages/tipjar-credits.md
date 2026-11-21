@@ -51,13 +51,14 @@ Core display:
 
 | Parameter | Behavior |
 | --- | --- |
-| `style` | `jar`, `meter`, `bar`, `compact`, `vertical`, `minimal`, `text`, the panels `card`/`ring`/`lowerthird`/`segmented`, the physical containers `glassjar`/`jar3d`/`beermug`/`coffeemug`/`potion`/`piggybank`/`chest`/`thermometer`, or the goal bars `battery`/`xpbar`/`healthbar`/`pixelbar`/`neonbar`/`terminal`/`milestones`/`gauge`. |
+| `style` | `jar`, `meter`, `bar`, `compact`, `vertical`, `minimal`, `text`, the panels `card`/`ring`/`lowerthird`/`segmented`, the no-target `counter` panel (running total plus the latest supporter), the physical containers `glassjar`/`jar3d`/`beermug`/`coffeemug`/`potion`/`piggybank`/`chest`/`thermometer`, or the goal bars `battery`/`xpbar`/`healthbar`/`pixelbar`/`neonbar`/`terminal`/`milestones`/`gauge`. |
 | `dropitem` | `hearts` (default on `jar`), `coins`, `gems`, `stars`, `bills`. Sets the falling sprite in the physics jar and the item dropped into the physical containers. |
 | `jarlabel` | Sticker text on `style=glassjar`, up to 12 characters (default `TIPS`). |
-| `hidetitle` / `nospin` | Hides the title above the physical containers / stops `style=jar3d` rotating. |
+| `hidetitle` / `nospin` | Hides the title above the physical containers and the caption on `style=counter` / stops `style=jar3d` rotating. |
+| `hidelatest` | Hides the latest supporter's picture and name on `style=counter`. |
 | `theme` | `default`, `neon`, or `gold`. |
-| `goal` | Target goal amount. Default is `250`, or `100` in hype mode. |
-| `title` | Visible title; defaults to `Stream Goal` or `Hype Goal`. |
+| `goal` | Target goal amount. Default is `250`, or `100` in hype mode. Not used by `style=counter`, which also turns off levels, rolling goals, milestones, and completion resets. |
+| `title` | Visible title; defaults to `Stream Goal` or `Hype Goal`. On `style=counter` the default names what is counted: `New Subscribers`, `New Followers`, the count label, `Hype Points`, or `Total Raised`. |
 | `alignright` | Aligns the overlay to the right. |
 | `baronly` | Applies a bar-only display mode. |
 | `jarimage` | Custom jar image URL for `style=jar`. |
@@ -100,8 +101,10 @@ Hype mode:
 | `subpoints` | Points for subscriptions/memberships; default `2.5`. |
 | `giftpoints` | Points per gift; defaults to `subpoints`. |
 | `donationpoints` | Multiplier for donation value in hype mode; default `1`. |
-| `followpoints` | Points per `new_follower` event (Twitch/Kick follows, public YouTube subscribers via the API source); default `0` (ignored). |
+| `followpoints` | Points per `new_follower` event (Twitch/Kick follows, public YouTube subscribers via the API source); default `0` (ignored). A grouped YouTube burst (`meta.grouped` with `meta.count`) scores once per subscriber in it. |
 | `followergoal` or `goalmetric=followers` | Follower-goal preset: hype mode with `followpoints=1`, `subpoints=0`, tips off unless `donationpoints` is set, unit `followers`, title `Follower Goal`, no reset on completion. |
+| `subscribergoal` or `goalmetric=subscribers` | Subscriber-goal preset (aliases `subs`, `members`, `subscriptions`, `memberships`): hype mode with `subpoints=1`, gifts 1 each, `followpoints=0`, renewals off unless `countresubs` is set, tips off unless `donationpoints` is set, unit `subscribers`, title `Subscriber Goal`, no reset on completion. Saved totals use their own `metric_subscribers` storage key. Wins over `followergoal` when both are present. |
+| `countresubs` | With the subscriber preset, also counts `resub` and renewal events. |
 | `notips`, `nosubs`, `nogifts`, `noresubs` | Exclude specific contribution classes. |
 | `excludegiftpurchase` | Excludes YouTube gifted-membership purchase events before Tip Jar/Hype processing. |
 | `countgiftredemptions` | Count gift-recipient events where available. |
@@ -139,6 +142,7 @@ Command filters:
 
 - If the command includes `tipjartype`, `tipjarunit`, or `donationtype`, it must match the page filter.
 - If the command includes `tipjarsource`, `donationsource`, or `source`, it must match the page source filter.
+- If the command includes `goalmetric=followers` or `goalmetric=subscribers`, only a page running that preset accepts it.
 
 Support rule: an API command can reach the server but still do nothing if the `tipjar.html` page is not open, uses a different session, or has mismatched source/unit filters.
 
@@ -161,6 +165,8 @@ Hype mode:
 - Uses event names, membership values, and `meta` fields to classify gifts/subs/resubs.
 - Applies duplicate suppression using explicit IDs where available, otherwise a signature of kind/source/event/name/count/raw data.
 - Can count non-cash unit goals or contribution point goals.
+- The follower and subscriber presets drop contributions worth zero points, so they never reach the history.
+- Each counted contribution updates the latest supporter shown by `style=counter` (name from `chatname`, picture from `chatimg`).
 
 YouTube gift guard:
 

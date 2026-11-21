@@ -13306,6 +13306,7 @@ details.wrapper[open] > .collapsible-text {
 					<ul>
 						<li>Running total of all donations</li>
 						<li>Optional count goals for Super Chats and Super Stickers</li>
+						<li>Count new followers or subscribers, with a goal or as a plain counter</li>
 						<li>Optional membership and subscription scoring</li>
 						<li>Visual progress bar display</li>
 						<li>Supports multiple donation platforms</li>
@@ -13502,6 +13503,7 @@ details.wrapper[open] > .collapsible-text {
                                         <option value="ring">Progress Ring</option>
                                         <option value="lowerthird">Lower Third</option>
                                         <option value="segmented">Segmented Bar</option>
+                                        <option value="counter">Counter (running total, no goal)</option>
                                         <optgroup label="Physical jars">
                                             <option value="glassjar">Glass Tip Jar</option>
                                             <option value="jar3d">3D Rotating Jar</option>
@@ -13556,7 +13558,7 @@ details.wrapper[open] > .collapsible-text {
                                     <small style="display:block;opacity:0.8">Only changes the goal display; amounts and donation units stay the same.</small>
                                 </div>
                                 <details class="popup-settings-panel popup-subsection"><summary>🎨 Panel styling</summary>
-                                <small>These controls apply to Goal Card, Progress Ring, Lower Third, and Segmented Bar.</small>
+                                <small>These controls apply to Goal Card, Progress Ring, Lower Third, Segmented Bar, and Counter.</small>
                                 <div><label for="tipjar-panelopacity"><span class="popup-control-icon" aria-hidden="true">📐</span>Panel opacity (0–1)</label><input id="tipjar-panelopacity" type="number" data-optionparam12="panelopacity" class="textInput" min="0" max="1" step="0.05" placeholder="Default" /></div>
                                 <div class="colorInputRow">
                                     <div class="textInputContainer">
@@ -13592,8 +13594,10 @@ details.wrapper[open] > .collapsible-text {
                                     <select data-optionparam12="goalmetric" class="textInput">
                                         <option value="" selected>Total donation value (default)</option>
                                         <option value="count">Number of qualifying donations</option>
+                                        <option value="followers">New followers / YouTube subscribers</option>
+                                        <option value="subscribers">New paid subs / YouTube members</option>
                                     </select>
-                                    <small style="display: block; opacity: 0.8;">Count goals take priority over Hype scoring.</small>
+                                    <small style="display: block; opacity: 0.8;">Count goals take priority over Hype scoring. The follower and sub options add 1 per new supporter and ignore donations; YouTube subscribers need the YouTube API source and a public subscription.</small>
                                 </div>
                                 <div>
                                     <label><span class="popup-control-icon" aria-hidden="true">🔎</span>Paid event filter:</label>
