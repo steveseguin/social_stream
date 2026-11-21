@@ -10,13 +10,13 @@ In the **desktop app**, turn on **Enable Beta Mode** above **Added Sources**. If
 
 Switch SSN on. In its **Search settings** box, type **browser's microphone instead**. Select the result, then click **Use my browser's microphone instead** to open your session's **Captions** page in Chrome or Edge.
 
-If the desktop app shows **Copy this page's link**, paste that link into your browser.
+If the page opens inside the desktop app, click **Copy this page's link**. Open a new tab in Chrome or Edge, paste the link into the address bar and press **Enter**.
 
 ![SSN settings search showing one result, Use my browser's microphone instead.](images/captions/find-mic.png)
 
-## 2. Start listening
+## 2. Start listening on the page you just opened
 
-On the **Captions** browser tab, choose your language. Below **Name shown**, click **Start listening** and allow microphone access.
+Look for the heading **Captions**, as shown below. Choose your language, click **Start listening** below **Name shown**, and allow microphone access. [Preview the Captions page](https://beta.socialstream.ninja/captions.html). Use the link from step 1 to connect it to your own SSN session.
 
 Say a short sentence, then pause. The **Last heard** box directly below the buttons shows your words.
 
