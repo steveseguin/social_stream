@@ -195,6 +195,7 @@ function youtubeFixture(retry) {
     youtubeShorts: false, messageQueue: [], deletedYouTubeMessageIds: new Set(), youtubeApiMessageIds: new Map(), atob,
     pendingYouTubeMessages: new Set(), cancelledYouTubeMessages: new WeakSet(),
     isPageVisible: false, currentStream: null, videoId: null, currentSourceName: '', currentSourceImage: '',
+    liveChatConnectionGeneration: 0, liveChatId: null, liveChatStreamAbortController: null, missingLiveChatCount: 0,
     youtubeRecommendedInterval: 5000, lastSuccessfulPollTime: 0, initialBacklogProcessing: false,
     lastMessageTime: null, lastMessageTimeIds: new Set(), nextPageToken: null, LIVE_CHAT_MAX_RESULTS: 500,
     consecutiveMaxMessages: 0, consecutiveEmptyPolls: 0, slowerPollingMode: false, quickPollCount: 0,
@@ -209,7 +210,8 @@ function youtubeFixture(retry) {
     CustomEvent: class { constructor(type, options) { this.type = type; this.detail = options.detail; } },
     window: { dispatchEvent: event => events.push({ type: event.type, detail: event.detail }) }
   });
-  install(c, source, ['normalizeLiveChatType', 'normalizeLiveChatMessageItem', 'processLiveChatResponseData',
+  install(c, source, ['getLiveChatConnection', 'isCurrentLiveChatConnection',
+    'normalizeLiveChatType', 'normalizeLiveChatMessageItem', 'processLiveChatResponseData',
     'forwardYouTubeDelete', 'rememberDeletedYouTubeMessage', 'getYouTubeMessageKey',
     'processYouTubeUserBanned', 'normalizeYouTubeBanType', 'normalizeYouTubeBanDurationSeconds',
     'queueMessage', 'messageDataNeedsRichBadgeResolution', 'queueMessageAfterRichBadgeRetry',
@@ -288,9 +290,47 @@ test('Pending capture cancellation preserves platform and exact-ID boundaries', 
     { message: { type: 'discord', id: 'native-1', chatname: 'Viewer' } }
   ];
   const c = vm.createContext({ pendingModeratedCaptures: new Set(pending) });
-  install(c, read('background.js'), ['cancelPendingModeratedCaptures']);
+  install(c, read('background.js'), ['tracksPendingModeration', 'cancelPendingModeratedCaptures']);
   c.cancelPendingModeratedCaptures({ type: 'kick', id: 'native-1', onlyLast: true });
   assert.deepEqual(pending.map(p => !!p.cancelled), [true, true, false, false, false]);
   c.cancelPendingModeratedCaptures({ type: 'discord', id: 'native-1' });
   assert.equal(pending[4].cancelled, undefined, 'Unrelated platforms retain their existing path');
+});
+
+test('Loco suppresses only the exact pending native ID during bot processing', async () => {
+  const release = deferred(), pendingModeratedCaptures = new Set(), delivered = [];
+  const c = vm.createContext({
+    isExtensionOn: true,
+    settings: {},
+    messageCounter: 0,
+    pendingModeratedCaptures,
+    checkIfAllowed: () => true,
+    checkExactDuplicateAlreadyReceived: () => false,
+    isIndividualLikeEvent: () => false,
+    applyBotActions: async message => {
+      await release.promise;
+      return message;
+    },
+    window: { eventFlowSystem: { processMessage: async message => message } },
+    sendToDestinations: async message => delivered.push(message.meta.messageId)
+  });
+  install(c, read('background.js'), [
+    'tracksPendingModeration', 'cancelPendingModeratedCaptures', 'processIncomingMessage'
+  ]);
+  const capturing = ['room-a:42', 'room-b:42', 'room-a:43'].map(messageId =>
+    c.processIncomingMessage({
+      type: 'loco', chatname: 'Viewer', chatmessage: 'Fixture', textonly: true, meta: { messageId }
+    })
+  );
+  try {
+    assert.equal(pendingModeratedCaptures.size, 3);
+    c.cancelPendingModeratedCaptures({ type: 'twitch', meta: { messageId: 'room-a:43' } });
+    c.cancelPendingModeratedCaptures({ type: 'loco', chatname: 'Viewer' });
+    c.cancelPendingModeratedCaptures({ type: 'loco', meta: { messageId: 'room-a:42' } });
+  } finally {
+    release.resolve();
+    await Promise.all(capturing);
+  }
+  assert.deepEqual(delivered, ['room-b:42', 'room-a:43']);
+  assert.equal(pendingModeratedCaptures.size, 0);
 });
