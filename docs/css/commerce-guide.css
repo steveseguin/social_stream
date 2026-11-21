@@ -1,0 +1,77 @@
+/* Commerce-only document styling; shared navigation stays intact. */
+* { box-sizing:border-box; }
+body.site-page.site-commerce { --site-bg:#faf9f6; --site-surface:#fff; --site-text:#262923; --site-muted:#62675f; --site-line:#d8d9d1; --commerce-accent:#8c421f; margin:0; font:17px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif; }
+.dark-mode body.site-page.site-commerce { --site-bg:#1c1e1b; --site-surface:#252823; --site-text:#eeeee7; --site-muted:#b6bcb1; --site-line:#44483f; --commerce-accent:#e8b58d; }
+.site-editorial main.commerce-guide { max-width:1120px; margin:auto; padding:0 28px 72px; }
+.commerce-guide a { color:var(--commerce-accent); text-underline-offset:4px; }
+.commerce-guide a:hover { text-decoration-thickness:2px; }
+.commerce-guide p { margin:0 0 16px; }
+.commerce-guide .eyebrow { font-size:14px; font-weight:500; color:var(--site-muted); margin:0 0 8px; }
+.commerce-intro { padding:40px 0 24px; }
+.commerce-intro h1 { font-size:clamp(32px,4vw,46px); font-weight:650; line-height:1.15; letter-spacing:-.035em; margin:0 0 16px; }
+.commerce-intro>p:last-of-type { max-width:660px; font-size:18px; color:var(--site-muted); }
+.commerce-jumps { display:flex; gap:12px 26px; flex-wrap:wrap; margin:22px 0 0; font-size:15px; }
+.commerce-heading { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:12px; margin:0 0 20px; }
+.commerce-guide .commerce-heading h2,.commerce-heading>p { margin:0; }
+.commerce-heading>p,.commerce-heading>a { font-size:14px; }
+.commerce-guide h2 { font-size:28px; font-weight:650; letter-spacing:-.02em; line-height:1.25; margin:0 0 20px; }
+.commerce-guide h3 { font-size:21px; font-weight:650; line-height:1.3; margin:0 0 10px; }
+.commerce-choices { border-top:1px solid var(--site-line); }
+.commerce-choice { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:36px; align-items:center; padding:26px 0; border-bottom:1px solid var(--site-line); }
+.choice-image { position:relative; display:flex; align-items:center; justify-content:center; background:#e4e5de; height:260px; padding:16px 16px 30px; }
+.dark-mode .choice-image { background:#30342e; }
+.choice-image img { max-width:100%; max-height:100%; object-fit:contain; }
+.choice-image span { position:absolute; right:10px; bottom:5px; color:#42483e; font-size:12px; }
+.dark-mode .choice-image span { color:#d0d5ca; }
+.choice-copy { padding:12px 12px 12px 0; }
+.choice-copy p { color:var(--site-muted); max-width:40ch; }
+.choice-copy .eyebrow { display:none; }
+.choice-copy>a { font-size:15px; }
+.commerce-section { margin-top:48px; padding-top:28px; border-top:1px solid var(--site-line); }
+.commerce-intro+.commerce-section { margin-top:4px; }
+.commerce-guide section[id],.commerce-guide article[id] { scroll-margin-top:100px; }
+.commerce-steps { list-style:none; counter-reset:step; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:30px; padding:0; margin:24px 0; }
+.commerce-steps li { counter-increment:step; position:relative; padding-left:28px; }
+.commerce-steps li::before { content:counter(step) '.'; position:absolute; left:0; top:0; color:var(--site-muted); font:500 16px/1.7 ui-monospace,Consolas,monospace; }
+.commerce-steps strong { display:block; font-size:17px; font-weight:650; line-height:1.5; margin-bottom:8px; }
+.commerce-steps span { color:var(--site-muted); font-size:16px; }
+.commerce-split { display:grid; grid-template-columns:1fr 1fr; gap:36px; align-items:start; }
+.commerce-guide ol:not(.commerce-steps) { padding-left:22px; }
+.commerce-guide ol:not(.commerce-steps) li { padding-left:4px; margin-bottom:12px; }
+.guide-shot { margin:24px 0; min-width:0; }
+.guide-shot a { display:block; background:#e4e5de; padding:16px; }
+.dark-mode .guide-shot a { background:#30342e; }
+.guide-shot img { display:block; max-width:100%; max-height:650px; width:auto; height:auto; margin:auto; }
+.guide-shot figcaption { color:var(--site-muted); font-size:13px; line-height:1.5; margin-top:8px; }
+.commerce-split .guide-shot { margin-top:0; }
+.commerce-provider-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:28px 40px; }
+.commerce-provider-grid article { padding:16px 0 0; border-top:1px solid var(--site-line); }
+.commerce-provider-grid p { color:var(--site-muted); font-size:16px; }
+.commerce-provider-grid a { font-size:15px; }
+.commerce-note { margin-top:20px!important; padding-left:16px; border-left:2px solid var(--site-line); color:var(--site-muted); font-size:15px; }
+.commerce-guide details { border-top:1px solid var(--site-line); margin-top:22px; padding:14px 0 0; }
+.commerce-guide summary { cursor:pointer; font-weight:600; font-size:15px; }
+.commerce-guide details[open]>summary { margin-bottom:14px; }
+.commerce-guide details p { font-size:15px; max-width:75ch; }
+.commerce-guide pre { overflow:auto; padding:16px; background:var(--site-surface); border:1px solid var(--site-line); font-size:13px; }
+.commerce-guide a:focus,.commerce-guide summary:focus { outline:2px solid var(--commerce-accent); outline-offset:4px; }
+.site-commerce .skip { position:absolute; left:16px; top:-100px; z-index:2100; padding:10px; background:var(--site-surface); color:var(--site-text); }
+.site-commerce .skip:focus { top:12px; }
+#spots { display:grid; grid-template-columns:minmax(0,1.8fr) minmax(0,1fr); gap:0 28px; align-items:start; }
+#spots .commerce-heading,#spots .commerce-note { grid-column:1/-1; }
+#spots .guide-shot { margin-top:0; }
+#spots .commerce-steps { grid-template-columns:1fr; margin-top:0; gap:18px; }
+@media(max-width:750px) {
+ .site-editorial main.commerce-guide { padding:0 20px 48px; }
+ .commerce-intro { padding:26px 0; }
+ .commerce-choice,.commerce-split,.commerce-steps,.commerce-provider-grid,#spots { grid-template-columns:1fr; }
+ .commerce-choice { gap:18px; padding:22px 0; }
+ .choice-image { height:230px; }
+ .choice-copy { padding:0; }
+ .commerce-guide h2 { font-size:25px; }
+ .commerce-section { margin-top:34px; padding-top:24px; }
+ .commerce-split { gap:20px; }
+ .commerce-steps { gap:20px; }
+ .commerce-provider-grid { gap:20px; }
+ .guide-shot a { padding:10px; }
+}

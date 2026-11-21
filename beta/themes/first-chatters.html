@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<!--
+Social Stream Ninja - "First-time chatter welcome" overlay.
+Shows a friendly welcome card ("Welcome to chat, Maple!") with avatar, platform icon and
+their first message whenever a chat message arrives with firsttime=true. One card at a time;
+extra welcomes wait in a queue. Transparent background.
+
+REQUIRES: in the Social Stream Ninja popup, keep "Disable the local message database" off and
+turn on "First-time chatter detection" (see docs/first-time-chatters.html). Only plain chat and
+paid chat messages are welcomed; other events, meta-only updates, bots and host/reflected
+messages are ignored.
+
+DATA: arrives via a hidden VDO.Ninja iframe (WebRTC) at event.data.dataReceived.overlayNinja,
+or via WebSocket when &server / &server2 is set. Payload fields used: firsttime, chatname,
+chatmessage, chatimg, type, textonly, hasDonation, event, userid, id.
+
+URL PARAMETERS:
+  session=ID        (required) your Social Stream session id
+  password=PASS     optional room password (default false)
+  showtime=MS       how long each welcome stays on screen (default 8000); 0 = keep the last
+                    card until the next welcome arrives
+  text=TEXT         headline text; {name} is replaced by the chatter's name
+                    (default "Welcome to chat, {name}!")
+  tagline=TEXT      small label above the headline (default "First-time chatter"); empty hides it
+  nomessage         hide the chatter's first message
+  noavatar          hide the avatar
+  noicon            hide the platform icon
+  style=NAME        cute | cozy | cats | music | arcade | slate | paper | micro (themes/collections.css)
+                    art-cat | art-dog | art-halloween | art-christmas | art-music | art-forest |
+                    art-space | art-dragon (illustrated packs, themes/featured-styles/artwork.css)
+  staticart         keep illustrated characters still
+  width=PX          maximum card width in px (default 640, 800 for illustrated styles)
+  font=PX           base font size in px; the whole card scales with it (default 16)
+  fontfamily=NAME   card font family; loads matching Google Font (e.g. fontfamily=Nunito)
+  scale=N           scale the card (e.g. scale=1.5)
+  maxqueue=N        most welcomes kept waiting; oldest waiting are dropped (default 25)
+  chroma=HEX        solid background colour for chroma keying (e.g. chroma=00FF00)
+  css=URL|CSS       extra stylesheet URL or inline CSS
+  b64css=BASE64     extra CSS, base64 encoded (window.btoa(encodeURIComponent(css)))
+  server / server2  connect via WebSocket instead of (or in addition to) WebRTC
+  localserver       use ws://127.0.0.1:3000 (override with localserverport=PORT)
+
+Keep this file Chrome-80 friendly: no <script type="module">, no top-level import/export.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="First-Time Chatter Welcome: a Social Stream Ninja overlay for OBS that greets viewers the first time they chat.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+<script src="../libs/objects.js"></script>
+<script src="../shared/utils/chatHtml.js"></script>
+<script type="text/javascript" src="../js/local-server-url.js"></script>
+<script type="text/javascript" src="../js/transport-dedupe.js"></script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>First-Time Chatter Welcome</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+
+<meta name="generator" content="Social Stream Ninja - https://github.com/steveseguin/social_stream">
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #0000;
+    overflow: hidden;
+    font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+}
+* {
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    --fc-line: rgba(0, 0, 0, 0.12);
+    --fc-soft: rgba(0, 0, 0, 0.05);
+}
+
+#stage {
+    position: relative;
+    width: 100%;
+    max-width: 40em;
+    padding: 1.5em;
+    transform-origin: center center;
+}
+.art-featured #stage { max-width: 50em; }
+
+/* Card entrance / exit. Illustrated styles use the shared artwork.css transition. */
+.message-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    opacity: 0;
+    transform: translateY(1.25em) scale(0.94);
+    transition: opacity 0.4s ease-out, transform 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.25);
+}
+.message-wrapper.show { opacity: 1; transform: none; }
+.message-wrapper.hide {
+    opacity: 0;
+    transform: translateY(-0.75em) scale(0.98);
+    transition: opacity 0.35s ease-in, transform 0.4s ease-in;
+}
+
+/* Card layout (shared by every style) */
+.fc-card {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    padding: 1.3em 1.6em 1.3em 1.3em;
+    border: 1px solid var(--fc-line);
+    border-radius: 1.4em;
+}
+/* Margins instead of flex gap: OBS builds on Chrome 80 ignore gap in flex layouts. */
+.fc-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+    width: 4.6em;
+    height: 4.6em;
+    margin-right: 1.15em;
+}
+.fc-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    font-size: 1em;
+    font-weight: 800;
+    overflow: hidden;
+}
+.fc-initial span { font-size: 1.9em; line-height: 1; }
+.fc-source {
+    position: absolute;
+    right: -0.2em;
+    bottom: -0.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75em;
+    height: 1.75em;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 0.1em 0.35em rgba(0, 0, 0, 0.35);
+}
+.fc-source img { width: 1.1em; height: 1.1em; object-fit: contain; display: block; }
+.fc-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+.fc-body > * + * { margin-top: 0.4em; }
+.fc-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3em 0.75em 0.3em 0.55em;
+    border-radius: 999px;
+    font-size: 0.72em;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.fc-tag svg { width: 1.3em; height: 1.3em; flex-shrink: 0; margin-right: 0.4em; }
+.fc-headline {
+    max-width: 100%;
+    font-size: 1.85em;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+}
+.fc-name { overflow-wrap: anywhere; }
+.fc-message {
+    position: relative;
+    max-width: 100%;
+    margin-top: 0.15em;
+    padding: 0.5em 0.95em 0.5em 2.25em;
+    border-radius: 0.9em;
+    background: var(--fc-soft);
+    font-size: 1.08em;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+.fc-message-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.fc-message::before {
+    content: '\201C';
+    position: absolute;
+    left: 0.45em;
+    top: 0.12em;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 2.1em;
+    font-weight: 700;
+    line-height: 1;
+}
+.fc-message img,
+.fc-message svg { max-height: 1.4em; max-width: 4em; vertical-align: middle; }
+.fc-donation { font-size: 0.95em; font-weight: 800; }
+.fc-attachment { display: block; max-width: 14em; max-height: 7em; border-radius: 0.6em; object-fit: contain; }
+.fc-sparkles { display: none; }
+
+/* Default: warm, high-contrast dark card */
+.fc-default .fc-card {
+    --fc-line: rgba(255, 255, 255, 0.12);
+    --fc-soft: rgba(255, 255, 255, 0.07);
+    color: #fff6ee;
+    background:
+        radial-gradient(120% 160% at 0% 0%, rgba(255, 150, 64, 0.30), rgba(255, 150, 64, 0) 55%),
+        radial-gradient(90% 130% at 100% 100%, rgba(255, 92, 120, 0.20), rgba(255, 92, 120, 0) 60%),
+        linear-gradient(135deg, #2b1c1c 0%, #18121a 100%);
+    box-shadow: 0 1.1em 2.6em rgba(0, 0, 0, 0.38), 0 0.2em 0.6em rgba(0, 0, 0, 0.25);
+}
+.fc-default .fc-avatar { background: #4a2f2a; color: #fff6ee; box-shadow: 0 0 0 0.2em #1d1519, 0 0 0 0.38em #ffb347; }
+.fc-default .fc-tag { color: #2a1608; background: linear-gradient(90deg, #ffc84d, #ff8a5c); }
+.fc-default .fc-headline { color: #ffffff; text-shadow: 0 0.06em 0.2em rgba(0, 0, 0, 0.3); }
+.fc-default .fc-name { color: #ffc35a; }
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+    .fc-default .fc-name {
+        background: linear-gradient(90deg, #ffd56b, #ff8a5c);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        text-shadow: none;
+    }
+}
+.fc-default .fc-message { color: #f7e9df; }
+.fc-default .fc-message::before { color: #ffb347; }
+.fc-default .fc-donation { color: #7dffb4; }
+.fc-default .fc-sparkles {
+    display: block;
+    position: absolute;
+    top: 0.7em;
+    right: 0.8em;
+    width: 2.3em;
+    height: 2.3em;
+    color: #ffc84d;
+    pointer-events: none;
+}
+.fc-default .fc-sparkles svg { width: 100%; height: 100%; display: block; animation: fc-twinkle 3.2s ease-in-out infinite; }
+@keyframes fc-twinkle {
+    0%, 100% { opacity: 0.95; transform: scale(1); }
+    50% { opacity: 0.55; transform: scale(0.88); }
+}
+
+/* Matching collections (themes/collections.css supplies the --collection-* colours) */
+.collection .fc-card {
+    background-color: var(--collection-bg);
+    color: var(--collection-text);
+    border-radius: var(--collection-radius);
+    box-shadow: 0 0.4em 1.4em rgba(0, 0, 0, 0.22);
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+.collection .fc-avatar { background: var(--collection-accent); color: var(--collection-bg); box-shadow: 0 0 0 0.16em var(--collection-bg), 0 0 0 0.3em var(--collection-accent); }
+.collection .fc-tag { background: var(--collection-accent); color: var(--collection-bg); }
+.collection .fc-headline { color: var(--collection-text); }
+.collection .fc-name { color: var(--collection-accent); }
+.collection .fc-message::before { color: var(--collection-accent); }
+.collection .fc-donation { color: var(--collection-accent); }
+.style-music, .style-arcade, .style-slate, .style-micro { --fc-line: rgba(255, 255, 255, 0.14); --fc-soft: rgba(255, 255, 255, 0.07); }
+.style-cute .fc-card {
+    background-image:
+        radial-gradient(circle at calc(100% - 22px) 14px, #e8a2c3 3px, transparent 4px),
+        radial-gradient(circle at calc(100% - 34px) 26px, #b9a1d6 3px, transparent 4px),
+        radial-gradient(circle at calc(100% - 14px) 32px, #f3c6a5 2px, transparent 3px);
+}
+.style-cozy .fc-card { background-image: linear-gradient(100deg, rgba(172, 135, 74, 0.10), transparent); }
+.style-cozy .fc-headline { font-family: Georgia, serif; }
+.style-cats .fc-card { padding-right: 4.2em; }
+.style-cats .fc-card::after {
+    content: '=^.^=';
+    position: absolute;
+    top: 0.6em;
+    right: 0.7em;
+    color: var(--collection-accent);
+    font: bold 13px monospace;
+    pointer-events: none;
+}
+.style-music .fc-card { background-image: linear-gradient(110deg, rgba(135, 232, 205, 0.07), transparent); padding-right: 3.6em; }
+.style-music .fc-card::after {
+    content: '';
+    position: absolute;
+    top: 0.85em;
+    right: 0.9em;
+    width: 22px;
+    height: 16px;
+    background:
+        linear-gradient(var(--collection-accent), var(--collection-accent)) 0 100% / 4px 9px no-repeat,
+        linear-gradient(var(--collection-accent), var(--collection-accent)) 6px 100% / 4px 16px no-repeat,
+        linear-gradient(var(--collection-accent), var(--collection-accent)) 12px 100% / 4px 6px no-repeat,
+        linear-gradient(var(--collection-accent), var(--collection-accent)) 18px 100% / 4px 12px no-repeat;
+    opacity: 0.7;
+    pointer-events: none;
+}
+.style-arcade .fc-card { box-shadow: 0.25em 0.25em 0 rgba(0, 0, 0, 0.45); }
+.style-arcade .fc-headline, .style-arcade .fc-tag { font-family: Consolas, monospace; letter-spacing: 0.05em; }
+.style-slate .fc-card, .style-paper .fc-card, .style-micro .fc-card { padding: 0.8em 1em; box-shadow: none; }
+.style-slate .fc-avatar-wrap, .style-paper .fc-avatar-wrap, .style-micro .fc-avatar-wrap { width: 3.4em; height: 3.4em; margin-right: 0.8em; }
+.style-slate .fc-headline, .style-paper .fc-headline, .style-micro .fc-headline { font-size: 1.45em; }
+.style-micro .fc-tag { border-radius: 0; }
+
+/* Illustrated packs: mascot and motion come from featured-styles/artwork.css (.art-featured .message-wrapper) */
+.art-featured .fc-card {
+    padding: 1.5em 1.65em 1.5em 2.5em;
+    border-radius: 24px 24px 24px 7px;
+    background-color: var(--art-bg);
+    color: var(--art-text);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.13), inset 0 0 0 5px rgba(255, 255, 255, 0.04);
+}
+.art-featured .fc-avatar-wrap { width: 4.1em; height: 4.1em; margin-right: 1em; }
+.art-featured .fc-avatar { background: var(--art-accent); color: var(--art-bg); box-shadow: 0 0 0 2px var(--art-accent); }
+.art-featured .fc-tag { background: var(--art-accent); color: var(--art-bg); }
+.art-featured .fc-headline { color: var(--art-text); font-size: 1.75em; }
+.art-featured .fc-name { color: var(--art-accent); }
+.art-featured .fc-message { font-size: 1.12em; }
+.art-featured .fc-message::before { color: var(--art-accent); }
+.art-featured .fc-donation { color: var(--art-accent); }
+.style-art-halloween, .style-art-music, .style-art-space, .style-art-dragon { --fc-line: rgba(255, 255, 255, 0.16); --fc-soft: rgba(255, 255, 255, 0.07); }
+.style-art-forest .fc-card, .style-art-christmas .fc-card { border-radius: 8px 26px 8px 26px; }
+.style-art-forest .fc-headline, .style-art-christmas .fc-headline { font-family: Georgia, serif; }
+.style-art-music .fc-card { border-radius: 12px; }
+.style-art-space .fc-card { border-radius: 32px; background-image: radial-gradient(ellipse at right top, rgba(206, 192, 255, 0.10), transparent 65%); }
+.style-art-dragon .fc-card { border-radius: 8px 24px; }
+
+@media (max-width: 600px) {
+    #stage { padding: 1em; }
+    .fc-card { padding: 1em 1.1em 1em 1em; }
+    .fc-avatar-wrap { width: 3.4em; height: 3.4em; margin-right: 0.8em; }
+    .fc-headline { font-size: 1.4em; }
+    .art-featured .fc-card { padding: 2em 1.1em 1.1em; }
+    .art-featured .fc-headline { font-size: 1.4em; }
+}
+
+.static-art .fc-sparkles svg { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+    .message-wrapper,
+    .message-wrapper.show,
+    .message-wrapper.hide {
+        transform: none !important;
+        animation: none !important;
+        transition: opacity 0.2s linear !important;
+    }
+    .fc-sparkles svg { animation: none !important; }
+}
+</style>
+<link rel="stylesheet" href="./collections.css">
+<link rel="stylesheet" href="./featured-styles/artwork.css">
+</head>
+<body>
+<div id="stage" aria-live="polite"></div>
+<script>
+    var urlParams = new URLSearchParams(window.location.search);
+    var ART_STYLES = ['art-cat', 'art-dog', 'art-halloween', 'art-christmas', 'art-music', 'art-forest', 'art-space', 'art-dragon'];
+    var COLLECTION_STYLES = ['cute', 'cozy', 'cats', 'music', 'arcade', 'slate', 'paper', 'micro'];
+    var collectionStyle = String(urlParams.get('style') || '').toLowerCase().replace(/[^a-z0-9-]/g, '');
+
+    function applyStyle() {
+        if (ART_STYLES.indexOf(collectionStyle) !== -1) {
+            document.body.classList.add('art-featured', 'style-' + collectionStyle);
+            return;
+        }
+        if (collectionStyle) {
+            // Any style defined in collections.css works, including ones added after this page.
+            document.body.classList.add('collection', 'style-' + collectionStyle);
+            var hasVars = false;
+            try { hasVars = !!getComputedStyle(document.body).getPropertyValue('--collection-bg').trim(); } catch (e) {}
+            if (hasVars || COLLECTION_STYLES.indexOf(collectionStyle) !== -1) { return; }
+            document.body.classList.remove('collection', 'style-' + collectionStyle);
+        }
+        document.body.classList.add('fc-default');
+    }
+    applyStyle();
+    if (urlParams.has('staticart')) document.body.classList.add('static-art');
+
+    var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
+    // Transport migration guard: only pages with full server parity may skip the legacy bridge.
+    var TRANSPORT_CAPABILITIES = {
+        serverFeed: true,
+        serverTargeted: false,
+        upstreamCommands: false,
+        customChannel: false,
+        legacyBridgeRequired: false,
+        exclusiveServerParams: { server: false, server2: true, server3: false }
+    };
+    function versionAtLeast(value, minimum) {
+        var a = String(value || "").split(".");
+        var b = String(minimum || "").split(".");
+        var len = Math.max(a.length, b.length);
+        for (var i = 0; i < len; i++) {
+            var av = parseInt(a[i], 10) || 0;
+            var bv = parseInt(b[i], 10) || 0;
+            if (av > bv) return true;
+            if (av < bv) return false;
+        }
+        return true;
+    }
+    // Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
+    function hasExclusiveServerTransport(caps) {
+        var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
+        return (params.server === true && urlParams.has("server")) ||
+            (params.server2 !== false && urlParams.has("server2")) ||
+            (params.server3 === true && urlParams.has("server2") && urlParams.has("server3"));
+    }
+    function useServerOnlyTransport() {
+        var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
+        return hasExclusiveServerTransport(caps) &&
+            versionAtLeast(urlParams.get("v"), SERVER_EXCLUSIVE_TRANSPORT_VERSION) &&
+            caps.serverFeed === true &&
+            caps.legacyBridgeRequired !== true &&
+            caps.upstreamCommands !== true &&
+            caps.customChannel !== true;
+    }
+    var roomID = urlParams.has("session") ? urlParams.get("session") : "iWWnKL28tQ";
+    var password = urlParams.has("password") ? urlParams.get("password") : "false";
+    var hideAvatar = urlParams.has("noavatar");
+    var hideIcon = urlParams.has("noicon");
+    var hideMessage = urlParams.has("nomessage");
+    var headlineTemplate = urlParams.get("text") || "Welcome to chat, {name}!";
+    var tagline = urlParams.has("tagline") ? urlParams.get("tagline") : "First-time chatter";
+
+    var showtime = 8000;
+    if (urlParams.has("showtime")) {
+        var parsedShowtime = parseInt(urlParams.get("showtime"), 10);
+        if (!isNaN(parsedShowtime) && parsedShowtime >= 0) { showtime = parsedShowtime; }
+    }
+    var MAX_QUEUE = 25;
+    if (urlParams.has("maxqueue")) {
+        var parsedQueue = parseInt(urlParams.get("maxqueue"), 10);
+        if (!isNaN(parsedQueue) && parsedQueue > 0) { MAX_QUEUE = parsedQueue; }
+    }
+    var HIDE_MS = 500;
+    var GAP_MS = 250;
+    var MIN_DWELL_MS = 5000; // with showtime=0, a waiting welcome replaces the current card after this long
+
+    var stage = document.getElementById("stage");
+
+    if (urlParams.has("chroma")) {
+        var c = urlParams.get("chroma") || "";
+        document.body.style.backgroundColor = c.charAt(0) === "#" ? c : "#" + c;
+    }
+    if (urlParams.has("font")) {
+        var fs = parseInt(urlParams.get("font"), 10);
+        if (!isNaN(fs) && fs > 0) {
+            document.documentElement.style.fontSize = fs + "px";
+            document.body.style.fontSize = fs + "px";
+        }
+    }
+    if (urlParams.has("fontfamily")) {
+        var ff = (urlParams.get("fontfamily") || "").trim();
+        if (ff) {
+            var safeFamily = ff.replace(/['"\\;{}<>]/g, "");
+            var gf = document.createElement("link");
+            gf.rel = "stylesheet";
+            gf.href = "https://fonts.googleapis.com/css2?family=" +
+                encodeURIComponent(safeFamily).replace(/%20/g, "+") + ":wght@400;500;600;700;800&display=swap";
+            document.head.appendChild(gf);
+            document.body.style.fontFamily = "'" + safeFamily +
+                "', 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif";
+        }
+    }
+    if (urlParams.has("width")) {
+        var w = parseInt(urlParams.get("width"), 10);
+        if (!isNaN(w) && w > 0) { stage.style.maxWidth = w + "px"; }
+    }
+    if (urlParams.has("scale")) {
+        var scale = parseFloat(urlParams.get("scale"));
+        if (!isNaN(scale) && scale > 0) { stage.style.transform = "scale(" + scale + ")"; }
+    }
+    if (urlParams.has("css")) {
+        var cssURL = urlParams.get("css");
+        try { cssURL = decodeURI(cssURL); } catch (e) {}
+        if (cssURL.indexOf("http") === 0) {
+            var cssLink = document.createElement("link");
+            cssLink.rel = "stylesheet";
+            cssLink.href = cssURL;
+            document.head.appendChild(cssLink);
+        } else {
+            var cssInline = document.createElement("style");
+            cssInline.innerHTML = cssURL;
+            document.head.appendChild(cssInline);
+        }
+    }
+    if (urlParams.has("base64css") || urlParams.has("b64css") || urlParams.has("cssbase64") || urlParams.has("cssb64")) {
+        try {
+            var base64Css = urlParams.get("base64css") || urlParams.get("b64css") || urlParams.get("cssbase64") || urlParams.get("cssb64");
+            try { base64Css = atob(base64Css); } catch (e) {}
+            try { base64Css = decodeURIComponent(base64Css); } catch (e) {}
+            var cssB64Sheet = document.createElement("style");
+            cssB64Sheet.innerText = base64Css;
+            document.head.appendChild(cssB64Sheet);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    var LEAF_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M20.8 3.2C13.7 3.4 7.6 6.7 5.2 11.7c-1.3 2.7-1.1 5.2.5 6.8 1.6 1.6 4.2 1.7 6.8.5 5-2.4 8.3-8.5 8.6-15.6 0-.1-.1-.2-.3-.2Z" fill="currentColor"/><path d="M4 20c3.3-5.5 7.4-8.8 12.8-10.8" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="2" stroke-linecap="round"/></svg>';
+    var SPARKLE_SVG = '<svg viewBox="0 0 40 40" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M25 3l2.4 7.6L35 13l-7.6 2.4L25 23l-2.4-7.6L15 13l7.6-2.4z" fill="currentColor"/><path d="M10 20l1.5 4.5L16 26l-4.5 1.5L10 32l-1.5-4.5L4 26l4.5-1.5z" fill="currentColor" opacity=".7"/></svg>';
+
+    var queue = [];
+    var current = null;
+    var hiding = false;
+    var advanceTimer = null;
+    var welcomedUsers = {};
+    var localBlockUserList = {};
+    var timedOutUsers = {};
+
+    function userKey(data) {
+        return String(data.type || "") + "|" + String(data.userid || data.chatname || "").toLowerCase();
+    }
+
+    function isFirstTimeChat(data) {
+        if (!data || typeof data !== "object") { return false; }
+        if (!data.firsttime || data.firsttime === "false") { return false; }
+        if (!data.chatname) { return false; }
+        // Skip system events (joins, follows...) but keep paid chat such as Super Chats.
+        if (data.event && !data.hasDonation) { return false; }
+        if (data.reflection || data.host || data.bot || data.replay || data.history || data.reload) { return false; }
+        return true;
+    }
+
+    function isBlocked(data) {
+        var chatname = String(data.chatname);
+        var type = data.type ? String(data.type) : "";
+        if (localBlockUserList[chatname] && (localBlockUserList[chatname].indexOf(type) !== -1 || localBlockUserList[chatname].indexOf("*") !== -1)) {
+            return true;
+        }
+        if (type && timedOutUsers[chatname + ":" + type]) {
+            if (timedOutUsers[chatname + ":" + type] < Date.now()) { delete timedOutUsers[chatname + ":" + type]; }
+            else { return true; }
+        }
+        return false;
+    }
+
+    function getPayloadMessageId(data) {
+        var keys = ['mid', 'id', 'messageId', 'message_id'];
+        for (var i = 0; i < keys.length; i++) {
+            if (data[keys[i]] !== undefined && data[keys[i]] !== null && data[keys[i]] !== "") {
+                return String(data[keys[i]]);
+            }
+        }
+        return "";
+    }
+
+    function buildHeadline(name) {
+        var headline = document.createElement("div");
+        headline.className = "fc-headline";
+        var parts = String(headlineTemplate).split("{name}");
+        for (var i = 0; i < parts.length; i++) {
+            if (parts[i]) { headline.appendChild(document.createTextNode(parts[i])); }
+            if (i < parts.length - 1) {
+                var nameSpan = document.createElement("span");
+                nameSpan.className = "fc-name";
+                nameSpan.textContent = name;
+                headline.appendChild(nameSpan);
+            }
+        }
+        return headline;
+    }
+
+    function buildAvatar(data) {
+        var wrap = document.createElement("div");
+        wrap.className = "fc-avatar-wrap";
+        var initial = document.createElement("div");
+        initial.className = "fc-avatar fc-initial";
+        var letter = document.createElement("span");
+        letter.textContent = String(data.chatname).trim().charAt(0).toUpperCase() || "?";
+        initial.appendChild(letter);
+        // Media fields must be http(s) or data:image URLs; anything else falls back to the initial.
+        var avatarSrc = data.chatimg && typeof sanitizeRelayUrl === "function" ? sanitizeRelayUrl(data.chatimg, true) : "";
+        if (avatarSrc) {
+            var img = document.createElement("img");
+            img.className = "fc-avatar";
+            img.alt = "";
+            img.onerror = function () {
+                if (img.parentNode) { img.parentNode.replaceChild(initial, img); }
+            };
+            img.src = avatarSrc;
+            wrap.appendChild(img);
+        } else {
+            wrap.appendChild(initial);
+        }
+        var type = String(data.type || "").replace(/[^a-z0-9_-]/gi, "");
+        if (!hideIcon && type) {
+            var badge = document.createElement("span");
+            badge.className = "fc-source";
+            var icon = document.createElement("img");
+            icon.alt = type;
+            icon.onerror = function () { badge.style.display = "none"; };
+            icon.src = "../sources/images/" + type + ".png";
+            badge.appendChild(icon);
+            wrap.appendChild(badge);
+        }
+        return wrap;
+    }
+
+    function buildCard(data) {
+        var wrapper = document.createElement("div");
+        wrapper.className = "message-wrapper";
+        var card = document.createElement("div");
+        card.className = "fc-card";
+
+        if (!hideAvatar) { card.appendChild(buildAvatar(data)); }
+
+        var body = document.createElement("div");
+        body.className = "fc-body";
+        if (tagline) {
+            var tag = document.createElement("div");
+            tag.className = "fc-tag";
+            tag.innerHTML = LEAF_SVG;
+            tag.appendChild(document.createTextNode(tagline));
+            body.appendChild(tag);
+        }
+        body.appendChild(buildHeadline(String(data.chatname)));
+
+        if (!hideMessage && data.chatmessage) {
+            var message = document.createElement("div");
+            message.className = "fc-message";
+            var messageText = document.createElement("div");
+            messageText.className = "fc-message-text";
+            // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
+            if (data.textonly) { messageText.textContent = data.chatmessage; }
+            else { messageText.innerHTML = window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage) : fallbackEscapeHtml(data.chatmessage); }
+            message.appendChild(messageText);
+            if (messageText.textContent.trim() || messageText.querySelector("img")) { body.appendChild(message); }
+        }
+        var attachmentSrc = !hideMessage && data.contentimg && typeof sanitizeRelayUrl === "function" ? sanitizeRelayUrl(data.contentimg, true) : "";
+        if (attachmentSrc) {
+            var attachment = document.createElement("img");
+            attachment.className = "fc-attachment";
+            attachment.alt = "";
+            attachment.onerror = function () { if (attachment.parentNode) { attachment.parentNode.removeChild(attachment); } };
+            attachment.src = attachmentSrc;
+            body.appendChild(attachment);
+        }
+        if (data.hasDonation) {
+            var donation = document.createElement("div");
+            donation.className = "fc-donation";
+            donation.textContent = data.hasDonation;
+            body.appendChild(donation);
+        }
+        card.appendChild(body);
+
+        var sparkles = document.createElement("span");
+        sparkles.className = "fc-sparkles";
+        sparkles.innerHTML = SPARKLE_SVG;
+        card.appendChild(sparkles);
+
+        wrapper.appendChild(card);
+        return wrapper;
+    }
+
+    function scheduleAdvance() {
+        clearTimeout(advanceTimer);
+        advanceTimer = null;
+        if (!current || hiding) { return; }
+        var shown = Date.now() - current.shownAt;
+        var wait;
+        if (showtime > 0) { wait = showtime - shown; }
+        else if (queue.length) { wait = MIN_DWELL_MS - shown; }
+        else { return; }
+        advanceTimer = setTimeout(function () { hideCurrent(showNext); }, Math.max(0, wait));
+    }
+
+    function showNext() {
+        if (current || hiding || !queue.length) { return; }
+        var data = queue.shift();
+        var wrapper = buildCard(data);
+        stage.appendChild(wrapper);
+        void wrapper.offsetWidth;
+        wrapper.classList.add("show");
+        current = { el: wrapper, data: data, shownAt: Date.now() };
+        scheduleAdvance();
+    }
+
+    function hideCurrent(callback) {
+        clearTimeout(advanceTimer);
+        advanceTimer = null;
+        if (!current) { if (callback) { callback(); } return; }
+        if (hiding) { return; }
+        hiding = true;
+        var el = current.el;
+        el.classList.remove("show");
+        el.classList.add("hide");
+        setTimeout(function () {
+            if (el.parentNode) { el.parentNode.removeChild(el); }
+            current = null;
+            hiding = false;
+            // Welcomes that arrived during the hide still get shown after a clear-all.
+            if (callback) { setTimeout(callback, GAP_MS); }
+            else if (queue.length) { setTimeout(showNext, GAP_MS); }
+        }, HIDE_MS);
+    }
+
+    function enqueue(data) {
+        queue.push(data);
+        while (queue.length > MAX_QUEUE) { queue.shift(); }
+        if (!current && !hiding) { showNext(); }
+        else { scheduleAdvance(); }
+    }
+
+    function removeMatching(matches) {
+        queue = queue.filter(function (item) { return !matches(item); });
+        if (current && !hiding && matches(current.data)) { hideCurrent(showNext); }
+    }
+
+    function sameUser(name, type) {
+        name = String(name || "");
+        type = type ? String(type) : "";
+        return function (item) {
+            if (String(item.chatname) !== name) { return false; }
+            if (!type) { return true; }
+            return item.type === type || (type === "youtube" && item.type === "youtubeshorts");
+        };
+    }
+
+    function addLocalBlock(username, type) {
+        if (!username) { return; }
+        username = String(username);
+        var types = type ? [String(type)] : ["*"];
+        if (type === "youtube") { types.push("youtubeshorts"); }
+        if (!localBlockUserList[username]) { localBlockUserList[username] = []; }
+        types.forEach(function (t) {
+            if (localBlockUserList[username].indexOf(t) === -1) { localBlockUserList[username].push(t); }
+        });
+        setTimeout(function () {
+            if (!localBlockUserList[username]) { return; }
+            types.forEach(function (t) {
+                var idx = localBlockUserList[username].indexOf(t);
+                if (idx !== -1) { localBlockUserList[username].splice(idx, 1); }
+            });
+            if (!localBlockUserList[username].length) { delete localBlockUserList[username]; }
+        }, 10000);
+    }
+
+    function handleControlPayload(data) {
+        if (!data || typeof data !== "object") { return false; }
+        if ("deleteMessage" in data) {
+            var delId = String(data.deleteMessage);
+            removeMatching(function (item) { return getPayloadMessageId(item) === delId; });
+            return true;
+        }
+        if ("clearAll" in data || data.action === "clear" || data.action === "clearAll") {
+            queue = [];
+            hideCurrent();
+            return true;
+        }
+        if ("delete" in data) {
+            var d = data.delete;
+            if (d && typeof d === "object") {
+                if (d.id !== undefined && d.id !== null && d.id !== "") {
+                    var idString = String(d.id);
+                    removeMatching(function (item) { return getPayloadMessageId(item) === idString; });
+                } else if (d.chatname) {
+                    removeMatching(sameUser(d.chatname, d.type));
+                }
+            }
+            return true;
+        }
+        if ("timeoutUser" in data && data.timeoutUser) {
+            var tName = data.timeoutUser.username || data.timeoutUser.chatname;
+            if (tName && data.timeoutUser.type && data.timeoutUser.duration) {
+                timedOutUsers[String(tName) + ":" + String(data.timeoutUser.type)] = Date.now() + (Number(data.timeoutUser.duration) * 1000);
+            }
+            if (tName) { removeMatching(sameUser(tName, data.timeoutUser.type)); }
+            return true;
+        }
+        if ("blockUser" in data && data.blockUser) {
+            var bName = data.blockUser.chatname || data.blockUser.username;
+            addLocalBlock(bName, data.blockUser.type);
+            if (bName) { removeMatching(sameUser(bName, data.blockUser.type)); }
+            return true;
+        }
+        return false;
+    }
+
+    // Cross-transport dedupe: in server mode the same feed message can arrive over both
+    // the websocket relay and the VDO.Ninja bridge; render only the first copy.
+    var CROSS_TRANSPORT_DEDUPE_TTL_MS = 12000;
+    var recentTransportDeliveries = new Map();
+    var transportDeliveryDedupe = typeof SocialStreamTransportDedupe !== "undefined" ? SocialStreamTransportDedupe.create() : null;
+    function isDuplicateTransportDelivery(data, source) {
+        if (!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3"))) {
+            return false;
+        }
+        if (transportDeliveryDedupe) return transportDeliveryDedupe(data, source);
+        if (!data || typeof data !== "object") {
+            return false;
+        }
+        if (data.id === undefined || data.id === null) {
+            return false;
+        }
+        if ("action" in data || "get" in data || "callback" in data || "mid" in data) {
+            return false;
+        }
+        if (!(data.chatname || data.chatmessage || data.chatimg || data.hasDonation || data.membership || data.event || data.contentimg)) {
+            return false;
+        }
+        var key =
+            String(data.id) +
+            "|" + (data.type || "") +
+            "|" + (data.chatname || "") +
+            "|" + String(data.chatmessage || "").slice(0, 100) +
+            "|" + (data.hasDonation || "") +
+            "|" + (data.event || "");
+        var now = Date.now();
+        recentTransportDeliveries.forEach(function (seenAt, seenKey) {
+            if (now - seenAt > CROSS_TRANSPORT_DEDUPE_TTL_MS) {
+                recentTransportDeliveries.delete(seenKey);
+            }
+        });
+        if (recentTransportDeliveries.has(key)) {
+            return true;
+        }
+        recentTransportDeliveries.set(key, now);
+        return false;
+    }
+
+    function addMessageToOverlay(data, source) {
+        if (isDuplicateTransportDelivery(data, source)) { return; }
+        if (handleControlPayload(data)) { return; }
+        if (!isFirstTimeChat(data)) { return; }
+        if (isBlocked(data)) { return; }
+        var key = userKey(data);
+        if (welcomedUsers[key]) { return; }
+        welcomedUsers[key] = true;
+        enqueue(data);
+    }
+
+    // --- WebRTC bridge (hidden VDO.Ninja iframe) ---
+    if (!useServerOnlyTransport()) {
+        var iframe = document.createElement("iframe");
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + "&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID;
+        iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+        document.body.appendChild(iframe);
+        window.addEventListener("message", function (e) {
+            if (e.source != iframe.contentWindow) return;
+            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object" && e.data.dataReceived.overlayNinja) {
+                addMessageToOverlay(e.data.dataReceived.overlayNinja, "p2p");
+            }
+        });
+    }
+
+    // --- optional WebSocket ---
+    var conCon = 1;
+    var socketserver = false;
+    var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja";
+    function setupSocket() {
+        socketserver.onclose = function () {
+            setTimeout(function () { conCon += 1; socketserver = new WebSocket(serverURL); setupSocket(); }, 100 * conCon);
+        };
+        socketserver.onopen = function () {
+            conCon = 1;
+            socketserver.send(JSON.stringify({ "join": roomID, "out": 3, "in": 4 }));
+        };
+        socketserver.addEventListener('message', function (event) {
+            if (event.data) {
+                try { var data = JSON.parse(event.data); if (data) { addMessageToOverlay(data, "server"); } }
+                catch (err) { console.error("Error processing WebSocket message:", err); }
+            }
+        });
+    }
+    if (urlParams.has("server") || urlParams.has("server2")) {
+        serverURL = urlParams.get("server") || urlParams.get("server2") || serverURL;
+        socketserver = new WebSocket(serverURL);
+        setupSocket();
+    }
+</script>
+</body>
+</html>

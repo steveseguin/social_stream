@@ -1,0 +1,168 @@
+* {
+	box-sizing: border-box;
+}
+body {
+	margin: 0;
+	background: #101522;
+	color: #edf2f8;
+	font:
+		14px/1.5 system-ui,
+		sans-serif;
+}
+main {
+	max-width: 620px;
+	margin: auto;
+	padding: 24px;
+}
+header small {
+	letter-spacing: 0.14em;
+	color: #a4c7f9;
+	font-size: 10px;
+}
+h1 {
+	font-size: 30px;
+	margin: 5px 0;
+}
+header p,
+.hint,
+.note {
+	color: #afbdd0;
+}
+section {
+	margin: 18px 0;
+	padding: 18px;
+	background: #192232;
+	border: 1px solid #354155;
+	border-radius: 13px;
+}
+h2 {
+	font-size: 14px;
+	margin: 0 0 10px;
+}
+.status,
+.row,
+.buttons {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+.status {
+	justify-content: space-between;
+}
+#mode {
+	font-size: 10px;
+	letter-spacing: 0.1em;
+	color: #bcd89e;
+}
+label {
+	display: block;
+	margin: 12px 0 6px;
+}
+button,
+select,
+input {
+	font: inherit;
+	color: inherit;
+	background: #25334a;
+	border: 1px solid #4c607c;
+	border-radius: 7px;
+	padding: 9px;
+	max-width: 100%;
+}
+button {
+	cursor: pointer;
+}
+button:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+.primary {
+	background: #b8d5ff;
+	color: #111c2c;
+	font-weight: 700;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+	outline: 2px solid #a9d985;
+	outline-offset: 2px;
+}
+.row select {
+	flex: 1;
+	min-width: 130px;
+}
+.buttons {
+	margin-top: 14px;
+}
+.arm {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.hint,
+.note {
+	font-size: 12px;
+}
+.meter {
+	height: 6px;
+	background: #0e1624;
+	border-radius: 4px;
+	margin: 15px 0;
+	overflow: hidden;
+}
+#level {
+	height: 100%;
+	width: 0;
+	background: #9ce2bd;
+}
+.heard {
+	overflow-wrap: anywhere;
+	color: #d6e5ff;
+	min-height: 24px;
+}
+#match {
+	color: #b9de9a;
+}
+#dock-link {
+	width: 100%;
+	margin-top: 10px;
+}
+.note {
+	margin: 18px 3px;
+}
+[hidden] {
+	display: none !important;
+}
+@media (max-width: 400px) {
+	main {
+		padding: 12px;
+	}
+	section {
+		padding: 14px;
+	}
+	h1 {
+		font-size: 26px;
+	}
+}
+#desktop-tools button {
+	margin: 0 5px 8px 0;
+}
+
+.dock main {
+	padding: 12px;
+}
+.dock header h1 {
+	font-size: 22px;
+}
+.dock header p {
+	margin: 4px 0;
+}
+.dock section {
+	padding: 12px;
+	margin: 12px 0;
+}
+.dock .hint,
+.dock .note {
+	font-size: 12px;
+}

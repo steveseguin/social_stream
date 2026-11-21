@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="robots" content="noindex">
+
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Static Overlay - Social Stream Ninja</title>
+	<meta name="description" content="A static stream overlay from the Social Stream Ninja overlay studio. All settings are in the URL.">
+	<link rel="icon" href="../favicon.ico">
+	<style>
+		html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
+		body { -webkit-font-smoothing: antialiased; }
+		#sso-root { position: relative; width: 100%; height: 100%; }
+		.sso-icon { display: inline-block; width: 1em; height: 1em; vertical-align: -0.14em; flex-shrink: 0; }
+		img.sso-icon { object-fit: contain; }
+		.sso-missing { font: 16px/1.5 system-ui, sans-serif; color: #fff; background: rgba(0,0,0,.75); padding: 16px 20px; margin: 20px; border-radius: 8px; display: inline-block; }
+		.sso-missing a { color: #8ab4f8; }
+		body.sso-preview-checker { background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Crect width='10' height='10' fill='%23e5e5e5'/%3E%3Crect x='10' y='10' width='10' height='10' fill='%23e5e5e5'/%3E%3C/svg%3E"); }
+	</style>
+</head>
+<body>
+	<div id="sso-root"></div>
+	<script>
+	// Load governor. Where the machine cannot keep up (OBS with browser hardware acceleration switched off, a laptop already
+	// busy with a game), animated overlays draw at 30, 20 or 15 fps instead of fighting the stream for the
+	// processor. Animations keep their speed, because they step by elapsed time. Overlays that can draw at a lower resolution
+	// without changing how they look (they ask through SSO_FRAMES.onScale) do that first. The frame rate comes back once things
+	// are calm, and what this source needed is remembered for half an hour so the next show starts that way.
+	// &fps=full turns all of this off; &fps=30, &fps=20 or &fps=15 holds that rate; &quality=0.75 or 0.5 holds that resolution.
+	(function () {
+		var raf = window.requestAnimationFrame, ric = window.requestIdleCallback, query = new URLSearchParams(location.search), asked = query.get("fps"), want = parseInt(asked, 10);
+		if (!raf || asked === "full") { return; }
+		var fixedFps = want > 0 ? Math.max(15, Math.min(60, want)) : 0, fixedRes = parseFloat(query.get("quality")), fixed = fixedFps > 0 || fixedRes > 0;
+		var level = 0, res = 1, hold = 0, frameMs = 0, nextDraw = null, scalers = [];
+		var queue = [], active = [], nextId = 1, pending = false, prev = 0, gap = 16.7, ran = false, winStart = 0, renders = 0, drawnGaps = [], spent = 0, idle = 0, idleAsked = false, calm = 0, retry = 12, lastUp = -99;
+		var KEY = "sso:load:v2:" + location.pathname + location.search;
+		// With a resolution to give up, that goes first (levels 1-2) and frames after (3-5); without one, frames straight away (1-3).
+		function top() { return scalers.length ? 5 : 3; }
+		function plan() {
+			var before = res;
+			if (fixed) { res = fixedRes > 0 ? Math.max(0.3, Math.min(1, fixedRes)) : 1; hold = fixedFps ? Math.ceil(60 / fixedFps) - 1 : 0; }
+			else if (scalers.length) { res = [1, 0.75, 0.56][Math.min(level, 2)]; hold = Math.max(0, level - 2); }
+			else { res = 1; hold = Math.min(3, level); }
+			frameMs = fixedFps ? 1000 / fixedFps : hold ? (hold + 1) * 1000 / 60 : 0;
+			nextDraw = null;
+			if (res !== before) { scalers.forEach(function (fn) { try { fn(res); } catch (e) {} }); }
+		}
+		if (!fixed) {
+			try { var saved = String(localStorage.getItem(KEY) || "").split(":"); if (Date.now() - (+saved[1] || 0) < 1800000) { level = Math.max(0, Math.min(5, +saved[0] || 0)); } } catch (e) {}
+		}
+		plan();
+		function onIdle(deadline) { idleAsked = false; idle += Math.min(deadline.timeRemaining(), gap); }
+		// load: share of the main thread that was not idle (drawing, painting). slow: share of drawn frames delayed beyond the normal source interval.
+		function judge(t) {
+			var span = t - winStart, load = Math.max(0, Math.min(1, ric ? 1 - idle / span : spent / span)), secs = t / 1000, was = level;
+			// The lower quartile estimates the source's normal frame interval despite occasional stalls.
+			drawnGaps.sort(function (a, b) { return a - b; });
+			var slowAfter = Math.max(40, 1.5 * (drawnGaps[Math.floor(drawnGaps.length / 4)] || 0));
+			var slow = 0;
+			for (var i = drawnGaps.length - 1; i >= 0 && drawnGaps[i] > slowAfter; i--) { slow++; }
+			var slowShare = drawnGaps.length ? slow / drawnGaps.length : 0;
+			winStart = t; renders = 0; drawnGaps.length = 0; spent = 0; idle = 0;
+			if (fixed || secs < 1.5) { return; }
+			if ((load > 0.7 && level < top()) || (slowShare > 0.3 && level < top() - 1)) {
+				level++; calm = 0;
+				// Speeding back up just failed, so wait longer before trying that again.
+				if (secs - lastUp < 10) { retry = Math.min(300, retry * 2); }
+			} else if (hold > 0 && load * (hold + 1) / hold < 0.4 && slowShare < 0.05) {
+				// Only frames are given back; a resolution that was given up stays that way for this run.
+				calm += span / 1000;
+				if (calm >= retry) { level--; calm = 0; lastUp = secs; }
+			} else { calm = 0; }
+			if (level !== was) {
+				plan();
+				try { localStorage.setItem(KEY, level + ":" + Date.now()); } catch (e) {}
+			}
+		}
+		function pump(t) {
+			pending = false;
+			gap = prev ? t - prev : 16.7;
+			prev = t;
+			// A long gap is a hidden source or a stalled page, not a slow frame.
+			if (gap > 250) { winStart = t; renders = 0; drawnGaps.length = 0; spent = 0; idle = 0; gap = 16.7; nextDraw = null; }
+			else if (ran && gap > 0) { drawnGaps.push(gap); }
+			ran = false;
+			if (!queue.length) { return; }
+			if (ric && !idleAsked) { idleAsked = true; ric(onIdle); }
+			if (!winStart) { winStart = t; }
+			// Schedule by time: OBS and monitors may supply 30, 60, 120 or other native frame rates.
+			if (frameMs && nextDraw !== null && t < nextDraw - 0.1) { pending = true; raf(pump); return; }
+			if (frameMs) { nextDraw = nextDraw === null || t - nextDraw >= frameMs ? t + frameMs : nextDraw + frameMs; }
+			var list = queue, t0 = performance.now(), i;
+			active = list;
+			queue = [];
+			for (i = 0; i < list.length; i++) {
+				if (!list[i].fn) { continue; }
+				try { list[i].fn(t); } catch (e) { (function (err) { setTimeout(function () { throw err; }, 0); })(e); }
+			}
+			active = [];
+			spent += performance.now() - t0;
+			renders++; ran = true;
+			if (t - winStart >= 1000 && renders >= 5) { judge(t); }
+			if (queue.length && !pending) { pending = true; raf(pump); }
+		}
+		window.requestAnimationFrame = function (fn) {
+			var id = nextId++;
+			queue.push({ id: id, fn: fn });
+			if (!pending) { pending = true; raf(pump); }
+			return id;
+		};
+		window.cancelAnimationFrame = function (id) {
+			for (var i = 0; i < queue.length; i++) { if (queue[i].id === id) { queue[i].fn = null; return; } }
+			for (var j = 0; j < active.length; j++) { if (active[j].id === id) { active[j].fn = null; return; } }
+		};
+		window.SSO_FRAMES = {
+			skipping: function () { return hold; },
+			level: function () { return level; },
+			scale: function () { return res; },
+			// For overlays that draw in their own units and so look the same at any canvas resolution: fn(scale) is called
+			// whenever the scale changes. Returns a function that stops the calls.
+			onScale: function (fn) {
+				scalers.push(fn);
+				plan();
+				return function () { var i = scalers.indexOf(fn); if (i >= 0) { scalers.splice(i, 1); } };
+			},
+			set: function (n) { level = Math.max(0, Math.min(top(), n | 0)); plan(); }
+		};
+	})();
+	</script>
+	<script src="core.js?v=21"></script>
+	<script src="templates/countries.js?v=15"></script>
+	<script src="templates/engines.js?v=19"></script>
+	<script src="templates/socials.js?v=18"></script>
+	<script src="templates/time.js?v=17"></script>
+	<script src="templates/scenes.js?v=21"></script>
+	<script src="templates/maps.js?v=18"></script>
+	<script src="templates/fun.js?v=15"></script>
+	<script src="templates/text.js?v=15"></script>
+	<script src="templates/gaming.js?v=17"></script>
+	<script src="templates/obs.js?v=16"></script>
+	<script src="templates/petrig.js?v=1"></script>
+	<script src="templates/pets.js?v=16"></script>
+	<script src="templates/extra.js?v=24"></script>
+	<script src="templates/themes.js?v=19"></script>
+	<script src="templates/music.js?v=16"></script>
+	<script src="templates/promo.js?v=15"></script>
+	<script src="templates/live.js?v=16"></script>
+	<script src="templates/games.js?v=16"></script>
+	<script src="templates/reef.js?v=16"></script>
+	<script src="templates/kaiju.js?v=16"></script>
+	<script src="templates/party.js?v=17"></script>
+	<script src="templates/cozy.js?v=17"></script>
+	<script src="templates/themebar.js?v=16"></script>
+	<script src="templates/winter.js?v=3"></script>
+	<script src="templates/winterstrip.js?v=2"></script>
+	<script src="templates/winterscenes.js?v=2"></script>
+	<script src="templates/winterfx.js?v=2"></script>
+	<script src="templates/frames2.js?v=2"></script>
+	<script src="templates/lowerfx.js?v=1"></script>
+	<script src="templates/seasons.js?v=1"></script>
+	<script src="templates/seasondecor.js?v=1"></script>
+	<script src="templates/splat.js?v=3"></script>
+	<script src="templates/three3d.js?v=2"></script>
+	<script src="templates/portrait.js?v=3"></script>
+	<script src="templates/celebrate.js?v=3"></script>
+	<script src="templates/moments.js?v=4"></script>
+	<script src="templates/random.js?v=3"></script>
+	<script src="templates/countscreen.js?v=3"></script>
+	<script src="templates/seasontags.js?v=1"></script>
+	<script>
+	(function () {
+		var params = new URLSearchParams(location.search);
+		var root = document.getElementById("sso-root");
+		var def = SSO.get(params.get("t") || "");
+
+		if (params.has("scale")) {
+			var scale = parseFloat(params.get("scale"));
+			if (isFinite(scale) && scale > 0) {
+				root.style.transformOrigin = "0 0";
+				root.style.transform = "scale(" + scale + ")";
+				root.style.width = (100 / scale) + "%";
+				root.style.height = (100 / scale) + "%";
+			}
+		}
+
+		var css = params.get("css");
+		if (css) {
+			if (/^https?:\/\//i.test(css)) {
+				var link = document.createElement("link");
+				link.rel = "stylesheet";
+				link.href = css;
+				document.head.appendChild(link);
+			} else {
+				SSO.addStyle(css);
+			}
+		}
+		var b64 = params.get("b64css") || params.get("cssb64");
+		if (b64) {
+			try { SSO.addStyle(decodeURIComponent(escape(atob(b64)))); } catch (e) { console.warn("Bad b64css", e); }
+		}
+
+		if (!def) {
+			root.innerHTML = '<div class="sso-missing">Pick an overlay in the <a href="index.html">overlay gallery</a> to get a link.</div>';
+			return;
+		}
+
+		var cfg = SSO.readConfig(def);
+		if (cfg.font) { SSO.loadFont(cfg.font); }
+		document.body.className = "sso-t-" + def.id;
+		if (def.css) { SSO.addStyle(def.css, "sso-css-" + def.id); }
+
+		var ctx = { params: params, preview: params.has("preview") };
+		// Track template timers so a replay doesn't leave old loops running.
+		var timers = [];
+		var nativeInterval = window.setInterval;
+		window.setInterval = function (fn, ms) { var id = nativeInterval(fn, ms); timers.push(id); return id; };
+		function draw() {
+			timers.forEach(function (id) { clearInterval(id); });
+			timers = [];
+			SSO.cleanup(root);
+			root.innerHTML = "";
+			def.render(root, cfg, ctx);
+		}
+
+		if (cfg.huecycle > 0) {
+			SSO.addStyle("@keyframes sso-hue{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(360deg)}}");
+			root.style.animation = "sso-hue " + (cfg.huecycle * 60) + "s linear infinite";
+		}
+		if (cfg.fadein > 0) {
+			root.style.opacity = "0";
+			root.style.transition = "opacity " + cfg.fadein + "s ease";
+			setTimeout(function () { root.style.opacity = "1"; }, 50);
+		}
+		if (cfg.cycleshow > 0) {
+			// Periodically fade the whole overlay out and back in (handy for socials that shouldn't sit there all stream).
+			root.style.transition = "opacity 1.2s ease";
+			var visibleNow = true;
+			(function cycle() {
+				setTimeout(function () {
+					visibleNow = !visibleNow;
+					root.style.opacity = visibleNow ? "1" : "0";
+					cycle();
+				}, (visibleNow ? cfg.cycleshow : cfg.cyclehide) * 1000);
+			})();
+		}
+		var onlyScenes = String(cfg.scenes || "").split(",").map(function (s) { return s.trim().toLowerCase(); }).filter(Boolean);
+		function sceneVisible(name) {
+			if (!onlyScenes.length || !name) { return; }
+			root.style.visibility = onlyScenes.indexOf(String(name).toLowerCase()) === -1 ? "hidden" : "";
+		}
+		if (onlyScenes.length) { SSO.obs.scene(function (sc) { if (sc) { sceneVisible(sc.name); } }); }
+		SSO.obs.on("obsSceneChanged", function (d) {
+			sceneVisible(d.name);
+			if (cfg.replay) { draw(); }
+		});
+
+		SSO.loadScripts(def.libs || [], draw);
+	})();
+	</script>
+</body>
+</html>

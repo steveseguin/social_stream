@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Word Chain Game: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Chain Game - Social Stream Ninja</title>
+    <link rel="icon" href="../favicon.ico" />
+    <link rel="stylesheet" href="wordchain.css" />
+</head>
+<body>
+    <div id="game-container">
+        <div id="timer-chip" class="chip">⏳ <span id="timer">60</span></div>
+
+        <div id="chain-container"></div>
+
+        <div id="word-row">
+            <div id="word-display">HELLO</div>
+        </div>
+        <div id="author"></div>
+
+        <div id="next-word">
+            <div class="tile" id="next-letter">O</div>
+            <div class="tile"></div>
+            <div class="tile"></div>
+            <div class="tile"></div>
+        </div>
+
+        <div id="score-list"></div>
+    </div>
+
+    <script>
+    // Game state
+    let currentWord = 'HELLO';
+    let wordChain = ['HELLO'];
+    let usedWords = new Set(['HELLO']);
+    let scores = new Map();
+    let roundScores = new Map();
+    let timeLeft = 60;
+    let gameActive = true;
+    let currentTheme = 'General';
+    let comboMultiplier = 1;
+    let lastContributor = null;
+    
+    // Themes with starting words
+    const themes = {
+        'General': ['HELLO', 'START', 'GAME', 'PLAY'],
+        'Animals': ['TIGER', 'ELEPHANT', 'MONKEY', 'ZEBRA'],
+        'Food': ['PIZZA', 'BURGER', 'SALAD', 'TACO'],
+        'Gaming': ['MARIO', 'ZELDA', 'SONIC', 'PACMAN'],
+        'Nature': ['TREE', 'OCEAN', 'MOUNTAIN', 'RIVER']
+    };
+    
+    // URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
+    const sessionId = urlParams.get('session') || 'test';
+    const password = urlParams.get('password') || 'false';
+
+    if (urlParams.has('transparent')) {
+        document.body.classList.add('transparent');
+    }
+
+    function stripHtml(html) {
+        const tmp = document.createElement('template').content.appendChild(document.createElement('div'));
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+    }
+
+    // Show the current word with its last letter picked out; the same letter opens the
+    // row of empty tiles below, which is the cue for what chat should type next.
+    function showWord() {
+        const display = document.getElementById('word-display');
+        display.textContent = '';
+
+        const stem = document.createElement('span');
+        stem.textContent = currentWord.slice(0, -1);
+        const last = document.createElement('span');
+        last.className = 'last-letter';
+        last.textContent = currentWord.slice(-1);
+        display.appendChild(stem);
+        display.appendChild(last);
+
+        document.getElementById('next-letter').textContent = currentWord.slice(-1);
+        fitWord();
+    }
+
+    // Long words shrink to stay on one line inside the window
+    function fitWord() {
+        const unit = Math.min(window.innerWidth, window.innerHeight) / 100;
+        const available = window.innerWidth - 12 * unit;
+        const largest = (window.innerHeight > window.innerWidth ? 21 : 18) * unit;
+        const size = Math.min(largest, available / (Math.max(3, currentWord.length) * 0.82 + 0.5));
+        document.getElementById('word-display').style.fontSize = size + 'px';
+    }
+
+    function showTimer() {
+        document.getElementById('timer').textContent = Math.max(0, timeLeft);
+        document.getElementById('timer-chip').classList.toggle('low', timeLeft <= 10);
+    }
+
+    function showAuthor(text) {
+        document.getElementById('author').textContent = text;
+    }
+
+    showWord();
+    showTimer();
+    window.addEventListener('resize', fitWord);
+
+    function addWordToChain(word, username) {
+        const container = document.getElementById('chain-container');
+        const wordDiv = document.createElement('div');
+        wordDiv.className = 'chain-word';
+        wordDiv.textContent = word;
+        container.appendChild(wordDiv);
+
+        // Keep a readable trail of the eight most recent words.
+        const existingWords = container.querySelectorAll('.chain-word');
+
+        // Remove old words if too many
+        if (existingWords.length > 8) {
+            existingWords[0].remove();
+        }
+    }
+
+    function updateScoreboard() {
+        const scoreList = document.getElementById('score-list');
+        scoreList.textContent = '';
+
+        const sortedScores = Array.from(scores.entries())
+            .sort((a, b) => b[1].score - a[1].score)
+            .slice(0, 3);
+
+        const medals = ['🥇', '🥈', '🥉'];
+        sortedScores.forEach(([, player], index) => {
+            const scoreDiv = document.createElement('div');
+            scoreDiv.className = 'score-entry';
+
+            const medal = document.createElement('span');
+            medal.textContent = medals[index];
+            const name = document.createElement('span');
+            name.className = 'score-name';
+            name.textContent = player.name;
+            const points = document.createElement('span');
+            points.className = 'score-points';
+            points.textContent = player.score;
+            const unit = document.createElement('small');
+            unit.textContent = ' pts';
+            points.appendChild(unit);
+
+            scoreDiv.appendChild(medal);
+            scoreDiv.appendChild(name);
+            scoreDiv.appendChild(points);
+            scoreList.appendChild(scoreDiv);
+        });
+    }
+
+    function processWord(username, word, playerKey = username) {
+        if (!gameActive) return;
+
+        word = word.toUpperCase().trim();
+
+        // Validate word
+        if (word.length < 3) {
+            sendResponse(`@${username}, word must be at least 3 letters!`);
+            return;
+        }
+
+        const lastLetter = currentWord[currentWord.length - 1];
+        if (word[0] !== lastLetter) {
+            sendResponse(`@${username}, your word must start with '${lastLetter}'!`);
+            document.getElementById('word-display').classList.add('wrong-answer');
+            setTimeout(() => {
+                document.getElementById('word-display').classList.remove('wrong-answer');
+            }, 500);
+            return;
+        }
+
+        if (usedWords.has(word)) {
+            sendResponse(`@${username}, '${word}' was already used!`);
+            return;
+        }
+
+        // Valid word!
+        currentWord = word;
+        wordChain.push(word);
+        usedWords.add(word);
+
+        // Calculate points
+        let points = word.length;
+        if (playerKey === lastContributor) {
+            comboMultiplier = Math.min(comboMultiplier + 0.5, 3);
+        } else {
+            comboMultiplier = 1;
+        }
+        points = Math.floor(points * comboMultiplier);
+
+        // Update score
+        scores.set(playerKey, {name: username, score: (scores.get(playerKey) || {score: 0}).score + points});
+        roundScores.set(playerKey, {name: username, score: (roundScores.get(playerKey) || {score: 0}).score + points});
+
+        // Update display
+        showWord();
+        showAuthor(username);
+        addWordToChain(word, username);
+        updateScoreboard();
+
+        // Show combo
+        if (comboMultiplier > 1) {
+            showCombo(comboMultiplier);
+        }
+
+        lastContributor = playerKey;
+
+        // Add bonus time for good words
+        if (word.length >= 7) {
+            timeLeft += 5;
+            showTimer();
+            const chip = document.getElementById('timer-chip');
+            chip.classList.remove('bonus');
+            void chip.offsetWidth; // restart the pop
+            chip.classList.add('bonus');
+            sendResponse(`⏰ +5 seconds! Nice long word, ${username}!`);
+        }
+    }
+
+    function showCombo(multiplier) {
+        const combo = document.createElement('div');
+        combo.className = 'combo-indicator';
+        combo.textContent = `x${multiplier}`;
+        document.getElementById('word-row').appendChild(combo);
+
+        setTimeout(() => combo.remove(), 1100);
+    }
+
+    function startNewRound() {
+        // Pick random theme
+        const themeNames = Object.keys(themes);
+        currentTheme = themeNames[Math.floor(Math.random() * themeNames.length)];
+
+        // Pick random starting word from theme
+        const themeWords = themes[currentTheme];
+        currentWord = themeWords[Math.floor(Math.random() * themeWords.length)];
+
+        // Reset game state
+        wordChain = [currentWord];
+        usedWords = new Set([currentWord]);
+        roundScores = new Map();
+        timeLeft = 60;
+        gameActive = true;
+        comboMultiplier = 1;
+        lastContributor = null;
+
+        // Clear chain display
+        document.getElementById('chain-container').textContent = '';
+
+        // Update display
+        showWord();
+        showAuthor('');
+        showTimer();
+        document.getElementById('next-word').classList.remove('closed');
+        addWordToChain(currentWord, 'System');
+
+        sendResponse(`🎮 New round! Theme: ${currentTheme} - Starting word: ${currentWord}`);
+    }
+
+    function updateTimer() {
+        if (!gameActive) return;
+
+        timeLeft--;
+        showTimer();
+
+        if (timeLeft <= 0) {
+            endRound();
+        }
+    }
+
+    function endRound() {
+        gameActive = false;
+
+        // Find round winner
+        const winner = Array.from(roundScores.entries())
+            .sort((a, b) => b[1].score - a[1].score)[0];
+
+        // Between rounds the empty tiles go away and the round's top player is named
+        document.getElementById('next-word').classList.add('closed');
+        showAuthor(winner ? '🏆 ' + winner[1].name : '');
+
+        if (winner) {
+            sendResponse(`🏆 Round over! Winner: ${winner[1].name} with ${winner[1].score} points! Chain length: ${wordChain.length} words`);
+        }
+
+        // Start new round after delay
+        setTimeout(startNewRound, 5000);
+    }
+    
+    function sendResponse(message) {
+        if (urlParams.has('demo')) return;
+        const response = {
+            chatname: 'WordChainBot',
+            chatmessage: message,
+            type: 'bot',
+            timestamp: Date.now()
+        };
+        
+        if (window.parent !== window) {
+            window.parent.postMessage({
+                overlay: 'wordchain',
+                response: response
+            }, '*');
+        }
+        
+        console.log('Bot response:', message);
+    }
+    
+    function processData(data) {
+        if (data && data.content) {
+            data = data.content;
+        }
+        
+        if (!data || !data.chatmessage || !data.chatname) return;
+
+        let message = data.chatmessage;
+        // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
+        if (!data.textonly) {
+            message = stripHtml(message);
+        }
+        message = message.trim();
+
+        // Check if it's a plausible word attempt (starts with the required letter)
+        if (gameActive && message.length >= 3 && /^[a-zA-Z]+$/.test(message) &&
+            message[0].toUpperCase() === currentWord[currentWord.length - 1]) {
+            processWord(String(data.chatname), message, JSON.stringify([data.type || '', String(data.userid || data.username || data.chatname)]));
+        }
+    }
+    
+    // Timer
+    setInterval(updateTimer, 1000);
+    
+    // Setup iframe communication
+    if (!urlParams.has('demo') && !chatRelay.enabled) {
+    const iframe = document.createElement("iframe");
+    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
+    iframe.style.width = "0px";
+    iframe.style.height = "0px";
+    iframe.style.position = "fixed";
+    iframe.style.left = "-100px";
+    iframe.style.top = "-100px";
+    iframe.id = "frame1";
+    document.body.appendChild(iframe);
+    
+    window.addEventListener("message", function(e) {
+        if (e.source !== iframe.contentWindow) return;
+        
+        if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+            if ("overlayNinja" in e.data.dataReceived) {
+                processData(e.data.dataReceived.overlayNinja);
+            }
+        }
+    });
+    
+    }
+
+    // Handle WebSocket if server parameter provided
+    if (!urlParams.has('demo') && chatRelay.enabled) {
+        const serverUrl = chatRelay.url;
+        let socketserver = null;
+        let reconnectTimeout = null;
+
+        function connectWebSocket() {
+            socketserver = new WebSocket(serverUrl);
+
+            socketserver.onopen = function() {
+                socketserver.send(JSON.stringify({
+                    join: sessionId.split(",")[0],
+                    out: chatRelay.out, in: chatRelay.in
+                }));
+            };
+
+            socketserver.onclose = function() {
+                clearTimeout(reconnectTimeout);
+                reconnectTimeout = setTimeout(connectWebSocket, 5000);
+            };
+
+            socketserver.onerror = function() {
+                try { socketserver.close(); } catch (e) {}
+            };
+
+            socketserver.onmessage = function(event) {
+                if (event.data) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        processData(data);
+                    } catch (e) {
+                        console.error('WebSocket parse error:', e);
+                    }
+                }
+            };
+        }
+
+        connectWebSocket();
+    }
+
+    // Demo mode: three players keep the chain going with words that fit
+    if (urlParams.has('demo')) {
+        const demoPlayers = ['Maple', 'Juno', 'Rook'];
+        const demoWords = ['APPLE', 'ANCHOR', 'ARROW', 'BANANA', 'BRIDGE', 'CASTLE', 'COMET', 'DRAGON', 'DONUT', 'EAGLE',
+            'ELEPHANT', 'ECLAIR', 'ENGINE', 'EMERALD', 'ECHO', 'ELBOW', 'ENVELOPE', 'GARDEN', 'GUITAR', 'HONEY', 'HAMMER',
+            'ISLAND', 'IGLOO', 'KITTEN', 'KOALA', 'LEMON', 'LANTERN', 'MONKEY', 'MARBLE', 'NOODLE', 'NINJA', 'NAPKIN',
+            'NECTAR', 'ORANGE', 'OCEAN', 'OTTER', 'PIZZA', 'PLANET', 'ROCKET', 'RABBIT', 'RIVER', 'RAINBOW', 'RADIO',
+            'SUNSET', 'SALAD', 'TURTLE', 'TIGER', 'TOMATO', 'TRUMPET', 'TOWER', 'TRAIN', 'UMBRELLA', 'WAFFLE', 'WIZARD',
+            'YOGURT', 'YELLOW', 'ZEBRA'];
+        setInterval(() => {
+            if (!gameActive) return;
+            const letter = currentWord[currentWord.length - 1];
+            const options = demoWords.filter(word => word[0] === letter && !usedWords.has(word));
+            if (!options.length) return;
+            processWord(demoPlayers[Math.floor(Math.random() * demoPlayers.length)], options[Math.floor(Math.random() * options.length)]);
+        }, 2200);
+    }
+    </script>
+</body>
+</html>

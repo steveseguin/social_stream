@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Rhythm Pulse: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rhythm Pulse - Social Stream Ninja</title>
+    <link rel="icon" href="../favicon.ico" />
+    <link rel="preload" href="../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+    <style>
+        /* Hide scrollbars */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        * {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+            -webkit-user-select: none;  /* Safari */
+            -moz-user-select: none;  /* Firefox */
+            -ms-user-select: none;  /* IE10+/Edge */
+            user-select: none;  /* Standard */
+            box-sizing: border-box;
+        }
+
+        @font-face {
+            font-family: NotoColorEmojiLimited;
+            unicode-range: U+1F1E6-1F1FF;
+            src: url(../thirdparty/NotoColorEmoji.ttf);
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at center, #0f0f23 0%, #000 100%);
+            overflow: hidden;
+            font-family: 'NotoColorEmojiLimited', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            color: white;
+        }
+
+        body.chroma {
+            background: #00ff00;
+        }
+
+        body.darkmode {
+            background: #000000;
+        }
+
+        body.transparent {
+            background: transparent;
+        }
+
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding-bottom: 15vmin;
+            overflow: hidden;
+        }
+
+        /* Tempo: the number is the beats per minute, and the disc pulses at that speed */
+        #tempo {
+            flex: none;
+            width: 27vmin;
+            height: 27vmin;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #20243a;
+            border: 1.2vmin solid #3a4061;
+            animation: tempo-pulse 0.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes tempo-pulse {
+            0% { transform: scale(0.96); }
+            100% { transform: scale(1.04); }
+        }
+
+        #bpm-display {
+            font-size: 9.5vmin;
+            font-weight: 800;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        #bpm-unit {
+            margin-top: 0.4vmin;
+            font-size: 2.6vmin;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: #aab1cf;
+        }
+
+        #pads {
+            flex: none;
+            display: grid;
+            grid-template-columns: repeat(4, 34vmin);
+            grid-gap: 4vmin;
+            margin-top: 5vmin;
+        }
+
+        .pad {
+            position: relative;
+            width: 34vmin;
+            height: 34vmin;
+        }
+
+        .pad-face {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1.6vmin solid rgba(0, 0, 0, 0.22);
+        }
+
+        .pad.hit .pad-face {
+            animation: pad-hit 0.3s ease-out;
+        }
+
+        @keyframes pad-hit {
+            0% { transform: scale(1); }
+            30% { transform: scale(0.88); }
+            65% { transform: scale(1.07); }
+            100% { transform: scale(1); }
+        }
+
+        .pad svg {
+            width: 44%;
+            height: 44%;
+            fill: none;
+            stroke: #fff;
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .pad-word {
+            margin-top: 0.4vmin;
+            font-size: 5vmin;
+            font-weight: 800;
+            line-height: 1.1;
+            color: #fff;
+        }
+
+        .drum-kick .pad-face { background: #f2545f; }
+        .drum-snare .pad-face { background: #4f6df5; }
+        .drum-hihat .pad-face { background: #27b877; }
+        .drum-crash .pad-face { background: #f59f1a; }
+
+        .pad-ring {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 1vmin solid #fff;
+            pointer-events: none;
+            animation: pad-ring 0.6s ease-out forwards;
+        }
+
+        @keyframes pad-ring {
+            0% { transform: scale(1); opacity: 0.85; }
+            100% { transform: scale(1.4); opacity: 0; }
+        }
+
+        .note-particle {
+            position: absolute;
+            font-size: 7vmin;
+            line-height: 1;
+            font-family: 'NotoColorEmojiLimited', 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
+            animation: note-float 1.8s ease-out forwards;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        @keyframes note-float {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, 0) scale(0.6);
+            }
+            15% {
+                opacity: 1;
+                transform: translate(-50%, -4vmin) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -22vmin) scale(0.9);
+            }
+        }
+
+        .sync-burst {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            font-size: 26vmin;
+            line-height: 1;
+            z-index: 60;
+            pointer-events: none;
+            animation: sync-explosion 1.1s ease-out forwards;
+        }
+
+        @keyframes sync-explosion {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.2);
+            }
+            35% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(1.5);
+            }
+        }
+
+        #beat-visualizer {
+            position: absolute;
+            left: 3vmin;
+            right: 3vmin;
+            bottom: 3vmin;
+            height: 12vmin;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .frequency-bar {
+            flex: 1 1 0;
+            height: 100%;
+            margin: 0 0.4vmin;
+            border-radius: 1vmin 1vmin 0 0;
+            transform: scaleY(0.08);
+            transform-origin: 50% 100%;
+            transition: transform 0.12s ease-out;
+        }
+
+        @media (orientation: portrait) {
+            #game-container {
+                padding-bottom: 20vmin;
+            }
+
+            #tempo {
+                width: 34vmin;
+                height: 34vmin;
+            }
+
+            #bpm-display {
+                font-size: 13vmin;
+            }
+
+            #bpm-unit {
+                font-size: 3.4vmin;
+            }
+
+            #pads {
+                grid-template-columns: repeat(2, 44vmin);
+                margin-top: 7vmin;
+            }
+
+            .pad {
+                width: 44vmin;
+                height: 44vmin;
+            }
+
+            .pad-word {
+                font-size: 6.4vmin;
+            }
+
+            #beat-visualizer {
+                height: 17vmin;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="tempo">
+            <div id="bpm-display">120</div>
+            <div id="bpm-unit">BPM</div>
+        </div>
+
+        <div id="pads">
+            <div class="pad drum-kick" data-sound="kick">
+                <div class="pad-face">
+                    <svg viewBox="0 0 100 100"><circle cx="50" cy="48" r="34"/><circle cx="50" cy="48" r="11" fill="#fff" stroke="none"/><path d="M24 78L15 93M76 78L85 93"/></svg>
+                    <div class="pad-word">kick</div>
+                </div>
+            </div>
+            <div class="pad drum-snare" data-sound="snare">
+                <div class="pad-face">
+                    <svg viewBox="0 0 100 100"><ellipse cx="50" cy="46" rx="33" ry="11"/><path d="M17 46V72M83 46V72M17 72A33 11 0 0 0 83 72M28 8L50 34M72 8L50 34"/></svg>
+                    <div class="pad-word">snare</div>
+                </div>
+            </div>
+            <div class="pad drum-hihat" data-sound="hihat">
+                <div class="pad-face">
+                    <svg viewBox="0 0 100 100"><ellipse cx="50" cy="32" rx="35" ry="8"/><ellipse cx="50" cy="46" rx="35" ry="8"/><path d="M50 12V24M50 54V92M33 92H67"/></svg>
+                    <div class="pad-word">hihat</div>
+                </div>
+            </div>
+            <div class="pad drum-crash" data-sound="crash">
+                <div class="pad-face">
+                    <svg viewBox="0 0 100 100"><ellipse cx="50" cy="34" rx="38" ry="10" transform="rotate(-12 50 34)"/><path d="M50 44V92M32 92H68"/><circle cx="50" cy="34" r="4" fill="#fff" stroke="none"/></svg>
+                    <div class="pad-word">crash</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="beat-visualizer"></div>
+    </div>
+
+    <script>
+        // URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
+        const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
+        const password = urlParams.get('password') || 'false';
+
+        // Apply theme settings
+        if (urlParams.has('chroma')) {
+            document.body.classList.add('chroma');
+        } else if (urlParams.has('darkmode')) {
+            document.body.classList.add('darkmode');
+        }
+        if (urlParams.has('transparent')) {
+            document.body.classList.remove('chroma', 'darkmode');
+            document.body.classList.add('transparent');
+        }
+
+        // Game state
+        let gameState = {
+            beatCount: 0,
+            musicians: new Set(),
+            comboCount: 0,
+            syncLevel: 0,
+            currentBPM: 120,
+            currentGenre: 'electronic',
+            recentBeats: [],
+            beatTimestamps: [],
+            lastBeatTime: 0
+        };
+
+        // Audio context and settings
+        let audioContext = null;
+        let masterGain = null;
+        let audioEnabled = true;
+        // Loudness is a link option: &volume=0 to 100 (0 is silent). OBS can also control the source's audio.
+        const DEFAULT_VOLUME = urlParams.has('volume') ? Math.max(0, Math.min(100, parseFloat(urlParams.get('volume')) || 0)) / 100 : 0.5;
+
+        // Initialize Web Audio API
+        function initAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                masterGain = audioContext.createGain();
+                masterGain.gain.value = DEFAULT_VOLUME;
+                masterGain.connect(audioContext.destination);
+                
+                attachAudioUnlockListeners();
+            } catch (error) {
+                console.error('Failed to initialize Web Audio API:', error);
+                audioEnabled = false;
+            }
+        }
+
+        function resumeAudio() {
+            if (!audioContext || audioContext.state !== 'suspended') {
+                return Promise.resolve(!!audioContext);
+            }
+            return audioContext.resume().then(() => true).catch(() => false);
+        }
+
+        function attachAudioUnlockListeners() {
+            const handler = () => {
+                resumeAudio();
+            };
+            ['pointerdown', 'mousedown', 'touchstart', 'keydown', 'click'].forEach(eventName => {
+                document.addEventListener(eventName, handler, { once: true });
+            });
+        }
+
+        // Sound synthesizers
+        const drumSounds = {
+            kick: function(time = 0) {
+                if (!audioEnabled || !audioContext) return;
+                
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                
+                osc.frequency.setValueAtTime(150, time);
+                osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.5);
+                
+                gain.gain.setValueAtTime(1, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+                
+                osc.connect(gain);
+                gain.connect(masterGain);
+                
+                osc.start(time);
+                osc.stop(time + 0.5);
+            },
+            
+            snare: function(time = 0) {
+                if (!audioEnabled || !audioContext) return;
+                
+                // Noise for snare
+                const bufferSize = audioContext.sampleRate * 0.2;
+                const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+                const output = buffer.getChannelData(0);
+                
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+                
+                const noise = audioContext.createBufferSource();
+                noise.buffer = buffer;
+                
+                const noiseFilter = audioContext.createBiquadFilter();
+                noiseFilter.type = 'highpass';
+                noiseFilter.frequency.value = 1000;
+                
+                const noiseGain = audioContext.createGain();
+                noiseGain.gain.setValueAtTime(0.5, time);
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+                
+                // Tone for body
+                const osc = audioContext.createOscillator();
+                osc.frequency.value = 200;
+                
+                const oscGain = audioContext.createGain();
+                oscGain.gain.setValueAtTime(0.7, time);
+                oscGain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+                
+                noise.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(masterGain);
+                
+                osc.connect(oscGain);
+                oscGain.connect(masterGain);
+                
+                noise.start(time);
+                osc.start(time);
+                osc.stop(time + 0.1);
+            },
+            
+            hihat: function(time = 0) {
+                if (!audioEnabled || !audioContext) return;
+                
+                const bufferSize = audioContext.sampleRate * 0.05;
+                const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+                const output = buffer.getChannelData(0);
+                
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+                
+                const noise = audioContext.createBufferSource();
+                noise.buffer = buffer;
+                
+                const filter = audioContext.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 10000;
+                
+                const gain = audioContext.createGain();
+                gain.gain.setValueAtTime(0.3, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
+                
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(masterGain);
+                
+                noise.start(time);
+            },
+            
+            crash: function(time = 0) {
+                if (!audioEnabled || !audioContext) return;
+                
+                const bufferSize = audioContext.sampleRate * 2;
+                const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+                const output = buffer.getChannelData(0);
+                
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+                
+                const noise = audioContext.createBufferSource();
+                noise.buffer = buffer;
+                
+                const filter = audioContext.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.value = 1000;
+                filter.Q.value = 10;
+                
+                const gain = audioContext.createGain();
+                gain.gain.setValueAtTime(0.8, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 2);
+                
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(masterGain);
+                
+                noise.start(time);
+            }
+        };
+
+        // Play drum sound
+        function playDrumSound(soundType) {
+            if (!audioEnabled || !audioContext || !drumSounds[soundType]) return;
+            if (audioContext.state === 'suspended') {
+                resumeAudio().then(running => {
+                    if (running) drumSounds[soundType](audioContext.currentTime);
+                });
+                return;
+            }
+            drumSounds[soundType](audioContext.currentTime);
+        }
+
+        // Sound/beat keywords
+        const beatKeywords = {
+            kick: { type: 'kick', color: '#ff4757', note: '🥁' },
+            drum: { type: 'kick', color: '#ff4757', note: '🥁' },
+            bass: { type: 'kick', color: '#ff4757', note: '🔊' },
+            snare: { type: 'snare', color: '#3742fa', note: '📯' },
+            clap: { type: 'snare', color: '#3742fa', note: '👏' },
+            snap: { type: 'snare', color: '#3742fa', note: '🫰' },
+            hihat: { type: 'hihat', color: '#2ed573', note: '⚡' },
+            cymbal: { type: 'crash', color: '#ffa502', note: '💥' },
+            crash: { type: 'crash', color: '#ffa502', note: '💥' },
+            beat: { type: 'kick', color: '#ff4757', note: '🎵' },
+            rhythm: { type: 'snare', color: '#3742fa', note: '🎼' },
+            music: { type: 'hihat', color: '#2ed573', note: '🎶' },
+            sound: { type: 'kick', color: '#ff4757', note: '🔊' }
+        };
+
+        // Equalizer along the bottom: one group of bars per drum, in the drum's color
+        const frequencyBars = [];
+        const drumGroups = { kick: 0, snare: 1, hihat: 2, crash: 3 };
+        const groupColors = ['#f2545f', '#4f6df5', '#27b877', '#f59f1a'];
+        const groupEnergy = [0, 0, 0, 0];
+        let visualizerIdle = true;
+
+        function initFrequencyBars() {
+            const visualizer = document.getElementById('beat-visualizer');
+            for (let i = 0; i < 32; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'frequency-bar';
+                bar.style.backgroundColor = groupColors[Math.floor(i / 8)];
+                visualizer.appendChild(bar);
+                frequencyBars.push(bar);
+            }
+        }
+
+        // Update frequency visualizer
+        function updateFrequencyBars() {
+            const floor = (gameState.syncLevel / 100) * 0.35;
+            let active = false;
+            for (let group = 0; group < groupEnergy.length; group++) {
+                groupEnergy[group] *= 0.86;
+                if (groupEnergy[group] > 0.02 || floor > 0.02) active = true;
+            }
+            if (!active && visualizerIdle) return;
+            visualizerIdle = !active;
+
+            frequencyBars.forEach((bar, index) => {
+                const energy = active ? Math.max(groupEnergy[Math.floor(index / 8)], floor) : 0;
+                const shape = Math.sin(((index % 8) + 0.5) / 8 * Math.PI) * 0.5 + 0.5;
+                const level = 0.08 + energy * shape * (0.55 + Math.random() * 0.45) * 0.92;
+                bar.style.transform = 'scaleY(' + level.toFixed(3) + ')';
+            });
+        }
+
+        // Extract beat keywords and emojis from text
+        function analyzeBeatMessage(text) {
+            const analysis = {
+                beats: [],
+                emojis: [],
+                intensity: 1
+            };
+
+            const lowerText = text.toLowerCase();
+            
+            // Find beat keywords
+            Object.entries(beatKeywords).forEach(([keyword, data]) => {
+                if (lowerText.includes(keyword)) {
+                    analysis.beats.push({ keyword, ...data });
+                }
+            });
+
+            // Extract musical emojis
+            const musicalEmojis = ['🎵', '🎶', '🎼', '🥁', '🎸', '🎹', '🎺', '🎷', '🎤', '🔊', '📯', '💥', '⚡', '🔥'];
+            const emojiRegex = /(\p{Regional_Indicator}\p{Regional_Indicator}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F)(\p{Emoji_Modifier}|\u200D\p{Emoji})*|\p{Emoji_Component}\uFE0F/gu;
+            const foundEmojis = text.match(emojiRegex) || [];
+            
+            foundEmojis.forEach(emoji => {
+                if (musicalEmojis.includes(emoji)) {
+                    analysis.emojis.push(emoji);
+                }
+            });
+
+            // Calculate intensity based on message length and caps
+            analysis.intensity = Math.min(3, 1 + (text.length / 20) + (/[a-z]/i.test(text) && text === text.toUpperCase() ? 1 : 0));
+
+            return analysis;
+        }
+
+        // processData reports each beat in pieces: the strength and the note first,
+        // then the drum that was hit. They are collected here and drawn on the pad.
+        let pendingIntensity = 1;
+        const pendingNotes = [];
+
+        function createBeatCircle(x, y, color, size = 1) {
+            pendingIntensity = size;
+        }
+
+        function createRhythmWave(color, intensity) {
+            pendingIntensity = intensity;
+        }
+
+        function createNoteParticle(note) {
+            pendingNotes.push(note);
+        }
+
+        function createBeatTrail() {}
+
+        // Float a note up from a drum pad, or from around the tempo disc when no drum was hit
+        function spawnNote(note, pad) {
+            const container = document.getElementById('game-container');
+            if (!note || container.querySelectorAll('.note-particle').length >= 24) return;
+
+            const anchor = (pad || document.getElementById('tempo')).getBoundingClientRect();
+            const particle = document.createElement('div');
+            particle.className = 'note-particle';
+            particle.textContent = note;
+            particle.style.left = (anchor.left + anchor.width * (pad ? 0.3 + Math.random() * 0.4 : Math.random() * 1.6 - 0.3)) + 'px';
+            particle.style.top = (anchor.top + anchor.height * (pad ? 0.02 : 0.2 + Math.random() * 0.3)) + 'px';
+
+            container.appendChild(particle);
+
+            setTimeout(() => particle.remove(), 1800);
+        }
+
+        // Trigger drum pad
+        function triggerDrumPad(soundType) {
+            const drumPad = document.querySelector(`[data-sound="${soundType}"]`);
+            const note = pendingNotes.shift();
+            if (drumPad) {
+                drumPad.classList.remove('hit');
+                void drumPad.offsetWidth; // restart the bounce
+                drumPad.classList.add('hit');
+
+                if (drumPad.querySelectorAll('.pad-ring').length < 3) {
+                    const ring = document.createElement('div');
+                    ring.className = 'pad-ring';
+                    drumPad.appendChild(ring);
+                    setTimeout(() => ring.remove(), 600);
+                }
+
+                spawnNote(note, drumPad);
+            }
+
+            if (soundType in drumGroups) {
+                groupEnergy[drumGroups[soundType]] = Math.min(1, 0.6 + pendingIntensity * 0.14);
+            }
+
+            // Play the sound
+            playDrumSound(soundType);
+        }
+
+        // Calculate BPM from recent beats
+        function calculateBPM() {
+            const now = Date.now();
+            const recentBeats = gameState.beatTimestamps.filter(t => now - t < 10000); // Last 10 seconds
+            
+            if (recentBeats.length < 2) return gameState.currentBPM;
+            
+            const intervals = [];
+            for (let i = 1; i < recentBeats.length; i++) {
+                intervals.push(recentBeats[i] - recentBeats[i-1]);
+            }
+            
+            const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+            const bpm = Math.round(60000 / avgInterval);
+            
+            // Smooth BPM changes
+            gameState.currentBPM = Math.max(60, Math.min(200, Math.round((gameState.currentBPM * 0.7) + (bpm * 0.3))));
+            
+            return gameState.currentBPM;
+        }
+
+        // Check for sync/combo
+        function checkSync() {
+            // Notes that came without a drum word float up around the tempo disc
+            while (pendingNotes.length) {
+                spawnNote(pendingNotes.shift(), null);
+            }
+
+            const now = Date.now();
+            const syncWindow = 1000; // 1 second window
+
+            const recentBeats = gameState.recentBeats.filter(beat => now - beat.timestamp < syncWindow);
+
+            if (recentBeats.length >= 3) {
+                gameState.comboCount++;
+
+                // Create sync burst
+                const burst = document.createElement('div');
+                burst.className = 'sync-burst';
+                burst.textContent = '🔥';
+                document.getElementById('game-container').appendChild(burst);
+
+                setTimeout(() => burst.remove(), 1100);
+
+                for (let group = 0; group < groupEnergy.length; group++) {
+                    groupEnergy[group] = 1;
+                }
+
+                // Clear recent beats to avoid duplicate combos
+                gameState.recentBeats = [];
+            }
+        }
+
+        // Calculate sync level
+        function calculateSyncLevel() {
+            const now = Date.now();
+            const recentActivity = gameState.beatTimestamps.filter(t => now - t < 5000); // Last 5 seconds
+            
+            gameState.syncLevel = Math.min(100, (recentActivity.length / 10) * 100);
+        }
+
+        // Update display
+        let shownPulse = '';
+        function updateDisplay() {
+            const bpm = calculateBPM();
+            document.getElementById('bpm-display').textContent = bpm;
+
+            // The tempo disc swells and settles once per beat
+            const pulse = (30 / bpm).toFixed(3) + 's';
+            if (pulse !== shownPulse) {
+                shownPulse = pulse;
+                document.getElementById('tempo').style.animationDuration = pulse;
+            }
+
+            calculateSyncLevel();
+        }
+
+        // Process incoming message
+        function processData(data) {
+            // Handle different data formats from Social Stream
+            if (data && data.content) {
+                data = data.content;
+            }
+            
+            if (!data || !data.chatmessage || !data.chatname) return;
+
+            // Read the name without loading images or running their handlers.
+            const nameTemplate = document.createElement('template');
+            const tmpName = nameTemplate.content.appendChild(document.createElement('div'));
+            tmpName.innerHTML = data.chatname;
+            const username = tmpName.textContent || tmpName.innerText || '';
+            let message = data.chatmessage;
+
+            // If textonly is not set, extract text from HTML
+            // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
+            if (!data.textonly) {
+                const tmp = document.createElement('template').content.appendChild(document.createElement('div'));
+                tmp.innerHTML = data.chatmessage;
+                message = tmp.textContent || tmp.innerText || '';
+            }
+            
+            // Analyze message for beat content
+            const analysis = analyzeBeatMessage(message);
+            
+            // Process if beats or musical emojis found
+            if (analysis.beats.length > 0 || analysis.emojis.length > 0) {
+                gameState.musicians.add(username);
+                
+                const now = Date.now();
+                gameState.beatTimestamps.push(now);
+                gameState.lastBeatTime = now;
+                
+                // Keep timestamps manageable
+                if (gameState.beatTimestamps.length > 50) {
+                    gameState.beatTimestamps.shift();
+                }
+                
+                // Process beats
+                analysis.beats.forEach(beat => {
+                    gameState.beatCount++;
+                    
+                    // Create visual effects
+                    const x = Math.random() * 80 + 10;
+                    const y = Math.random() * 70 + 15;
+                    
+                    createBeatCircle(x, y, beat.color, analysis.intensity);
+                    createRhythmWave(beat.color, analysis.intensity);
+                    createNoteParticle(beat.note, x, y);
+                    createBeatTrail(x, y);
+                    
+                    // Trigger drum pad
+                    triggerDrumPad(beat.type);
+                    
+                    // Add to recent beats for sync detection
+                    gameState.recentBeats.push({
+                        timestamp: now,
+                        user: username,
+                        type: beat.type
+                    });
+                });
+                
+                // Process musical emojis
+                analysis.emojis.forEach(emoji => {
+                    const x = Math.random() * 80 + 10;
+                    const y = Math.random() * 70 + 15;
+                    createNoteParticle(emoji, x, y);
+                });
+                
+                // Check for sync
+                checkSync();
+            }
+
+            updateDisplay();
+        }
+
+        // Setup iframe communication
+        if (!urlParams.has('demo') && !chatRelay.enabled) {
+            const iframe = document.createElement("iframe");
+            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            document.body.appendChild(iframe);
+            
+            // Listen for messages
+            window.addEventListener("message", function(e) {
+                if (e.source !== iframe.contentWindow) return;
+                
+                if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        processData(e.data.dataReceived.overlayNinja);
+                    }
+                }
+            });
+        }
+
+        // Handle WebSocket connection
+        if (!urlParams.has('demo') && chatRelay.enabled) {
+            const serverUrl = chatRelay.url;
+            let socketserver = null;
+            let reconnectTimeout = null;
+
+            function connectWebSocket() {
+                socketserver = new WebSocket(serverUrl);
+
+                socketserver.onopen = function() {
+                    socketserver.send(JSON.stringify({
+                        join: sessionId.split(",")[0],
+                        out: chatRelay.out, in: chatRelay.in
+                    }));
+                };
+
+                socketserver.onclose = function() {
+                    clearTimeout(reconnectTimeout);
+                    reconnectTimeout = setTimeout(connectWebSocket, 5000);
+                };
+
+                socketserver.onerror = function() {
+                    try { socketserver.close(); } catch (e) {}
+                };
+
+                socketserver.onmessage = function(event) {
+                    if (event.data) {
+                        try {
+                            const data = JSON.parse(event.data);
+                            processData(data);
+                        } catch (e) {
+                            console.error('WebSocket parse error:', e);
+                        }
+                    }
+                };
+            }
+
+            connectWebSocket();
+        }
+        
+        // Demo mode
+        if (urlParams.has('demo')) {
+            const demoBeatWords = Object.keys(beatKeywords);
+            const demoMusicians = ['BeatMaster', 'DrumBot', 'RhythmKing', 'BassQueen', 'SyncLord'];
+            
+            function demoBeat() {
+                const beat = demoBeatWords[Math.floor(Math.random() * demoBeatWords.length)];
+                const musician = demoMusicians[Math.floor(Math.random() * demoMusicians.length)];
+                const emojis = ['🎵', '🎶', '🥁', '🔊', '💥'];
+                const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+                
+                const messages = [
+                    `${beat}!`,
+                    `${beat} ${emoji}`,
+                    `Let's ${beat}!`,
+                    `${emoji} ${beat} time!`,
+                    `Feel the ${beat}`
+                ];
+                
+                processData({
+                    chatname: musician,
+                    chatmessage: messages[Math.floor(Math.random() * messages.length)]
+                });
+                setTimeout(demoBeat, 600 + Math.random() * 800);
+            }
+            setTimeout(demoBeat, 600 + Math.random() * 800);
+        }
+
+        // Initialize
+        initFrequencyBars();
+        updateDisplay();
+        initAudio();
+
+        // Keep decaying BPM/sync display even when chat goes idle
+        setInterval(updateDisplay, 1000);
+        setInterval(updateFrequencyBars, 120);
+
+        // Clean up old data periodically
+        setInterval(() => {
+            const now = Date.now();
+            gameState.beatTimestamps = gameState.beatTimestamps.filter(t => now - t < 30000);
+            gameState.recentBeats = gameState.recentBeats.filter(b => now - b.timestamp < 5000);
+        }, 5000);
+    </script>
+</body>
+</html>

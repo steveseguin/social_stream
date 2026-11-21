@@ -1,0 +1,388 @@
+/* Sized to be read on a 1920x1080 stream. Text scales with the browser source width. */
+.breaks-output #commerce-display {
+	--line: #ffffff26;
+	--open: #22323b;
+	--taken: #10171b;
+	margin: 0;
+	padding: 20px 22px 22px;
+	border: 1px solid var(--line);
+	border-radius: 14px;
+	background: #10171ced;
+	color: #f4f7f6;
+}
+.breaks-output header {
+	align-items: flex-end;
+	gap: 24px;
+	border-color: var(--line);
+	margin-bottom: 16px;
+	padding-bottom: 14px;
+}
+.breaks-output #eyebrow {
+	color: var(--accent-text, var(--accent));
+	font-size: clamp(13px, 0.9vw, 17px);
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+.breaks-output h1 {
+	font-size: clamp(22px, 2.4vw, 42px);
+}
+/* Spots left, claimed count and a compact bar. */
+.breaks-output #board-count {
+	display: grid;
+	grid-template-columns: auto auto;
+	justify-content: end;
+	align-items: baseline;
+	gap: 6px 8px;
+	min-width: 170px;
+	font: inherit;
+	color: #f4f7f6;
+	text-align: right;
+}
+.br-left {
+	font-size: clamp(28px, 2.6vw, 48px);
+	font-weight: 800;
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+	color: var(--accent-text, var(--accent));
+}
+.br-left-label {
+	font-size: clamp(15px, 1.1vw, 21px);
+	font-weight: 700;
+}
+.br-claimed {
+	grid-column: 1 / -1;
+	font-size: clamp(13px, 0.85vw, 16px);
+	color: #c9d6d2;
+}
+.br-bar {
+	grid-column: 1 / -1;
+	display: block;
+	height: 6px;
+	border-radius: 3px;
+	background: #ffffff1f;
+	overflow: hidden;
+}
+.br-bar span {
+	display: block;
+	height: 100%;
+	border-radius: 3px;
+	background: var(--accent);
+}
+.breaks-output #board-grid {
+	display: grid;
+	grid-template-columns: repeat(var(--columns, 4), minmax(0, 1fr));
+	gap: 8px;
+}
+.breaks-output #board-legend {
+	display: none;
+}
+/* Open spots are brighter and say Open. Claimed spots go dark but keep the same name size. */
+.br-tile {
+	min-width: 0;
+	min-height: 84px;
+	padding: 12px 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	border: 1px solid var(--line);
+	border-radius: 9px;
+	background: var(--open);
+	overflow-wrap: anywhere;
+}
+.br-tile.claimed,
+.br-tile.revealed {
+	background: var(--taken);
+	border-color: #ffffff17;
+}
+.br-head {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-width: 0;
+}
+/* Names shrink with more columns so a full team name never splits mid-word. */
+.br-label {
+	min-width: 0;
+	font-size: clamp(14px, calc(4.8vw / var(--columns, 4) + 0.3vw), 28px);
+	font-weight: 750;
+	line-height: 1.12;
+}
+.br-status {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 4px 12px;
+	min-width: 0;
+	font-size: clamp(14px, calc(2.4vw / var(--columns, 4) + 0.5vw), 20px);
+}
+.br-state {
+	font-size: 0.85em;
+	font-weight: 700;
+	letter-spacing: 0.07em;
+	text-transform: uppercase;
+	color: #c3cfcb;
+}
+.available .br-state {
+	color: var(--accent-text, var(--accent));
+}
+.br-buyer {
+	min-width: 0;
+	font-weight: 600;
+	color: #e9f0ee;
+}
+.br-price {
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+.br-result {
+	margin: 2px 0 0;
+	padding: 5px 9px;
+	border-radius: 6px;
+	background: #ffffff1c;
+	color: #fff;
+	font-size: clamp(15px, 1.2vw, 22px);
+	font-weight: 700;
+	line-height: 1.2;
+}
+.br-description {
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	overflow: hidden;
+	font-size: clamp(12px, 0.85vw, 15px);
+	color: #c3cfcb;
+}
+.br-tile > img {
+	width: 100%;
+	height: 120px;
+	object-fit: contain;
+}
+.br-tile.highlight {
+	outline: 3px solid var(--accent);
+	outline-offset: 2px;
+}
+/* Team colors: a code or logo badge and a light team tint. Names stay white on every team. */
+.br-theme-teams .br-label {
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+}
+.br-theme-teams .br-team.available {
+	background: var(--team-open);
+}
+.br-theme-teams .br-team.claimed,
+.br-theme-teams .br-team.revealed {
+	background: var(--team-taken);
+}
+.br-mark {
+	flex: 0 0 auto;
+	display: grid;
+	place-items: center;
+	min-width: 2.3em;
+	height: 2.3em;
+	padding: 0 0.35em;
+	border-radius: 1.15em;
+	overflow: hidden;
+	background: #ffffff21;
+	color: #fff;
+	font-size: clamp(10px, calc(3.2vw / var(--columns, 4) + 0.15vw), 18px);
+	font-weight: 800;
+	letter-spacing: 0.02em;
+}
+.br-team .br-mark {
+	background: var(--team);
+	color: var(--team-ink);
+}
+.br-mark img {
+	width: 2.3em;
+	height: 2.3em;
+	object-fit: contain;
+}
+.br-mark:empty {
+	display: none;
+}
+/* Full league boards: more than five rows in the grid. */
+.br-dense #board-grid {
+	gap: 6px;
+}
+.br-dense .br-tile {
+	min-height: 0;
+	padding: 8px 11px;
+	gap: 4px;
+}
+.br-dense .br-label {
+	font-size: clamp(14px, calc(3.6vw / var(--columns, 4) + 0.25vw), 22px);
+}
+.br-dense .br-status {
+	font-size: clamp(13px, calc(1.8vw / var(--columns, 4) + 0.45vw), 18px);
+}
+.br-dense .br-result {
+	padding: 3px 7px;
+	font-size: clamp(13px, calc(1.8vw / var(--columns, 4) + 0.5vw), 18px);
+}
+.br-dense .br-mark {
+	font-size: clamp(10px, calc(2.4vw / var(--columns, 4) + 0.15vw), 14px);
+}
+.br-dense .br-description {
+	display: none;
+}
+.br-dense .br-tile > img {
+	height: 64px;
+}
+/* Strip and column must keep a 32-spot break inside a 1080p or vertical scene. */
+.breaks-output .br-strip header,
+.breaks-output .br-column header {
+	margin-bottom: 10px;
+	padding-bottom: 10px;
+}
+.breaks-output .br-strip #board-grid {
+	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	gap: 6px;
+}
+.br-strip .br-tile {
+	min-height: 0;
+	padding: 8px 10px;
+	gap: 3px;
+}
+.br-strip .br-head {
+	gap: 7px;
+}
+/* Strip and column tiles are too narrow for capitals. */
+.br-strip .br-label,
+.br-column .br-label {
+	font-size: 15px;
+	text-transform: none;
+	letter-spacing: 0;
+}
+.br-strip .br-status {
+	font-size: 14px;
+}
+.br-strip .br-result {
+	padding: 2px 6px;
+	font-size: 14px;
+}
+.br-strip .br-mark {
+	font-size: 10px;
+}
+.br-strip .br-description,
+.br-column .br-description {
+	display: none;
+}
+.br-strip .br-tile > img {
+	height: 56px;
+}
+.breaks-output .br-column header {
+	flex-direction: column;
+	align-items: stretch;
+	gap: 8px;
+}
+.breaks-output .br-column #board-count {
+	justify-content: start;
+	text-align: left;
+}
+.breaks-output .br-column #board-grid {
+	grid-template-columns: 1fr;
+	gap: 2px;
+}
+/* 32 rows of about 25px keep a full league inside a 1080px-tall source. */
+.br-column .br-tile {
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	min-height: 0;
+	padding: 2px 10px;
+	border-radius: 5px;
+	line-height: 1.2;
+}
+.br-column .br-head {
+	flex: 1 1 auto;
+	gap: 8px;
+}
+.br-column .br-label {
+	font-size: 16px;
+}
+.br-column .br-status {
+	flex: 0 1 auto;
+	max-width: 45%;
+	flex-wrap: nowrap;
+	font-size: 15px;
+}
+.br-column .br-buyer,
+.br-column .br-result {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+/* Results get their own row so the buyer and team remain visible. */
+.br-column .br-has-result {
+	flex-wrap: wrap;
+	row-gap: 3px;
+}
+.br-column .br-result {
+	flex: 1 0 100%;
+	max-width: 100%;
+	margin: 0;
+	padding: 1px 7px;
+	font-size: 14px;
+}
+/* Crowded columns keep the full spot name above the buyer and pull. */
+.br-compact-column .br-has-result {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: 3px 8px;
+}
+.br-compact-column .br-has-result .br-head {
+	grid-column: 1 / -1;
+}
+.br-compact-column .br-has-result .br-status {
+	max-width: 100%;
+}
+.br-compact-column .br-result {
+	max-width: 100%;
+}
+.br-column .br-mark {
+	min-width: 3.2em;
+	height: 1.8em;
+	border-radius: 0.9em;
+	font-size: 10px;
+}
+.br-column .br-mark img {
+	width: 1.8em;
+	height: 1.8em;
+}
+.br-column .br-tile > img {
+	order: -1;
+	flex: 0 0 auto;
+	width: 20px;
+	height: 20px;
+}
+@media (max-width: 600px) {
+	.breaks-output #commerce-display {
+		padding: 12px;
+	}
+	.breaks-output #board-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.breaks-output .br-column #board-grid {
+		grid-template-columns: 1fr;
+	}
+	.br-tile {
+		padding: 9px;
+	}
+	.br-tile > img {
+		height: 90px;
+	}
+}
+@media (prefers-reduced-motion: no-preference) {
+	.br-tile.celebrate {
+		animation: break-pulse 0.7s ease-out 2;
+	}
+	@keyframes break-pulse {
+		50% {
+			background: #53765d;
+			transform: translateY(-3px);
+		}
+	}
+}

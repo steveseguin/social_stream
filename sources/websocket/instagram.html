@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="description" content="Read comments from your Instagram professional account with the Instagram API.">
+  <meta name="referrer" content="no-referrer">
+  <title>Social Stream — Instagram API</title>
+  <link rel="icon" href="../images/instagram.png" type="image/png">
+  <link rel="stylesheet" href="instagram.css">
+  <script src="instagram.js" defer></script>
+</head>
+<body>
+  <main>
+    <header class="panel">
+      <h1>Instagram API comments</h1>
+      <p><strong>Posts only for now.</strong> Instagram Live support is a work in progress. Choose <strong>Post or Reel</strong> below.</p>
+      <p>Read comments on media from a professional Instagram account you manage.</p>
+      <p class="hint">Sign in with the Facebook account that manages your linked Instagram professional account. <a href="https://developers.facebook.com/documentation/instagram-platform/create-an-instagram-app" target="_blank" rel="noopener noreferrer">About API access</a></p>
+    </header>
+    <div class="layout">
+      <section class="panel" aria-labelledby="setup-heading">
+        <h2 id="setup-heading">Connection settings</h2>
+        <form id="connection-form">
+          <fieldset id="connection-fields">
+            <div class="actions">
+              <button id="signin-btn" type="button">Sign in with Facebook</button>
+            </div>
+            <p id="signin-status" class="hint" role="status" aria-live="polite">Sign-in stays in this page only. Reloading or closing it clears your access.</p>
+            <details id="manual-token-settings">
+              <summary>Use an access token manually</summary>
+              <label for="login-type">Token issued through</label>
+              <select id="login-type">
+                <option value="instagram">Instagram Login</option>
+                <option value="facebook">Facebook Login</option>
+              </select>
+              <p class="hint" id="permission-hint"></p>
+              <label for="access-token">Access token</label>
+              <input id="access-token" type="password" autocomplete="off" spellcheck="false">
+              <p class="hint">Kept in this page only. Closing or reloading the page clears it.</p>
+              <label class="check"><input id="show-token" type="checkbox"> Show token</label>
+              <div class="actions">
+                <button id="load-accounts-btn" type="button" class="secondary">Load Instagram accounts</button>
+              </div>
+            </details>
+            <label for="account-select">Instagram account</label>
+            <select id="account-select" disabled>
+              <option value="">Load your accounts first</option>
+            </select>
+            <details>
+              <summary>Account missing from the list?</summary>
+              <label for="manual-account-id">Instagram professional account ID</label>
+              <input id="manual-account-id" type="text" inputmode="numeric" pattern="[0-9]+" autocomplete="off">
+              <p class="hint">If Meta does not list your account, enter its numeric Instagram API ID. Your token must already have access to this account.</p>
+              <button id="load-account-id-btn" type="button" class="secondary">Load account by ID</button>
+            </details>
+            <label for="media-type">Media</label>
+            <select id="media-type">
+              <option value="live">Live video</option>
+              <option value="post">Post or Reel</option>
+            </select>
+            <div class="actions">
+              <button id="refresh-media-btn" type="button" class="secondary" disabled>Refresh media</button>
+            </div>
+            <label for="media-select">Video or post</label>
+            <select id="media-select" disabled>
+              <option value="">Choose an Instagram account first</option>
+            </select>
+            <p id="discovery-status" class="hint" role="status" aria-live="polite">Load your accounts to find a live video or post.</p>
+            <button id="more-media-btn" type="button" class="secondary" hidden>Load more</button>
+            <details id="manual-media-settings">
+              <summary>Enter a media ID manually</summary>
+              <label for="media-id">Instagram media ID</label>
+              <input id="media-id" type="text" inputmode="numeric" pattern="[0-9]+" autocomplete="off" placeholder="17895695668004550">
+              <p class="hint">Use the numeric ID returned by the API, not a post URL or shortcode.</p>
+            </details>
+            <details>
+              <summary>Polling settings</summary>
+              <label for="poll-interval">Seconds between checks</label>
+              <input id="poll-interval" type="number" min="5" max="60" step="1" value="10" required>
+              <p class="hint">Larger intervals use fewer API requests. Each check reads all pages of top-level comments.</p>
+            </details>
+          </fieldset>
+          <div class="actions">
+            <button id="connect-btn" type="submit">Connect</button>
+            <button id="disconnect-btn" type="button" class="secondary" disabled>Disconnect</button>
+            <button id="clear-token-btn" type="button" class="secondary">Clear sign-in</button>
+          </div>
+        </form>
+        <details class="setup-notes">
+          <summary>How comments are captured</summary>
+          <p>The first complete check shows existing comments here as history. Only new comment IDs found on later checks are forwarded to Social Stream.</p>
+          <p>Hidden comments and replies are excluded. Later edits, hides and deletions are not synchronized. Comments received while Social Stream is off or unavailable stay in this preview and are not replayed later. Reconnecting starts a new history snapshot.</p>
+          <p>This page uses API polling. Meta also provides <a href="https://developers.facebook.com/documentation/instagram-platform/comment-moderation" target="_blank" rel="noopener noreferrer">Live comment webhooks</a>, which require a server connection.</p>
+        </details>
+      </section>
+      <section class="panel" aria-labelledby="chat-heading">
+        <h2 id="chat-heading">Comments</h2>
+        <div id="status" role="status" aria-live="polite">Disconnected</div>
+        <p id="output-status" class="hint">Preview only — no Social Stream connection detected.</p>
+        <dl class="stats">
+          <div><dt>New comments</dt><dd id="message-count">0</dd></div>
+          <div><dt>Sent to Social Stream</dt><dd id="sent-count">0</dd></div>
+          <div><dt>Last check</dt><dd id="last-poll">—</dd></div>
+        </dl>
+        <div id="chat-feed" class="chat-feed" role="log" aria-label="Instagram comments" aria-live="off">
+          <p id="chat-empty" class="hint">Connect to load comments.</p>
+        </div>
+        <p class="hint">Shows the latest 200 comments. Keep this page open to capture new comments.</p>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

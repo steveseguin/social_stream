@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+	<head>
+    <meta charset="utf-8" />
+    <meta name="description" content="将 NinjaBacker 小费接入 Social Stream Ninja，并在 OBS 中显示。">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-cn/docs/ninjabacker.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-cn/docs/ninjabacker.html">
+    <meta property="og:title" content="NinjaBacker 设置 | Social Stream Ninja">
+    <meta property="og:description" content="将 NinjaBacker 小费接入 Social Stream Ninja，并在 OBS 中显示。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-cn/docs/ninjabacker.html">
+    <meta name="twitter:title" content="NinjaBacker 设置 | Social Stream Ninja">
+    <meta name="twitter:description" content="将 NinjaBacker 小费接入 Social Stream Ninja，并在 OBS 中显示。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>NinjaBacker 设置 | Social Stream Ninja</title>
+		<link rel="icon" href="../../icons/favicon.ico" />
+		<link rel="stylesheet" href="../../docs/css/styles.css" />
+		<link rel="stylesheet" href="../../docs/css/guides.css" />
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem('darkMode');
+				var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+				if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) document.documentElement.classList.add('dark-mode');
+			})();
+		</script>
+	<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="../../docs/css/visual-guides.css">
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/ninjabacker.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-and-chat-commands.html","docs/alerts-customization-guide.html","docs/breaks.html","docs/channel-names-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/chatbot-knowledge-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-overlays.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/game-overlay-troubleshooting.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/meld-guide.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/music.html","docs/name-colors.html","docs/ninjabacker.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-studio-guide.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{". Create your account and finish Stripe setup to accept payments.":"。创建账户并完成 Stripe 设置，即可接受付款。","1. Connect your account":"1. 连接账户","2. Optional: use a webhook":"2. 可选：使用 Webhook","3. Add your display to OBS":"3. 将显示画面添加到 OBS","4. Check your setup":"4. 检查设置","Check the Tip Jar session and source, donation type and paid event filters. Use a money goal for tip amounts. Refunds do not subtract from SSN alerts or goals.":"检查 Tip Jar 的会话以及来源、捐赠类型和付费事件筛选器。小费金额应使用金额目标。退款不会从 SSN 的提醒或目标中扣除。","Choose Reliable webhook to queue tips for up to seven days while SSN is off.":"选择可靠 Webhook，可在 SSN 关闭时将小费排队保存最多七天。","Click Copy receiver URL in SSN. Paste it into NinjaBacker's Webhook URL field and click Save.":"在 SSN 中点击复制接收 URL。将其粘贴到 NinjaBacker 的 Webhook URL 字段，然后点击 Save。","Commands & API":"命令与 API","Connect NinjaBacker tips to Social Stream Ninja and display them in OBS.":"将 NinjaBacker 小费接入 Social Stream Ninja，并在 OBS 中显示。","Copy the Receiver URL from SSN's Reliable webhook setup, save it in NinjaBacker, and send a new test tip. Saving a new URL stops retries to the old destination.":"从 SSN 的可靠 Webhook 设置中复制接收 URL，保存到 NinjaBacker，然后发送新的测试小费。保存新 URL 后，将停止向旧地址重试。","Copy the generated URL; do not build one from your session ID.":"复制生成的 URL，不要用会话 ID 自行拼接。","Custom receivers and delivery details":"自定义接收端与投递详情","Download":"下载","Example account. Keep your Tip ID and receiver URL private.":"示例账户。请勿公开 Tip ID 和接收 URL。","Features":"功能","For a running goal, open Money > Tip Jar and Goal Meter. Choose your style and goal, then copy its link.":"要显示累计目标，请打开收入 > Tip Jar 与目标进度条。选择样式和目标，然后复制链接。","For alerts, choose NinjaBacker donations under OBS overlay for in Shops & support. Copy the overlay link.":"要显示提醒，请在商店与支持的 OBS 叠加层对象中选择 NinjaBacker 捐赠。复制叠加层链接。","Guides":"指南","HTTP 405 or a display URL error?":"出现 HTTP 405 或显示 URL 错误？","Hire":"雇用","Home":"首页","If Connected platforms is hidden, switch to Full mode in SSN.":"如果看不到已连接的平台，请在 SSN 中切换到完整模式。","In NinjaBacker, open Webhook. Under Webhook Signature Secret, click Generate and copy the secret. If you already use a secret, copy that one.":"在 NinjaBacker 中打开 Webhook。在 Webhook Signature Secret 下点击 Generate 并复制密钥。如果已在使用密钥，请复制现有密钥。","In OBS, add a Browser Source and paste the display link. Keep SSN and the display on the same session.":"在 OBS 中添加浏览器源，并粘贴显示链接。SSN 和显示画面必须使用同一会话。","In SSN's NinjaBacker setup, choose Reliable webhook, paste the signing secret, and click Save setup.":"在 SSN 的 NinjaBacker 设置中选择可靠 Webhook，粘贴签名密钥，然后点击保存设置。","In SSN, open Money > Shops & support > Connected platforms > NinjaBacker donations > Setup. Enter your username and Private Tip ID.":"在 SSN 中打开收入 > 商店与支持 > 已连接的平台 > NinjaBacker 捐赠 > 设置。输入用户名和私有 Tip ID。","In the NinjaBacker dashboard, open Social Stream Ninja and copy your Private Tip ID.":"在 NinjaBacker 控制面板中打开 Social Stream Ninja，并复制 Private Tip ID。","Inspiration":"灵感","Keep SSN on and NinjaBacker donations enabled. Check the username and Tip ID match the same account. For webhooks, refresh Delivery History in NinjaBacker and check the receiver URL and signing secret.":"保持 SSN 运行，并启用 NinjaBacker 捐赠。检查用户名和 Tip ID 是否属于同一账户。使用 Webhook 时，请刷新 NinjaBacker 的 Delivery History，并检查接收 URL 和签名密钥。","Leave Delivery on Live feed (simple), turn on NinjaBacker donations, and click Save setup.":"将投递方式保持为实时订阅（简单），启用 NinjaBacker 捐赠，然后点击保存设置。","Live feed":"实时订阅","Live feed needs no webhook. It shows new tips while connected; it does not replay tips received while SSN was off.":"实时订阅不需要 Webhook。它会在连接期间显示新小费，但不会补播 SSN 关闭时收到的小费。","Main navigation":"主导航","NinjaBacker rejects a Tip Jar display URL and links to this setup guide":"NinjaBacker 拒绝 Tip Jar 显示 URL，并提供本设置指南的链接","NinjaBacker setup | Social Stream Ninja":"NinjaBacker 设置 | Social Stream Ninja","NinjaBacker tips in Social Stream Ninja":"在 Social Stream Ninja 中接收 NinjaBacker 小费","No test alert?":"没有测试提醒？","OBS display":"OBS 显示","On this page":"本页内容","Open NinjaBacker":"打开 NinjaBacker","Open navigation menu":"打开导航菜单","Open the SSN NinjaBacker alert overlay. In NinjaBacker, open Testing and click Send Test Tip. Expect a test alert in that overlay.":"打开 SSN 的 NinjaBacker 提醒叠加层。在 NinjaBacker 中打开 Testing，并点击 Send Test Tip。该叠加层中应出现测试提醒。","Overlay Gallery":"叠加层图库","Read the result below Send Test Tip. Webhook accepted confirms receipt, not an OBS alert. On failure, correct the URL or signing secret and send a new test. Dashboard tests retry for five minutes.":"查看 Send Test Tip 下方的结果。Webhook accepted 表示请求已被接收，不代表 OBS 已显示提醒。如果失败，请修正 URL 或签名密钥，然后重新测试。控制面板测试会在五分钟内重试。","Receive tips in SSN, then add alerts or a Tip Jar to OBS.":"在 SSN 中接收小费，然后将提醒或 Tip Jar 添加到 OBS。","Reliable webhook setup in SSN with the generated Receiver URL and copy button":"SSN 的可靠 Webhook 设置，包含生成的接收 URL 和复制按钮","SSN NinjaBacker setup with username, private Tip ID and Live feed selected":"SSN 的 NinjaBacker 设置，包含用户名、私有 Tip ID 和已选中的实时订阅","Share your public NinjaBacker tip page with viewers. Keep overlay links in OBS and receiver URLs in the webhook field.":"向观众分享公开的 NinjaBacker 小费页面。叠加层链接放在 OBS 中，接收 URL 放在 Webhook 字段中。","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 标志","Start here with the SSN desktop app or Chrome extension. Keep SSN on while streaming.":"从 SSN 桌面应用或 Chrome 扩展开始。直播期间请保持 SSN 运行。","Support":"支持","Supported Sites":"支持的网站","Switch back to Live feed":"切换回实时订阅","Switch theme":"切换主题","Switching deletes queued tips in the SSN receiver. Clear and save the old Webhook URL in NinjaBacker too.":"切换会删除 SSN 接收端中排队的小费。也请清空 NinjaBacker 中的旧 Webhook URL 并保存。","Test and troubleshoot":"测试与排查问题","Test tips do not add money to the Tip Jar, appear as paid chat donations, or trigger paid rewards.":"测试小费不会增加 Tip Jar 金额，不会在聊天中显示为付费捐赠，也不会触发付费奖励。","The receiver URL starts with:":"接收 URL 以下列内容开头：","Tip Jar styles and goal settings":"Tip Jar 样式与目标设置","Tip Jar, chat dock and other display URLs go in OBS. They cannot receive webhook requests.":"Tip Jar、聊天面板及其他显示 URL 用于 OBS，不能接收 Webhook 请求。","Tips appear in chat but not in the goal?":"聊天中显示了小费，但目标没有增加？","Webhook":"Webhook"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/ninjabacker.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/ninjabacker.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/ninjabacker.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/ninjabacker.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/ninjabacker.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/ninjabacker.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/ninjabacker.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/ninjabacker.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/ninjabacker.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/ninjabacker.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/ninjabacker.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/ninjabacker.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/ninjabacker.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/ninjabacker.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/ninjabacker.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/ninjabacker.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/ninjabacker.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/ninjabacker.html">
+<link rel="alternate" hreflang="et" href="https://socialstream.ninja/beta/et/docs/ninjabacker.html">
+<!-- ssn-languages:end --></head>
+	<body class="visual-guide">
+		<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主导航"><a href="../index.html">首页</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">灵感</a><a href="download.html">下载</a><a href="guides.html">指南</a><a href="commands.html">命令与 API</a><a href="supported-sites.html">支持的网站</a><a href="overlay-gallery.html" class="site-priority-gallery">叠加层图库</a><a href="services.html" class="site-priority-hire">雇用</a><a href="support.html">支持</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/ninjabacker.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/ninjabacker.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/ninjabacker.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/ninjabacker.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/ninjabacker.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/ninjabacker.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/ninjabacker.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="ninjabacker.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/ninjabacker.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/ninjabacker.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/ninjabacker.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/ninjabacker.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/ninjabacker.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/ninjabacker.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/ninjabacker.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/ninjabacker.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/ninjabacker.html" lang="th" hreflang="th">ไทย</a><a class="site-language-link" href="../../et/docs/ninjabacker.html" lang="et" hreflang="et">Eesti</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+<section class="page-hero"><div class="container"><h1>在 Social Stream Ninja 中接收 NinjaBacker 小费</h1><p>在 SSN 中接收小费，然后将提醒或 Tip Jar 添加到 OBS。</p></div></section>
+<main><section class="guide-section"><div class="container">
+<nav class="guide-jump-links" aria-label="本页内容"><a href="#live">实时订阅</a><a href="#webhook">Webhook</a><a href="#obs">OBS 显示</a><a href="#test">测试与排查问题</a></nav>
+<div class="guide-card">
+<h2 id="live">1. 连接账户</h2>
+<div class="guide-step-layout"><div>
+<p>从 SSN 桌面应用或 Chrome 扩展开始。直播期间请保持 SSN 运行。</p>
+<ol class="guide-steps">
+<li><a href="https://ninjabacker.com/dashboard" target="_blank" rel="noopener">打开 NinjaBacker</a><span>。创建账户并完成 Stripe 设置，即可接受付款。</span></li>
+<li>在 NinjaBacker 控制面板中打开 Social Stream Ninja，并复制 Private Tip ID。</li>
+<li>在 SSN 中打开收入 &gt; 商店与支持 &gt; 已连接的平台 &gt; NinjaBacker 捐赠 &gt; 设置。输入用户名和私有 Tip ID。</li>
+<li>将投递方式保持为实时订阅（简单），启用 NinjaBacker 捐赠，然后点击保存设置。</li>
+</ol>
+<p>如果看不到已连接的平台，请在 SSN 中切换到完整模式。</p>
+<p>实时订阅不需要 Webhook。它会在连接期间显示新小费，但不会补播 SSN 关闭时收到的小费。</p>
+</div><figure class="guide-figure"><a href="../../docs/images/ninjabacker/live-setup.png"><img src="../../docs/images/ninjabacker/live-setup.png" alt="SSN 的 NinjaBacker 设置，包含用户名、私有 Tip ID 和已选中的实时订阅" width="436" height="601" loading="lazy"></a><figcaption>示例账户。请勿公开 Tip ID 和接收 URL。</figcaption></figure></div>
+</div>
+<div class="guide-card">
+<h2 id="webhook">2. 可选：使用 Webhook</h2>
+<div class="guide-step-layout"><div>
+<p>选择可靠 Webhook，可在 SSN 关闭时将小费排队保存最多七天。</p>
+<ol class="guide-steps">
+<li>在 NinjaBacker 中打开 Webhook。在 Webhook Signature Secret 下点击 Generate 并复制密钥。如果已在使用密钥，请复制现有密钥。</li>
+<li>在 SSN 的 NinjaBacker 设置中选择可靠 Webhook，粘贴签名密钥，然后点击保存设置。</li>
+<li>在 SSN 中点击复制接收 URL。将其粘贴到 NinjaBacker 的 Webhook URL 字段，然后点击 Save。</li>
+</ol>
+</div><figure class="guide-figure"><a href="../../docs/images/ninjabacker/receiver-setup.png"><img src="../../docs/images/ninjabacker/receiver-setup.png" alt="SSN 的可靠 Webhook 设置，包含生成的接收 URL 和复制按钮" width="436" height="879" loading="lazy"></a><figcaption>复制生成的 URL，不要用会话 ID 自行拼接。</figcaption></figure></div>
+<p>接收 URL 以下列内容开头：</p><pre><code>https://api.socialstream.ninja/v1/ninjabacker/webhook/...</code></pre>
+<p>Tip Jar、聊天面板及其他显示 URL 用于 OBS，不能接收 Webhook 请求。</p>
+
+<details class="guide-extra"><summary>切换回实时订阅</summary><p>切换会删除 SSN 接收端中排队的小费。也请清空 NinjaBacker 中的旧 Webhook URL 并保存。</p></details>
+</div>
+<div class="guide-card">
+<h2 id="obs">3. 将显示画面添加到 OBS</h2>
+<ol class="guide-steps">
+<li>要显示提醒，请在商店与支持的 OBS 叠加层对象中选择 NinjaBacker 捐赠。复制叠加层链接。</li>
+<li>要显示累计目标，请打开收入 &gt; Tip Jar 与目标进度条。选择样式和目标，然后复制链接。</li>
+<li>在 OBS 中添加浏览器源，并粘贴显示链接。SSN 和显示画面必须使用同一会话。</li>
+</ol>
+<p><a href="tip-jar-goal-meter.html">Tip Jar 样式与目标设置</a></p>
+<p>向观众分享公开的 NinjaBacker 小费页面。叠加层链接放在 OBS 中，接收 URL 放在 Webhook 字段中。</p>
+</div>
+<div class="guide-card">
+<h2 id="test">4. 检查设置</h2>
+<p>打开 SSN 的 NinjaBacker 提醒叠加层。在 NinjaBacker 中打开 Testing，并点击 Send Test Tip。该叠加层中应出现测试提醒。</p>
+<p>查看 Send Test Tip 下方的结果。Webhook accepted 表示请求已被接收，不代表 OBS 已显示提醒。如果失败，请修正 URL 或签名密钥，然后重新测试。控制面板测试会在五分钟内重试。</p>
+<p>测试小费不会增加 Tip Jar 金额，不会在聊天中显示为付费捐赠，也不会触发付费奖励。</p>
+<details class="guide-extra"><summary>没有测试提醒？</summary><p>保持 SSN 运行，并启用 NinjaBacker 捐赠。检查用户名和 Tip ID 是否属于同一账户。使用 Webhook 时，请刷新 NinjaBacker 的 Delivery History，并检查接收 URL 和签名密钥。</p></details>
+<details class="guide-extra"><summary>出现 HTTP 405 或显示 URL 错误？</summary><p>从 SSN 的可靠 Webhook 设置中复制接收 URL，保存到 NinjaBacker，然后发送新的测试小费。保存新 URL 后，将停止向旧地址重试。</p><figure class="guide-shot guide-shot-compact"><a href="../../docs/images/ninjabacker/wrong-url.png"><img src="../../docs/images/ninjabacker/wrong-url.png" alt="NinjaBacker 拒绝 Tip Jar 显示 URL，并提供本设置指南的链接" width="334" height="176" loading="lazy"></a></figure></details>
+<details class="guide-extra"><summary>聊天中显示了小费，但目标没有增加？</summary><p>检查 Tip Jar 的会话以及来源、捐赠类型和付费事件筛选器。小费金额应使用金额目标。退款不会从 SSN 的提醒或目标中扣除。</p></details>
+<p><a href="https://ninjabacker.com/developers">自定义接收端与投递详情</a></p>
+</div>
+</div></section></main></body></html>

@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Spam Power. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spam Power - Social Stream Ninja</title>
+    <link rel="icon" href="./favicon.ico" />
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a;
+            overflow: hidden;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            color: white;
+        }
+
+        body.chroma {
+            background: #00ff00;
+        }
+
+        body.darkmode {
+            background: #000000;
+        }
+
+        body.transparent {
+            background: transparent;
+        }
+
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Sized from script; 1em inside is one hundredth of the core's width */
+        #core-wrap {
+            position: relative;
+            flex: none;
+        }
+
+        #progress-ring {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+            overflow: visible;
+        }
+
+        #progress-ring circle {
+            fill: none;
+            stroke-width: 13;
+            stroke-linecap: round;
+        }
+
+        #progress-bg {
+            stroke: #2a3050;
+        }
+
+        #progress-fill {
+            stroke: #3ddc97;
+            stroke-dasharray: 565.49;
+            stroke-dashoffset: 565.49;
+            transition: stroke-dashoffset 0.4s ease, stroke 0.4s ease;
+        }
+
+        #power-core {
+            position: absolute;
+            top: 13%;
+            left: 13%;
+            width: 74%;
+            height: 74%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 50% 38%, #3f4fb8 0%, #2a2f7a 55%, #1c1f55 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+        }
+
+        #power-core.bump {
+            animation: core-bump 0.22s ease-out;
+        }
+
+        @keyframes core-bump {
+            0% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        #power-core.lost {
+            animation: core-lost 0.6s ease-in-out;
+        }
+
+        @keyframes core-lost {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-3%); }
+            40%, 80% { transform: translateX(3%); }
+        }
+
+        #power-level {
+            font-size: 27em;
+            font-weight: 800;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        #goal-line {
+            margin-top: 1em;
+            font-size: 7.5em;
+            font-weight: 700;
+            line-height: 1;
+            color: #aeb6e8;
+            font-variant-numeric: tabular-nums;
+        }
+
+        #multiplier {
+            position: absolute;
+            top: 3%;
+            right: 3%;
+            width: 22%;
+            height: 22%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffb02e;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            color: #2a1a00;
+            font-size: 10em;
+            font-weight: 800;
+            line-height: 1;
+            transform: scale(0);
+            transition: transform 0.25s cubic-bezier(0.2, 1.5, 0.4, 1);
+        }
+
+        #multiplier.active {
+            transform: scale(1);
+        }
+
+        #timer-chip {
+            flex: none;
+            margin-top: 4vmin;
+            padding: 0.8vmin 3.2vmin;
+            border-radius: 5vmin;
+            background: rgba(20, 24, 40, 0.86);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            font-size: 5.4vmin;
+            font-weight: 800;
+            line-height: 1.25;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        #timer-chip.low #timer {
+            color: #ff8a70;
+        }
+
+        #win-animation {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            font-size: 44vmin;
+            line-height: 1;
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+        }
+
+        #win-animation.show {
+            animation: win-burst 2s ease-out;
+        }
+
+        @keyframes win-burst {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.3);
+            }
+            30% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(1.4);
+            }
+        }
+
+        .power-particle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 1.6vmin;
+            height: 1.6vmin;
+            margin: -0.8vmin 0 0 -0.8vmin;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: spark-out 0.8s ease-out forwards;
+        }
+
+        @keyframes spark-out {
+            0% {
+                opacity: 1;
+                transform: translate(var(--sx), var(--sy)) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--ex), var(--ey)) scale(0.3);
+            }
+        }
+
+        /* Each chatter's name flies in and feeds the ring */
+        .message-burst {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            max-width: 34vmin;
+            padding: 0.5vmin 1.8vmin;
+            background: rgba(20, 24, 40, 0.86);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 3vmin;
+            font-size: 3vmin;
+            font-weight: 700;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            pointer-events: none;
+            animation: burst-in 1s ease-in forwards;
+        }
+
+        @keyframes burst-in {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) translate(var(--burst-x), var(--burst-y)) scale(1);
+            }
+            20% {
+                opacity: 1;
+                transform: translate(-50%, -50%) translate(var(--burst-x), var(--burst-y)) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) translate(var(--end-x), var(--end-y)) scale(0.5);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="core-wrap">
+            <svg id="progress-ring" viewBox="0 0 200 200">
+                <circle id="progress-bg" cx="100" cy="100" r="90"></circle>
+                <circle id="progress-fill" cx="100" cy="100" r="90"></circle>
+            </svg>
+            <div id="power-core">
+                <div id="power-level">0</div>
+                <div id="goal-line">/ <span id="goal-value">100</span></div>
+            </div>
+            <div id="multiplier">x2</div>
+        </div>
+
+        <div id="timer-chip">⏳ <span id="timer">60</span></div>
+        <div id="win-animation">🎉</div>
+    </div>
+
+    <script>
+        // URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
+        // Transport migration guard: only pages with full server parity may skip the legacy bridge.
+        var TRANSPORT_CAPABILITIES = {
+            serverFeed: true,
+            serverTargeted: false,
+            upstreamCommands: false,
+            customChannel: false,
+            legacyBridgeRequired: false,
+            exclusiveServerParams: { server: true, server2: true, server3: false }
+        };
+        function versionAtLeast(value, minimum) {
+            const a = String(value || "").split(".");
+            const b = String(minimum || "").split(".");
+            const len = Math.max(a.length, b.length);
+            for (let i = 0; i < len; i++) {
+                const av = parseInt(a[i], 10) || 0;
+                const bv = parseInt(b[i], 10) || 0;
+                if (av > bv) return true;
+                if (av < bv) return false;
+            }
+            return true;
+        }
+        // Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
+        function hasExclusiveServerTransport(caps) {
+            var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
+            return (params.server === true && urlParams.has("server")) ||
+                (params.server2 !== false && urlParams.has("server2")) ||
+                (params.server3 === true && urlParams.has("server2") && urlParams.has("server3"));
+        }
+        function useServerOnlyTransport() {
+            var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
+            return hasExclusiveServerTransport(caps) &&
+                versionAtLeast(urlParams.get("v"), SERVER_EXCLUSIVE_TRANSPORT_VERSION) &&
+                caps.serverFeed === true &&
+                caps.legacyBridgeRequired !== true &&
+                caps.upstreamCommands !== true &&
+                caps.customChannel !== true;
+        }
+        const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
+        const password = urlParams.get('password') || 'false';
+        const lanonly = urlParams.has('lanonly') ? '&lanonly' : '';
+
+        // Apply theme settings from URL parameters
+        if (urlParams.has('chroma')) {
+            document.body.classList.add('chroma');
+        } else if (urlParams.has('darkmode')) {
+            document.body.classList.add('darkmode');
+        }
+        if (urlParams.has('transparent')) {
+            document.body.classList.remove('chroma', 'darkmode');
+            document.body.classList.add('transparent');
+        }
+
+        // Game state
+        let gameState = {
+            power: 0,
+            goal: 100,
+            timeLeft: 60,
+            messagesPerSecond: 0,
+            peakRate: 0,
+            totalPower: 0,
+            winStreak: 0,
+            multiplier: 1,
+            isActive: false,
+            messageTimestamps: [],
+            lastWinTime: 0
+        };
+
+        // Saved history is optional; the game still runs when storage is blocked or holds bad data
+        function readStored(key, fallback) {
+            try {
+                const value = localStorage.getItem(key);
+                return value === null ? fallback : value;
+            } catch (e) {
+                return fallback;
+            }
+        }
+
+        function writeStored(key, value) {
+            try {
+                localStorage.setItem(key, value);
+            } catch (e) {}
+        }
+
+        function readStoredGoals() {
+            try {
+                const goals = JSON.parse(readStored('spamPowerRecentGoals', '[]'));
+                return Array.isArray(goals) ? goals.filter(goal => typeof goal === 'number' && isFinite(goal)) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        // Load historical data
+        const historicalData = {
+            peakActivity: parseInt(readStored('spamPowerPeakActivity', '10')) || 10,
+            totalWins: parseInt(readStored('spamPowerTotalWins', '0')) || 0,
+            bestStreak: parseInt(readStored('spamPowerBestStreak', '0')) || 0,
+            averageWinRate: parseFloat(readStored('spamPowerAvgWinRate', '10')) || 10,
+            recentGoals: readStoredGoals()
+        };
+
+        // Calculate dynamic goal based on history
+        function calculateDynamicGoal() {
+            let baseGoal = 100;
+
+            // Increase based on peak activity
+            if (historicalData.peakActivity > 20) {
+                baseGoal = Math.floor(historicalData.peakActivity * 5);
+            }
+
+            // Adjust based on recent performance
+            if (historicalData.recentGoals.length > 0) {
+                const avgGoal = historicalData.recentGoals.reduce((a, b) => a + b, 0) / historicalData.recentGoals.length;
+                baseGoal = Math.floor(avgGoal * 1.1); // 10% harder each time
+            }
+
+            // Add streak bonus difficulty
+            baseGoal += gameState.winStreak * 20;
+
+            // Ensure reasonable bounds
+            return Math.max(50, Math.min(baseGoal, 1000));
+        }
+
+        // The core fills the short side of the window in either orientation
+        function layout() {
+            const size = Math.max(60, Math.min(window.innerWidth * 0.84, window.innerHeight * 0.68));
+            const wrap = document.getElementById('core-wrap');
+            wrap.style.width = size + 'px';
+            wrap.style.height = size + 'px';
+            wrap.style.fontSize = (size / 100) + 'px';
+        }
+
+        // Initialize game
+        function initGame() {
+            gameState.goal = calculateDynamicGoal();
+            gameState.power = 0;
+            gameState.timeLeft = 60;
+            gameState.isActive = true;
+            gameState.multiplier = 1;
+            document.getElementById('power-core').classList.remove('lost');
+
+            updateDisplay();
+            startTimer();
+        }
+
+        const RING_LENGTH = 2 * Math.PI * 90;
+        let shownPower = -1;
+
+        // Update display
+        function updateDisplay() {
+            const power = Math.floor(gameState.power);
+            const core = document.getElementById('power-core');
+            document.getElementById('power-level').textContent = power;
+            document.getElementById('goal-value').textContent = gameState.goal;
+            document.getElementById('timer').textContent = gameState.timeLeft;
+            document.getElementById('timer-chip').classList.toggle('low', gameState.timeLeft <= 10);
+
+            // Update progress ring
+            const progressPercent = Math.min(gameState.power / gameState.goal, 1);
+            const fill = document.getElementById('progress-fill');
+            fill.style.strokeDashoffset = RING_LENGTH - (progressPercent * RING_LENGTH);
+            fill.style.opacity = progressPercent > 0 ? '1' : '0'; // a round line cap would leave a dot at zero
+
+            // Color change as approaching goal
+            if (progressPercent > 0.8) {
+                fill.style.stroke = '#ff7b54';
+            } else if (progressPercent > 0.5) {
+                fill.style.stroke = '#ffd23f';
+            } else {
+                fill.style.stroke = '#3ddc97';
+            }
+
+            // The core nudges on every point gained
+            if (power > shownPower && shownPower >= 0) {
+                core.classList.remove('bump');
+                void core.offsetWidth;
+                core.classList.add('bump');
+            }
+            shownPower = power;
+
+            // Reaching the goal ends the round right away instead of waiting for the next clock tick
+            if (gameState.isActive && gameState.power >= gameState.goal) {
+                endGame(true);
+            }
+        }
+
+        // Timer
+        function startTimer() {
+            const timerInterval = setInterval(() => {
+                if (!gameState.isActive) {
+                    clearInterval(timerInterval);
+                    return;
+                }
+
+                gameState.timeLeft--;
+                document.getElementById('timer').textContent = gameState.timeLeft;
+                document.getElementById('timer-chip').classList.toggle('low', gameState.timeLeft <= 10);
+
+                // Check win condition
+                if (gameState.power >= gameState.goal) {
+                    clearInterval(timerInterval);
+                    endGame(true);
+                    return;
+                }
+
+                if (gameState.timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endGame(false);
+                }
+            }, 1000);
+        }
+
+        // Calculate messages per second
+        let multiplierShownUntil = 0;
+        function updateMessageRate() {
+            const now = Date.now();
+            gameState.messageTimestamps = gameState.messageTimestamps.filter(t => now - t < 1000);
+            gameState.messagesPerSecond = gameState.messageTimestamps.length;
+
+            if (gameState.messagesPerSecond > gameState.peakRate) {
+                gameState.peakRate = gameState.messagesPerSecond;
+                if (gameState.peakRate > historicalData.peakActivity) {
+                    historicalData.peakActivity = gameState.peakRate;
+                    writeStored('spamPowerPeakActivity', gameState.peakRate.toString());
+                }
+            }
+
+            // Update multiplier based on message rate
+            const badge = document.getElementById('multiplier');
+            if (gameState.messagesPerSecond >= 10) {
+                gameState.multiplier = 3;
+            } else if (gameState.messagesPerSecond >= 5) {
+                gameState.multiplier = 2;
+            } else {
+                gameState.multiplier = 1;
+            }
+            if (gameState.multiplier > 1) {
+                badge.textContent = 'x' + gameState.multiplier;
+                multiplierShownUntil = now + 1500;
+            }
+            // Hold the badge briefly so it does not flicker when the rate hovers at a threshold
+            badge.classList.toggle('active', now < multiplierShownUntil);
+        }
+
+        // Handle incoming messages (compatible with Social Stream format)
+        // Cross-transport dedupe: in server mode the same feed message can arrive over both
+        // the websocket relay and the VDO.Ninja bridge; render only the first copy.
+        var CROSS_TRANSPORT_DEDUPE_TTL_MS = 12000;
+        var recentTransportDeliveries = new Map();
+        function isDuplicateTransportDelivery(data) {
+            if (!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3"))) {
+                return false;
+            }
+            if (!data || typeof data !== "object") {
+                return false;
+            }
+            if (data.id === undefined || data.id === null) {
+                return false;
+            }
+            if ("action" in data || "get" in data || "callback" in data || "mid" in data) {
+                return false;
+            }
+            if (!(data.chatname || data.chatmessage || data.chatimg || data.hasDonation || data.membership || data.event || data.contentimg)) {
+                return false;
+            }
+            var key =
+                String(data.id) +
+                "|" + (data.type || "") +
+                "|" + (data.chatname || "") +
+                "|" + String(data.chatmessage || "").slice(0, 100) +
+                "|" + (data.hasDonation || "") +
+                "|" + (data.event || "");
+            var now = Date.now();
+            recentTransportDeliveries.forEach(function (seenAt, seenKey) {
+                if (now - seenAt > CROSS_TRANSPORT_DEDUPE_TTL_MS) {
+                    recentTransportDeliveries.delete(seenKey);
+                }
+            });
+            if (recentTransportDeliveries.has(key)) {
+                return true;
+            }
+            recentTransportDeliveries.set(key, now);
+            return false;
+        }
+        function processData(data) {
+            if (data && data.content) data = data.content;
+            if (isDuplicateTransportDelivery(data)) {
+                return;
+            }
+            if (!gameState.isActive) return;
+            
+            
+            if (!data || !data.chatmessage || !data.chatname) return;
+            
+            // Track message timestamp
+            gameState.messageTimestamps.push(Date.now());
+            updateMessageRate();
+            
+            // Add power with multiplier
+            const powerGain = 1 * gameState.multiplier;
+            gameState.power += powerGain;
+            gameState.totalPower += powerGain;
+            
+            // Create particle effect
+            createPowerParticle();
+            
+            // Create message burst
+            createMessageBurst(data.chatname || 'Anonymous');
+            
+            updateDisplay();
+        }
+
+        // Particle effects: a spark leaves the ring for every message
+        function createPowerParticle() {
+            const container = document.getElementById('game-container');
+            if (container.querySelectorAll('.power-particle').length >= 30) return;
+
+            const particle = document.createElement('div');
+            particle.className = 'power-particle';
+
+            const radius = document.getElementById('core-wrap').offsetWidth * 0.46;
+            const angle = Math.random() * Math.PI * 2;
+            const reach = radius * (1.25 + Math.random() * 0.3);
+
+            particle.style.setProperty('--sx', (Math.cos(angle) * radius) + 'px');
+            particle.style.setProperty('--sy', (Math.sin(angle) * radius) + 'px');
+            particle.style.setProperty('--ex', (Math.cos(angle) * reach) + 'px');
+            particle.style.setProperty('--ey', (Math.sin(angle) * reach) + 'px');
+            particle.style.backgroundColor = document.getElementById('progress-fill').style.stroke || '#3ddc97';
+
+            container.appendChild(particle);
+
+            setTimeout(() => particle.remove(), 800);
+        }
+
+        // Message burst effect: the chatter's name is pulled into the ring
+        function createMessageBurst(username) {
+            const container = document.getElementById('game-container');
+            if (container.querySelectorAll('.message-burst').length >= 14) return;
+
+            const burst = document.createElement('div');
+            burst.className = 'message-burst';
+            burst.textContent = username;
+
+            const size = document.getElementById('core-wrap').offsetWidth;
+            const unit = Math.min(window.innerWidth, window.innerHeight) / 100;
+            const reachX = Math.min(size * 0.72, window.innerWidth / 2 - 14 * unit);
+            const reachY = Math.min(size * 0.66, window.innerHeight / 2 - 5 * unit);
+            const angle = Math.random() * Math.PI * 2;
+
+            burst.style.setProperty('--burst-x', (Math.cos(angle) * reachX) + 'px');
+            burst.style.setProperty('--burst-y', (Math.sin(angle) * reachY) + 'px');
+            burst.style.setProperty('--end-x', (Math.cos(angle) * size * 0.45) + 'px');
+            burst.style.setProperty('--end-y', (Math.sin(angle) * size * 0.45) + 'px');
+
+            container.appendChild(burst);
+
+            setTimeout(() => burst.remove(), 1000);
+        }
+
+        // End game
+        function endGame(won) {
+            gameState.isActive = false;
+            updateDisplay();
+
+            if (won) {
+                // Show win animation
+                const winAnim = document.getElementById('win-animation');
+                winAnim.classList.remove('show');
+                void winAnim.offsetWidth;
+                winAnim.classList.add('show');
+
+                // Update streak
+                const now = Date.now();
+                if (now - gameState.lastWinTime < 300000) { // 5 minutes
+                    gameState.winStreak++;
+                } else {
+                    gameState.winStreak = 1;
+                }
+                gameState.lastWinTime = now;
+
+                // Update historical data
+                historicalData.totalWins++;
+                historicalData.averageWinRate = (historicalData.averageWinRate + gameState.messagesPerSecond) / 2;
+                historicalData.recentGoals.push(gameState.goal);
+                if (historicalData.recentGoals.length > 5) {
+                    historicalData.recentGoals.shift();
+                }
+                if (gameState.winStreak > historicalData.bestStreak) {
+                    historicalData.bestStreak = gameState.winStreak;
+                }
+
+                // Save for the next session
+                writeStored('spamPowerTotalWins', historicalData.totalWins.toString());
+                writeStored('spamPowerAvgWinRate', historicalData.averageWinRate.toString());
+                writeStored('spamPowerRecentGoals', JSON.stringify(historicalData.recentGoals));
+                writeStored('spamPowerBestStreak', historicalData.bestStreak.toString());
+            } else {
+                gameState.winStreak = 0;
+                document.getElementById('power-core').classList.remove('bump');
+                document.getElementById('power-core').classList.add('lost');
+            }
+
+            // Restart after delay
+            setTimeout(() => {
+                initGame();
+            }, 3000);
+        }
+
+        // Setup iframe communication (same as petrace.html)
+        if (!urlParams.has('demo') && !useServerOnlyTransport()) {
+            const iframe = document.createElement("iframe");
+            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}${lanonly}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            document.body.appendChild(iframe);
+
+            // Listen for messages
+            window.addEventListener("message", function(e) {
+                if (e.source !== iframe.contentWindow) return;
+            
+                if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        processData(e.data.dataReceived.overlayNinja);
+                    }
+                }
+            });
+        }
+        
+        // Handle WebSocket connection if server parameters are provided
+        if (!urlParams.has('demo') && urlParams.has('server')) {
+            const serverURL = urlParams.get('server') || (urlParams.has('localserver') ? SocialStreamLocalServer.getWebSocketUrl() : 'wss://io.socialstream.ninja');
+            let socketserver, retry, closed = false;
+            function connectServer() {
+                if (closed) return;
+                socketserver = new WebSocket(serverURL);
+                socketserver.onopen = function() {
+                    socketserver.send(JSON.stringify({ join: sessionId.split(",")[0], out: 2, in: 1 }));
+                };
+                socketserver.onmessage = function(event) {
+                    if (!event.data) return;
+                    try { processData(JSON.parse(event.data)); } catch (e) {}
+                };
+                socketserver.onerror = function() { socketserver.close(); };
+                socketserver.onclose = function() {
+                    if (!closed) { clearTimeout(retry); retry = setTimeout(connectServer, 5000); }
+                };
+            }
+            window.addEventListener('beforeunload', function() {
+                closed = true; clearTimeout(retry); if (socketserver) socketserver.close();
+            });
+            connectServer();
+        }
+
+        // Optional: Extension relay via server2/server3
+        (function setupExtensionSocket(){
+            if (urlParams.has('demo') || !(urlParams.has('server2') || urlParams.has('server3'))) return;
+            const serverURL = urlParams.has('server2') ? (SocialStreamLocalServer.getRelayUrl(urlParams, 'server2', 'wss://io.socialstream.ninja/extension')) : (SocialStreamLocalServer.getRelayUrl(urlParams, 'server3', 'wss://io.socialstream.ninja/extension'));
+            let socket = null; let attempts = 1;
+            function connect(){
+                if (socket){ socket.onclose=null; try{socket.close();}catch(e){} }
+                socket = new WebSocket(serverURL);
+                socket.onopen = function(){ attempts = 1; socket.send(JSON.stringify({ join: sessionId.split(',')[0], out:3, in:4 })); };
+                socket.onclose = function(){ setTimeout(connect, 100*attempts++); };
+                socket.onerror = function(){ try{socket.close();}catch(e){} };
+                socket.addEventListener('message', function(event){
+                    if (!event.data) return;
+                    try{ const data = JSON.parse(event.data); processData(data); if (data.get){ socket.send(JSON.stringify({callback:{get:data.get,result:true}})); } }catch(e){}
+                });
+            }
+            connect();
+        })();
+
+        // Demo mode: chat comes in waves so the ring, the multiplier and a win all get shown
+        if (urlParams.has('demo')) {
+            const demoStart = Date.now();
+            setInterval(() => {
+                const wave = 0.45 + 0.4 * Math.sin((Date.now() - demoStart) / 2600);
+                if (gameState.isActive && Math.random() < wave) {
+                    processData({
+                        chatname: ['DemoUser', 'TestBot', 'Spammer', 'ChatHero', 'PowerPlayer'][Math.floor(Math.random() * 5)],
+                        chatmessage: ['GO!', 'POWER!', '⚡', 'SPAM!', 'ENERGY!'][Math.floor(Math.random() * 5)]
+                    });
+                }
+            }, 140);
+        }
+
+        // Start game
+        layout();
+        window.addEventListener('resize', layout);
+        initGame();
+
+        // Keep the rate and multiplier current between messages
+        setInterval(updateMessageRate, 100);
+    </script>
+</body>
+</html>
