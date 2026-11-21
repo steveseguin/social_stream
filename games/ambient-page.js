@@ -1,5 +1,6 @@
 (function(){
 'use strict';
+if (window.name === 'ssn-game-rotation' && window.parent !== window) document.documentElement.style.colorScheme = 'normal';
 var params=new URLSearchParams(location.search),mode=document.body.dataset.game,game=new SSNOverlayGame.Game(mode),demo=params.has('demo');
     var chatRelay = SocialStreamLocalServer.getChatRelayConfig(params);
 var canvas=document.getElementById('playfield'),ctx=canvas.getContext('2d'),result=document.getElementById('result'),images=new Map(),last=performance.now(),lastDraw=0;

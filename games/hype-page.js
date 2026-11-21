@@ -1,5 +1,6 @@
 (function () {
 	'use strict';
+	if (window.name === 'ssn-game-rotation' && window.parent !== window) document.documentElement.style.colorScheme = 'normal';
 	var Hype = window.SSNHypeGame;
 	var params = new URLSearchParams(location.search), mode = document.body.dataset.game;
 	var demo = params.has('demo');
@@ -347,7 +348,6 @@
 				for (var i = 0; i < 9; i++) emit({ kind: 'rect', x: x + rand(-slot * 0.3, slot * 0.3), y: groundY - rand(0, top), vx: rand(-120, 120), vy: rand(-260, -40), g: 620, life: rand(0.7, 1.3), size: rand(4, 9), color: pal.body, spin: rand(-9, 9) });
 			}
 			if (e.type === 'repair') sparkle((e.data.index + 0.5) * slot, groundY - 20, 6, '#ffe9a8', 90);
-			if (e.type === 'knockdown') 
 			if (e.type === 'rebuild') announce('\u25B2 ' + e.data.level, '#9be7a8', Math.max(70, groundY - 250));
 		});
 		if (dt > 0 && shake > 0.25 && Math.random() < dt * 9 * shake) puff(rand(0, W), groundY - 4, 1, '#b9ad9f', 9, 30);
@@ -528,7 +528,6 @@
 		var heat = erupting ? 1 : st.pressure, rumble = !shakeOn ? 0 : erupting ? 3 : st.pressure > 0.7 ? (st.pressure - 0.7) * 7 : 0;
 		var jx = (Math.random() - 0.5) * rumble, jy = (Math.random() - 0.5) * rumble;
 		game.takeEffects().forEach(function (e) {
-			if (e.type === 'erupt') 
 			if (e.type === 'cool') announce(Math.round(e.data.seconds) + 's', '#ffd166', Math.max(70, topY - 250), cx);
 		});
 		if (dt > 0) {
@@ -695,7 +694,6 @@
 		fire.flare = Math.max(0, fire.flare - dt * 2.5);
 		fire.label -= dt;
 		game.takeEffects().forEach(function (e) {
-			if (e.type === 'lit') 
 			if (e.type === 'out') announce(clock(e.data.seconds), '#ffd166', Math.max(70, baseY - 400), cx);
 		});
 		if (dt > 0) {

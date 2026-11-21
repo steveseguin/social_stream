@@ -3,7 +3,7 @@
 (function () {
 	'use strict';
 	var K = window.SSNArcade, st = K.stage(), u = 1, portrait = false, clock = 0, STEPS = 20;
-	var faces = {}, keepers = [], runner = null, snap = { phase: 'waiting', steps: 0, left: 0, share: 1, round: 0, last: '' }, shownLit = 0, resultAt = -1, lit = false, awarded = 0, backdrop = null, pts = [];
+	var faces = K.recentFaces(), keepers = [], runner = null, snap = { phase: 'waiting', steps: 0, left: 0, share: 1, round: 0, last: '' }, shownLit = 0, resultAt = -1, lit = false, awarded = 0, backdrop = null, pts = [];
 	document.body.classList.add('ssn-scene');
 
 	// The path: twenty lanterns from the bottom to the beacon. It climbs left to right in a wide window and zigzags up a tall one.
@@ -45,14 +45,14 @@
 		chat: function (m) {
 			if (!m || !m.type || !m.chatname) return;
 			var key = engineKey(m);
-			faces[key] = K.player(key.toLowerCase(), String(m.chatname).slice(0, 24), m.chatimg);
+			faces.player(key, String(m.chatname).slice(0, 24), m.chatimg);
 		},
 		sync: function (game, now) {
 			var n, face, ranked;
 			if (game.round !== snap.round) { keepers = []; runner = null; resultAt = -1; shownLit = 0; }
 			// Each new step is one chatter carrying the flame from the last lantern to the next.
 			for (n = Math.max(snap.round === game.round ? snap.steps : 0, keepers.length); n < game.steps; n++) {
-				face = n === game.steps - 1 && game.lastPlayer ? faces[game.lastPlayer] || K.player(game.lastPlayer.toLowerCase(), game.lastPlayer.split(':').slice(1).join(':')) : null;
+				face = n === game.steps - 1 && game.lastPlayer ? faces.get(game.lastPlayer) || faces.player(game.lastPlayer, game.lastPlayer.split(':').slice(1).join(':')) : null;
 				keepers.push({ face: face, at: clock });
 				if (face) runner = { face: face, from: n, t: 0 };
 			}
@@ -61,7 +61,7 @@
 				resultAt = clock; lit = game.steps >= STEPS;
 				if (lit && awarded !== game.round) {
 					awarded = game.round; ranked = [];
-					game.users.forEach(function (player, key) { ranked.push({ face: faces[key] || K.player(key.toLowerCase(), player.name), count: player.count }); });
+					game.users.forEach(function (player, key) { ranked.push({ face: faces.get(key) || faces.player(key, player.name), count: player.count }); });
 					ranked.sort(function (a, b) { return b.count - a.count; });
 					K.awardRound(ranked.slice(0, 3).map(function (r) { return r.face; }), ranked.map(function (r) { return r.face; }));
 				}

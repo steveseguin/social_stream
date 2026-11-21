@@ -5,7 +5,7 @@
 	// Everything is drawn in design units: a 1080-high (wide window) or 1080-wide (tall window) box fitted into the browser source.
 	var K = window.SSNArcade, st = K.stage(), box = null, W = 1920, H = 1080, px = 1, ox = 0, oy = 0, portrait = false, clock = 0;
 	var COLORS = ['#ff8a65', '#4dabf7', '#b197fc'], GOLD = '#ffd43b', EDGE = 'rgba(10,14,24,.9)', NAVY = '#1b2233', REVEAL = 2.4, FLIP = 0.45, DEPTH = 26;
-	var faces = {}, voters = {}, voterCount = 0, groups = [[], [], []], leaving = [], top = {}, ranked = [], spot = { x: 0, y: 0 };
+	var faces = K.recentFaces(), voters = {}, voterCount = 0, groups = [[], [], []], leaving = [], top = {}, ranked = [], spot = { x: 0, y: 0 };
 	var snap = { phase: 'waiting', stage: 0, round: 0, left: 12, share: 1, q: null };
 	var shownQ = null, flipTo = null, flipAt = -1, introAt = 0, banner = null, tiles = [null, null, null], stamps = {};
 	var reveal = null, correct = -1, lift = [0, 0, 0], grow = [1, 1, 1], dim = [1, 1, 1], bump = [0, 0, 0], board = 1, column = null, resultAt = -1, podiumAt = -1, leaders = [], crowd = [], awarded = 0;
@@ -126,7 +126,7 @@
 	}
 	function engineKey(m) { return String(m.type) + ':' + String(m.userid || m.username || m.chatname); }
 	function clean(name) { return K.short(String(name).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() || '?', 24); }
-	function faceFor(key, name) { return faces[key] || (faces[key] = K.player(key.toLowerCase(), clean(name || key.split(':').slice(1).join(':')))); }
+	function faceFor(key, name) { return faces.get(key) || faces.player(key, clean(name || key.split(':').slice(1).join(':'))); }
 	function regroup() {
 		var n, m;
 		groups = [[], [], []];
@@ -145,7 +145,7 @@
 		chat: function (m) {
 			if (!m || !m.type || !m.chatname) return;
 			var key = engineKey(m);
-			faces[key] = K.player(key.toLowerCase(), clean(m.chatname), m.chatimg);
+			faces.player(key, clean(m.chatname), m.chatimg);
 		},
 		sync: function (game, now) {
 			var changed = false, all = [], pops = 0, cap = L.per * L.rows;

@@ -1,5 +1,6 @@
 (function () {
     'use strict';
+    if (window.name === 'ssn-game-rotation' && window.parent !== window) document.documentElement.style.colorScheme = 'normal';
     var params = new URLSearchParams(location.search), mode = document.body.dataset.game;
     var chatRelay = SocialStreamLocalServer.getChatRelayConfig(params);
     // Only the explicitly managed Number Hunt variant uses the authoritative host.

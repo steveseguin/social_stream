@@ -33,8 +33,8 @@
 		if (!raf || asked === "full") { return; }
 		var fixedFps = want > 0 ? Math.max(15, Math.min(60, want)) : 0, fixedRes = parseFloat(query.get("quality")), fixed = fixedFps > 0 || fixedRes > 0;
 		var level = 0, res = 1, hold = 0, frameMs = 0, nextDraw = null, scalers = [];
-		var queue = [], active = [], nextId = 1, pending = false, prev = 0, gap = 16.7, ran = false, winStart = 0, renders = 0, slow = 0, spent = 0, idle = 0, idleAsked = false, calm = 0, retry = 12, lastUp = -99;
-		var KEY = "sso:load:" + location.pathname + location.search;
+		var queue = [], active = [], nextId = 1, pending = false, prev = 0, gap = 16.7, ran = false, winStart = 0, renders = 0, drawnGaps = [], spent = 0, idle = 0, idleAsked = false, calm = 0, retry = 12, lastUp = -99;
+		var KEY = "sso:load:v2:" + location.pathname + location.search;
 		// With a resolution to give up, that goes first (levels 1-2) and frames after (3-5); without one, frames straight away (1-3).
 		function top() { return scalers.length ? 5 : 3; }
 		function plan() {
@@ -51,10 +51,16 @@
 		}
 		plan();
 		function onIdle(deadline) { idleAsked = false; idle += Math.min(deadline.timeRemaining(), gap); }
-		// load: share of the main thread that was not idle (drawing, painting). slow: share of drawn frames that took over 40ms to show.
+		// load: share of the main thread that was not idle (drawing, painting). slow: share of drawn frames delayed beyond the normal source interval.
 		function judge(t) {
-			var span = t - winStart, load = Math.max(0, Math.min(1, ric ? 1 - idle / span : spent / span)), slowShare = renders ? slow / renders : 0, secs = t / 1000, was = level;
-			winStart = t; renders = 0; slow = 0; spent = 0; idle = 0;
+			var span = t - winStart, load = Math.max(0, Math.min(1, ric ? 1 - idle / span : spent / span)), secs = t / 1000, was = level;
+			// The lower quartile estimates the source's normal frame interval despite occasional stalls.
+			drawnGaps.sort(function (a, b) { return a - b; });
+			var slowAfter = Math.max(40, 1.5 * (drawnGaps[Math.floor(drawnGaps.length / 4)] || 0));
+			var slow = 0;
+			for (var i = drawnGaps.length - 1; i >= 0 && drawnGaps[i] > slowAfter; i--) { slow++; }
+			var slowShare = drawnGaps.length ? slow / drawnGaps.length : 0;
+			winStart = t; renders = 0; drawnGaps.length = 0; spent = 0; idle = 0;
 			if (fixed || secs < 1.5) { return; }
 			if ((load > 0.7 && level < top()) || (slowShare > 0.3 && level < top() - 1)) {
 				level++; calm = 0;
@@ -75,8 +81,8 @@
 			gap = prev ? t - prev : 16.7;
 			prev = t;
 			// A long gap is a hidden source or a stalled page, not a slow frame.
-			if (gap > 250) { winStart = t; renders = 0; slow = 0; spent = 0; idle = 0; gap = 16.7; nextDraw = null; }
-			else if (ran && gap > 40) { slow++; }
+			if (gap > 250) { winStart = t; renders = 0; drawnGaps.length = 0; spent = 0; idle = 0; gap = 16.7; nextDraw = null; }
+			else if (ran && gap > 0) { drawnGaps.push(gap); }
 			ran = false;
 			if (!queue.length) { return; }
 			if (ric && !idleAsked) { idleAsked = true; ric(onIdle); }
@@ -122,7 +128,7 @@
 		};
 	})();
 	</script>
-	<script src="core.js?v=20"></script>
+	<script src="core.js?v=21"></script>
 	<script src="templates/countries.js?v=15"></script>
 	<script src="templates/engines.js?v=19"></script>
 	<script src="templates/socials.js?v=18"></script>
@@ -160,7 +166,7 @@
 	<script src="templates/celebrate.js?v=3"></script>
 	<script src="templates/moments.js?v=4"></script>
 	<script src="templates/random.js?v=3"></script>
-	<script src="templates/countscreen.js?v=2"></script>
+	<script src="templates/countscreen.js?v=3"></script>
 	<script src="templates/seasontags.js?v=1"></script>
 	<script>
 	(function () {

@@ -157,7 +157,7 @@
 			{ key: "accent", label: "Accent colour", type: "color", group: "Style", default: "22d3ee" },
 			{ key: "fg", label: "Text colour", type: "color", group: "Style", default: "ffffff" },
 			{ key: "urgent", label: "Turn red and beat for the last 10 seconds", type: "bool", group: "Style", default: true },
-			{ key: "scale", label: "Size", type: "range", group: "Style", default: 1, min: 0.4, max: 1.6, step: 0.05 },
+			{ key: "clocksize", legacyKey: "scale", label: "Size", type: "range", group: "Style", default: 1, min: 0.4, max: 1.6, step: 0.05 },
 			SSO.f.font("Rajdhani"),
 			{ key: "backdrop", label: "Background", type: "select", group: "Background", default: "plain", options: [["none", "None (sits over your stream)"], ["plain", "Soft colour wash"]].concat(SSO.ENGINE_LIST || []) },
 			{ key: "c1", label: "Background colour 1 (blank = default)", type: "color", group: "Background", default: "", show: { backdrop: "!none" } },
@@ -272,7 +272,7 @@
 			root.appendChild(el);
 			var clock = body.querySelector(".cs-clock"), cap = body.querySelector(".cs-cap"), capText = "";
 			// 1em is 10px on a 1080p source, so a small preview and a full-screen source look the same.
-			function fit() { el.style.fontSize = (Math.min((root.clientWidth || window.innerWidth) / 1920, (root.clientHeight || window.innerHeight) / 1080) * c.scale * 10).toFixed(3) + "px"; }
+			function fit() { el.style.fontSize = (Math.min((root.clientWidth || window.innerWidth) / 1920, (root.clientHeight || window.innerHeight) / 1080) * c.clocksize * 10).toFixed(3) + "px"; }
 			fit();
 			window.addEventListener("resize", fit);
 			SSO.onCleanup(root, function () { window.removeEventListener("resize", fit); });

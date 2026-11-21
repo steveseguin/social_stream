@@ -9,10 +9,10 @@
 	st.onresize = function () { u = Math.min(st.W, st.H) / 1080 * K.scale; };
 	st.onresize();
 
-	function burst(x, y, color, power, rings) {
+	function burst(x, y, color, power, ringCount) {
 		var n, a, v, count = Math.round(40 * power), ring;
 		if (rings.length < 30) rings.push({ x: x, y: y, t: 0, color: color, power: power });
-		for (ring = 0; ring < rings; ring++) {
+		for (ring = 0; ring < ringCount; ring++) {
 			for (n = 0; n < count && sparks.length < 1100; n++) {
 				a = n / count * 6.2832 + ring * 0.3 + K.rand(-0.06, 0.06);
 				v = (560 - ring * 190) * power * u * K.rand(0.82, 1.08);

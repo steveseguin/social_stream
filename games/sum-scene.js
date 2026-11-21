@@ -7,7 +7,7 @@
 	var TARGETS = [20, 30, 40], EXAMPLES = [5, 8, 3, 9, 6, 2, 7, 4], GOLD = '#ffd43b', RED = '#ff6b6b', EDGE = 'rgba(10,14,24,.9)', NAVY = '#1b2233', FALL = 2600;
 	// Shading of a block, as [start, width, colour] in shares of its width.
 	var BANDS = [[0.012, 0.07, 'rgba(255,255,255,.36)'], [0.082, 0.16, 'rgba(255,255,255,.12)'], [0.7, 0.19, 'rgba(0,0,40,.11)'], [0.89, 0.11, 'rgba(0,0,40,.3)']];
-	var faces = {}, byName = {}, seen = { round: 0, stage: 0, total: 0 }, adder = null;
+	var faces = K.recentFaces(), byName = K.recentFaces(), seen = { round: 0, stage: 0, total: 0 }, adder = null;
 	var snap = { phase: 'waiting', stage: 0, total: 0, target: 20, left: 90, share: 1, round: 0, last: '' };
 	var tower = [], queue = [], locked = null, scale = 20, ghost = 5, shown = 0, shownTarget = 20, totalPop = 0, targetPop = 0;
 	var callouts = [null, null], side = 0, reject = null, medalAt = [-9, -9, -9], resultAt = -1, won = false, awarded = 0, leaders = [];
@@ -60,7 +60,7 @@
 	function sy(v) { return (Math.round(v * px + oy) - oy) / px; }
 	function engineKey(m) { return String(m.type) + ':' + String(m.userid || m.username || m.chatname); }
 	function clean(name) { return K.short(String(name).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() || '?', 24); }
-	function faceFor(key, name) { return faces[key] || (faces[key] = K.player(key.toLowerCase(), clean(name || key.split(':').slice(1).join(':')))); }
+	function faceFor(key, name) { return faces.get(key) || faces.player(key, clean(name || key.split(':').slice(1).join(':'))); }
 	function current() { return locked && !locked.final ? queue : tower; }
 	function size(list) { var n, s = 0; for (n = 0; n < list.length; n++) s += list[n].n; return s; }
 	function unit() { return (L.bot - L.line) / scale; }
@@ -80,8 +80,8 @@
 	window.SSNScene = {
 		chat: function (m, game) {
 			if (!m || !m.type || !m.chatname) return;
-			var key = engineKey(m), face = faces[key] = K.player(key.toLowerCase(), clean(m.chatname), m.chatimg), hit;
-			byName[String(m.chatname).slice(0, 48)] = face;
+			var key = engineKey(m), face = faces.player(key, clean(m.chatname), m.chatimg), hit;
+			byName.set(String(m.chatname).slice(0, 48), face);
 			if (!game) return;
 			if (game.round !== seen.round || game.stage !== seen.stage || game.total !== seen.total) { adder = face; seen = { round: game.round, stage: game.stage, total: game.total }; return; }
 			// A number that would pass the line is refused by the engine: show it not fitting.
@@ -95,7 +95,7 @@
 		sync: function (game, now) {
 			var who = adder, have, ranked;
 			adder = null;
-			if (!who) who = game.lastPlayer ? faceFor(game.lastPlayer) : game.history[0] ? byName[game.history[0].name] : null;
+			if (!who) who = game.lastPlayer ? faceFor(game.lastPlayer) : game.history[0] ? byName.get(game.history[0].name) : null;
 			if (game.round !== snap.round) {
 				// A new match: whatever is still standing drops out of the tube.
 				if (tower.length) { if (!locked) locked = { target: snap.target, hit: true, at: -9, plain: true }; locked.final = false; locked.pop = clock; }

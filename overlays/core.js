@@ -130,7 +130,9 @@
 		var params = new URLSearchParams(search == null ? global.location.search : search);
 		var cfg = {};
 		def.fields.forEach(function (field) {
-			cfg[field.key] = parseValue(field, params.has(field.key) ? params.get(field.key) : null);
+			var raw = params.get(field.key);
+			if (raw === null && field.legacyKey) { raw = params.get(field.legacyKey); }
+			cfg[field.key] = parseValue(field, raw);
 		});
 		return cfg;
 	};
@@ -141,13 +143,14 @@
 		return String(value);
 	}
 
-	// Builds "t=id&key=value" with only the values that differ from the template defaults.
+	// Builds "t=id&key=value" for an overlay link, omitting ordinary defaults.
 	SSO.buildQuery = function (def, cfg) {
 		var parts = ["t=" + encodeURIComponent(def.id)];
 		def.fields.forEach(function (field) {
 			if (!(field.key in cfg)) { return; }
 			var value = cfg[field.key];
-			if (encodeValue(field, value) === encodeValue(field, fieldDefault(field))) { return; }
+			// Keep a renamed field explicit so a legacy URL key can be used independently.
+			if (!field.legacyKey && encodeValue(field, value) === encodeValue(field, fieldDefault(field))) { return; }
 			parts.push(encodeURIComponent(field.key) + "=" + encodeURIComponent(encodeValue(field, value)).replace(/%2C/g, ",").replace(/%3A/g, ":").replace(/%40/g, "@"));
 		});
 		return parts.join("&");

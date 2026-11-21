@@ -19,6 +19,8 @@
 		var f = document.createElement('iframe');
 		f.setAttribute('aria-hidden', 'true'); f.tabIndex = -1; f.title = '';
 		f.style.cssText = 'position:fixed;left:0;top:0;width:100%;height:100%;border:0;opacity:0;transition:opacity .6s ease;pointer-events:none;background:transparent';
+		// Dark-themed games use the frame's normal color scheme here so Chromium keeps the background transparent.
+		f.name = 'ssn-game-rotation';
 		f.src = id + '.html' + (query ? '?' + query : '');
 		document.body.appendChild(f);
 		return f;

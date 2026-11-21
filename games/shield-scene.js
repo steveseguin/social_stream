@@ -4,7 +4,7 @@
 	'use strict';
 	var K = window.SSNArcade, st = K.stage(), u = 1, portrait = false, clock = 0;
 	var LANES = [{ color: '#ff6b6b', cmd: '!shield red' }, { color: '#4dabf7', cmd: '!shield blue' }, { color: '#ffd43b', cmd: '!shield gold' }];
-	var faces = {}, holders = {}, lanes = [[], [], []], snap = { phase: 'waiting', wave: 1, hull: 6, threats: [1, 0, 0], held: [0, 0, 0], left: 0, share: 1, round: 0 };
+	var faces = K.recentFaces(), holders = {}, lanes = [[], [], []], snap = { phase: 'waiting', wave: 1, hull: 6, threats: [1, 0, 0], held: [0, 0, 0], left: 0, share: 1, round: 0 };
 	var rocks = [], flash = [0, 0, 0], hurt = 0, shownHull = 6, resultAt = -1, safe = false, awarded = 0, blasts = 0, ship = null;
 	document.body.classList.add('ssn-scene');
 
@@ -55,14 +55,14 @@
 		chat: function (m) {
 			if (!m || !m.type || !m.chatname) return;
 			var key = engineKey(m);
-			faces[key] = K.player(key.toLowerCase(), String(m.chatname).slice(0, 24), m.chatimg);
+			faces.player(key, String(m.chatname).slice(0, 24), m.chatimg);
 		},
 		sync: function (game, now) {
 			var held = [0, 0, 0], changed = false, seen = {}, n, m, ranked;
 			game.votes.forEach(function (lane, key) {
 				var h = holders[key];
 				held[lane]++; seen[key] = 1;
-				if (!h) { h = holders[key] = { face: faces[key] || K.player(key.toLowerCase(), key.split(':').slice(1).join(':')), lane: lane, x: laneX(lane), y: st.H + 60 * u, at: clock }; changed = true; }
+				if (!h) { h = holders[key] = { face: faces.get(key) || faces.player(key, key.split(':').slice(1).join(':')), lane: lane, x: laneX(lane), y: st.H + 60 * u, at: clock }; changed = true; }
 				else if (h.lane !== lane) { h.lane = lane; h.at = clock; changed = true; }
 			});
 			if (game.round !== snap.round) { rocks = []; resultAt = -1; shownHull = game.hull; holders = {}; changed = true; spawn(game.threats); }
@@ -82,7 +82,7 @@
 				resultAt = clock; safe = game.hull > 0;
 				if (awarded !== game.round && safe) {
 					awarded = game.round; ranked = [];
-					game.users.forEach(function (player, key) { ranked.push({ face: faces[key] || K.player(key.toLowerCase(), player.name), count: player.count }); });
+					game.users.forEach(function (player, key) { ranked.push({ face: faces.get(key) || faces.player(key, player.name), count: player.count }); });
 					ranked.sort(function (a, b) { return b.count - a.count; });
 					K.awardRound(ranked.slice(0, 3).map(function (r) { return r.face; }), ranked.map(function (r) { return r.face; }));
 				}

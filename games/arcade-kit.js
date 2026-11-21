@@ -102,7 +102,7 @@
 	K.q = 1;
 	var asked = params.get('fps'), wantFps = parseInt(asked, 10), fixedFps = wantFps > 0 ? K.clamp(wantFps, 15, 60) : 0, fixedRes = parseFloat(params.get('quality'));
 	var govOff = asked === 'full', govFixed = fixedFps > 0 || fixedRes > 0, level = 0, hold = 0, frameMs = 0;
-	var LOAD_KEY = 'ssnArcade:load:' + location.pathname;
+	var LOAD_KEY = 'ssnArcade:load:v2:' + location.pathname;
 	function plan() {
 		var before = res;
 		if (govFixed) { res = fixedRes > 0 ? K.clamp(fixedRes, 0.3, 1) : 1; hold = fixedFps ? Math.ceil(60 / fixedFps) - 1 : 0; }
@@ -120,12 +120,18 @@
 	// K.loop(step) still works for a single function that does both.
 	K.loop = function (update, draw) {
 		var ric = window.requestIdleCallback, prev = 0, gapAvg = 16.7, nextDraw = null, acc = 0, ran = false;
-		var winStart = 0, renders = 0, slow = 0, spent = 0, idle = 0, idleAsked = false, calm = 0, retry = 12, lastUp = -99, gapNow = 16.7;
+		var winStart = 0, renders = 0, drawnGaps = [], spent = 0, idle = 0, idleAsked = false, calm = 0, retry = 12, lastUp = -99, gapNow = 16.7;
 		function onIdle(deadline) { idleAsked = false; idle += Math.min(deadline.timeRemaining(), gapNow); }
-		// load: share of the main thread that was not idle. slowShare: share of drawn frames that took over 40ms to show.
+		// load: share of the main thread that was not idle. slowShare: share of drawn frames delayed beyond the normal source interval.
 		function judge(t) {
-			var span = t - winStart, load = K.clamp(ric ? 1 - idle / span : spent / span, 0, 1), slowShare = renders ? slow / renders : 0, secs = t / 1000, was = level;
-			winStart = t; renders = 0; slow = 0; spent = 0; idle = 0;
+			var span = t - winStart, load = K.clamp(ric ? 1 - idle / span : spent / span, 0, 1), secs = t / 1000, was = level;
+			// The lower quartile estimates the source's normal frame interval despite occasional stalls.
+			drawnGaps.sort(function (a, b) { return a - b; });
+			var slowAfter = Math.max(40, 1.5 * (drawnGaps[Math.floor(drawnGaps.length / 4)] || 0));
+			var slow = 0;
+			for (var i = drawnGaps.length - 1; i >= 0 && drawnGaps[i] > slowAfter; i--) { slow++; }
+			var slowShare = drawnGaps.length ? slow / drawnGaps.length : 0;
+			winStart = t; renders = 0; drawnGaps.length = 0; spent = 0; idle = 0;
 			if (govOff || govFixed || secs < 1.5) return;
 			// Resolution is given up early (it costs little to look at); frames only when the thread is nearly full.
 			if ((load > (level < 2 ? 0.5 : 0.7) && level < 5) || (slowShare > 0.3 && level < 4)) {
@@ -143,8 +149,8 @@
 			var gap = prev ? now - prev : 16.7, dt, cap, t0, n;
 			prev = now;
 			// A long gap is a hidden source or a stalled page, not a slow frame.
-			if (gap > 250) { winStart = now; renders = 0; slow = 0; spent = 0; idle = 0; gap = 16.7; nextDraw = null; }
-			else if (ran && gap > 40) slow++;
+			if (gap > 250) { winStart = now; renders = 0; drawnGaps.length = 0; spent = 0; idle = 0; gap = 16.7; nextDraw = null; }
+			else if (ran && gap > 0) { drawnGaps.push(gap); }
 			ran = false; gapNow = gap; gapAvg = gapAvg * 0.9 + gap * 0.1;
 			dt = Math.min(0.05, gap / 1000);
 			handled = 0; drain();
@@ -347,18 +353,38 @@
 		waiting.push({ p: p, url: url });
 		nextPhoto();
 	}
-	K.player = function (key, name, photoUrl) {
-		var p = players[key];
+	function updatePlayer(p, key, name, photoUrl) {
 		if (!p) {
-			if (count >= 4000) { players = {}; count = 0; }
 			var first = Array.from(String(name || '?').replace(/^[^0-9A-Za-z\u00C0-\uFFFF]+/, ''))[0] || '?';
-			p = players[key] = { key: key, name: name, color: K.colors[Math.floor(K.hash(key) * K.colors.length)], initial: first.toUpperCase(), sprite: null, big: null, photo: null, photoUrl: '', member: false };
-			count++;
+			p = { key: key, name: name, color: K.colors[Math.floor(K.hash(key) * K.colors.length)], initial: first.toUpperCase(), sprite: null, big: null, photo: null, photoUrl: '', member: false };
 			repaint(p);
 		}
 		if (name) p.name = name;
 		if (photoUrl && photoUrl !== p.photoUrl) loadPhoto(p, photoUrl);
 		return p;
+	}
+	K.player = function (key, name, photoUrl) {
+		if (!players[key]) {
+			if (count >= 4000) { players = {}; count = 0; }
+			count++;
+		}
+		return players[key] = updatePlayer(players[key], key, name, photoUrl);
+	};
+	// Scenes keep recent faces in their own cache. Active characters keep their face while they are on screen.
+	K.recentFaces = function () {
+		var entries = new Map();
+		return {
+			get: function (key) { return entries.get(key); },
+			player: function (key, name, photoUrl) {
+				return this.set(key, updatePlayer(entries.get(key), key.toLowerCase(), name, photoUrl));
+			},
+			set: function (key, face) {
+				entries.delete(key);
+				entries.set(key, face);
+				if (entries.size > 512) entries.delete(entries.keys().next().value);
+				return face;
+			}
+		};
 	};
 	K.face = function (ctx, p, x, y, r) { ctx.drawImage(p.sprite, x - r, y - r, r * 2, r * 2); };
 	// A sharper face for the one or two places a chatter is shown large (a winner, a boss).

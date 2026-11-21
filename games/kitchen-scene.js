@@ -4,7 +4,7 @@
 	'use strict';
 	var K = window.SSNArcade, st = K.stage(), u = 1, portrait = false, clock = 0;
 	var DISH = { 'Midnight pizza': '\uD83C\uDF55', 'Picnic sandwich': '\uD83E\uDD6A', 'Pancake party': '\uD83E\uDD5E', 'Cozy soup': '\uD83C\uDF72' };
-	var faces = {}, byName = {}, snap = { phase: 'waiting', served: 0, stock: [0, 0, 0], icons: ['', '', ''], words: ['', '', ''], dish: '', left: 0, share: 1, round: 0 };
+	var faces = K.recentFaces(), byName = K.recentFaces(), snap = { phase: 'waiting', served: 0, stock: [0, 0, 0], icons: ['', '', ''], words: ['', '', ''], dish: '', left: 0, share: 1, round: 0 };
 	var chefs = [null, null, null], tosses = [], plates = [], flying = null, flipAt = -9, potPulse = 0, resultAt = -1, done = false, awarded = 0, adds = 0, counter = null;
 	document.body.classList.add('ssn-scene');
 
@@ -33,11 +33,11 @@
 	window.SSNScene = {
 		chat: function (m) {
 			if (!m || !m.type || !m.chatname) return;
-			var key = engineKey(m), face = K.player(key.toLowerCase(), String(m.chatname).slice(0, 24), m.chatimg);
-			faces[key] = face; byName[String(m.chatname).slice(0, 48)] = face;
+			var key = engineKey(m), face = faces.player(key, String(m.chatname).slice(0, 24), m.chatimg);
+			byName.set(String(m.chatname).slice(0, 48), face);
 		},
 		sync: function (game, now) {
-			var recipe = game.recipe(), n, who = game.history[0] ? byName[game.history[0].name] : null, ranked;
+			var recipe = game.recipe(), n, who = game.history[0] ? byName.get(game.history[0].name) : null, ranked;
 			if (game.round !== snap.round) { plates = []; tosses = []; chefs = [null, null, null]; flying = null; resultAt = -1; }
 			else {
 				// An order went out: the pot gives up a finished dish, and the next recipe's ingredients turn up.
@@ -53,7 +53,7 @@
 				resultAt = clock; done = game.served >= 4;
 				if (done && awarded !== game.round) {
 					awarded = game.round; ranked = [];
-					game.users.forEach(function (player, key) { ranked.push({ face: faces[key] || K.player(key.toLowerCase(), player.name), count: player.count }); });
+					game.users.forEach(function (player, key) { ranked.push({ face: faces.get(key) || faces.player(key, player.name), count: player.count }); });
 					ranked.sort(function (a, b) { return b.count - a.count; });
 					K.awardRound(ranked.slice(0, 3).map(function (r) { return r.face; }), ranked.map(function (r) { return r.face; }));
 				}

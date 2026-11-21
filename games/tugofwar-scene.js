@@ -4,7 +4,7 @@
 	'use strict';
 	var K = window.SSNArcade, st = K.stage(), u = 1, cs = 1, portrait = false, clock = 0;
 	var TEAM = [{ color: '#ff7b7b', dark: '#b84a52' }, { color: '#5fe0c5', dark: '#2f9d88' }];
-	var faces = {}, people = {}, order = [[], []], snap = { phase: 'waiting', position: 0, goal: 20, pulls: [0, 0], prompt: '', promptLeft: 0, left: 0, round: 0, count: [0, 0] };
+	var faces = K.recentFaces(), people = {}, order = [[], []], snap = { phase: 'waiting', position: 0, goal: 20, pulls: [0, 0], prompt: '', promptLeft: 0, left: 0, round: 0, count: [0, 0] };
 	var shown = 0, promptAt = 0, lastPrompt = '', resultAt = -1, awarded = 0, heaves = 0, wobble = 0, ground = null;
 	document.body.classList.add('ssn-scene');
 
@@ -43,7 +43,7 @@
 		chat: function (m) {
 			if (!m || !m.type || !m.chatname) return;
 			var key = engineKey(m);
-			faces[key] = K.player(key.toLowerCase(), String(m.chatname).slice(0, 24), m.chatimg);
+			faces.player(key, String(m.chatname).slice(0, 24), m.chatimg);
 		},
 		sync: function (game, now) {
 			var changed = false, seen = {}, winners, all;
@@ -52,7 +52,7 @@
 				var p = people[key];
 				seen[key] = 1;
 				if (!p) {
-					p = people[key] = { face: faces[key] || K.player(key.toLowerCase(), user.name), team: user.team, pulls: user.pulls, joined: clock, slot: 0, x: 0, drop: 1, heave: 0, shown: clock };
+					p = people[key] = { face: faces.get(key) || faces.player(key, user.name), team: user.team, pulls: user.pulls, joined: clock, slot: 0, x: 0, drop: 1, heave: 0, shown: clock };
 					changed = true;
 				}
 				if (user.pulls > p.pulls) { p.heave = 1; p.shown = clock; heaves++; wobble = 1; changed = true; K.fx.pop('+1', p.x, groundY() - 190 * cs, TEAM[p.team].color, 34 * u); }

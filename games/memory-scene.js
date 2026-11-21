@@ -5,7 +5,7 @@
 	// Everything is drawn in design units: a 1080-high (wide window) or 1080-wide (tall window) box fitted into the browser source.
 	var K = window.SSNArcade, st = K.stage(), box = null, W = 1920, H = 1080, px = 1, ox = 0, oy = 0, portrait = false, clock = 0;
 	var COLORS = ['#ff6b6b', '#4dabf7', '#ffd43b', '#69db7c'], GOLD = '#ffd43b', GREEN = '#69db7c', EDGE = 'rgba(10,14,24,.9)', NAVY = '#1b2233', DEPTH = 30, VERDICT = 2.6;
-	var faces = {}, people = {}, count = 0, waiting = [], tray = [], waitGrid = null, trayGrid = null;
+	var faces = K.recentFaces(), people = {}, count = 0, waiting = [], tray = [], waitGrid = null, trayGrid = null;
 	var snap = { phase: 'waiting', stage: 0, round: 0, revealed: false, seq: '111', left: 5, share: 1 };
 	var showAt = -99, hideAt = -99, lead = 0.7, beat = -1, playing = -1, pulse = -1, lit = [0, 0, 0, 0], hit = [0, 0, 0, 0], trayGlow = 0, board = 1;
 	var verdict = null, resultAt = -1, podiumAt = -1, leaders = [], awarded = 0;
@@ -113,7 +113,7 @@
 	function sy(v) { return (Math.round(v * px + oy) - oy) / px; }
 	function engineKey(m) { return String(m.type) + ':' + String(m.userid || m.username || m.chatname); }
 	function clean(name) { return K.short(String(name).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() || '?', 24); }
-	function faceFor(key, name) { return faces[key] || (faces[key] = K.player(key.toLowerCase(), clean(name || key.split(':').slice(1).join(':')))); }
+	function faceFor(key, name) { return faces.get(key) || faces.player(key, clean(name || key.split(':').slice(1).join(':'))); }
 	// Where a face stands: in the waiting rows, in the answered tray, or (at the end) in the crowd under the podium.
 	function place(q, out) {
 		var per, row, inRow, n = q.n, total, g;
@@ -147,7 +147,7 @@
 		chat: function (m) {
 			if (!m || !m.type || !m.chatname) return;
 			var key = engineKey(m);
-			faces[key] = K.player(key.toLowerCase(), clean(m.chatname), m.chatimg);
+			faces.player(key, clean(m.chatname), m.chatimg);
 		},
 		sync: function (game, now) {
 			var changed = false, open = game.phase === 'active' && game.revealed, ranked = [], all = [], pops = 0;

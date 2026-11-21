@@ -7,7 +7,7 @@
 		showdown: [{ icon: '\u270A', color: '#ff8a65', cmd: '!throw rock' }, { icon: '\u270B', color: '#4dabf7', cmd: '!throw paper' }, { icon: '\u270C\uFE0F', color: '#b197fc', cmd: '!throw scissors' }],
 		minority: [{ icon: '\u2600\uFE0F', color: '#ffd43b', cmd: '!pick sun' }, { icon: '\uD83C\uDF19', color: '#91a7ff', cmd: '!pick moon' }, { icon: '\u2B50', color: '#f783ac', cmd: '!pick star' }]
 	}, choices = CHOICES[mode] || CHOICES.minority;
-	var faces = {}, voters = {}, groups = [[], [], []], snap = { phase: 'waiting', left: 0, share: 1, round: 0, secret: 0 }, status = [0, 0, 0], lift = [0, 0, 0], resultAt = -1, awarded = 0;
+	var faces = K.recentFaces(), voters = {}, groups = [[], [], []], snap = { phase: 'waiting', left: 0, share: 1, round: 0, secret: 0 }, status = [0, 0, 0], lift = [0, 0, 0], resultAt = -1, awarded = 0;
 	document.body.classList.add('ssn-scene');
 	st.onresize = function () { u = Math.min(st.W, st.H) / 1080 * K.scale; portrait = st.H > st.W; };
 	st.onresize();
@@ -34,7 +34,7 @@
 		chat: function (m) {
 			if (!m || !m.type || !m.chatname) return;
 			var key = engineKey(m);
-			faces[key] = K.player(key.toLowerCase(), String(m.chatname).slice(0, 24), m.chatimg);
+			faces.player(key, String(m.chatname).slice(0, 24), m.chatimg);
 		},
 		sync: function (game, now) {
 			var changed = false, seen = {}, n, m;
@@ -42,7 +42,7 @@
 			game.votes.forEach(function (choice, key) {
 				var v = voters[key];
 				seen[key] = 1;
-				if (!v) { v = voters[key] = { face: faces[key] || K.player(key.toLowerCase(), key.split(':').slice(1).join(':')), choice: choice, x: colX(choice) + K.rand(-60, 60) * u, y: -80 * u, at: clock, hop: 0 }; changed = true; }
+				if (!v) { v = voters[key] = { face: faces.get(key) || faces.player(key, key.split(':').slice(1).join(':')), choice: choice, x: colX(choice) + K.rand(-60, 60) * u, y: -80 * u, at: clock, hop: 0 }; changed = true; }
 				else if (v.choice !== choice) { v.choice = choice; v.hop = 1; v.at = clock; changed = true; }
 			});
 			Object.keys(voters).forEach(function (key) { if (!seen[key]) { delete voters[key]; changed = true; } });
