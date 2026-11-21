@@ -13,46 +13,66 @@
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; box-sizing: border-box; }
 
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
         body {
             margin: 0;
             padding: 0;
             overflow: hidden;
-            font-family: 'Arial', sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             color: white;
             background: #0a0a0a;
         }
 
-        #game-canvas { position: fixed; inset: 0; display: block; }
+        body.transparent { background: transparent; }
 
-        .hud-panel {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            padding: 12px 18px;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+        #game-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: block; }
+
+        .hud-pill {
+            padding: 0.7vmin 2.4vmin;
+            border-radius: 5vmin;
+            background: rgba(20, 24, 40, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            font-size: 4.4vmin;
+            font-weight: 800;
+            line-height: 1.25;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
         }
 
-        #status-panel { top: 20px; left: 20px; min-width: 230px; }
-        #status-line { font-size: 26px; font-weight: bold; color: #FFD700; }
-        #status-sub { font-size: 16px; margin-top: 4px; opacity: 0.9; }
-        #connection-line { font-size: 13px; margin-top: 7px; color: #ffd966; }
-        #connection-line.connected { color: #7CFC00; }
-        #connection-line.disconnected { color: #ff8a8a; }
-        #alive-line { font-size: 16px; margin-top: 6px; }
-        #alive-line b { color: #7CFC00; }
+        /* Top left: countdown and head count, digits only */
+        #status-panel {
+            position: absolute;
+            top: 3vmin;
+            left: 3vmin;
+            display: flex;
+            align-items: center;
+        }
+        #status-panel .hud-pill { margin-right: 1.4vmin; }
 
+        /* Top right: who just went out, as an icon and a name */
         #killfeed {
-            top: 20px;
-            right: 20px;
-            max-width: 360px;
-            min-width: 240px;
-            padding: 10px 14px;
-            font-size: 15px;
+            position: absolute;
+            top: 3vmin;
+            right: 3vmin;
+            max-width: 46vmin;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
         }
         .feed-entry {
-            margin: 4px 0;
+            max-width: 100%;
+            margin-bottom: 0.8vmin;
+            padding: 0.5vmin 1.8vmin;
+            border-radius: 3vmin;
+            background: rgba(20, 24, 40, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            font-size: 2.7vmin;
+            font-weight: 700;
+            line-height: 1.3;
             opacity: 0;
             transition: opacity 0.4s ease;
             white-space: nowrap;
@@ -60,112 +80,120 @@
             text-overflow: ellipsis;
         }
         .feed-entry.show { opacity: 1; }
-        .feed-entry .victim { color: #ff7a7a; font-weight: bold; }
-        .feed-entry .killer { color: #7CFC00; font-weight: bold; }
+        .feed-entry .victim { color: #ff9a9a; }
+        .feed-entry .killer { color: #a6f08a; }
 
+        /* Only used to list win totals saved under the old name-only scheme */
         #roster {
-            bottom: 90px;
-            right: 20px;
-            max-width: 280px;
-            font-size: 14px;
-            max-height: 40vh;
-            overflow: hidden;
+            position: absolute;
+            display: none;
+            bottom: 3vmin;
+            right: 3vmin;
+            max-width: 40vmin;
+            max-height: 36vh;
+            padding: 1.2vmin 1.8vmin;
+            border-radius: 2vmin;
+            background: rgba(20, 24, 40, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            font-size: 2.1vmin;
+            line-height: 1.35;
+            overflow-y: auto;
         }
-        #roster h4 { margin: 0 0 6px 0; color: #FFD700; font-size: 15px; }
-        #roster-list span { display: inline-block; margin: 2px 6px 2px 0; opacity: 0.95; }
-        #roster.has-legacy-wins { bottom: 160px; overflow-y: auto; }
-        #legacy-wins-list { max-height: 12vh; overflow-y: auto; }
+        #roster.has-legacy-wins { display: block; }
+        #legacy-wins p { margin: 0.6vmin 0; opacity: 0.8; }
+        #legacy-wins-list { max-height: 14vh; overflow-y: auto; }
         #legacy-wins summary:focus, #legacy-wins-list:focus { outline: 2px solid #FFD700; outline-offset: 2px; }
 
         #event-banner {
             position: absolute;
-            top: 14%;
+            top: 13%;
             left: 50%;
+            max-width: 92vw;
             transform: translateX(-50%);
-            font-size: 44px;
-            font-weight: bold;
+            font-size: 15vmin;
+            font-weight: 800;
+            line-height: 1.1;
             color: #fff;
-            text-shadow: 0 0 18px rgba(255, 200, 0, 0.9), 2px 2px 6px rgba(0,0,0,0.9);
+            text-shadow: 0 0.4vmin 0 rgba(0, 0, 0, 0.4);
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
             text-align: center;
         }
+        #event-banner.wordy { font-size: 5vmin; }
 
         #instructions {
             position: absolute;
-            bottom: 20px;
+            bottom: 3vmin;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.75);
-            padding: 12px 26px;
-            border-radius: 10px;
-            text-align: center;
-            font-size: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
         }
-        #instructions strong { color: #FFD700; font-size: 17px; }
-        #instructions b { color: #7CFC00; }
 
+        /* Sits low so the winning chicken stays in view above it */
         #winner-overlay {
             position: absolute;
-            top: 50%;
+            bottom: 5vmin;
             left: 50%;
-            transform: translate(-50%, -50%);
+            max-width: 90vw;
+            transform: translateX(-50%);
+            transform-origin: 50% 100%;
             text-align: center;
-            background: rgba(0, 0, 0, 0.82);
-            border: 3px solid #FFD700;
-            border-radius: 24px;
-            padding: 34px 60px;
+            background: rgba(20, 24, 40, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 5vmin;
+            padding: 2vmin 6vmin 3vmin;
             display: none;
-            box-shadow: 0 0 60px rgba(255, 215, 0, 0.45);
             animation: dinner-pop 0.6s cubic-bezier(0.18, 1.4, 0.4, 1);
         }
         @keyframes dinner-pop {
-            0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
-            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            0% { transform: translateX(-50%) scale(0.3); opacity: 0; }
+            100% { transform: translateX(-50%) scale(1); opacity: 1; }
         }
-        #winner-title {
-            font-size: 44px;
-            font-weight: bold;
-            color: #FFD700;
-            text-shadow: 0 0 24px rgba(255, 215, 0, 0.8);
-            animation: dinner-glow 1.2s ease-in-out infinite alternate;
-        }
-        @keyframes dinner-glow {
-            from { text-shadow: 0 0 14px rgba(255, 215, 0, 0.6); }
-            to { text-shadow: 0 0 34px rgba(255, 230, 80, 1); }
-        }
+        #winner-title { font-size: 10vmin; line-height: 1.15; }
         #winner-avatar {
-            width: 84px;
-            height: 84px;
+            width: 13vmin;
+            height: 13vmin;
             border-radius: 50%;
-            border: 3px solid #FFD700;
-            margin: 14px auto 4px auto;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            margin: 1vmin auto 0 auto;
             display: none;
             object-fit: cover;
         }
-        #winner-name { font-size: 38px; font-weight: bold; margin-top: 10px; }
-        #winner-stats { font-size: 18px; margin-top: 10px; opacity: 0.95; line-height: 1.5; }
-        #winner-podium { font-size: 16px; margin-top: 12px; opacity: 0.85; }
+        #winner-name {
+            max-width: 78vw;
+            margin-top: 1.2vmin;
+            font-size: 7vmin;
+            font-weight: 800;
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        #winner-stats { font-size: 4vmin; font-weight: 700; margin-top: 1.2vmin; white-space: nowrap; }
+        #winner-podium {
+            max-width: 78vw;
+            margin-top: 1.4vmin;
+            font-size: 3.2vmin;
+            font-weight: 600;
+            opacity: 0.9;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
     <canvas id="game-canvas"></canvas>
 
-    <div id="status-panel" class="hud-panel">
-        <div id="status-line">🐔 CHICKEN ROYALE</div>
-        <div id="status-sub">Connecting to chat...</div>
-        <div id="connection-line">● Connecting to chat...</div>
-        <div id="alive-line"></div>
+    <div id="status-panel">
+        <div id="status-timer" class="hud-pill" style="display:none;"></div>
+        <div id="lobby-count" class="hud-pill" style="display:none;">🐔 <span id="roster-count">0</span></div>
+        <div id="alive-line" class="hud-pill" style="display:none;"></div>
     </div>
 
-    <div id="killfeed" class="hud-panel" style="display:none;"></div>
+    <div id="killfeed" style="display:none;"></div>
 
-    <div id="roster" class="hud-panel">
-        <h4>🐔 Lobby <span id="roster-count">(0)</span></h4>
-        <div id="roster-list">Connecting to chat...</div>
+    <div id="roster">
         <details id="legacy-wins" open hidden>
             <summary>Past name-based wins</summary>
             <p>Older totals were shared by display name across platforms.</p>
@@ -176,18 +204,14 @@
     <div id="event-banner"></div>
 
     <div id="winner-overlay">
-        <div id="winner-title">🏆 WINNER WINNER 🍗<br>CHICKEN DINNER</div>
+        <div id="winner-title">🏆</div>
         <img id="winner-avatar" alt="" />
         <div id="winner-name"></div>
         <div id="winner-stats"></div>
         <div id="winner-podium"></div>
     </div>
 
-    <div id="instructions" style="display:none;">
-        <div><strong>🍗 Chicken Royale - How to Play:</strong></div>
-        <div>Type <b>!join</b> to enter as a chicken. Last bird standing wins the CHICKEN DINNER!</div>
-        <div style="margin-top: 4px; font-size: 13px; opacity: 0.8;">Chat while alive to boost your chicken • Stay inside the storm circle • <b>!start</b> to begin early</div>
-    </div>
+    <div id="instructions" class="hud-pill" style="display:none;">!join</div>
 
     <script src="../thirdparty/three.global.min.js"></script>
     <script>
@@ -249,6 +273,8 @@
     const AUTO_JOIN = urlParams.has('autojoin'); // any chatter is auto-entered during the lobby
     const CHROMA = urlParams.has('chroma');
     const DARKMODE = urlParams.has('darkmode');
+    const TRANSPARENT = urlParams.has('transparent'); // island only, nothing drawn behind it
+    if (TRANSPARENT && !CHROMA) document.body.classList.add('transparent');
 
     // ====================== Helpers ======================
     const domParser = new DOMParser();
@@ -324,6 +350,10 @@
             bg: new THREE.Color(0x00ff00), fog: null, water: false, clouds: false,
             hemi: [0xbfd9ff, 0x7a9a5a, 0.95], sun: [0xfff2d9, 1.35]
         };
+        if (TRANSPARENT) return {
+            bg: null, fog: null, water: false, clouds: false,
+            hemi: [0xbfd9ff, 0x7a9a5a, 0.95], sun: [0xfff2d9, 1.35]
+        };
         if (DARKMODE) return {
             bg: new THREE.Color(0x05070f), fog: [0x05070f, 70, 240], water: true, clouds: false,
             waterColor: 0x0a1a33, hemi: [0x33415e, 0x1a2418, 0.7], sun: [0xaac4ff, 0.9]
@@ -337,7 +367,8 @@
     // ====================== Three.js setup ======================
     const ISLAND_R = 38;
     const canvas = document.getElementById('game-canvas');
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: TRANSPARENT && !CHROMA });
+    if (TRANSPARENT && !CHROMA) renderer.setClearColor(0x000000, 0);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
@@ -365,6 +396,15 @@
     const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(0, 24, 44);
 
+    // The lens keeps at least a 38 degree view across, so a tall window does not crop the flock
+    function fitCamera() {
+        const aspect = window.innerWidth / Math.max(1, window.innerHeight);
+        camera.aspect = aspect;
+        camera.fov = aspect >= 1 ? 50 : Math.min(76, Math.max(50, 2 * Math.atan(Math.tan(19 * Math.PI / 180) / aspect) * 180 / Math.PI));
+        camera.updateProjectionMatrix();
+    }
+    fitCamera();
+
     const hemiLight = new THREE.HemisphereLight(THEME.hemi[0], THEME.hemi[1], THEME.hemi[2]);
     scene.add(hemiLight);
 
@@ -383,8 +423,7 @@
     scene.add(sunLight.target);
 
     window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
+        fitCamera();
         renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
@@ -831,8 +870,8 @@
             this.labelTex = new THREE.CanvasTexture(c);
             this.labelTex.colorSpace = THREE.SRGBColorSpace;
             this.label = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.labelTex, transparent: true, depthWrite: false, depthTest: false }));
-            this.label.scale.set(3.6, 1.35, 1);
-            this.label.position.set(0, 2.95, 0);
+            this.label.scale.set(4.6, 1.725, 1);
+            this.label.position.set(0, 3.15, 0);
             this.group.add(this.label);
             this.redrawLabel();
         }
@@ -840,10 +879,10 @@
         redrawLabel() {
             const ctx = this.labelCanvas.getContext('2d');
             ctx.clearRect(0, 0, 256, 96);
-            let display = this.name.length > 16 ? this.name.slice(0, 15) + '…' : this.name;
+            let display = this.name.length > 14 ? this.name.slice(0, 13) + '…' : this.name;
             const wins = getCareerWins(this.key);
             if (wins > 0) display = '👑' + (wins > 1 ? wins : '') + ' ' + display;
-            ctx.font = 'bold 26px Arial';
+            ctx.font = 'bold 28px system-ui, "Segoe UI", Arial, sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.lineWidth = 6;
@@ -1136,14 +1175,12 @@
 
     // ====================== HUD ======================
     const el = {
-        statusLine: document.getElementById('status-line'),
-        statusSub: document.getElementById('status-sub'),
-        connectionLine: document.getElementById('connection-line'),
+        statusTimer: document.getElementById('status-timer'),
+        lobbyCount: document.getElementById('lobby-count'),
         aliveLine: document.getElementById('alive-line'),
         killfeed: document.getElementById('killfeed'),
         roster: document.getElementById('roster'),
         rosterCount: document.getElementById('roster-count'),
-        rosterList: document.getElementById('roster-list'),
         banner: document.getElementById('event-banner'),
         winnerOverlay: document.getElementById('winner-overlay'),
         winnerAvatar: document.getElementById('winner-avatar'),
@@ -1170,11 +1207,8 @@
         const ready = isChatTransportReady();
         if (ready) chatTransportWasReady = true;
 
-        el.connectionLine.className = ready ? 'connected' : (chatTransportWasReady ? 'disconnected' : 'connecting');
-        el.connectionLine.textContent = ready
-            ? '● Chat connected' + (AUTO_JOIN ? ' • Auto-join ON' : '')
-            : (chatTransportWasReady ? '● Chat disconnected • Reconnecting...' : '● Connecting to chat...');
-        el.instructions.style.display = ready ? '' : 'none';
+        // The join hint is only useful while chat can reach the page and the lobby is open
+        el.instructions.style.display = ready && G.mode === 'lobby' ? '' : 'none';
     }
 
     function setTransportConnected(name, connected) {
@@ -1200,64 +1234,39 @@
         return arr;
     }
 
+    function showPill(pill, text) {
+        pill.style.display = text ? '' : 'none';
+        if (text && pill !== el.lobbyCount) pill.textContent = text;
+    }
+
+    // Digits only: seconds until the battle (or until the zone moves) and how many chickens are in
     function updateHUD() {
         if (G.mode === 'lobby') {
-            el.statusLine.textContent = '🐔 CHICKEN ROYALE';
-            if (!isChatTransportReady()) {
-                el.statusSub.textContent = chatTransportWasReady ? 'Reconnecting to chat...' : 'Connecting to chat...';
-            } else if (G.players.size === 0) {
-                el.statusSub.textContent = 'Waiting for chickens... type !join';
-            } else if (G.countdownEnd > 0) {
-                const left = Math.max(0, Math.ceil((G.countdownEnd - performance.now()) / 1000));
-                el.statusSub.textContent = '🛬 Battle begins in ' + left + 's';
-            } else {
-                el.statusSub.textContent = 'Type !join to enter!';
-            }
-            el.aliveLine.innerHTML = '';
+            const counting = G.players.size > 0 && G.countdownEnd > 0;
+            const left = Math.max(0, Math.ceil((G.countdownEnd - performance.now()) / 1000));
+            showPill(el.statusTimer, counting ? '⏳ ' + left : '');
+            showPill(el.lobbyCount, G.players.size > 0 ? 'count' : '');
+            showPill(el.aliveLine, '');
         } else if (G.mode === 'battle') {
             const alive = aliveChickens().length;
+            let zone = '🌀 ' + Math.max(0, Math.ceil(G.zone.timer));
             if (G.suddenDeath) {
-                el.statusLine.textContent = '☠️ SUDDEN DEATH';
-                el.statusSub.textContent = 'The storm consumes everything!';
+                zone = '💀';
             } else if (G.zone.shrinking) {
-                el.statusLine.textContent = '⚠️ ZONE SHRINKING';
-                el.statusSub.textContent = 'Run little chickens, run!';
-            } else {
-                el.statusLine.textContent = '🐔 BATTLE ROYALE';
-                const next = Math.max(0, Math.ceil(G.zone.timer));
-                el.statusSub.textContent = 'Zone shrinks in ' + next + 's';
+                zone = '🌀';
             }
-            el.aliveLine.innerHTML = '🐔 Alive: <b>' + alive + '</b> / ' + G.totalJoined;
+            showPill(el.statusTimer, zone);
+            showPill(el.lobbyCount, '');
+            showPill(el.aliveLine, '🐔 ' + alive + '/' + G.totalJoined);
         } else if (G.mode === 'winner') {
-            el.statusLine.textContent = '🏆 CHICKEN DINNER';
-            el.statusSub.textContent = G.winner ? G.winner.name + ' survives!' : '';
+            showPill(el.statusTimer, '');
+            showPill(el.lobbyCount, '');
+            showPill(el.aliveLine, '');
         }
     }
 
     function updateRoster() {
-        el.rosterCount.textContent = '(' + G.players.size + ')';
-        if (G.players.size === 0) {
-            el.rosterList.innerHTML = isChatTransportReady()
-                ? 'Type <b style="color:#7CFC00">!join</b> in chat'
-                : (chatTransportWasReady ? 'Reconnecting to chat...' : 'Connecting to chat...');
-            return;
-        }
-        el.rosterList.textContent = '';
-        let shown = 0;
-        for (const p of G.players.values()) {
-            if (shown >= 24) break;
-            const span = document.createElement('span');
-            span.textContent = '🐔' + (p.name.length > 14 ? p.name.slice(0, 13) + '…' : p.name);
-            span.style.color = '#' + p.color.getHexString();
-            el.rosterList.appendChild(span);
-            shown++;
-        }
-        if (G.players.size > shown) {
-            const more = document.createElement('span');
-            more.textContent = '+' + (G.players.size - shown) + ' more';
-            more.style.opacity = '0.7';
-            el.rosterList.appendChild(more);
-        }
+        el.rosterCount.textContent = G.players.size;
     }
 
     updateConnectionHUD();
@@ -1265,14 +1274,14 @@
 
     const feedEntries = [];
     function addFeedLine(htmlBuilder) {
-        el.killfeed.style.display = 'block';
+        el.killfeed.style.display = 'flex';
         const div = document.createElement('div');
         div.className = 'feed-entry';
         htmlBuilder(div);
         el.killfeed.appendChild(div);
         requestAnimationFrame(() => div.classList.add('show'));
         feedEntries.push(div);
-        while (feedEntries.length > 6) {
+        while (feedEntries.length > 4) {
             const old = feedEntries.shift();
             old.remove();
         }
@@ -1284,7 +1293,7 @@
                 if (i >= 0) feedEntries.splice(i, 1);
                 if (el.killfeed.children.length === 0) el.killfeed.style.display = 'none';
             }, 500);
-        }, 9000);
+        }, 6000);
     }
 
     function addKillFeed(victim, killer, cause) {
@@ -1293,24 +1302,25 @@
             v.className = 'victim';
             v.textContent = victim.name;
             if (cause === 'storm') {
-                div.append('⛈️ '); div.append(v); div.append(' got caught in the storm');
+                div.append('🌀 '); div.append(v);
             } else if (cause === 'lightning') {
-                div.append('⚡ '); div.append(v); div.append(' was struck by lightning');
+                div.append('⚡ '); div.append(v);
             } else if (cause === 'fox') {
-                div.append('🦊 '); div.append(v); div.append(' got snatched by the fox');
+                div.append('🦊 '); div.append(v);
             } else if (killer) {
                 const k = document.createElement('span');
                 k.className = 'killer';
                 k.textContent = killer.name;
-                div.append('🍗 '); div.append(v); div.append(' was pecked by '); div.append(k);
+                div.append(k); div.append(' 🍗 '); div.append(v);
             } else {
-                div.append('🍗 '); div.append(v); div.append(' is out');
+                div.append('🍗 '); div.append(v);
             }
         });
     }
 
     function announce(text, dur) {
         el.banner.textContent = text;
+        el.banner.classList.toggle('wordy', text.length > 8);
         el.banner.style.opacity = '1';
         clearTimeout(announce._t);
         announce._t = setTimeout(() => { el.banner.style.opacity = '0'; }, dur || 2600);
@@ -1372,7 +1382,7 @@
         const left = G.countdownEnd - performance.now();
         if (left > 5500) {
             G.countdownEnd = performance.now() + 5000;
-            announce('🏁 ' + byName + ' started the battle!', 2000);
+            announce('🏁 ' + byName, 2000);
         }
     }
 
@@ -1394,7 +1404,7 @@
         zoneWall.visible = true;
         zoneRing.visible = true;
         el.roster.style.display = 'none';
-        el.instructions.style.display = 'none';
+        updateConnectionHUD();
 
         // Air-drop the flock, spread evenly across the island
         let i = 0;
@@ -1405,7 +1415,6 @@
             p.startDrop(Math.cos(a) * r, Math.sin(a) * r, rand(20, 34));
             i++;
         });
-        announce('🐔 BATTLE BEGINS! 🐔', 3000);
         sendChatResponse('🍗 CHICKEN ROYALE has begun with ' + G.totalJoined + ' chickens! Chat while alive to boost your bird!');
         updateHUD();
     }
@@ -1438,20 +1447,16 @@
             // Overlay
             el.winnerName.textContent = winner.name;
             el.winnerName.style.color = '#' + winner.color.getHexString();
-            const survived = Math.round((performance.now() - G.battleStart) / 1000);
-            el.winnerStats.textContent = '🍗 Outlived ' + (G.totalJoined - 1) + ' chickens • ⚔️ ' + winner.kills + ' pecks • ⏱️ ' + survived + 's survived';
-            if (dinners > 1) el.winnerStats.textContent += ' • 👑 ' + dinners + ' career dinners';
+            el.winnerStats.textContent = '🍗 ' + winner.kills;
+            if (dinners > 1) el.winnerStats.textContent += '   👑 ' + dinners;
 
-            // Podium: runner-ups by elimination order, plus top pecker
+            // Podium: runner-ups by elimination order
             const dead = [];
             G.players.forEach(p => { if (!p.alive) dead.push(p); });
             dead.sort((a, b) => b.deathOrder - a.deathOrder);
             let podium = '';
             if (dead[0]) podium += '🥈 ' + dead[0].name + '   ';
-            if (dead[1]) podium += '🥉 ' + dead[1].name + '   ';
-            let topPecker = winner;
-            G.players.forEach(p => { if (p.kills > topPecker.kills) topPecker = p; });
-            if (topPecker.kills > 0) podium += '⚔️ Top pecker: ' + topPecker.name + ' (' + topPecker.kills + ')';
+            if (dead[1]) podium += '🥉 ' + dead[1].name;
             el.winnerPodium.textContent = podium;
 
             if (winner.avatar) {
@@ -1481,8 +1486,8 @@
         zoneRing.visible = false;
         targetRing.visible = false;
         el.winnerOverlay.style.display = 'none';
-        el.roster.style.display = 'block';
-        el.instructions.style.display = 'block';
+        el.roster.style.display = '';
+        updateConnectionHUD();
         feedEntries.length = 0;
         el.killfeed.textContent = '';
         el.killfeed.style.display = 'none';
@@ -1523,8 +1528,7 @@
         group.position.set(x, groundY + 26, z);
         scene.add(group);
 
-        announce('🌽 GRAIN DROP! 🌽', 2200);
-        addFeedLine(div => { div.textContent = '🌽 Grain drop incoming — free heals!'; });
+        announce('🌽', 2200);
 
         const ev = {
             type: 'grain', t: 0, landed: false, life: 10,
@@ -1584,7 +1588,7 @@
         bolt.visible = false;
         scene.add(bolt);
 
-        announce('⚡ THUNDERSTORM! ⚡', 1800);
+        announce('⚡', 1800);
 
         const ev = {
             type: 'lightning', t: 0, struck: false,
@@ -1658,8 +1662,7 @@
         fox.lookAt(to.x, 0, to.z);
         scene.add(fox);
 
-        announce('🦊 FOX ATTACK! 🦊', 2200);
-        addFeedLine(div => { div.textContent = '🦊 A hungry fox is crossing the island!'; });
+        announce('🦊', 2200);
 
         const hit = new Set();
         const DUR = 3.2;
@@ -1840,7 +1843,7 @@
                 z.shrinking = false;
                 if (z.phase >= ZONE_PHASES.length - 1) {
                     G.suddenDeath = true;
-                    announce('☠️ SUDDEN DEATH ☠️', 3000);
+                    announce('💀', 3000);
                 } else {
                     z.timer = ZONE_PHASES[z.phase + 1].wait;
                 }
@@ -1858,7 +1861,7 @@
                 z.dps = phase.dps;
                 targetRing.scale.set(z.target, z.target, 1);
                 targetRing.visible = true;
-                if (z.phase === 0) announce('⚠️ THE STORM APPROACHES ⚠️', 2600);
+                if (z.phase === 0) announce('🌀', 2600);
             } else if (z.phase >= 0 && z.timer < 5 && !targetRing.visible) {
                 const nextPhase = ZONE_PHASES[z.phase + 1] || ZONE_PHASES[ZONE_PHASES.length - 1];
                 targetRing.scale.set((ISLAND_R - 2) * nextPhase.frac, (ISLAND_R - 2) * nextPhase.frac, 1);
@@ -1900,7 +1903,8 @@
                 radius = Math.max(11, Math.min(48, G.zone.radius * 1.55 + 8));
                 if (alive.length === 2) radius = Math.max(10, radius * 0.8);
             } else {
-                radius = 36;
+                // Closer in the lobby, where the flock stays near the middle
+                radius = camera.aspect >= 1 ? 29 : 32;
             }
             desiredPos.set(
                 desiredTarget.x + Math.cos(G.camAngle) * radius,
@@ -2234,6 +2238,7 @@
                         const c = pick(alive);
                         processData({
                             chatname: c.name,
+                            type: c.platform,
                             chatmessage: pick(['cluck cluck!', 'GO GO GO', 'bok bok', 'RUN!', 'fight!', '🐔🐔🐔']),
                             hasDonation: Math.random() < 0.03 ? '$5' : ''
                         });

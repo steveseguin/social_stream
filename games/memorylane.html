@@ -20,12 +20,17 @@
             scrollbar-width: none;  /* Firefox */
         }
 
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
         body {
             margin: 0;
             padding: 0;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
             overflow: hidden;
-            font-family: 'Arial', sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             color: white;
         }
 
@@ -37,340 +42,162 @@
             background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);
         }
 
-        #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
+        body.transparent {
+            background: transparent;
         }
 
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* The wall of photos; --c is the width of one photo */
         #memory-timeline {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90%;
-            height: 80%;
-            perspective: 1000px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            --c: 300px;
         }
 
         .memory-photo {
             position: absolute;
-            width: 220px;
-            height: 180px;
-            background: rgba(255, 255, 255, 0.85);
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.5s ease;
-            animation: photo-float 8s ease-in-out infinite;
-            z-index: 1;
+            width: var(--c);
+            height: calc(var(--c) * 1.2);
+            margin: calc(var(--c) * -0.6) 0 0 calc(var(--c) * -0.5);
+            animation: photo-in 0.7s cubic-bezier(0.2, 1.3, 0.4, 1) both;
         }
 
-        .memory-photo:hover {
-            transform: scale(1.1) rotateY(5deg);
-            z-index: 10;
+        .memory-photo.leaving {
+            animation: photo-out 0.6s ease-in both;
         }
 
-        @keyframes photo-float {
-            0%, 100% { 
-                transform: translateY(0px) rotate(0deg);
+        @keyframes photo-in {
+            0% {
+                transform: translateY(-8vmin) rotate(calc(var(--tilt) * -2)) scale(1.25);
+                opacity: 0;
             }
-            25% { 
-                transform: translateY(-10px) rotate(1deg);
+            100% {
+                transform: translateY(0) rotate(var(--tilt)) scale(1);
+                opacity: 1;
             }
-            50% { 
-                transform: translateY(-5px) rotate(-1deg);
+        }
+
+        @keyframes photo-out {
+            0% {
+                transform: translateY(0) rotate(var(--tilt)) scale(1);
+                opacity: 1;
             }
-            75% { 
-                transform: translateY(-15px) rotate(1deg);
+            100% {
+                transform: translateY(5vmin) rotate(var(--tilt)) scale(0.85);
+                opacity: 0;
             }
         }
 
         .photo-polaroid {
+            position: relative;
             width: 100%;
             height: 100%;
-            padding: 15px;
+            padding: calc(var(--c) * 0.05);
             box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
+            background: #fffdf8;
+            border: 1px solid rgba(0, 0, 0, 0.14);
+            border-radius: calc(var(--c) * 0.055);
+            box-shadow: 0 0.8vmin 2vmin rgba(30, 20, 60, 0.25);
+            animation: photo-float 6s ease-in-out infinite alternate;
+        }
+
+        @keyframes photo-float {
+            0% { transform: translateY(-0.6vmin); }
+            100% { transform: translateY(0.6vmin); }
         }
 
         .photo-image {
-            flex: 1;
-            background: linear-gradient(45deg, #ffeaa7, #fab1a0, #fd79a8, #e17055);
-            border-radius: 5px;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            font-size: 40px;
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            overflow: hidden;
             position: relative;
-            padding-top: 15px;
-        }
-
-        .photo-text {
-            position: absolute;
-            bottom: 5px;
-            left: 5px;
-            right: 5px;
-            font-size: 11px;
-            line-height: 1.3;
-            background: rgba(0, 0, 0, 0.75);
-            color: white;
-            padding: 6px 8px;
-            border-radius: 3px;
-            text-align: center;
-            max-height: 65px;
-            overflow-y: auto;
-            word-wrap: break-word;
-        }
-
-        .photo-caption {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #333;
-            text-align: center;
-            font-family: 'Courier New', monospace;
-            height: 20px;
+            height: calc(var(--c) * 0.62);
+            border-radius: calc(var(--c) * 0.035);
             overflow: hidden;
+            text-align: center;
         }
 
-        .memory-sparkle {
+        .photo-emoji {
+            font-size: calc(var(--c) * 0.36);
+            line-height: calc(var(--c) * 0.62);
+        }
+
+        .photo-extra {
             position: absolute;
-            font-size: 16px;
-            color: #ffd700;
-            animation: sparkle-twinkle 2s ease-in-out infinite;
-            pointer-events: none;
+            font-size: calc(var(--c) * 0.14);
+            line-height: 1;
         }
 
-        @keyframes sparkle-twinkle {
-            0%, 100% { 
-                opacity: 0;
-                transform: scale(0.5) rotate(0deg);
-            }
-            50% { 
-                opacity: 1;
-                transform: scale(1) rotate(180deg);
-            }
+        .photo-extra.first {
+            left: 6%;
+            bottom: 8%;
+            transform: rotate(-14deg);
         }
 
-        .nostalgic-effect {
+        .photo-extra.second {
+            right: 6%;
+            top: 8%;
+            transform: rotate(12deg);
+        }
+
+        /* A fresh photo starts blank and develops */
+        .photo-developer {
             position: absolute;
-            top: 0;
             left: 0;
+            top: 0;
             width: 100%;
             height: 100%;
-            background: 
-                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 177, 153, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(255, 198, 244, 0.2) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 5;
-        }
-
-        #memory-stats {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 15px 20px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 1000;
-        }
-
-        .stat-line {
-            margin: 5px 0;
-            font-size: 16px;
-        }
-
-        #memory-album {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 250px;
-            max-height: 400px;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 15px 20px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 1000;
-            overflow-y: auto;
-        }
-
-        .album-memory {
-            display: flex;
-            align-items: center;
-            margin: 8px 0;
-            padding: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .album-memory:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateX(5px);
-        }
-
-        .album-emoji {
-            font-size: 20px;
-            margin-right: 10px;
-        }
-
-        .album-text {
-            flex: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .album-author {
-            font-size: 12px;
-            opacity: 0.7;
-            margin-top: 2px;
-        }
-
-        #mood-detector {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 15px 20px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 1000;
-            text-align: center;
-        }
-
-        .mood-indicator {
-            font-size: 48px;
-            margin: 10px 0;
-            animation: mood-pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes mood-pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        #instructions {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            text-align: left;
-            font-size: 16px;
-            z-index: 1000;
-        }
-
-        #instructions strong {
-            color: #fab1a0;
-            font-size: 18px;
-        }
-
-        .memory-trail {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: #ffd700;
-            border-radius: 50%;
-            pointer-events: none;
-            animation: trail-fade 3s ease-out forwards;
-        }
-
-        @keyframes trail-fade {
-            0% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            100% {
-                opacity: 0;
-                transform: scale(0.3) translateY(-50px);
-            }
-        }
-
-        .vintage-filter {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                repeating-linear-gradient(
-                    90deg,
-                    transparent,
-                    transparent 2px,
-                    rgba(255, 255, 255, 0.03) 2px,
-                    rgba(255, 255, 255, 0.03) 4px
-                );
-            pointer-events: none;
-            z-index: 15;
-        }
-
-        .photo-developing {
-            animation: develop-photo 2s ease-out forwards;
+            background: #f4efe6;
+            animation: develop-photo 2.2s ease-out 0.3s both;
         }
 
         @keyframes develop-photo {
-            0% {
-                opacity: 0;
-                transform: scale(0.5) rotateY(90deg);
-                filter: blur(10px) sepia(1);
-            }
-            50% {
-                opacity: 0.7;
-                transform: scale(1.1) rotateY(45deg);
-                filter: blur(5px) sepia(0.5);
-            }
-            100% {
-                opacity: 1;
-                transform: scale(1) rotateY(0deg);
-                filter: blur(0px) sepia(0);
-            }
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .photo-text {
+            margin-top: calc(var(--c) * 0.035);
+            max-height: 3.75em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+            font-size: calc(var(--c) * 0.072);
+            line-height: 1.25;
+            font-weight: 600;
+            color: #3b3550;
+            text-align: center;
+            word-break: break-word;
+        }
+
+        .photo-caption {
+            position: absolute;
+            left: 6%;
+            bottom: calc(var(--c) * 0.04);
+            width: 88%;
+            font-size: calc(var(--c) * 0.058);
+            line-height: 1.3;
+            font-weight: 800;
+            color: #8d84ab;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <div class="nostalgic-effect"></div>
-        <div class="vintage-filter"></div>
-        
-        <div id="memory-stats">
-            <div class="stat-line">📸 Photos: <span id="photo-count">0</span></div>
-            <div class="stat-line">💭 Memories: <span id="memory-count">0</span></div>
-            <div class="stat-line">👥 Contributors: <span id="contributor-count">0</span></div>
-            <div class="stat-line">🕰️ Nostalgia Level: <span id="nostalgia-level">0</span>%</div>
-        </div>
-        
-        <div id="memory-album">
-            <h4 style="margin-top: 0; color: #fab1a0;">📖 Memory Album</h4>
-            <div id="album-entries"></div>
-        </div>
-        
-        <div id="mood-detector">
-            <h4 style="margin-top: 0; color: #fab1a0;">Current Mood</h4>
-            <div class="mood-indicator" id="current-mood">😊</div>
-            <div id="mood-text">Happy</div>
-        </div>
-        
         <div id="memory-timeline"></div>
-        
-        <div id="instructions">
-            <div><strong>📷 Memory Lane - How to Play:</strong></div>
-            <div>Share memories and stories in chat!</div>
-            <div>Keywords: <strong>remember</strong>, <strong>childhood</strong>, <strong>nostalgia</strong></div>
-            <div>Emojis become photo themes!</div>
-        </div>
     </div>
 
     <script>
@@ -386,17 +213,23 @@
         } else if (urlParams.has('darkmode')) {
             document.body.classList.add('darkmode');
         }
+        if (urlParams.has('transparent')) {
+            document.body.classList.add('transparent');
+        }
 
         // Game state
         let gameState = {
-            photos: [],
-            memories: [],
             contributors: new Set(),
-            nostalgiaLevel: 0,
-            currentMood: 'happy',
-            photoCount: 0,
-            memoryCount: 0
+            memoryCount: 0,
+            photos: [],
+            slots: [],
+            pending: [],
+            lastPhotoTime: 0
         };
+
+        const PHOTO_LIFETIME = 90000; // a quiet chat lets the wall clear itself
+        const timeline = document.getElementById('memory-timeline');
+        const view = { slotWidth: 0, slotHeight: 0, margin: 0 };
 
         // Memory keywords and their themes
         const memoryKeywords = {
@@ -420,24 +253,6 @@
             art: { emoji: '🎨', theme: 'hobby', mood: 'creative' },
             remember: { emoji: '💭', theme: 'memory', mood: 'nostalgic' },
             nostalgia: { emoji: '🕰️', theme: 'memory', mood: 'nostalgic' }
-        };
-
-        // Mood definitions
-        const moods = {
-            happy: { emoji: '😊', color: '#ffd700' },
-            sad: { emoji: '😢', color: '#87ceeb' },
-            nostalgic: { emoji: '😌', color: '#dda0dd' },
-            excited: { emoji: '🤩', color: '#ff6347' },
-            peaceful: { emoji: '😇', color: '#98fb98' },
-            loving: { emoji: '🥰', color: '#ffb6c1' },
-            thoughtful: { emoji: '🤔', color: '#d3d3d3' },
-            joyful: { emoji: '😄', color: '#ffa500' },
-            warm: { emoji: '🤗', color: '#ffdab9' },
-            festive: { emoji: '🥳', color: '#ff69b4' },
-            proud: { emoji: '😤', color: '#9370db' },
-            creative: { emoji: '🤓', color: '#20b2aa' },
-            relaxed: { emoji: '😎', color: '#00ced1' },
-            cozy: { emoji: '☺️', color: '#f4a460' }
         };
 
         // Photo background gradients
@@ -464,7 +279,7 @@
             };
 
             const lowerText = text.toLowerCase();
-            
+
             // Find memory keywords
             Object.entries(memoryKeywords).forEach(([keyword, data]) => {
                 if (lowerText.includes(keyword)) {
@@ -473,7 +288,7 @@
             });
 
             // Extract emojis
-            const emojiRegex = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu;
+            const emojiRegex = /(\p{Regional_Indicator}\p{Regional_Indicator}|\p{Emoji_Presentation}|\p{Emoji}️)(\p{Emoji_Modifier}|‍\p{Emoji}️?)*/gu;
             const foundEmojis = text.match(emojiRegex) || [];
             analysis.emojis = foundEmojis;
 
@@ -487,65 +302,83 @@
             return analysis;
         }
 
-        // Get random position for photo
-        function getPhotoPosition() {
-            // Try to find a position that doesn't overlap too much with existing photos
-            let attempts = 0;
-            let position;
-            
-            do {
-                position = {
-                    left: Math.random() * 70 + 5,  // 5% to 75% (reduced range)
-                    top: Math.random() * 60 + 10    // 10% to 70% (reduced range)
-                };
-                
-                attempts++;
-                
-                // Check if position is far enough from existing photos
-                let tooClose = false;
-                for (let photo of gameState.photos) {
-                    if (!photo.element.parentNode) continue; // Skip removed photos
-                    
-                    const existingLeft = parseFloat(photo.element.style.left);
-                    const existingTop = parseFloat(photo.element.style.top);
-                    
-                    const distance = Math.sqrt(
-                        Math.pow(position.left - existingLeft, 2) + 
-                        Math.pow(position.top - existingTop, 2)
-                    );
-                    
-                    if (distance < 15) { // Minimum 15% distance between photos
-                        tooClose = true;
-                        break;
-                    }
+        function placePhoto(photo) {
+            const slot = photo.slot;
+            photo.element.style.left = (view.margin + view.slotWidth * (slot.col + 0.5 + photo.offsetX)) + 'px';
+            photo.element.style.top = (view.margin + view.slotHeight * (slot.row + 0.5 + photo.offsetY)) + 'px';
+        }
+
+        // Lay the wall out as a grid of photo spots: wide windows get 4 x 2, tall ones 2 x 3
+        function layoutWall() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const portrait = height > width;
+            const cols = portrait ? 2 : (width / height > 1.25 ? 4 : 3);
+            const rows = portrait ? 3 : 2;
+
+            view.margin = Math.min(width, height) * 0.03;
+            view.slotWidth = (width - view.margin * 2) / cols;
+            view.slotHeight = (height - view.margin * 2) / rows;
+            const photoWidth = Math.min(view.slotWidth * 0.86, view.slotHeight * 0.88 / 1.2);
+            timeline.style.setProperty('--c', photoWidth + 'px');
+
+            const slots = [];
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    slots.push({ col: col, row: row, photo: null });
                 }
-                
-                if (!tooClose) break;
-                
-            } while (attempts < 10); // Try up to 10 times to find a good position
-            
-            return position;
+            }
+
+            // Keep the photos already on the wall, newest first, as far as they still fit
+            const keep = gameState.photos.slice(-slots.length);
+            gameState.photos.slice(0, gameState.photos.length - keep.length).forEach(removePhoto);
+            keep.forEach((photo, index) => {
+                photo.slot = slots[index];
+                slots[index].photo = photo;
+                placePhoto(photo);
+            });
+            gameState.slots = slots;
+        }
+
+        function removePhoto(photo) {
+            if (photo.removed) return;
+            photo.removed = true;
+            if (photo.slot && photo.slot.photo === photo) {
+                photo.slot.photo = null;
+            }
+            gameState.photos = gameState.photos.filter(p => p !== photo);
+            photo.element.classList.add('leaving');
+            setTimeout(() => {
+                if (photo.element.parentNode) {
+                    photo.element.parentNode.removeChild(photo.element);
+                }
+            }, 600);
         }
 
         // Create memory photo
         function createMemoryPhoto(analysis, username, message) {
-            const position = getPhotoPosition();
-            
+            // Use a free spot, or take over from the oldest photo on the wall
+            let free = gameState.slots.filter(slot => !slot.photo);
+            if (free.length === 0 && gameState.photos.length > 0) {
+                const oldest = gameState.photos[0];
+                free = [oldest.slot];
+                removePhoto(oldest);
+            }
+            if (free.length === 0) return;
+            const slot = free[Math.floor(Math.random() * free.length)];
+
             const photo = document.createElement('div');
-            photo.className = 'memory-photo photo-developing';
-            photo.style.left = position.left + '%';
-            photo.style.top = position.top + '%';
-            
-            // Random animation delay
-            photo.style.animationDelay = Math.random() * 4 + 's';
-            
+            photo.className = 'memory-photo';
+            photo.style.setProperty('--tilt', (Math.random() * 10 - 5).toFixed(1) + 'deg');
+
             const polaroid = document.createElement('div');
             polaroid.className = 'photo-polaroid';
-            
+            polaroid.style.animationDelay = (-Math.random() * 6) + 's';
+
             const imageDiv = document.createElement('div');
             imageDiv.className = 'photo-image';
             imageDiv.style.background = photoBackgrounds[Math.floor(Math.random() * photoBackgrounds.length)];
-            
+
             // Choose main emoji for photo
             let mainEmoji = '📷';
             if (analysis.emojis.length > 0) {
@@ -553,170 +386,72 @@
             } else if (analysis.keywords.length > 0) {
                 mainEmoji = analysis.keywords[0].emoji;
             }
-            
-            imageDiv.textContent = mainEmoji;
-            
-            // Add message text overlay
+
+            const emoji = document.createElement('span');
+            emoji.className = 'photo-emoji';
+            emoji.textContent = mainEmoji;
+            imageDiv.appendChild(emoji);
+
+            // Other emojis and themes from the message decorate the corners
+            const extras = analysis.emojis.slice(1).concat(analysis.keywords.map(keyword => keyword.emoji))
+                .filter((value, index, list) => value !== mainEmoji && list.indexOf(value) === index);
+            extras.slice(0, 2).forEach((value, index) => {
+                const extra = document.createElement('span');
+                extra.className = 'photo-extra ' + (index === 0 ? 'first' : 'second');
+                extra.textContent = value;
+                imageDiv.appendChild(extra);
+            });
+
+            const developer = document.createElement('div');
+            developer.className = 'photo-developer';
+            imageDiv.appendChild(developer);
+
+            // The message is written under the picture
             const textOverlay = document.createElement('div');
             textOverlay.className = 'photo-text';
-            textOverlay.textContent = message.length > 80 ? message.substring(0, 80) + '...' : message;
-            imageDiv.appendChild(textOverlay);
-            
+            textOverlay.textContent = message.length > 70 ? message.substring(0, 70) + '…' : message;
+
             const caption = document.createElement('div');
             caption.className = 'photo-caption';
-            caption.textContent = `by ${username}`;
-            
+            caption.textContent = username;
+
             polaroid.appendChild(imageDiv);
+            polaroid.appendChild(textOverlay);
             polaroid.appendChild(caption);
             photo.appendChild(polaroid);
-            
-            // Click handler for sparkles
-            photo.addEventListener('click', () => createPhotoSparkles(photo));
-            
-            document.getElementById('memory-timeline').appendChild(photo);
-            
+
             // Store photo data
-            gameState.photos.push({
+            const entry = {
                 element: photo,
-                analysis,
-                username,
-                message,
-                timestamp: Date.now()
-            });
-            
-            gameState.photoCount++;
-            
+                slot: slot,
+                offsetX: (Math.random() - 0.5) * 0.08,
+                offsetY: (Math.random() - 0.5) * 0.06,
+                removed: false
+            };
+            slot.photo = entry;
+            gameState.photos.push(entry);
+            placePhoto(entry);
+            timeline.appendChild(photo);
+
             // Auto-remove after time
-            setTimeout(() => {
-                if (photo.parentNode) {
-                    photo.style.animation = 'develop-photo 1s ease-in reverse';
-                    setTimeout(() => {
-                        if (photo.parentNode) {
-                            photo.remove();
-                            gameState.photos = gameState.photos.filter(p => p.element !== photo);
-                        }
-                    }, 1000);
-                }
-            }, 45000); // Remove after 45 seconds
+            setTimeout(() => removePhoto(entry), PHOTO_LIFETIME);
         }
 
-        // Create photo sparkles
-        function createPhotoSparkles(photoElement) {
-            for (let i = 0; i < 8; i++) {
-                setTimeout(() => {
-                    const sparkle = document.createElement('div');
-                    sparkle.className = 'memory-sparkle';
-                    sparkle.textContent = '✨';
-                    
-                    const rect = photoElement.getBoundingClientRect();
-                    const containerRect = document.getElementById('memory-timeline').getBoundingClientRect();
-                    
-                    sparkle.style.left = (rect.left - containerRect.left + Math.random() * rect.width) + 'px';
-                    sparkle.style.top = (rect.top - containerRect.top + Math.random() * rect.height) + 'px';
-                    sparkle.style.animationDelay = Math.random() * 1000 + 'ms';
-                    
-                    document.getElementById('memory-timeline').appendChild(sparkle);
-                    
-                    setTimeout(() => sparkle.remove(), 2000);
-                }, i * 100);
-            }
+        // Photos go up one at a time, so a busy chat does not turn the wall into a slideshow
+        function queueMemoryPhoto(analysis, username, message) {
+            if (gameState.pending.length >= 6) gameState.pending.shift();
+            gameState.pending.push([analysis, username, message]);
         }
 
-        // Create memory trail
-        function createMemoryTrail(x, y) {
-            const trail = document.createElement('div');
-            trail.className = 'memory-trail';
-            trail.style.left = x + 'px';
-            trail.style.top = y + 'px';
-            
-            document.getElementById('game-container').appendChild(trail);
-            
-            setTimeout(() => trail.remove(), 3000);
-        }
+        function developNextPhoto() {
+            if (gameState.pending.length === 0) return;
+            const now = Date.now();
+            const filling = gameState.photos.length < gameState.slots.length;
+            if (now - gameState.lastPhotoTime < (filling ? 450 : 2200)) return;
 
-        // Update mood based on recent messages
-        function updateMood() {
-            if (gameState.photos.length === 0) return;
-            
-            // Analyze recent photos for mood
-            const recentPhotos = gameState.photos.slice(-5);
-            const moodCounts = {};
-            
-            recentPhotos.forEach(photo => {
-                const mood = photo.analysis.mood;
-                moodCounts[mood] = (moodCounts[mood] || 0) + 1;
-            });
-            
-            // Find dominant mood
-            const dominantMood = Object.entries(moodCounts)
-                .sort((a, b) => b[1] - a[1])[0];
-            
-            if (dominantMood) {
-                gameState.currentMood = dominantMood[0];
-                const moodData = moods[gameState.currentMood];
-                
-                document.getElementById('current-mood').textContent = moodData.emoji;
-                document.getElementById('mood-text').textContent = gameState.currentMood.charAt(0).toUpperCase() + gameState.currentMood.slice(1);
-                document.getElementById('mood-text').style.color = moodData.color;
-            }
-        }
-
-        // Update memory album
-        function updateMemoryAlbum() {
-            const albumEntries = document.getElementById('album-entries');
-            albumEntries.innerHTML = '';
-            
-            // Show recent memories
-            const recentMemories = gameState.memories.slice(-8).reverse();
-            
-            recentMemories.forEach(memory => {
-                const entry = document.createElement('div');
-                entry.className = 'album-memory';
-                
-                const emoji = document.createElement('div');
-                emoji.className = 'album-emoji';
-                emoji.textContent = memory.emoji;
-                
-                const textDiv = document.createElement('div');
-                textDiv.className = 'album-text';
-                textDiv.textContent = memory.text;
-                
-                const author = document.createElement('div');
-                author.className = 'album-author';
-                author.textContent = `- ${memory.author}`;
-                
-                textDiv.appendChild(author);
-                entry.appendChild(emoji);
-                entry.appendChild(textDiv);
-                albumEntries.appendChild(entry);
-            });
-        }
-
-        // Calculate nostalgia level
-        function calculateNostalgia() {
-            const nostalgicKeywords = ['remember', 'childhood', 'nostalgia', 'school', 'family'];
-            let nostalgicCount = 0;
-            
-            gameState.memories.forEach(memory => {
-                if (nostalgicKeywords.some(keyword => memory.text.toLowerCase().includes(keyword))) {
-                    nostalgicCount++;
-                }
-            });
-            
-            gameState.nostalgiaLevel = Math.min(100, (nostalgicCount / Math.max(gameState.memories.length, 1)) * 100);
-        }
-
-        // Update display
-        function updateDisplay() {
-            calculateNostalgia();
-
-            document.getElementById('photo-count').textContent = gameState.photoCount;
-            document.getElementById('memory-count').textContent = gameState.memoryCount;
-            document.getElementById('contributor-count').textContent = gameState.contributors.size;
-            document.getElementById('nostalgia-level').textContent = Math.floor(gameState.nostalgiaLevel);
-            
-            updateMood();
-            updateMemoryAlbum();
+            gameState.lastPhotoTime = now;
+            const next = gameState.pending.shift();
+            createMemoryPhoto(next[0], next[1], next[2]);
         }
 
         // Process incoming message
@@ -755,42 +490,20 @@
                 // Get the text content
                 message = tempDiv.textContent || tempDiv.innerText || '';
             }
-            
+
             // Analyze message for memory content
-            const analysis = analyzeMessage(message);
-            
+            const analysis = analyzeMessage(message.trim());
+
             // Create memory if keywords or emojis found, or if message is long enough
             if (analysis.keywords.length > 0 || analysis.emojis.length > 0 || message.length > 20) {
-                gameState.contributors.add(username);
-                
-                // Create photo
-                createMemoryPhoto(analysis, username, message);
-                
-                // Add to memory collection
-                const memory = {
-                    text: message,
-                    author: username,
-                    emoji: analysis.emojis[0] || analysis.keywords[0]?.emoji || '💭',
-                    timestamp: Date.now(),
-                    theme: analysis.theme,
-                    mood: analysis.mood
-                };
-                
-                gameState.memories.push(memory);
-                gameState.memoryCount++;
-                
-                // Keep memory list manageable
-                if (gameState.memories.length > 50) {
-                    gameState.memories.shift();
+                if (gameState.contributors.size >= 500) {
+                    gameState.contributors = new Set(Array.from(gameState.contributors).slice(-250));
                 }
-                
-                // Create memory trail at random position
-                const x = Math.random() * window.innerWidth;
-                const y = Math.random() * window.innerHeight;
-                createMemoryTrail(x, y);
-            }
+                gameState.contributors.add(username);
+                gameState.memoryCount++;
 
-            updateDisplay();
+                queueMemoryPhoto(analysis, username, message.trim());
+            }
         }
 
         // Setup iframe communication (skip when using WebSocket mode)
@@ -858,7 +571,7 @@
 
             connectWebSocket();
         }
-        
+
         // Demo mode
         if (urlParams.has('demo')) {
             const demoMemories = [
@@ -873,34 +586,36 @@
                 'Love spending time with my pet 🐕❤️',
                 'Those winter nights by the fireplace ❄️🔥'
             ];
-            
+
             const demoUsers = ['Nostalgic_User', 'Memory_Keeper', 'Old_Soul', 'Time_Traveler', 'Dreamer'];
-            
-            setInterval(() => {
-                const memory = demoMemories[Math.floor(Math.random() * demoMemories.length)];
+
+            // Work through the list in a random order so the wall does not repeat itself
+            let demoQueue = [];
+            function demoMemory() {
+                if (demoQueue.length === 0) {
+                    demoQueue = demoMemories.slice().sort(() => Math.random() - 0.5);
+                }
+                const memory = demoQueue.pop();
                 const user = demoUsers[Math.floor(Math.random() * demoUsers.length)];
-                
+
                 processData({
                     chatname: user,
                     chatmessage: memory
                 });
-            }, 2000 + Math.random() * 3000);
-        }
-        
-        // Initialize display
-        updateDisplay();
-        
-        // Auto-hide instructions after 30 seconds
-        setTimeout(() => {
-            const instructions = document.getElementById('instructions');
-            if (instructions) {
-                instructions.style.transition = 'opacity 1s ease-out';
-                instructions.style.opacity = '0';
-                setTimeout(() => {
-                    instructions.style.display = 'none';
-                }, 1000);
             }
-        }, 30000);
+
+            // A handful of memories to start the wall, then a steady trickle
+            for (let i = 0; i < 5; i++) {
+                demoMemory();
+            }
+            setInterval(demoMemory, 2600);
+        }
+
+        // Keep the wall fitted to the window
+        window.addEventListener('resize', layoutWall);
+
+        layoutWall();
+        setInterval(developNextPhoto, 150);
     </script>
 </body>
 </html>

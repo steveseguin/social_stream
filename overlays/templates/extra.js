@@ -146,7 +146,7 @@
 			function frame(t) {
 				if (!alive) { return; }
 				if (last === null) { last = t; }
-				var dt = Math.min(0.05, (t - last) / 1000);
+				var dt = SSO.frameDelta(t - last);
 				last = t;
 				var W = root.clientWidth, H = root.clientHeight, w = el.offsetWidth, h = el.offsetHeight;
 				x += dx * c.speed * dt;

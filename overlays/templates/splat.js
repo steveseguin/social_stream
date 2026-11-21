@@ -5,6 +5,8 @@
 	"use strict";
 	var esc = SSO.esc, TAU = Math.PI * 2;
 	var WORDS = 16, STRIDE = 64;
+	// Reach of a swimming body's parts from its centre (they are stored in one byte each).
+	var LOCAL = 0.4;
 
 	// ---------------------------------------------------------------- vectors
 	function add(a, b) { return [a[0] + b[0], a[1] + b[1], a[2] + b[2]]; }
@@ -27,10 +29,10 @@
 	var VERT = [
 		"precision highp float;",
 		"attribute vec2 aCorner;attribute vec3 aCenter;attribute vec3 aCovA;attribute vec3 aCovB;attribute vec4 aColor;attribute vec4 aAnim;attribute float aGlow;attribute vec4 aNrm;",
-		"uniform vec3 uEye;uniform vec3 uR0;uniform vec3 uR1;uniform vec3 uR2;uniform vec3 uLight;uniform vec2 uView;uniform float uFocal;uniform float uTime;",
+		"uniform vec3 uEye;uniform vec3 uR0;uniform vec3 uR1;uniform vec3 uR2;uniform vec3 uLight;uniform vec2 uView;uniform vec2 uShift;uniform float uFocal;uniform float uTime;",
 		"varying vec4 vColor;varying vec2 vPos;varying float vGlow;",
 		"void main(){",
-		"vec3 p=aCenter;vec4 col=aColor;float size=1.;float flut=1.;float kind=aAnim.x;float ph=aAnim.y;float amp=aAnim.z;float w=aAnim.w;",
+		"vec3 p=aCenter;vec4 col=aColor;float size=1.;float flut=1.;float kind=aAnim.x;float ph=aAnim.y;float amp=aAnim.z;float w=aAnim.w;vec3 cA=aCovA;vec3 cB=aCovB;float shine=aNrm.w;",
 		"if(kind>.5){",
 		// 1 sway
 		"if(kind<1.5){float a=uTime*1.3*w+ph*6.2832;p.x+=amp*sin(a);p.z+=amp*.6*cos(a*.83+1.7);p.y+=amp*.25*sin(a*1.31+.6);}",
@@ -45,20 +47,30 @@
 		// 6 straight fall (snow, water)
 		"else if(kind<6.5){float f=fract(uTime/w+ph);p.y-=amp*f;p.x+=.08*sin(f*7.+ph*40.);p.z+=.08*cos(f*5.+ph*23.);col.a*=smoothstep(0.,.05,f)*(1.-smoothstep(.92,1.,f));}",
 		// 7 bob
-		"else{p.y+=amp*sin(uTime*w+ph*6.2832);}",
+		"else if(kind<7.5){p.y+=amp*sin(uTime*w+ph*6.2832);}",
+		// 8 swim: the splat is one part of a body circling its centre (aCenter), heading along the circle and wagging its tail.
+		// The part's place in the body rides in aNrm, and the gaussian is turned with the body.
+		"else if(kind<8.5){vec3 l=(aNrm.xyz*2.-1.)*" + LOCAL.toFixed(2) + ";float a=uTime*w+ph*6.2832;float cs=cos(a);float sn=sin(a);",
+		"l.x+=max(0.,l.z*sign(w))*.6*sin(uTime*8.+ph*40.);l.x+=amp;",
+		"p+=vec3(cs*l.x+sn*l.z,l.y+.03*sin(uTime*.9+ph*20.),cs*l.z-sn*l.x);",
+		"cA=vec3(cs*cs*aCovA.x+2.*cs*sn*aCovA.z+sn*sn*aCovB.z,cs*aCovA.y+sn*aCovB.y,cs*sn*(aCovB.z-aCovA.x)+(cs*cs-sn*sn)*aCovA.z);",
+		"cB=vec3(aCovB.x,cs*aCovB.y-sn*aCovA.y,sn*sn*aCovA.x-2.*cs*sn*aCovA.z+cs*cs*aCovB.z);shine=0.;}",
+		// 9 bubble: rises and wobbles without growing
+		"else{float f=fract(uTime/w+ph);p.y+=amp*f;p.x+=.03*sin(f*19.+ph*30.);p.z+=.03*cos(f*13.+ph*17.);col.a*=smoothstep(0.,.08,f)*(1.-smoothstep(.9,1.,f));}",
 		"}",
 		"vec3 q=p-uEye;vec3 c=vec3(dot(uR0,q),dot(uR1,q),dot(uR2,q));float d=-c.z;",
 		"if(d<.15||col.a<.004){gl_Position=vec4(0.,0.,2.,1.);return;}",
-		"if(aNrm.w>.01){vec3 n=normalize(aNrm.xyz*2.-1.);float s=pow(max(dot(n,normalize(uLight+normalize(-q))),0.),26.)*aNrm.w;col.rgb+=s*vec3(1.4,1.34,1.2);}",
+		"if(shine>.01){vec3 n=normalize(aNrm.xyz*2.-1.);float s=pow(max(dot(n,normalize(uLight+normalize(-q))),0.),26.)*shine;col.rgb+=s*vec3(1.4,1.34,1.2);}",
 		// Rows of the projection Jacobian, taken back into world space, then the 2x2 screen covariance in pixels.
 		"float fd=uFocal/d;vec3 t0=uR0*fd+uR2*(fd*c.x/d);vec3 t1=uR1*fd+uR2*(fd*c.y/d);",
-		"vec3 m1=vec3(aCovA.y,aCovB.x,aCovB.y);vec3 m2=vec3(aCovA.z,aCovB.y,aCovB.z);",
-		"vec3 s0=vec3(dot(aCovA,t0),dot(m1,t0),dot(m2,t0));vec3 s1=vec3(dot(aCovA,t1),dot(m1,t1),dot(m2,t1));",
+		"vec3 m1=vec3(cA.y,cB.x,cB.y);vec3 m2=vec3(cA.z,cB.y,cB.z);",
+		"vec3 s0=vec3(dot(cA,t0),dot(m1,t0),dot(m2,t0));vec3 s1=vec3(dot(cA,t1),dot(m1,t1),dot(m2,t1));",
 		"float ss=size*size;float ca=dot(t0,s0)*ss+.3;float cb=dot(t0,s1)*ss;float cc=dot(t1,s1)*ss+.3;",
 		"float mid=.5*(ca+cc);float rad=length(vec2(.5*(ca-cc),cb));float l1=mid+rad;float l2=max(mid-rad,.1);",
 		"vec2 dv=abs(cb)<1e-4?(ca>=cc?vec2(1.,0.):vec2(0.,1.)):normalize(vec2(cb,l1-ca));",
 		"float lim=uView.y*.6;vec2 major=min(sqrt(2.*l1),lim)*dv;vec2 minor=min(sqrt(2.*l2),lim)*flut*vec2(-dv.y,dv.x);",
-		"vec2 ctr=c.xy*fd;",
+		// uShift slides the whole picture (in half-screens), so a scene can sit beside or below a title.
+		"vec2 ctr=c.xy*fd+uShift*uView*.5;",
 		"if(abs(ctr.x)>uView.x*.5+lim||abs(ctr.y)>uView.y*.5+lim){gl_Position=vec4(0.,0.,2.,1.);return;}",
 		"gl_Position=vec4((ctr+aCorner.x*major+aCorner.y*minor)*2./uView,0.,1.);",
 		"vColor=col;vPos=aCorner;vGlow=aGlow;",
@@ -125,8 +137,9 @@
 			divisor(loc, 1);
 		});
 		var U = {};
-		["uEye", "uR0", "uR1", "uR2", "uLight", "uView", "uFocal", "uTime", "uSolid"].forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
+		["uEye", "uR0", "uR1", "uR2", "uLight", "uView", "uShift", "uFocal", "uTime", "uSolid"].forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
 		gl.uniform3fv(U.uLight, LIGHT);
+		gl.uniform2f(U.uShift, o.shift ? o.shift[0] : 0, o.shift ? o.shift[1] : 0);
 		gl.uniform1f(U.uSolid, o.solid ? 1 : 0);
 		gl.disable(gl.DEPTH_TEST);
 		gl.enable(gl.BLEND);
@@ -134,9 +147,19 @@
 		gl.clearColor(0, 0, 0, 0);
 
 		// Back to front: a 16-bit counting sort on depth along the view direction, then the instance buffer is rewritten in that order.
-		function sort(f) {
+		// Swimmers travel a long way from where they are stored, so they are sorted where they are right now.
+		var srcB = new Uint8Array(data.buf, 0, count * STRIDE), swimmers = [], si;
+		for (si = 0; si < count; si++) { if (srcF[si * WORDS + 10] === 8) { swimmers.push(si); } }
+		function sort(f, time) {
 			var i, o2, mn = Infinity, mx = -Infinity, dd;
 			for (i = 0; i < count; i++) { o2 = i * WORDS; dd = srcF[o2] * f[0] + srcF[o2 + 1] * f[1] + srcF[o2 + 2] * f[2]; depth[i] = dd; if (dd < mn) { mn = dd; } if (dd > mx) { mx = dd; } }
+			for (i = 0; i < swimmers.length; i++) {
+				o2 = swimmers[i] * WORDS;
+				var j = swimmers[i] * STRIDE + 60, a = time * srcF[o2 + 13] + srcF[o2 + 11] * TAU, cs = Math.cos(a), sn = Math.sin(a);
+				var lx = (srcB[j] / 127.5 - 1) * LOCAL + srcF[o2 + 12], ly = (srcB[j + 1] / 127.5 - 1) * LOCAL, lz = (srcB[j + 2] / 127.5 - 1) * LOCAL;
+				dd = (srcF[o2] + cs * lx + sn * lz) * f[0] + (srcF[o2 + 1] + ly) * f[1] + (srcF[o2 + 2] + cs * lz - sn * lx) * f[2];
+				depth[swimmers[i]] = dd; if (dd < mn) { mn = dd; } if (dd > mx) { mx = dd; }
+			}
 			var sc = 65535 / Math.max(1e-6, mx - mn), k, s, t;
 			for (i = 0; i < 65536; i++) { counts[i] = 0; }
 			for (i = 0; i < count; i++) { k = 65535 - ((depth[i] - mn) * sc | 0); keys[i] = k; counts[k]++; }
@@ -171,7 +194,7 @@
 			var real = last ? now - last : 16, dt = Math.min(0.1, real / 1000);
 			last = now;
 			t += dt;
-			if (o.adapt && real < 250) {
+			if (o.adapt && real < 250 && !(window.SSO_FRAMES && window.SSO_FRAMES.skipping())) {
 				// Slow machine: step the render scale down rather than drop frames. It never steps back up, so it cannot oscillate.
 				if (warm < 40) { warm++; } else { acc += real; accN++; }
 				if (accN >= 90) { if (acc / accN > 42 && q > base * 0.45) { q = Math.max(base * 0.45, q * 0.8); fit(true); } acc = 0; accN = 0; }
@@ -183,14 +206,15 @@
 			var aspect = pw / phh, D = cam.dist * (moving ? 1 + 0.012 * Math.sin(ct * 0.29) : 1) * (aspect < 1.25 ? 1.25 / aspect : 1);
 			var eye = [cam.target[0] + Math.sin(th) * Math.cos(el) * D, cam.target[1] + Math.sin(el) * D, cam.target[2] + Math.cos(th) * Math.cos(el) * D];
 			var fwd = norm(sub(cam.target, eye)), right = norm(cross(fwd, [0, 1, 0])), up = cross(right, fwd);
-			if (!sf || (dot(fwd, sf) < 0.9999 && now - lastSort > 60)) { sort(fwd); sf = fwd; lastSort = now; }
+			var uTime = o.animate === false ? 0 : t;
+			if (!sf || (dot(fwd, sf) < 0.9999 && now - lastSort > 60) || (swimmers.length && uTime && now - lastSort > 90)) { sort(fwd, uTime); sf = fwd; lastSort = now; }
 			gl.uniform3fv(U.uEye, eye);
 			gl.uniform3fv(U.uR0, right);
 			gl.uniform3fv(U.uR1, up);
 			gl.uniform3f(U.uR2, -fwd[0], -fwd[1], -fwd[2]);
 			gl.uniform2f(U.uView, pw, phh);
 			gl.uniform1f(U.uFocal, phh / 2 / TAN);
-			gl.uniform1f(U.uTime, o.animate === false ? 0 : t);
+			gl.uniform1f(U.uTime, uTime);
 			gl.clear(gl.COLOR_BUFFER_BIT);
 			if (ext) { ext.drawArraysInstancedANGLE(gl.TRIANGLE_STRIP, 0, 4, count); } else { gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, count); }
 		}
@@ -231,6 +255,8 @@
 			if (o) {
 				F[i + 10] = o.k || 0; F[i + 11] = o.ph || 0; F[i + 12] = o.amp || 0; F[i + 13] = o.w || 1; F[i + 14] = o.glow || 0;
 				if (o.spec) { var nn = o.n || [0, 1, 0]; B[j + 60] = nn[0] * 127.5 + 127.5; B[j + 61] = nn[1] * 127.5 + 127.5; B[j + 62] = nn[2] * 127.5 + 127.5; B[j + 63] = clamp01(o.spec) * 255; }
+				// A swimmer keeps its place in the body where other splats keep their normal.
+				if (o.local) { B[j + 60] = clamp01(o.local[0] / LOCAL * 0.5 + 0.5) * 255; B[j + 61] = clamp01(o.local[1] / LOCAL * 0.5 + 0.5) * 255; B[j + 62] = clamp01(o.local[2] / LOCAL * 0.5 + 0.5) * 255; B[j + 63] = 0; }
 			}
 			n++;
 		};
@@ -899,6 +925,395 @@
 		}
 	});
 
+	// ---------------------------------------------------------------- scenes for stream screens
+	function tint(c, t) { return [c[0] * t[0], c[1] * t[1], c[2] * t[2]]; }
+	// Flat disc of small surfels facing nrm (table tops, liquids, lids). fn(r01, angle, p) -> colour, { col, a, o } or null.
+	function disc(b, c, R, n, size, nrm, fn) {
+		var rnd = b.rnd, u = norm(cross(Math.abs(nrm[1]) < 0.9 ? AY : AX, nrm)), v = cross(nrm, u), i;
+		for (i = 0; i < n; i++) {
+			var r = Math.sqrt(rnd()), a = rnd() * TAU, p = add(c, add(mul(u, Math.cos(a) * r * R), mul(v, Math.sin(a) * r * R))), res = fn(r, a, p);
+			if (!res) { continue; }
+			if (res.length) { res = { col: res }; }
+			var s = size * (0.8 + rnd() * 0.4);
+			b.surfel(p, nrm, s, s, res.col, res.a == null ? 0.95 : res.a, res.o);
+		}
+	}
+	// A fish that swims round `pivot` in a circle of radius rad.
+	// o: { len, tall, col, belly, stripe, n (stripes), tail, fin, speed (negative = the other way round), ph (0..1 round the circle) }
+	function fish(b, pivot, rad, o) {
+		var L = o.len, T = o.tall || 0.45, fw = o.speed > 0 ? -1 : 1, i;
+		function part(local, sx, sy, sz, col, alpha) { b.put(pivot, AX, AY, AZ, sx, sy, sz, col, alpha, { k: 8, ph: o.ph, amp: rad, w: o.speed, local: local }); }
+		part([0, 0, 0], L * 0.11, L * T * 0.5, L * 0.34, o.col, 0.97);
+		part([0, -L * T * 0.17, fw * L * 0.06], L * 0.1, L * T * 0.34, L * 0.22, o.belly || mix(o.col, [1, 1, 1], 0.35), 0.92);
+		part([0, L * 0.01, fw * L * 0.3], L * 0.09, L * T * 0.34, L * 0.13, mul(o.col, 0.94), 0.97);
+		for (i = 0; i < (o.n || 0); i++) { part([0, 0, fw * L * (0.2 - 0.23 * i)], L * 0.118, L * T * (0.47 - 0.07 * i), L * 0.034, o.stripe, 0.97); }
+		part([0, 0, -fw * L * 0.5], L * 0.022, L * T * 0.44, L * 0.12, o.tail || o.col, 0.95);
+		part([0, L * T * 0.5, -fw * L * 0.04], L * 0.016, L * 0.1, L * 0.17, o.fin || mul(o.col, 0.8), 0.9);
+		part([0, -L * T * 0.46, fw * L * 0.02], L * 0.016, L * 0.07, L * 0.1, o.fin || mul(o.col, 0.8), 0.9);
+		[-1, 1].forEach(function (s) {
+			part([s * L * 0.09, L * T * 0.1, fw * L * 0.31], L * 0.03, L * 0.04, L * 0.04, [1, 1, 1], 1);
+			part([s * L * 0.105, L * T * 0.1, fw * L * 0.32], L * 0.018, L * 0.024, L * 0.024, [0.04, 0.04, 0.06], 1);
+		});
+	}
+
+	scene({
+		id: "hourglass", label: "Hourglass", cam: { target: [0, 0.84, 0], dist: 4.4, elev: 9 }, bg: ["0a0f24", "3b4c96"],
+		build: function (b) {
+			var rnd = b.rnd, i, WOOD = hex("#8a5630"), DARK = hex("#4f2d16"), SAND = pal(["#f2c14e", "#e8b23c", "#f7d67a", "#dba02c"]);
+			function wood(th, y, n2) { return { col: b.lit(b.jit(mix(DARK, WOOD, 0.5 + 0.5 * Math.sin(th * 14 + y * 70)), 0.1), n2), o: { spec: 0.4, n: n2 } }; }
+			function sand(th, y, n2) { return { col: b.lit(b.jit(b.pick(SAND), 0.12), n2), a: 0.97 }; }
+			// turned base and cap, three spindles
+			[0.02, 1.56].forEach(function (y) {
+				b.put([0, y + 0.045, 0], AX, AY, AZ, 0.3, 0.03, 0.3, DARK, 0.97);
+				b.lathe(0, 0, [[0.0, y], [0.46, y], [0.5, y + 0.025], [0.5, y + 0.065], [0.46, y + 0.09], [0.0, y + 0.09]], b.N(4200), 0.02, wood);
+			});
+			for (i = 0; i < 3; i++) {
+				var pa = i * TAU / 3 + 0.5;
+				b.lathe(Math.cos(pa) * 0.42, Math.sin(pa) * 0.42, [[0.03, 0.11], [0.048, 0.2], [0.026, 0.42], [0.042, 0.84], [0.026, 1.26], [0.048, 1.47], [0.03, 1.56]], b.N(1100), 0.014, wood);
+			}
+			// sand below, sand above, and the thread of sand between them
+			b.put([0, 0.2, 0], AX, AY, AZ, 0.17, 0.07, 0.17, mul(SAND[3], 0.7), 0.97);
+			b.lathe(0, 0, [[0.315, 0.115], [0.31, 0.15], [0.17, 0.29], [0.0, 0.385]], b.N(4200), 0.017, sand);
+			b.put([0, 1.12, 0], AX, AY, AZ, 0.15, 0.08, 0.15, mul(SAND[3], 0.7), 0.97);
+			b.lathe(0, 0, [[0.045, 0.87], [0.19, 1.03], [0.315, 1.23]], b.N(2600), 0.017, sand);
+			b.lathe(0, 0, [[0.315, 1.23], [0.13, 1.17], [0.0, 1.1]], b.N(1700), 0.017, sand);
+			for (i = 0; i < b.N(300); i++) { b.ball([b.g() * 0.006, 0.86, b.g() * 0.006], 0.007 + rnd() * 0.006, b.pick(SAND), 0.95, { k: 9, ph: rnd(), amp: -0.47, w: 0.5 + rnd() * 0.2 }); }
+			for (i = 0; i < b.N(60); i++) { var ga = rnd() * TAU, gr = 0.05 * rnd(); b.ball([Math.cos(ga) * gr, 0.385 + rnd() * 0.02, Math.sin(ga) * gr], 0.008, SAND[2], 1, { k: 2, ph: rnd(), amp: 0.9, w: 9 + rnd() * 9 }); }
+			for (i = 0; i < b.N(70); i++) { var sa = rnd() * TAU, sr = 0.28 * Math.sqrt(rnd()), up = rnd() < 0.5; b.ball([Math.cos(sa) * sr, up ? 1.11 + sr * 0.4 : 0.39 - sr * 0.75, Math.sin(sa) * sr], 0.007, [1, 0.97, 0.8], 1, { k: 2, ph: rnd(), amp: 1, w: 1.5 + rnd() * 3, glow: 0.6 }); }
+			// glass: thin, and bright where the light catches it
+			b.lathe(0, 0, [[0.31, 0.11], [0.35, 0.22], [0.335, 0.42], [0.2, 0.63], [0.065, 0.77], [0.04, 0.84], [0.065, 0.91], [0.2, 1.05], [0.335, 1.26], [0.35, 1.46], [0.31, 1.56]], b.N(2400), 0.032, function (th, y, n2) { return { col: [0.78, 0.92, 1], a: 0.06, o: { spec: 0.75, n: n2 } }; });
+			if (!b.clear) { floor(b, 1.9, pal(["#0d1022", "#12162c", "#0a0c1c"]), [0.95, 0.7, 0.25]); }
+			else { for (i = 0; i < b.N(260); i++) { var fr = 0.8 * Math.sqrt(rnd()), fa = rnd() * TAU; b.surfel([Math.cos(fa) * fr, 0.005, Math.sin(fa) * fr], AY, 0.09, 0.09, [1, 0.75, 0.3], 0.2 * (1 - fr / 0.8), { glow: 0.9 }); } }
+			for (i = 0; i < b.N(80); i++) { var d = norm([b.g(), b.g(), b.g()]), mr = 0.7 + rnd() * 0.7; b.ball([d[0] * mr, 0.85 + d[1] * mr * 0.85, d[2] * mr], 0.008, [1, 0.92, 0.7], 0.9, { k: 2, ph: rnd(), amp: 1, w: 1 + rnd() * 2.5, glow: 0.8 }); }
+			b.ball([0, 0.84, 0], 0.95, [1, 0.8, 0.45], 0.05, { glow: 1 });
+		}
+	});
+
+	scene({
+		id: "coffee", label: "Coffee break", cam: { target: [0, 0.36, 0], dist: 3.5, elev: 20 }, bg: ["1c120b", "a06e3e"],
+		build: function (b) {
+			var rnd = b.rnd, i, MUG = hex("#2f8f9a"), CREAM = hex("#f3ead8"), CHINA = [0.95, 0.94, 0.9], SIL = [0.76, 0.78, 0.82];
+			if (!b.clear) { floor(b, 1.9, pal(["#3a2416", "#46301d", "#2f1d11"]), [0.9, 0.55, 0.25]); }
+			// saucer
+			b.lathe(0, 0, [[0.5, 0.085], [0.47, 0.068], [0.3, 0.022], [0.0, 0.014]], b.N(3600), 0.016, function (th, y, n2) { return { col: b.lit(b.jit(CHINA, 0.03), n2), o: { spec: 0.7, n: n2 } }; });
+			b.lathe(0, 0, [[0.28, 0.0], [0.47, 0.05], [0.5, 0.085]], b.N(1400), 0.016, function (th, y, n2) { return { col: mul(b.lit(CHINA, n2), 0.8) }; });
+			// mug: glazed outside with a pale lip, and coffee with a heart poured into it
+			b.put([0, 0.3, 0], AX, AY, AZ, 0.19, 0.17, 0.19, mul(MUG, 0.5), 0.97);
+			b.lathe(0, 0, [[0.19, 0.03], [0.255, 0.06], [0.285, 0.2], [0.292, 0.5], [0.298, 0.6]], b.N(9000), 0.014, function (th, y, n2) {
+				return { col: b.lit(rnd() < 0.04 ? mul(MUG, 0.55) : b.jit(y > 0.555 ? CREAM : MUG, 0.06), n2), a: 0.97, o: { spec: 0.75, n: n2 } };
+			});
+			b.lathe(0, 0, [[0.29, 0.6], [0.276, 0.5]], b.N(1200), 0.014, function () { return { col: mul(CREAM, 0.72) }; });
+			for (i = 0; i < b.N(260); i++) { var la = rnd() * TAU; b.ball([Math.cos(la) * 0.294, 0.602, Math.sin(la) * 0.294], 0.011, b.jit(CREAM, 0.04), 0.97, { spec: 0.8, n: [Math.cos(la) * 0.4, 0.9, Math.sin(la) * 0.4] }); }
+			disc(b, [0, 0.535, 0], 0.276, b.N(2600), 0.012, AY, function (r, a, p) {
+				var x = p[0] / 0.15, y = -p[2] / 0.15 + 0.2, h = x * x + y * y - 1, art = h * h * h - x * x * y * y * y < 0 || Math.abs(r - 0.86) < 0.045;
+				return { col: b.jit(art ? hex("#e3c49a") : mix(hex("#4a2c17"), hex("#7a4a26"), r * r), 0.08), a: 0.97, o: { spec: 0.5, n: AY } };
+			});
+			var prev = null;
+			for (i = 0; i <= 20; i++) {
+				var t = i / 20, q = [0.29 + 0.19 * Math.sin(Math.PI * t), 0.52 - 0.36 * t, 0];
+				if (prev) { var hn = norm([1, 0.4 - t, 0.5]); b.stick(prev, q, 0.03, 0.03, b.lit(MUG, hn), 0.97, { spec: 0.75, n: hn }, 0.06); }
+				prev = q;
+			}
+			for (i = 0; i < b.N(46); i++) { b.ball([b.g() * 0.09, 0.58, b.g() * 0.09], 0.05 + rnd() * 0.03, [1, 1, 1], 0.1, { k: 5, ph: rnd(), amp: 0.85 + rnd() * 0.3, w: 3.5 + rnd() * 2.5 }); }
+			// a cookie and a spoon on the saucer, beans on the table
+			b.sphere([-0.36, 0.064, 0.14], [0.1, 0.024, 0.1], b.N(900), 0.012, function (d, n2, p) {
+				var chip = d[1] > 0 && Math.sin(p[0] * 61) * Math.cos(p[2] * 57) > 0.55;
+				return { col: b.lit(chip ? hex("#3a2114") : b.jit(hex("#c98f4e"), 0.14), n2) };
+			}, hex("#a8733a"));
+			b.stick([0.26, 0.068, 0.33], [-0.13, 0.052, 0.38], 0.011, 0.011, SIL, 0.97, { spec: 1, n: AY }, 0.03);
+			b.put([-0.175, 0.056, 0.386], AX, AY, AZ, 0.05, 0.012, 0.032, SIL, 0.97, { spec: 1, n: AY });
+			for (i = 0; i < 9; i++) {
+				var ba = 0.5 + b.g() * 0.3, br = 0.72 + rnd() * 0.3, yaw = rnd() * TAU, bu = [Math.cos(yaw), 0, Math.sin(yaw)];
+				b.put([Math.cos(ba) * br, 0.02, Math.sin(ba) * br], bu, AY, [-bu[2], 0, bu[0]], 0.034, 0.019, 0.023, b.jit(hex("#3b2415"), 0.2), 0.97, { spec: 0.5, n: AY });
+			}
+			b.ball([0, 0.5, 0], 0.9, [1, 0.7, 0.35], 0.05, { glow: 1 });
+		}
+	});
+
+	scene({
+		id: "bathroom", label: "Bathroom break", cam: { target: [0, 0.66, 0], dist: 4.3, elev: 13 }, bg: ["0f3352", "a9e1ff"], move: "swing",
+		build: function (b) {
+			var rnd = b.rnd, i, W = [0.95, 0.96, 0.98], Z0 = 0.16, PAPER = [0.97, 0.97, 0.95], YEL = hex("#ffd21f");
+			function china(n2, k) { var c = b.jit(W, 0.03); return { col: mul(mix(b.lit(c, n2), c, 0.5), k || 1), a: 0.97, o: { spec: 0.75, n: n2 } }; }
+			// tiled floor
+			disc(b, [0, 0, 0], 1.95, b.N(5200), 0.03, AY, function (r, a, p) {
+				var tx = p[0] / 0.36 + 40, tz = p[2] / 0.36 + 40, grout = tx - Math.floor(tx) < 0.07 || tz - Math.floor(tz) < 0.07;
+				var col = grout ? hex("#5d7f96") : (Math.floor(tx) + Math.floor(tz)) % 2 ? hex("#e6f1f8") : hex("#8fc3df");
+				return { col: mul(b.jit(col, 0.05), 1 - 0.25 * Math.exp(-r * r * 5)), a: 0.95 * (1 - sstep(0.78, 1, r)), o: grout ? null : { spec: 0.35, n: AY } };
+			});
+			// bowl on its pedestal, water, seat
+			b.put([0, 0.3, Z0], AX, AY, AZ, 0.12, 0.14, 0.12, mul(W, 0.6), 0.97);
+			b.lathe(0, Z0, [[0.21, 0.0], [0.23, 0.04], [0.16, 0.1], [0.15, 0.24], [0.25, 0.4], [0.31, 0.48], [0.32, 0.52]], b.N(7000), 0.016, function (th, y, n2) { return china(n2); });
+			b.lathe(0, Z0, [[0.31, 0.52], [0.23, 0.42], [0.1, 0.36], [0.0, 0.34]], b.N(2600), 0.016, function (th, y, n2) { return china(n2, 0.82); });
+			disc(b, [0, 0.4, Z0], 0.19, b.N(500), 0.016, AY, function () { return { col: b.jit(hex("#5cc3f0"), 0.1), a: 0.9, o: { spec: 0.8, n: AY } }; });
+			for (i = 0; i < 30; i++) {
+				var s0 = i * TAU / 30, s1 = (i + 1) * TAU / 30;
+				b.stick([Math.cos(s0) * 0.315, 0.535, Z0 + Math.sin(s0) * 0.315], [Math.cos(s1) * 0.315, 0.535, Z0 + Math.sin(s1) * 0.315], 0.03, 0.03, b.lit(hex("#f6efe2"), AY), 0.97, { spec: 0.6, n: AY }, 0.03);
+			}
+			// lid tipped back against the tank; the tank, its lid and the flush handle
+			var ln = norm([0, 0.2, 1]);
+			disc(b, [0, 0.85, -0.215], 0.31, b.N(2400), 0.016, ln, function (r) { return china(ln, r > 0.9 ? 0.86 : 1); });
+			b.put([0, 0.82, -0.38], AX, AY, AZ, 0.2, 0.17, 0.07, mul(W, 0.82), 0.97);
+			b.box([0, 0.82, -0.38], 0.66, 0.56, 0.24, 0, 5200, 0.016, function (face, u, v, p, n2) { return china(n2); });
+			b.box([0, 1.125, -0.38], 0.7, 0.05, 0.28, 0, 5200, 0.016, function (face, u, v, p, n2) { return china(n2, 1.02); });
+			b.ball([-0.24, 1.0, -0.25], 0.028, [0.8, 0.82, 0.86], 1, { spec: 1, n: AZ });
+			b.stick([-0.24, 1.0, -0.25], [-0.14, 0.98, -0.24], 0.012, 0.012, [0.75, 0.77, 0.8], 0.97, { spec: 1, n: AZ }, 0.02);
+			// a roll of paper on the tank, with a sheet hanging down the front
+			var rc = [0.17, 1.232, -0.38];
+			for (i = 0; i < b.N(1500); i++) {
+				var ra = rnd() * TAU, rn = [0, Math.sin(ra), Math.cos(ra)];
+				b.surfel([rc[0] + (rnd() - 0.5) * 0.15, rc[1] + rn[1] * 0.08, rc[2] + rn[2] * 0.08], rn, 0.012, 0.012, b.lit(b.jit(PAPER, 0.03), rn), 0.96);
+			}
+			[-1, 1].forEach(function (sd) {
+				disc(b, [rc[0] + sd * 0.075, rc[1], rc[2]], 0.08, b.N(260), 0.011, [sd, 0, 0], function (r) { return r < 0.36 ? { col: [0.35, 0.28, 0.2] } : { col: mul(PAPER, 0.78 + 0.16 * Math.sin(r * 60)) }; });
+			});
+			for (i = 0; i < b.N(700); i++) {
+				var su = rnd(), sv = rnd(), perf = Math.abs((sv * 3) % 1 - 0.5) > 0.47;
+				b.surfel([rc[0] + (su - 0.5) * 0.15, rc[1] - 0.02 - sv * 0.36, -0.232 + 0.012 * Math.sin(sv * 9)], AZ, 0.011, 0.011, mul(PAPER, perf ? 0.8 : 0.95 + 0.05 * rnd()), 0.95, { k: 1, ph: 0.3, amp: 0.003 + 0.012 * sv, w: 0.9 });
+			}
+			// rubber duck
+			var dk = [-0.2, 1.15, -0.38];
+			function duck(d, n2) { return { col: b.lit(b.jit(YEL, 0.05), n2), o: { spec: 0.7, n: n2 } }; }
+			b.sphere([dk[0], dk[1] + 0.055, dk[2]], [0.085, 0.058, 0.07], b.N(700), 0.012, duck, mul(YEL, 0.8));
+			b.sphere([dk[0] + 0.02, dk[1] + 0.135, dk[2] + 0.035], [0.048, 0.046, 0.048], b.N(420), 0.011, duck, mul(YEL, 0.8));
+			b.put([dk[0] + 0.022, dk[1] + 0.125, dk[2] + 0.09], AX, AY, AZ, 0.022, 0.01, 0.024, hex("#ff7a1a"), 0.98);
+			b.put([dk[0] - 0.07, dk[1] + 0.085, dk[2] - 0.02], AX, AY, AZ, 0.03, 0.02, 0.035, mul(YEL, 0.95), 0.97);
+			[-0.002, 0.042].forEach(function (ex) { b.ball([dk[0] + ex, dk[1] + 0.15, dk[2] + 0.074], 0.008, [0.05, 0.05, 0.06], 1); });
+			// plunger and a fluffy mat
+			b.lathe(0.74, 0.3, [[0.12, 0.0], [0.125, 0.05], [0.07, 0.12], [0.025, 0.15]], b.N(1300), 0.014, function (th, y, n2) { return { col: b.lit(b.jit(hex("#b3392b"), 0.08), n2), o: { spec: 0.4, n: n2 } }; });
+			b.stick([0.74, 0.14, 0.3], [0.77, 0.82, 0.28], 0.018, 0.018, hex("#c9a26b"), 0.97, null, 0.1);
+			for (i = 0; i < b.N(3200); i++) {
+				var mx = (rnd() - 0.5) * 0.9, mz = (rnd() - 0.5) * 0.5, ex2 = Math.max(Math.abs(mx) - 0.33, 0), ez = Math.max(Math.abs(mz) - 0.13, 0);
+				if (ex2 * ex2 + ez * ez > 0.0144) { continue; }
+				b.blade([mx, 0.01, 0.98 + mz], norm([b.g() * 0.4, 1, b.g() * 0.4]), 0.035 + rnd() * 0.02, 0.008, mul(b.jit(hex("#ff8fb3"), 0.12), 0.75 + 0.35 * rnd()), 0.94);
+			}
+			for (i = 0; i < b.N(46); i++) { var ba = rnd() * TAU, br = 0.3 + rnd() * 1.1; b.ball([Math.cos(ba) * br, 0.25 + rnd() * 0.3, Math.sin(ba) * br], 0.012 + rnd() * 0.018, [0.9, 0.97, 1], 0.4, { k: 9, ph: rnd(), amp: 1.7 + rnd() * 0.8, w: 5 + rnd() * 5, glow: 0.35 }); }
+		}
+	});
+
+	scene({
+		id: "standby", label: "Old TV on stand-by", cam: { target: [0, 0.78, 0], dist: 5.3, elev: 9 }, bg: ["0b0c12", "3b4250"], move: "swing",
+		build: function (b) {
+			var rnd = b.rnd, i, BARS = pal(["#f0f0f0", "#f0e01a", "#19d6e6", "#1fcf3a", "#e42ee4", "#e42222", "#2434e4"]), LOW = pal(["#2434e4", "#111118", "#e42ee4", "#111118", "#19d6e6", "#111118", "#f0f0f0"]);
+			var WOOD = hex("#7a4b28"), DARKW = hex("#4a2c16"), C = [0, 0.82, 0], TW = 1.56, TH = 1.04, TD = 0.74, SIL = [0.72, 0.74, 0.78], OR = hex("#ff6a1a");
+			function grain(u, v, n2) { return { col: b.lit(b.jit(mix(DARKW, WOOD, 0.5 + 0.5 * Math.sin(v * 40 + Math.sin(u * 9) * 2)), 0.08), n2), o: { spec: 0.25, n: n2 } }; }
+			// cabinet: wood on five sides, the front drawn finer
+			b.put(C, AX, AY, AZ, 0.5, 0.33, 0.22, mul(DARKW, 0.6), 0.97);
+			b.box(C, TW, TH, TD, 0, 3400, 0.02, function (face, u, v, p, n2) { return face === 3 ? null : grain(u, v, n2); });
+			for (i = 0; i < b.N(15000); i++) {
+				var u = rnd(), v = rnd(), su = (u - 0.06) / 0.66, sv = (v - 0.12) / 0.78, res, s = 0.0115 * (0.8 + rnd() * 0.4);
+				if (su > 0 && su < 1 && sv > 0 && sv < 1 && Math.pow(Math.abs(su - 0.5) * 2, 5) + Math.pow(Math.abs(sv - 0.5) * 2, 5) < 1) {
+					// colour bars on the picture tube
+					var bar = Math.min(6, Math.floor(su * 7)), col = sv > 0.3 ? BARS[bar] : sv > 0.22 ? LOW[bar] : su < 0.72 ? (Math.floor(su / 0.72 * 4) % 2 ? [0.95, 0.95, 0.95] : [0.07, 0.07, 0.6]) : [0.05, 0.05, 0.06];
+					res = { col: mul(col, (0.86 + 0.14 * Math.sin(sv * 190)) * (0.82 + 0.18 * rnd())), o: { k: 2, ph: Math.floor(sv * 9) / 9, amp: 0.14, w: 23, glow: 0.3 } };
+				} else if (su > -0.04 && su < 1.04 && sv > -0.05 && sv < 1.05) {
+					res = { col: b.lit([0.09, 0.09, 0.11], AZ), o: { spec: 0.5, n: AZ } };
+				} else if (u > 0.76 && u < 0.96) {
+					var du = (u - 0.86) * TW / TH, d1 = v - 0.74, d2 = v - 0.54;
+					if (du * du + d1 * d1 < 0.0042 || du * du + d2 * d2 < 0.0042) { res = { col: b.lit([0.75, 0.76, 0.8], AZ), o: { spec: 1, n: AZ } }; }
+					else if (v > 0.1 && v < 0.4) { res = { col: Math.floor(v * 46) % 2 ? [0.06, 0.06, 0.07] : b.lit(hex("#2a2a30"), AZ) }; }
+					else { res = { col: b.lit(hex("#2f2f36"), AZ) }; }
+				} else { res = grain(u, v, AZ); }
+				b.surfel([(u - 0.5) * TW, C[1] + (v - 0.5) * TH, TD / 2], AZ, s, s, res.col, 0.97, res.o);
+			}
+			for (i = 0; i < 40; i++) { b.surfel([-0.62 + rnd() * 0.4, 1.0 + rnd() * 0.16, TD / 2 + 0.012], AZ, 0.07, 0.03, [1, 1, 1], 0.05, { glow: 1 }, 0.5); }
+			// legs and rabbit ears
+			[[-1, 1], [1, 1], [-1, -1], [1, -1]].forEach(function (sg) { b.stick([sg[0] * 0.6, 0.31, sg[1] * 0.27], [sg[0] * 0.72, 0.0, sg[1] * 0.36], 0.04, 0.022, DARKW, 0.97, null, 0.1); });
+			b.ball([0, 1.37, -0.1], 0.06, [0.2, 0.2, 0.23], 1, { spec: 0.8, n: AY });
+			[[-0.62, 2.05], [0.5, 2.12]].forEach(function (e) {
+				b.stick([0, 1.38, -0.1], [e[0], e[1], -0.14], 0.009, 0.007, [0.8, 0.82, 0.86], 0.97, { spec: 1, n: AZ }, 0.03);
+				b.ball([e[0], e[1], -0.14], 0.02, [0.85, 0.87, 0.9], 1, { spec: 1, n: AY });
+			});
+			// something inside is not happy: smoke and sparks out of the back corner
+			for (i = 0; i < b.N(40); i++) { b.ball([0.52 + b.g() * 0.07, 1.36, -0.22 + b.g() * 0.06], 0.1, [0.62, 0.62, 0.66], 0.09, { k: 5, ph: rnd(), amp: 1.5, w: 4 + rnd() * 3 }); }
+			for (i = 0; i < b.N(70); i++) { b.ball([0.56 + b.g() * 0.03, 1.34, -0.2 + b.g() * 0.03], 0.008 + rnd() * 0.007, [1, 0.9, 0.5], 1, { k: 4, ph: rnd(), amp: 0.35 + rnd() * 0.5, w: 0.35 + rnd() * 0.6, glow: 0.8 }); }
+			b.ball([0.56, 1.36, -0.2], 0.16, [1, 0.85, 0.5], 0.3, { k: 2, ph: 0.1, amp: 1, w: 19, glow: 1 });
+			// floor, with the picture's light spilling onto it
+			if (!b.clear) { floor(b, 1.95, pal(["#101117", "#15161d", "#0c0d12"]), [0.3, 0.45, 0.6]); }
+			for (i = 0; i < b.N(160); i++) {
+				var gx = (rnd() - 0.5) * 1.1, gz = 0.45 + rnd() * 0.9;
+				b.surfel([gx - 0.16, 0.008, gz], AY, 0.1, 0.1, BARS[Math.min(6, Math.floor((gx / 1.1 + 0.5) * 7))], 0.07 * (1 - (gz - 0.45) / 0.9), { k: 2, ph: 0, amp: 0.2, w: 23, glow: 0.9 });
+			}
+			// traffic cone, wrench, screwdriver, and the plug somebody pulled
+			b.box([-1.05, 0.02, 0.55], 0.36, 0.04, 0.36, 0.3, 5200, 0.014, function (face, bu, bv, p, n2) { return { col: b.lit(b.jit(OR, 0.06), n2) }; });
+			b.lathe(-1.05, 0.55, [[0.14, 0.04], [0.03, 0.56], [0.0, 0.57]], b.N(2400), 0.014, function (th, y, n2) { return { col: b.lit(b.jit(y > 0.24 && y < 0.36 ? [0.96, 0.96, 0.96] : OR, 0.05), n2), o: { spec: 0.3, n: n2 } }; });
+			var w0 = [0.7, 0.02, 0.78], w1 = [1.12, 0.02, 0.98], wa = Math.atan2(w1[2] - w0[2], w1[0] - w0[0]);
+			b.stick(w0, w1, 0.024, 0.024, SIL, 0.97, { spec: 1, n: AY }, 0.04);
+			[0.7, -0.7].forEach(function (off) { b.stick(w1, [w1[0] + Math.cos(wa + off) * 0.11, 0.02, w1[2] + Math.sin(wa + off) * 0.11], 0.026, 0.02, SIL, 0.97, { spec: 1, n: AY }, 0.04); });
+			b.stick([0.35, 0.03, 1.05], [0.52, 0.03, 1.12], 0.034, 0.034, hex("#d7263d"), 0.97, { spec: 0.6, n: AY }, 0.05);
+			b.stick([0.52, 0.03, 1.12], [0.74, 0.02, 1.21], 0.01, 0.009, SIL, 0.97, { spec: 1, n: AY }, 0.03);
+			var cp = [-0.5, 0.36, -0.37];
+			[[-0.72, 0.06, -0.5], [-1.0, 0.02, -0.3], [-1.3, 0.02, -0.42], [-1.55, 0.02, -0.15]].forEach(function (nx) { b.stick(cp, nx, 0.014, 0.014, [0.08, 0.08, 0.1], 0.97, null, 0.05); cp = nx; });
+			b.box([-1.6, 0.03, -0.12], 0.09, 0.06, 0.07, 0.6, 5200, 0.012, function (face, bu, bv, p, n2) { return { col: b.lit([0.9, 0.9, 0.88], n2) }; });
+		}
+	});
+
+	scene({
+		id: "heart", label: "Big glossy heart", cam: { target: [0, 1.04, 0], dist: 5.3, elev: 6 }, bg: ["2a0a1e", "ff7aa8"],
+		build: function (b) {
+			var rnd = b.rnd, i, C = [0, 1.12, 0], S = 0.66, RED = hex("#e8113f"), PINK = hex("#ff5f8f"), BOB = 0.035;
+			function f(x, y, z) { var a = x * x + 2.25 * z * z + y * y - 1; return a * a * a - x * x * y * y * y - 0.1125 * z * z * y * y * y; }
+			b.put([C[0], C[1] + 0.05, C[2]], AX, AY, AZ, 0.34, 0.28, 0.18, mul(RED, 0.6), 0.97, { k: 7, ph: 0, amp: BOB, w: 1.1 });
+			for (i = 0; i < b.N(15000); i++) {
+				// walk out from the middle until the surface is crossed
+				var d = norm([b.g(), b.g(), b.g()]), lo = 0, hi = 1.9, k;
+				for (k = 0; k < 20; k++) { var m = (lo + hi) / 2; if (f(d[0] * m, d[1] * m, d[2] * m) < 0) { lo = m; } else { hi = m; } }
+				var x = d[0] * lo, y = d[1] * lo, z = d[2] * lo, e = 0.01;
+				var n2 = norm([f(x + e, y, z) - f(x - e, y, z), f(x, y + e, z) - f(x, y - e, z), f(x, y, z + e) - f(x, y, z - e)]);
+				var rim = 1 - Math.abs(n2[2]), s = 0.02 + rnd() * 0.008;
+				b.surfel([C[0] + x * S, C[1] + y * S, C[2] + z * S], n2, s, s, add(b.lit(b.jit(mix(RED, PINK, 0.25 + 0.5 * clamp01(n2[1] * 0.6 + 0.4)), 0.06), n2), mul([0.25, 0.05, 0.1], rim * rim)), 0.97, { k: 7, ph: 0, amp: BOB, w: 1.1, spec: 0.95, n: n2 });
+			}
+			b.ball(C, 1.15, PINK, 0.07, { k: 2, ph: 0, amp: 0.35, w: 2.2, glow: 1 });
+			for (i = 0; i < b.N(90); i++) {
+				var sd = norm([b.g(), b.g(), b.g()]), sr = 0.95 + rnd() * 0.75, sp = [sd[0] * sr, C[1] + sd[1] * sr * 0.9, sd[2] * sr], an = { k: 2, ph: rnd(), amp: 1, w: 1.5 + rnd() * 3, glow: 0.8 };
+				b.ball(sp, 0.012, [1, 0.97, 0.95], 1, an);
+				b.ball(sp, 0.05, [1, 0.6, 0.75], 0.32, { k: 2, ph: an.ph, amp: 1, w: an.w, glow: 1 });
+			}
+			for (i = 0; i < b.N(70); i++) { var ba = rnd() * TAU, br = 0.3 + 1.3 * Math.sqrt(rnd()); b.ball([Math.cos(ba) * br, 0.05, Math.sin(ba) * br], 0.014 + rnd() * 0.022, rnd() < 0.5 ? [1, 0.75, 0.85] : [1, 0.95, 0.97], 0.5, { k: 9, ph: rnd(), amp: 2.4 + rnd() * 0.6, w: 6 + rnd() * 6, glow: 0.5 }); }
+			var party = pal(["#ff4d8d", "#ffd27a", "#ffffff", "#ff9ec4", "#ffe3ee"]);
+			for (i = 0; i < b.N(260); i++) { var cr = 0.4 + 1.4 * Math.sqrt(rnd()), ca = rnd() * TAU, cs2 = 0.014 + rnd() * 0.009; b.surfel([Math.cos(ca) * cr, 2.95, Math.sin(ca) * cr], norm([b.g(), b.g(), b.g()]), cs2, cs2 * 0.6, b.pick(party), 0.95, { k: 3, ph: rnd(), amp: 2.9, w: 5 + rnd() * 5 }, null, 0.4); }
+			if (!b.clear) { floor(b, 1.9, pal(["#1f0714", "#2a0a1e", "#18050f"]), [1, 0.35, 0.55]); }
+			else { for (i = 0; i < b.N(260); i++) { var gr = 0.8 * Math.sqrt(rnd()), ga = rnd() * TAU; b.surfel([Math.cos(ga) * gr, 0.005, Math.sin(ga) * gr], AY, 0.09, 0.09, [1, 0.4, 0.6], 0.2 * (1 - gr / 0.8), { glow: 0.9 }); } }
+		}
+	});
+
+	scene({
+		id: "moon", label: "Moonlit cottage", cam: { target: [0, 1.3, 0], dist: 6.6, elev: 5 }, bg: ["040714", "28337a"], move: "swing",
+		build: function (b) {
+			var rnd = b.rnd, i, R = 2.0, MC = [1, 0.95, 0.72], WARM = [1, 0.8, 0.4], WALL = hex("#8f97c4");
+			function hy(x, z) { return 0.42 * Math.max(0, 1 - (x * x + z * z) / (R * R)); }
+			// hill
+			for (i = 0; i < b.N(5200); i++) {
+				var r = R * Math.sqrt(rnd()), a = rnd() * TAU, x = Math.cos(a) * r, z = Math.sin(a) * r, sl = 0.84 * r / (R * R), n2 = norm([sl * Math.cos(a), 1, sl * Math.sin(a)]), s = 0.045 + rnd() * 0.03;
+				b.surfel([x, hy(x, z), z], n2, s, s, mul(b.lit(b.jit(hex("#1d3a3a"), 0.2), n2), 0.9), 0.95 * (1 - sstep(0.8, 1, r / R)));
+			}
+			for (i = 0; i < b.N(3000); i++) {
+				var ga = rnd() * TAU, gr = R * 0.92 * Math.sqrt(rnd()), gx = Math.cos(ga) * gr, gz = Math.sin(ga) * gr;
+				b.blade([gx, hy(gx, gz), gz], norm([b.g() * 0.3, 1, b.g() * 0.3]), 0.04 + rnd() * 0.05, 0.007, mul(b.jit(hex("#2f5a52"), 0.3), 0.7 + 0.5 * rnd()), 0.9 * (1 - sstep(0.8, 1, gr / R)));
+			}
+			// cottage with the lights on and the chimney going
+			var hc = [-0.35, hy(-0.35, 0.1) + 0.19, 0.1], yaw = 0.3, cs = Math.cos(yaw), sn = Math.sin(yaw);
+			function hr(v) { return [hc[0] + v[0] * cs + v[2] * sn, hc[1] + v[1], hc[2] - v[0] * sn + v[2] * cs]; }
+			b.put(hc, AX, AY, AZ, 0.16, 0.12, 0.13, hex("#3a3f5a"), 0.97);
+			b.box(hc, 0.56, 0.38, 0.44, yaw, 4200, 0.014, function (face, u, v, p, nb) {
+				if (face === 0) { return null; }
+				if (face === 3 && Math.abs(u - 0.5) < 0.1 && v < 0.6) { return { col: mul(b.lit(b.jit(hex("#5a3a22"), 0.12), nb), 0.8) }; }
+				if ((face === 3 && Math.abs(Math.abs(u - 0.5) - 0.3) < 0.09 && Math.abs(v - 0.6) < 0.17) || ((face === 1 || face === 2) && Math.abs(u - 0.5) < 0.16 && Math.abs(v - 0.6) < 0.17)) { return { col: WARM, o: { k: 2, ph: 0.3, amp: 0.14, w: 3, glow: 0.35 } }; }
+				return { col: mul(b.lit(b.jit(WALL, 0.07), nb), 0.85) };
+			});
+			for (i = 0; i < b.N(2600); i++) {
+				var u = rnd(), v = rnd(), sg = rnd() < 0.5 ? -1 : 1, rn = norm([0, 0.3, sg * 0.28]), wn = [rn[2] * sn, rn[1], rn[2] * cs];
+				b.surfel(hr([(u - 0.5) * 0.68, 0.19 + 0.28 * (1 - v), sg * 0.29 * v]), wn, 0.016, 0.016, mul(b.lit(b.jit(Math.floor(v * 7) % 2 ? hex("#4a3f6a") : hex("#3c3358"), 0.1), wn), 1.1), 0.96);
+			}
+			for (i = 0; i < b.N(600); i++) {
+				var gy = 0.28 * rnd(), gs = rnd() < 0.5 ? -1 : 1, gn = [gs * cs, 0.2, -gs * sn];
+				b.surfel(hr([gs * 0.28, 0.19 + gy, (rnd() - 0.5) * 0.44 * (1 - gy / 0.28)]), [gs * cs, 0, -gs * sn], 0.014, 0.014, mul(b.lit(b.jit(WALL, 0.07), gn), 0.85), 0.96);
+			}
+			b.stick(hr([0.14, 0.34, -0.1]), hr([0.14, 0.58, -0.1]), 0.04, 0.038, hex("#5a5f7a"), 0.97);
+			for (i = 0; i < 12; i++) { b.ball(hr([0.14 + b.g() * 0.01, 0.62, -0.1]), 0.03, [0.8, 0.84, 1], 0.1, { k: 5, ph: rnd(), amp: 0.7, w: 4 + rnd() * 2 }); }
+			b.ball(hr([0, -0.12, 0.42]), 0.3, WARM, 0.1, { k: 2, ph: 0.2, amp: 0.2, w: 4, glow: 1 });
+			var greens = pal(["#0f3d2e", "#14533a", "#1a6b4a", "#0b2e24"]);
+			pine(b, [1.05, hy(1.05, -0.5), -0.5], 1.7, 0.5, { needles: 4600, tiers: 7, pal: greens, dim: 0.6 });
+			pine(b, [1.5, hy(1.5, 0.3), 0.3], 1.15, 0.38, { needles: 2600, tiers: 5, pal: greens, dim: 0.55 });
+			pine(b, [-1.35, hy(-1.35, -0.6), -0.6], 1.35, 0.42, { needles: 3200, tiers: 6, pal: greens, dim: 0.5 });
+			// crescent moon: a flattened ball with a round bite cut straight through it
+			var M = [0.55, 2.95, -1.1], MR = 0.52, KX = 0.27, KY = 0.09, KR = 0.47;
+			for (i = 0; i < b.N(6200); i++) {
+				var d = norm([b.g(), b.g(), b.g()]), p = [M[0] + d[0] * MR, M[1] + d[1] * MR, M[2] + d[2] * MR * 0.42], s2 = 0.02 + rnd() * 0.008;
+				if ((d[0] * MR - KX) * (d[0] * MR - KX) + (d[1] * MR - KY) * (d[1] * MR - KY) < KR * KR) { continue; }
+				var crater = Math.sin(d[0] * 9 + 2) * Math.cos(d[1] * 11) * Math.sin(d[2] * 8 + 1) > 0.35;
+				b.surfel(p, d, s2, s2, mul(MC, (crater ? 0.78 : 1) * (0.8 + 0.25 * Math.max(0, dot(d, norm([-0.6, 0.3, 0.7]))))), 0.97, { glow: 0.3 });
+			}
+			b.ball([M[0] - 0.2, M[1], M[2]], 0.9, [0.9, 0.9, 1], 0.07, { k: 2, ph: 0, amp: 0.2, w: 0.7, glow: 1 });
+			// stars, clouds, fireflies
+			for (i = 0; i < b.N(420); i++) { var sd = norm([b.g(), Math.abs(b.g()) * 0.8 + 0.1, b.g()]); b.ball(mul(sd, 11 + rnd() * 9), 0.02 + rnd() * 0.035, b.jit([0.9, 0.93, 1], 0.2), 0.9, { k: 2, ph: rnd(), amp: 0.75, w: 0.8 + rnd() * 2.5, glow: 0.8 }); }
+			for (i = 0; i < 4; i++) {
+				var ca = -0.9 + i * 0.6 + rnd() * 0.3, cr = 2.3 + rnd() * 0.9, cc = [Math.sin(ca) * cr, 1.9 + rnd() * 1.1, -Math.cos(ca) * cr * 0.8], cph = rnd(), k;
+				for (k = 0; k < 20; k++) { var off = [b.g() * 0.3, Math.abs(b.g()) * 0.07, b.g() * 0.14]; b.ball(add(cc, off), 0.08 + rnd() * 0.09, mul([0.62, 0.72, 1], 0.5 + clamp01(off[1] * 6) * 0.35), 0.3, { k: 1, ph: cph, amp: 0.12, w: 0.18 }); }
+			}
+			for (i = 0; i < 40; i++) { var ya = rnd() * TAU, yr = 0.5 + rnd() * 1.3, yx = Math.cos(ya) * yr, yz = Math.sin(ya) * yr; b.ball([yx, hy(yx, yz) + 0.15 + rnd() * 0.8, yz], 0.01, [0.9, 1, 0.5], 1, { k: 1, ph: rnd(), amp: 0.14, w: 0.35 + rnd() * 0.3, glow: 0.7 }); }
+		}
+	});
+
+	scene({
+		id: "reef", label: "Coral reef aquarium", cam: { target: [0, 0.9, 0], dist: 6.7, elev: 6 }, bg: ["03263f", "2aa9cf"],
+		build: function (b) {
+			var rnd = b.rnd, i, SAND = pal(["#e9d7a8", "#dcc693", "#f2e3bb", "#cdb682"]), SEA = [0.78, 0.95, 1];
+			// sand with ripples, and light moving across it
+			for (i = 0; i < b.N(5200); i++) {
+				var r = 2.25 * Math.sqrt(rnd()), a = rnd() * TAU, x = Math.cos(a) * r, z = Math.sin(a) * r, rip = 0.5 + 0.5 * Math.sin(x * 9 + Math.sin(z * 3) * 1.5), s = 0.045 + rnd() * 0.03;
+				b.surfel([x, 0.02 * rip, z], norm([b.g() * 0.15, 1, b.g() * 0.15]), s, s, tint(mul(b.jit(b.pick(SAND), 0.1), 0.66 + 0.3 * rip), SEA), 0.95 * (1 - sstep(0.78, 1, r / 2.25)), { k: 2, ph: (x * 0.8 + z * 0.6 + 8) % 1, amp: 0.28, w: 1.6 });
+			}
+			// rocks, some with algae on top
+			[[0, 0.2, 0, 0.46], [-0.55, 0.14, 0.35, 0.3], [0.6, 0.13, -0.2, 0.34], [0.15, 0.1, 0.7, 0.22], [-0.25, 0.12, -0.7, 0.28], [1.25, 0.08, 0.75, 0.2], [-1.3, 0.08, -0.5, 0.22]].forEach(function (e) {
+				rock(b, [e[0], e[1], e[2]], e[3], hex("#70757f"), function (cl, p, n2) { return { col: n2[1] > 0.5 && Math.sin(p[0] * 13) * Math.cos(p[2] * 11) > 0 ? mix(cl, hex("#35784f"), 0.6) : tint(cl, SEA) }; });
+			});
+			// branching corals with pale tips
+			function coral(base, dir, len, rad, depth, col, ph) {
+				var end = add(base, mul(dir, len));
+				b.stick(base, end, rad, rad * 0.8, col, 0.97, { k: 1, ph: ph, amp: 0.005 * (4 - depth), w: 0.8 }, 0.12);
+				if (depth <= 0) { b.ball(end, rad * 1.5, mix(col, [1, 1, 1], 0.45), 0.97, { k: 1, ph: ph, amp: 0.02, w: 0.8, glow: 0.12 }); return; }
+				var kids = 2 + (rnd() < 0.45 ? 1 : 0), a0 = rnd() * TAU, px = norm(cross(dir, Math.abs(dir[1]) < 0.9 ? AY : AX)), py = cross(dir, px), k;
+				for (k = 0; k < kids; k++) {
+					var az = a0 + k * TAU / kids + (rnd() - 0.5) * 0.6, tilt = 0.45 + rnd() * 0.35;
+					coral(end, norm(add(add(mul(dir, Math.cos(tilt)), add(mul(px, Math.cos(az) * Math.sin(tilt)), mul(py, Math.sin(az) * Math.sin(tilt)))), [0, 0.25, 0])), len * (0.68 + rnd() * 0.14), rad * 0.72, depth - 1, col, ph);
+				}
+			}
+			coral([-0.1, 0.6, -0.05], norm([0.05, 1, 0]), 0.24, 0.04, 4, hex("#ff7a45"), 0.1);
+			coral([0.62, 0.42, -0.2], norm([0.2, 1, -0.1]), 0.2, 0.034, 4, hex("#ff5fa2"), 0.45);
+			coral([-0.25, 0.36, -0.72], norm([-0.2, 1, -0.2]), 0.18, 0.03, 3, hex("#b07cff"), 0.7);
+			// brain coral and tube sponges
+			b.sphere([0.55, 0.3, 0.42], [0.2, 0.15, 0.18], b.N(2400), 0.016, function (d, n2) { return { col: tint(b.lit(b.jit(Math.sin(Math.atan2(d[2], d[0]) * 9 + Math.sin(d[1] * 9) * 2.4) > 0 ? hex("#e2a070") : hex("#a8643c"), 0.08), n2), [0.92, 1, 1]) }; }, hex("#8a5030"));
+			[[-0.62, 0.3, 0.45, 0.36], [-0.72, 0.28, 0.36, 0.28], [-0.54, 0.3, 0.33, 0.44], [-0.5, 0.3, 0.5, 0.24]].forEach(function (e) {
+				b.lathe(e[0], e[2], [[0.035, e[1]], [0.05, e[1] + e[3] * 0.55], [0.062, e[1] + e[3]]], b.N(700), 0.014, function (th, y, n2) { return { col: b.lit(b.jit(hex("#ffd34a"), 0.1), n2) }; });
+				disc(b, [e[0], e[1] + e[3] - 0.008, e[2]], 0.05, b.N(60), 0.012, AY, function () { return { col: [0.25, 0.15, 0.05] }; });
+			});
+			// sea fans: flat, lacy, swaying
+			function fan(base, right, depth0) {
+				(function grow(p, ang, len, depth) {
+					var q = [p[0] + right[0] * Math.sin(ang) * len, p[1] + Math.cos(ang) * len, p[2] + right[2] * Math.sin(ang) * len];
+					b.stick(p, q, 0.006 + depth * 0.003, 0.005 + depth * 0.0025, hex("#c23a6a"), 0.95, { k: 1, ph: 0.6, amp: 0.004 * (depth0 - depth + 1), w: 0.9 }, 0.15);
+					if (depth <= 0) { return; }
+					grow(q, ang - 0.3 - rnd() * 0.25, len * 0.8, depth - 1);
+					grow(q, ang + 0.3 + rnd() * 0.25, len * 0.8, depth - 1);
+					if (rnd() < 0.5) { grow(q, ang + (rnd() - 0.5) * 0.2, len * 0.75, depth - 1); }
+				})(base, 0, 0.14, depth0);
+			}
+			fan([1.22, 0.2, 0.72], norm([0.8, 0, -0.6]), 5);
+			fan([-1.28, 0.2, -0.48], norm([0.5, 0, 0.87]), 5);
+			// anemone on the front rock
+			var an0 = [0.15, 0.27, 0.7];
+			b.put(an0, AX, AY, AZ, 0.09, 0.05, 0.09, hex("#b23a78"), 0.97);
+			for (i = 0; i < b.N(110); i++) {
+				var td = norm([b.g(), Math.abs(b.g()) + 0.5, b.g()]), tph = rnd(), tp = add(an0, mul(td, 0.05)), seg;
+				for (seg = 0; seg < 4; seg++) { b.blade(tp, td, 0.05, 0.011 - seg * 0.0015, mix(hex("#ff5fa2"), [1, 0.95, 0.85], seg / 3.5), 0.95, { k: 1, ph: tph, amp: 0.008 + 0.012 * seg, w: 1.3 }); tp = add(tp, mul(td, 0.045)); }
+			}
+			// sea grass round the edge
+			for (i = 0; i < b.N(46); i++) {
+				var ka = rnd() * TAU, kr = 1.15 + rnd() * 0.95, kp = [Math.cos(ka) * kr, 0.01, Math.sin(ka) * kr], kh = 0.5 + rnd() * 0.9, kph = rnd(), lean = [b.g() * 0.12, 0, b.g() * 0.12], sg;
+				for (sg = 0; sg < 8; sg++) {
+					var t0 = sg / 8, kd = norm([lean[0] * (1 + t0 * 2), 1, lean[2] * (1 + t0 * 2)]);
+					b.blade(kp, kd, kh / 8 * 1.25, 0.016 * (1 - t0 * 0.6), mul(b.jit(hex("#2f9a4a"), 0.25), 0.6 + 0.5 * t0), 0.93 * (1 - sstep(0.85, 1, kr / 2.1)), { k: 1, ph: kph, amp: 0.012 + 0.09 * t0 * t0, w: 0.7 });
+					kp = add(kp, mul(kd, kh / 8));
+				}
+			}
+			// fish: clownfish by the anemone, tangs, a school of neons, one slow angelfish
+			[0, 0.36, 0.7].forEach(function (ph, k) { fish(b, [0.15, 0.52 + k * 0.07, 0.7], 0.3 + k * 0.05, { len: 0.19 - k * 0.02, tall: 0.5, col: hex("#ff7a1a"), belly: hex("#ffa24a"), stripe: [0.98, 0.98, 0.98], n: 3, tail: hex("#ff8a2a"), speed: 0.55 - k * 0.07, ph: ph }); });
+			[0.05, 0.55].forEach(function (ph, k) { fish(b, [0, 1.25 + k * 0.2, 0], 1.05 + k * 0.2, { len: 0.3, tall: 0.6, col: hex("#1f6fe0"), belly: hex("#4a9af0"), stripe: [0.05, 0.08, 0.2], n: 1, tail: hex("#ffd21f"), speed: -0.3, ph: ph }); });
+			[0.2, 0.28, 0.37].forEach(function (ph, k) { fish(b, [0.2, 0.95 + k * 0.1, -0.1], 0.72 + k * 0.08, { len: 0.2, tall: 0.75, col: hex("#ffd21f"), belly: hex("#ffe36a"), n: 0, speed: 0.36, ph: ph }); });
+			for (i = 0; i < 16; i++) { fish(b, [0, 1.6 + b.g() * 0.12, 0], 1.3 + rnd() * 0.3, { len: 0.1, tall: 0.36, col: hex("#18c8f0"), belly: hex("#f0f6ff"), stripe: hex("#ff3b3b"), n: 1, speed: 0.42, ph: 0.6 + b.g() * 0.035 }); }
+			fish(b, [0, 1.0, 0], 1.75, { len: 0.36, tall: 0.95, col: hex("#f2f2f6"), belly: [1, 1, 1], stripe: [0.08, 0.08, 0.1], n: 3, tail: [0.9, 0.9, 0.95], speed: -0.16, ph: 0.8 });
+			// bubbles, shafts of light, drifting specks, a starfish
+			[[0.62, 0.5, -0.2], [-0.56, 0.45, 0.36]].forEach(function (src) { for (var k = 0; k < b.N(40); k++) { b.ball([src[0] + b.g() * 0.03, src[1], src[2] + b.g() * 0.03], 0.012 + rnd() * 0.02, [0.9, 0.98, 1], 0.45, { k: 9, ph: rnd(), amp: 2.6, w: 3.5 + rnd() * 2.5, glow: 0.35 }); } });
+			var ray = norm([0.22, 1, 0.08]), rayU = norm(cross(ray, AZ)), rayW = cross(rayU, ray);
+			for (i = 0; i < 11; i++) { var ra = rnd() * TAU, rr = 0.3 + rnd() * 1.5, rs = 0.07 + rnd() * 0.09; b.put([Math.cos(ra) * rr, 1.9, Math.sin(ra) * rr], rayU, ray, rayW, rs, 1.25, rs, [0.7, 0.95, 1], 0.045, { k: 2, ph: rnd(), amp: 0.6, w: 0.35 + rnd() * 0.5, glow: 1 }); }
+			for (i = 0; i < b.N(220); i++) { b.ball([b.g() * 1.2, 0.2 + rnd() * 2.4, b.g() * 1.2], 0.006 + rnd() * 0.006, [0.85, 0.97, 1], 0.5, { k: 1, ph: rnd(), amp: 0.06, w: 0.25 + rnd() * 0.3, glow: 0.4 }); }
+			var sf = [0.95, 0.03, -0.9];
+			for (i = 0; i < 5; i++) { var fa = i * TAU / 5 + 0.3; b.blade(sf, [Math.cos(fa), 0.02, Math.sin(fa)], 0.13, 0.026, hex("#ff7a45"), 0.97); }
+			b.ball(sf, 0.035, hex("#ff8f5a"), 0.97);
+		}
+	});
+
 	// ---------------------------------------------------------------- your own .splat file
 	// 32 bytes per splat: position (3 float32), scale (3 float32), RGBA (4 uint8), rotation quaternion w, x, y, z (4 uint8).
 	// Only the first part of the file is read; these files keep their most important splats at the front.
@@ -1011,7 +1426,15 @@
 			{ name: "Trophy, no background", tags: ["3d", "celebrate", "simple"], values: { scene: "trophy", bg: "none" } },
 			{ name: "Floating island, no background", tags: ["3d", "cute", "simple"], values: { scene: "floating", bg: "none" } },
 			{ name: "Autumn be right back", tags: ["3d", "autumn", "cozy"], values: { title: "be right back", font: "Amatic SC", fontsize: 150 } },
-			{ name: "Galaxy starting soon", tags: ["3d", "cyber"], values: { scene: "galaxy", title: "Starting soon", font: "Orbitron", fontsize: 76, textpos: "top", camy: 14 } }
+			{ name: "Galaxy starting soon", tags: ["3d", "cyber"], values: { scene: "galaxy", title: "Starting soon", font: "Orbitron", fontsize: 76, textpos: "top", camy: 14 } },
+			{ name: "Coral reef aquarium", tags: ["3d", "cozy", "cute", "summer"], values: { scene: "reef" } },
+			{ name: "Reef, no background", tags: ["3d", "cute", "simple"], values: { scene: "reef", bg: "none" } },
+			{ name: "Hourglass", tags: ["3d", "elegant", "simple"], values: { scene: "hourglass" } },
+			{ name: "Coffee break", tags: ["3d", "cozy", "cute"], values: { scene: "coffee", title: "be right back", font: "Fredoka", fontsize: 96 } },
+			{ name: "Bathroom break", tags: ["3d", "cute"], values: { scene: "bathroom", move: "swing", title: "bathroom break", font: "Baloo 2", fontsize: 96 } },
+			{ name: "Please stand by", tags: ["3d", "retro"], values: { scene: "standby", move: "swing", title: "PLEASE STAND BY", font: "VT323", fontsize: 110 } },
+			{ name: "Thanks for watching", tags: ["3d", "cute", "elegant"], values: { scene: "heart", title: "Thanks for watching!", font: "Pacifico", fontsize: 92 } },
+			{ name: "Moonlit cottage", tags: ["3d", "cozy", "elegant"], values: { scene: "moon", move: "swing", title: "good night", font: "Caveat", fontsize: 120 } }
 		],
 		css: [
 			".spl{position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;}",
@@ -1064,4 +1487,47 @@
 			} else { builtIn(); }
 		}
 	});
+
+	// ---------------------------------------------------------------- the same scenes behind a screen
+	// Every scene is also a background for the starting soon / BRB / ending screens and the animated background overlay.
+	if (SSO.addEngine) {
+		SCENE_LIST.slice().forEach(function (item) {
+			var sc = SCENES[item[0]];
+			SSO.addEngine({
+				id: "splat-" + sc.id, label: "Splats: " + sc.label, colors: [sc.bg[0], sc.bg[1], "ffffff"],
+				start: function (host, o) {
+					// Make room for the words: the scene steps aside, up or down depending on where the text sits.
+					var L = o.layout, side = L === "split" || L === "center", band = L === "top" || L === "bottom";
+					var shift = L === "top" ? [0, -0.26] : L === "bottom" ? [0, 0.3] : side ? [0.55, -0.04] : [0, 0];
+					if (!o.transparent) { host.style.background = "radial-gradient(ellipse 85% 80% at " + (50 + shift[0] * 50) + "% " + (58 - shift[1] * 50) + "%," + o.c2 + " 0%," + o.c1 + " 100%)"; }
+					var b = Builder("splat-" + sc.id, 1, !!o.transparent);
+					sc.build(b);
+					var view = splatView(host, b.done(), {
+						solid: true, cam: { target: sc.cam.target, dist: sc.cam.dist * (side ? 1.34 : band ? 1.3 : 1), elev: sc.cam.elev },
+						move: sc.move || "orbit", speed: o.speed || 1, angle: 0, quality: 0.8, animate: true, adapt: true, shift: shift
+					});
+					return { stop: function () { if (view) { view.stop(); } host.style.background = ""; } };
+				}
+			});
+		});
+		var addPresets = function (id, list) { var d = SSO.get(id); if (d) { d.presets = d.presets.concat(list); } };
+		var SOC = "twitch:yourname,youtube:@yourname,discord:discord.gg/yourname";
+		addPresets("screen", [
+			{ name: "Splats: hourglass, starting soon", tags: ["3d", "elegant", "cozy"], values: { backdrop: "splat-hourglass", c1: "0a0f24", c2: "3b4c96", title: "Starting soon", subtitle: "the sand is already running", minutes: 5, layout: "bottom", font: "Cinzel", fontsize: 70, accent: "ffd27a", dim: 0 } },
+			{ name: "Splats: coffee break BRB", tags: ["3d", "cozy", "cute"], values: { backdrop: "splat-coffee", c1: "1c120b", c2: "a06e3e", title: "Be right back", subtitle: "topping up the coffee", minutes: 0, layout: "bottom", font: "Fredoka", fontsize: 76, accent: "ffd9a8", dim: 0 } },
+			{ name: "Splats: bathroom break", tags: ["3d", "cute", "simple"], values: { backdrop: "splat-bathroom", c1: "0f3352", c2: "a9e1ff", title: "Bathroom break", subtitle: "back in a flush", minutes: 3, countlabel: "back in", endtext: "washing hands…", layout: "bottom", font: "Baloo 2", fontsize: 74, accent: "ffe36a", dim: 0 } },
+			{ name: "Splats: technical difficulties", tags: ["3d", "retro", "simple"], values: { backdrop: "splat-standby", c1: "0b0c12", c2: "3b4250", title: "Please stand by", subtitle: "technical difficulties, back in a moment", minutes: 0, layout: "bottom", font: "VT323", fontsize: 88, upper: true, accent: "ffd166", dim: 0 } },
+			{ name: "Splats: thanks for watching", tags: ["3d", "cute", "elegant"], values: { backdrop: "splat-heart", c1: "2a0a1e", c2: "ff7aa8", title: "Thanks for watching!", subtitle: "see you next stream", minutes: 0, layout: "bottom", font: "Pacifico", fontsize: 64, accent: "ffd6e4", dim: 0, socials: SOC } },
+			{ name: "Splats: good night, ending", tags: ["3d", "cozy", "elegant"], values: { backdrop: "splat-moon", c1: "040714", c2: "28337a", title: "Good night", subtitle: "that's the stream, thanks for hanging out", minutes: 0, layout: "bottom", font: "Caveat", fontsize: 88, accent: "ffe9a8", dim: 0, socials: SOC } },
+			{ name: "Splats: reef, gone swimming", tags: ["3d", "cozy", "cute"], values: { backdrop: "splat-reef", c1: "03263f", c2: "2aa9cf", title: "Gone swimming", subtitle: "back before the fish notice", minutes: 0, layout: "top", font: "Fredoka", fontsize: 74, accent: "bff3ff", dim: 0 } },
+			{ name: "Splats: campfire intermission", tags: ["3d", "cozy"], values: { backdrop: "splat-campfire", c1: "04060e", c2: "1a2748", title: "Intermission", subtitle: "stretch, hydrate, back shortly", minutes: 10, countlabel: "resuming in", endtext: "resuming now", layout: "bottom", font: "Poppins", fontsize: 70, accent: "ffb36b", dim: 0 } },
+			{ name: "Splats: starting soon, text on the left", tags: ["3d", "pro", "elegant"], values: { backdrop: "splat-hourglass", c1: "0a0f24", c2: "3b4c96", title: "Starting soon", subtitle: "grab a drink, we begin shortly", minutes: 5, layout: "split", font: "Montserrat", fontsize: 80, accent: "ffd27a", dim: 0 } },
+			{ name: "Splats: stream ending, text on the left", tags: ["3d", "pro", "cute"], values: { backdrop: "splat-heart", c1: "2a0a1e", c2: "ff7aa8", title: "That's a wrap", subtitle: "thank you for watching", minutes: 0, layout: "split", font: "Montserrat", fontsize: 80, accent: "ffd6e4", dim: 0 } }
+		]);
+		addPresets("backdrop", [
+			{ name: "Splats: coral reef aquarium", tags: ["3d", "cozy", "cute"], values: { engine: "splat-reef" } },
+			{ name: "Splats: moonlit cottage", tags: ["3d", "cozy", "elegant"], values: { engine: "splat-moon" } },
+			{ name: "Splats: campfire at night", tags: ["3d", "cozy"], values: { engine: "splat-campfire" } }
+		]);
+	}
 })();

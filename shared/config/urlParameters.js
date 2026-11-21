@@ -995,6 +995,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Shows the current viewer count indicator"
           },
           {
+            "key": "viewercountorder",
+            "displayName": "viewercountorder",
+            "aliases": [
+              "viewercountorder"
+            ],
+            "values": "comma-separated source types",
+            "description": "Orders viewer counts from left to right, e.g. twitch,youtube,kick; other sources follow. Normally set by dragging platforms under Viewer count order in the app, which applies to every viewer-count overlay; this parameter overrides that for one link"
+          },
+          {
             "key": "reserveviewercountspace",
             "displayName": "reserveviewercountspace",
             "aliases": [
@@ -2844,6 +2853,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "slow, fast",
             "description": "Ticker speed or rotation interval. Default rotation is 6 seconds per platform; slow is 10 seconds and fast is 3 seconds"
+          },
+          {
+            "key": "viewercountorder",
+            "displayName": "viewercountorder",
+            "aliases": [
+              "viewercountorder"
+            ],
+            "values": "comma-separated source types",
+            "description": "Platform order, e.g. twitch,youtube,kick; other sources follow alphabetically. Normally set by dragging platforms under Viewer count order in the app; this parameter overrides that for one link"
           },
           {
             "key": "scale",

@@ -148,6 +148,10 @@ jobs:
             if grep -q 'shared/utils/contentImage.js' "$checkout/dock.html" "$checkout/featured.html"; then
               test -f "$checkout/shared/utils/contentImage.js"
             fi
+            # Viewer count ordering is shared by every overlay that lists viewer counts.
+            if grep -qs 'shared/utils/viewerCountOrder.js' "$checkout/dock.html" "$checkout/hype.html" "$checkout/events.html" "$checkout/meta.html"; then
+              test -f "$checkout/shared/utils/viewerCountOrder.js"
+            fi
             # Badge rendering and its packaged sanitizer must accompany overlays.
             if grep -q 'shared/utils/chatBadges.js' "$checkout/dock.html"; then
               test -f "$checkout/shared/utils/chatBadges.js"

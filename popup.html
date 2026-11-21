@@ -194,6 +194,83 @@
     cursor: pointer;
 }
 
+/* Viewer count order: platform chips the user drags into place. One setting, shown in each overlay section that lists viewer counts. */
+.viewer-count-order {
+    padding: 0 4px;
+    text-align: left;
+}
+
+.viewer-count-order-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 8px;
+}
+
+.viewer-count-order-hint {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+}
+
+.viewer-count-order-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 0;
+}
+
+.viewer-count-order-list:empty {
+    display: none;
+}
+
+.viewer-count-order-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 30px;
+    box-sizing: border-box;
+    padding: 2px 3px 2px 8px;
+    border: 1px solid #443;
+    border-radius: 4px;
+    background-color: #443;
+    color: white;
+    cursor: grab;
+    user-select: none;
+}
+
+/* A platform that is live but not placed yet: it follows the placed ones until it is moved. */
+.viewer-count-order-chip.is-unplaced {
+    padding-right: 8px;
+    border: 1px dashed var(--text-secondary);
+    background-color: transparent;
+    color: var(--default-text-color);
+}
+
+.viewer-count-order-chip.is-dragging {
+    opacity: 0.35;
+}
+
+.viewer-count-order-chip:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+}
+
+.viewer-count-order-chip img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    pointer-events: none;
+}
+
+/* The remove button keeps the standard settings-button look used by the other source tags. */
+.viewer-count-order-chip .viewer-count-order-remove {
+    margin: 0;
+}
+
+.viewer-count-order .add-source-container select {
+    width: 170px;
+}
+
 .username-list-container {
 	max-height: 80px;
 	overflow-y: auto;
@@ -2526,7 +2603,7 @@ details.wrapper[open] > .collapsible-text {
         </button>
         <div class="sticky-action-row top-35">
             <button class="glowingButton showalways" style="flex-grow: 1; flex-shrink: 1; flex-basis: auto; box-sizing: border-box; padding: 0;" data-action="fakemsg">
-                <span data-translate="trigger-fake-message">Test message</span>
+                <span data-translate="trigger-fake-message">Send Test message</span>
             </button>
             <button
                 class="glowingButton showalways"
@@ -2781,6 +2858,10 @@ details.wrapper[open] > .collapsible-text {
                                     </label>
 									<span data-translate="show-viewer-count">🔢 Show viewer count per source; top-right</span>
                                 </div>
+								<div class="isolate">
+									<input type="text" id="viewerCountOrder" class="hidden" autocomplete="off" tabindex="-1" aria-hidden="true" data-textsetting="viewerCountOrder" />
+									<div class="viewer-count-order" data-viewer-count-order data-search-row data-search-label="Viewer count order" data-keywords="viewer count platform source order sort reorder arrange drag icons"></div>
+								</div>
 								<div data-keywords="like count likes reactions stats analytics tally" title="Enabling this also enables Send platform like totals in Global Settings.">
 									<label class="switch">
 										<input type="checkbox" data-param1="showlikecount" />
@@ -8022,17 +8103,13 @@ details.wrapper[open] > .collapsible-text {
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group">
-                                <div>
+                                <div title="Use the iframe connection if you have trouble connecting with the SDK.">
                                     <label class="switch">
-                                        <input type="checkbox" data-setting="sdk" />
+                                        <input type="checkbox" data-setting="legacyiframe" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span><span class="popup-control-icon" aria-hidden="true">🔌</span>Use SDK transport (beta)</span>
+                                    <span><span class="popup-control-icon" aria-hidden="true">🔌</span>Use legacy iframe transport</span>
                                 </div>
-                                <small style="opacity: 0.75; display:block; margin-top:6px;">
-                                    When enabled, background uses the Ninja SDK instead of a hidden iframe.
-                                    You can also enable via URL with &sdk or &beta.
-                                </small>
                             </div>
                         </div>
                     </div>
@@ -12008,6 +12085,7 @@ details.wrapper[open] > .collapsible-text {
 <div> <label class="switch"> <input data-param17="currency" type="checkbox"/> <span class="slider round"></span> </label> <span data-translate="show-usd-conversion">💵 Show USD conversion for all donations</span> </div>
 <div> <label class="switch"> <input data-param17="highlightvalue" type="checkbox"/> <span class="slider round"></span> </label> <span data-translate="highlight-high-value">✨ Highlight high-value donations</span> </div>
 <div> <label class="switch"> <input data-param17="showviewercount" type="checkbox"/> <span class="slider round"></span> </label> <span data-translate="popup-show-viewer-count-bar-in-the-top-right">👀 Show viewer count bar in the top-right</span> </div>
+<div class="isolate"><div class="viewer-count-order" data-viewer-count-order data-search-row data-search-label="Viewer count order" data-keywords="viewer count platform source order sort reorder arrange drag icons"></div></div>
 <div> <label class="switch"> <input data-param17="hidemeta" type="checkbox"/> <span class="slider round"></span> </label> <span data-translate="popup-hide-metadata-details-under-messages">🗂️ Hide metadata details under messages</span> </div>
 <div> <label class="switch"> <input data-param17="notime" type="checkbox"/> <span class="slider round"></span> </label> <span data-translate="hide-timestamp">🕘 Hide timestamp </span> </div>
 </div>
@@ -12537,6 +12615,9 @@ details.wrapper[open] > .collapsible-text {
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="show-only-active-chatters">💬 Show only active chatters</span>
+								</div>
+								<div class="isolate">
+									<div class="viewer-count-order" data-viewer-count-order data-search-row data-search-label="Viewer count order" data-keywords="viewer count platform source order sort reorder arrange drag icons"></div>
 								</div>
 								<div class="textInputContainer">
 									<select class="textInput" id="hype-display-style" data-optionparam4="style">
@@ -16704,10 +16785,6 @@ details.wrapper[open] > .collapsible-text {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Perfect for BRB screens or dedicated game segments!</div>
 				</div>
-				<p class="popup-section-description"><span data-translate="interactive-chat-games">
-					   Interactive chat-based games for viewer engagement. Choose from various mini-games.
-					</span>
-				</p>
 				<div id="games" data-raw="" class="streaming_chat"><a href="" id="gameslink"></a></div>
 
 				<!-- Games Preset Selector -->
@@ -16717,9 +16794,33 @@ details.wrapper[open] > .collapsible-text {
 					</label>
 					<select id="games-preset-select" style="padding: 5px 10px; border-radius: 4px; background: var(--color-accent-subtle); color: var(--default-text-color); border: 1px solid var(--collapsible-border-color);">
 						<option value="">Choose a game...</option>
+						<option value="games/marblerace.html">🔮 Marble Race - Chat marbles race a random course</option>
+						<option value="games/streamboss.html">👹 Stream Boss - Chat fights a boss; tips hit hard</option>
+						<option value="games/trivia.html">💡 Trivia - Quiz show with question packs</option>
+						<option value="games/streambingo.html">🎫 Stream Bingo - One bingo card for the whole stream</option>
+						<option value="games/cliffclimb.html">🧗 Cliff Climb - A climbing race up the sides of the screen</option>
+						<option value="games/chatcrowd.html">👥 Chat Crowd - Chatters walk along the bottom of the stream</option>
+						<option value="games/rollcall.html">🙋 Roll Call - Starting-soon wall of faces</option>
+						<option value="games/aquarium.html">🐠 Chat Aquarium - Break-time tank where chatters are fish</option>
+						<option value="games/groupphoto.html">📸 Group Photo - End-of-show class photo of chat</option>
+						<option value="games/podium.html">🏆 Winners’ Podium - The stream’s top players across all games</option>
+						<option value="games/rotation.html">🔁 Game Rotation - One source that plays a list of games</option>
+						<option value="games/pegdrop.html">🎱 Peg Drop - Portrait peg board</option>
+						<option value="games/chatblocks.html">🧩 Chat Blocks - Chat votes where each block lands</option>
+						<option value="games/skydrop.html">🎯 Sky Drop - Parachute onto the target</option>
+						<option value="games/towerduel.html">📦 Tower Duel - Two teams on the sides of the screen</option>
+						<option value="games/frontrow.html">🎬 Front Row - Starting-soon countdown crowd</option>
+						<option value="games/keepitup.html">🎈 Keep It Up - Break-time balloon rally</option>
+						<option value="games/encore.html">🎆 Encore - End-of-show fireworks</option>
 						<option value="games/mazeraid.html">🧱 Maze Raid - Chat invades a retro maze</option>
 						<option value="games/fireflycatch.html">🐛 Firefly Catch - Transparent timing game</option>
 						<option value="games/cometrally.html">☄️ Comet Rally - Transparent team race</option>
+						<option value="games/seismograph.html">📈 Chat Quake - Chat hype as live quakes</option>
+						<option value="games/quakecity.html">🌆 Quake City - Chat hype shakes a skyline down</option>
+						<option value="games/hypeflight.html">🐦 Hype Flight - Chat keeps a bird flying</option>
+						<option value="games/chatvolcano.html">🌋 Chat Volcano - Pressure builds until it blows</option>
+						<option value="games/hyperocket.html">🚀 Hype Rocket - Chat fuels the launch</option>
+						<option value="games/chatcampfire.html">🔥 Chat Campfire - Keep the fire burning</option>
 						<option value="games/signallock.html">🔐 Signal Lock - Cooperative code puzzle</option>
 <option value="games/crowdquest.html">🚀 Crowd Quest - Chat chooses the adventure</option>
 <option value="games/minorityclub.html">🌙 Minority Club</option>
@@ -16746,7 +16847,6 @@ details.wrapper[open] > .collapsible-text {
 						<option value="games/memorylane.html">📷 Memory Lane - Nostalgic photo stories</option>
 						<option value="games/rhythmpulse.html">🎵 Rhythm Pulse - Musical beat creation</option>
 						<option value="games/petrace.html">🏁 Pet Race - Racing game</option>
-						<option value="games/phraseguess.html">💬 Phrase Guessing - Host-created word puzzles</option>
 <option value="games/wordchain.html">🔤 Word Chain - Word puzzle</option>
 						<option value="games/emojitower.html">🏗️ Emoji Tower - Stacking game</option>
 						<option value="games/colorwars.html">🎨 Color Wars - Territory painting</option>
@@ -16754,10 +16854,11 @@ details.wrapper[open] > .collapsible-text {
 						<option value="games/dancingparade.html">💃 Dancing Parade - Lower third animation</option>
 						<option value="games/chickenroyale.html">🍗 Chicken Royale - 3D battle royale, last chicken standing</option>
 					</select>
-					<span style="margin-left: 10px; font-size: 12px; opacity: 0.7;display: block;">
-						<i data-translate="games-note">Note: Each game has unique commands and mechanics</i> <a id="games_gallery_menu_url" href="docs/games-gallery.html" target="_blank" rel="noopener noreferrer">Browse screenshots &amp; games</a> &middot; <a href="docs/chat-games.html" target="_blank" rel="noopener">Game guide</a>
-					</span>
+					<p class="popup-guide-link">
+						<a id="games_gallery_menu_url" href="https://socialstream.ninja/docs/games-gallery.html" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">🖼️</span> Browse game gallery</a> &middot; <a href="docs/chat-games.html" target="_blank" rel="noopener">Game guide</a>
+					</p>
 				</div>
+				<a id="phraseguess-control-link" class="popup-guide-link" target="_blank" rel="noopener noreferrer" title="Host controls and answers. Show prompts and results with Dock.">💬 Open Phrase Guess host tool</a>
 			</div>
 
 			<div class="wrapper" id="games-options-wrapper" data-panel-section="games">
@@ -16896,6 +16997,10 @@ details.wrapper[open] > .collapsible-text {
 								<!-- Rhythm Pulse Options -->
 								<div class="game-config-section" id="rhythmpulse-config" style="display: none;">
 									<h3>🎵 <span data-translate="rhythm-pulse-options">Rhythm Pulse Options</span></h3>
+                                    <div class="textInputContainer" data-keywords="rhythm pulse audio volume mute sound">
+                                        <input id="rhythmpulse-volume" type="number" class="textInput" data-optionparam20="volume" min="0" max="100" step="1" placeholder="50" title="0 mutes audio. Leave blank for 50%." />
+                                        <label for="rhythmpulse-volume"><span class="popup-control-icon" aria-hidden="true">🔉</span><span>Volume (%)</span></label>
+                                    </div>
 									<div>
 										<label class="switch">
 											<input type="checkbox" data-param20="demo" />

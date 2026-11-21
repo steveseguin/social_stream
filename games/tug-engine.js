@@ -10,7 +10,7 @@
         this.round++; this.phase = 'waiting'; this.deadline = 0; this.promptDeadline = 0; this.position = 0;
         this.users = new Map(); this.votes = new Map(); this.seen = new Set(); this.answered = new Set();
         this.teams = [0, 0]; this.pulls = [0, 0]; this.history = []; this.result = ''; this.promptNumber = 0;
-        this.prompt = 'Two teams. One rope.'; this.answer = ''; this.promptKind = 'Join the game'; this.revision = 0;
+        this.prompt = '!join'; this.answer = ''; this.promptKind = 'Join the game'; this.revision = 0;
     };
     Game.prototype.newPrompt = function () {
         var previous = this.answer;
@@ -36,7 +36,7 @@
     Game.prototype.finish = function () {
         if (this.phase !== 'active') return;
         this.phase = 'result'; this.revision++;
-        this.result = this.position === 0 ? 'A perfect standoff! Both teams share the draw.' : (this.position < 0 ? 'Team Coral' : 'Team Mint') + ' wins! ' + (Math.abs(this.position) >= this.goal ? 'Over the line!' : 'Ahead when the clock ran out.');
+        this.result = this.position === 0 ? 'Match drawn' : (this.position < 0 ? 'Team Coral' : 'Team Mint') + ' wins!';
     };
     Game.prototype.next = function () { if (this.phase === 'result') this.begin(); };
     Game.prototype.input = function (message) {

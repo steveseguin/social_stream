@@ -44,6 +44,14 @@
 	};
 	SSO.list = function () { return templates.slice(); };
 
+	// Governed frames can be more than 50ms apart. Keep their elapsed time, but
+	// retain each animation's pause limit after a hidden tab or a long stall.
+	SSO.frameDelta = function (ms, limit) {
+		limit = limit || 0.05;
+		if (global.SSO_FRAMES && global.SSO_FRAMES.skipping() && ms < 250) { limit = Math.max(limit, 0.1); }
+		return Math.min(limit, Math.max(0, ms / 1000));
+	};
+
 	// Vibe tags shown as gallery filters; presets list theirs in `tags`.
 	SSO.VIBES = [
 		["simple", "Simple"], ["gaming", "Gaming"], ["minecraft", "Blocky / Minecraft"], ["console", "Console"],
@@ -122,7 +130,9 @@
 		var params = new URLSearchParams(search == null ? global.location.search : search);
 		var cfg = {};
 		def.fields.forEach(function (field) {
-			cfg[field.key] = parseValue(field, params.has(field.key) ? params.get(field.key) : null);
+			var raw = params.get(field.key);
+			if (raw === null && field.legacyKey) { raw = params.get(field.legacyKey); }
+			cfg[field.key] = parseValue(field, raw);
 		});
 		return cfg;
 	};
@@ -133,13 +143,14 @@
 		return String(value);
 	}
 
-	// Builds "t=id&key=value" with only the values that differ from the template defaults.
+	// Builds "t=id&key=value" for an overlay link, omitting ordinary defaults.
 	SSO.buildQuery = function (def, cfg) {
 		var parts = ["t=" + encodeURIComponent(def.id)];
 		def.fields.forEach(function (field) {
 			if (!(field.key in cfg)) { return; }
 			var value = cfg[field.key];
-			if (encodeValue(field, value) === encodeValue(field, fieldDefault(field))) { return; }
+			// Keep a renamed field explicit so a legacy URL key can be used independently.
+			if (!field.legacyKey && encodeValue(field, value) === encodeValue(field, fieldDefault(field))) { return; }
 			parts.push(encodeURIComponent(field.key) + "=" + encodeURIComponent(encodeValue(field, value)).replace(/%2C/g, ",").replace(/%3A/g, ":").replace(/%40/g, "@"));
 		});
 		return parts.join("&");
@@ -475,8 +486,15 @@
 		".fx-comic{color:var(--fx2) !important;-webkit-text-stroke:.06em #111;text-shadow:.07em .07em 0 #111,.1em .1em 0 var(--fx3) !important;letter-spacing:.03em;transform:skewX(-6deg);display:inline-block;}",
 		".fx-vapor{background:linear-gradient(180deg,var(--fx2),var(--fx1));-webkit-background-clip:text;background-clip:text;color:transparent !important;filter:drop-shadow(4px 4px 0 var(--fx3));font-style:italic;}",
 		".fx-spray{color:var(--fx1) !important;text-shadow:0 0 2px var(--fx1),0 0 8px var(--fx1),0 0 18px var(--fx3) !important;filter:url(#sso-rough);}",
-		".fx-drip{color:var(--fx1) !important;animation:fx-drip 4s ease-in-out infinite;}",
-		"@keyframes fx-drip{0%,100%{text-shadow:0 2px 0 var(--fx3),0 6px 6px rgba(0,0,0,.6),0 0 18px var(--fx3)}50%{text-shadow:0 2px 0 var(--fx3),0 14px 8px rgba(120,0,0,.7),0 0 28px var(--fx3)}}",
+		// The dripping glow breathes between two shadows. Animating text-shadow itself repaints the whole (blurred) title on
+		// every frame, which costs a full processor core on a big title; two copies of the shadow fading in and out look the
+		// same and are handled by the graphics card.
+		".fx-drip{position:relative;z-index:0;display:inline-block;color:var(--fx1) !important;text-shadow:0 2px 0 var(--fx3) !important;}",
+		".fx-drip:before,.fx-drip:after{content:attr(data-text);position:absolute;left:0;top:0;width:100%;z-index:-1;color:transparent;pointer-events:none;will-change:opacity;}",
+		".fx-drip:before{text-shadow:0 6px 6px rgba(0,0,0,.6),0 0 18px var(--fx3);animation:fx-drip-a 4s ease-in-out infinite;}",
+		".fx-drip:after{text-shadow:0 14px 8px rgba(120,0,0,.7),0 0 28px var(--fx3);opacity:0;animation:fx-drip-b 4s ease-in-out infinite;}",
+		"@keyframes fx-drip-a{0%,100%{opacity:1}50%{opacity:0}}",
+		"@keyframes fx-drip-b{0%,100%{opacity:0}50%{opacity:1}}",
 		".fx-rainbow{background:linear-gradient(90deg,#ff3b3b,#ffb03b,#ffee3b,#3bff6b,#3bd4ff,#8a3bff,#ff3bd4,#ff3b3b);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent !important;animation:fx-slide 4s linear infinite;filter:drop-shadow(0 2px 2px rgba(0,0,0,.4));}",
 		// Gradient text only paints inside its box, so script and italic fonts lose their swashes without some room.
 		".fx-fire,.fx-ice,.fx-chrome,.fx-gold,.fx-vapor,.fx-rainbow{padding:.12em .22em;margin:-.12em -.22em;-webkit-box-decoration-break:clone;box-decoration-break:clone;}",
@@ -518,7 +536,7 @@
 		if (c1) { el.style.setProperty("--fx1", SSO.color(c1)); }
 		if (c2) { el.style.setProperty("--fx2", SSO.color(c2)); }
 		if (c3) { el.style.setProperty("--fx3", SSO.color(c3)); }
-		if (fx === "glitch") { el.setAttribute("data-text", el.textContent); }
+		if (fx === "glitch" || fx === "drip") { el.setAttribute("data-text", el.textContent); }
 	};
 	// Shared fields for templates that offer text effects.
 	SSO.fxFields = function (group, def) {
@@ -533,8 +551,9 @@
 
 
 	// ---------- OBS browser source events ----------
-	// OBS fires obsSceneChanged, obsStreamingStarted/Stopped, obsRecordingStarted/Stopped, obsReplaybufferSaved,
-	// obsSourceVisibleChanged… on window. The editor simulates them with postMessage({ssoObsEvent}).
+	// OBS fires obsSceneChanged, obsStreamingStarting/Started/Stopped, obsRecordingStarted/Paused/Unpaused/Stopped,
+	// obsReplaybufferSaved, obsVirtualcamStarted/Stopped, obsSourceVisibleChanged… on window.
+	// The editor simulates them with postMessage({ssoObsEvent}).
 	SSO.obs = {
 		available: function () { return !!global.obsstudio; },
 		on: function (name, fn) {
@@ -558,7 +577,7 @@
 	global.addEventListener("message", function (e) {
 		var d = e.data;
 		if (new URLSearchParams(global.location.search).has("preview") && e.source === global.parent && e.origin === global.location.origin &&
-			d && typeof d.ssoObsEvent === "string" && /^obs(?:SceneChanged|StreamingStarted|StreamingStopped|RecordingStarted|RecordingStopped|ReplaybufferSaved|SourceVisibleChanged)$/.test(d.ssoObsEvent)) {
+			d && typeof d.ssoObsEvent === "string" && /^obs(?:SceneChanged|Source(?:Visible|Active)Changed|Streaming(?:Starting|Started|Stopping|Stopped)|Recording(?:Starting|Started|Paused|Unpaused|Stopping|Stopped)|Replaybuffer(?:Started|Saved|Stopped)|Virtualcam(?:Started|Stopped))$/.test(d.ssoObsEvent)) {
 			var ev;
 			try { ev = new CustomEvent(d.ssoObsEvent, { detail: d.detail || {} }); } catch (err) { ev = document.createEvent("CustomEvent"); ev.initCustomEvent(d.ssoObsEvent, false, false, d.detail || {}); }
 			global.dispatchEvent(ev);

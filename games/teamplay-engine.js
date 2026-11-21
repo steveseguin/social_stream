@@ -23,9 +23,9 @@
     Game.prototype.shiftTime=function(n){if(this.waveDeadline)this.waveDeadline+=n;};
     Game.prototype.finish=function(){
         if(this.phase!=='active')return;this.phase='result';this.revision++;
-        if(this.mode==='kitchen')this.result=this.served===4?'All four orders served! A little help made a whole feast.':this.served+' of 4 orders served. The next kitchen shift starts shortly.';
-        else if(this.mode==='relay')this.result=this.steps===20?'The beacon is lit! Your crew carried the light all the way home.':this.steps+' of 20 lights reached. Bring another viewer along for the next relay.';
-        else this.result=this.hull>0?'Ship safe! The crew blocked '+this.blocked+' meteors across six waves.':'Shields down! You blocked '+this.blocked+' meteors. Regroup for another flight.';
+        if(this.mode==='kitchen')this.result=this.served===4?'All four orders served!':this.served+' / 4 orders served';
+        else if(this.mode==='relay')this.result=this.steps===20?'The beacon is lit!':this.steps+' / 20 lights';
+        else this.result=this.hull>0?'Ship safe!':'Shields down!';
     };
     Game.prototype.resolveWave=function(){
         var held=[0,0,0];this.votes.forEach(function(v){held[v]++;});var hits=0,stopped=0;

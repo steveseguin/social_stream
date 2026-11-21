@@ -211,7 +211,7 @@ async function run() {
         console.log('PASS hosted HTTP POST and URL-encoded GET -> actual SSApp workflow -> local webhook');
         await bg.evaluate(async () => {
             await handleRuntimeMessage({ cmd: 'saveSetting', setting: 'socketserver', value: false }, null, function () {});
-            await handleRuntimeMessage({ cmd: 'saveSetting', setting: 'sdk', value: true }, null, function () {});
+            await handleRuntimeMessage({ cmd: 'saveSetting', setting: 'legacyiframe', value: false }, null, function () {});
         });
         await bg.waitForFunction(() => ninjaBridge && ninjaBridge.isReady(), null, { timeout: 45000 });
         Object.assign(globals, { transport: 'p2p', password: '', requestTimeoutMs: 15000 });

@@ -495,4 +495,271 @@
 			setInterval(paint, ctx && ctx.preview ? 300 : 2000);
 		}
 	});
+
+	// ================================================================ more things OBS drives by itself
+	function words(value) { return String(value || "").split(",").map(function (s) { return s.trim().toLowerCase(); }).filter(Boolean); }
+	function sceneHas(list, name) {
+		var n = String(name || "").toLowerCase();
+		return list.some(function (k) { return n.indexOf(k) !== -1; });
+	}
+	function panel(root, c, cls) {
+		var el = box(root, c, cls);
+		if (c.bgopacity > 0) { el.style.padding = ".7em .9em"; }
+		return el;
+	}
+
+	// ---------------------------------------------------------------- BRB / scene timer
+	SSO.register({
+		id: "scenetimer",
+		name: "BRB timer (starts itself)",
+		category: "obs",
+		description: "A timer that starts by itself when you switch to your BRB scene, or any scene you choose. Counts how long you have been away, or counts down to when you are back. Nothing to press.",
+		size: [560, 150],
+		fields: [
+			{ key: "when", label: "Runs in scenes whose name contains (comma separated, blank = every scene)", type: "text", group: "Content", default: "brb, be right back, break, away, afk", help: "It restarts each time you switch to one of these scenes. Outside OBS it simply starts when the page loads." },
+			{ key: "mode", label: "Timer", type: "select", group: "Content", default: "up", options: [["up", "Count up (Away for 02:31)"], ["down", "Count down (Back in 04:59)"]] },
+			{ key: "minutes", label: "Count down from (minutes)", type: "number", group: "Content", default: 5, min: 0.1, max: 600, step: 0.5, show: { mode: "down" } },
+			{ key: "label", label: "Label while counting up", type: "text", group: "Content", default: "Away for", show: { mode: "up" } },
+			{ key: "labeldown", label: "Label while counting down", type: "text", group: "Content", default: "Back in", show: { mode: "down" } },
+			{ key: "donetext", label: "Text when the countdown runs out", type: "text", group: "Content", default: "Back any second…", show: { mode: "down" } },
+			{ key: "hide", label: "Hide in other scenes", type: "bool", group: "Content", default: true },
+			{ key: "stack", label: "Label above the time", type: "bool", group: "Style", default: false }
+		].concat(lookFields({ fontsize: 44, font: "Bebas Neue", accent: "ffd23f" })),
+		presets: [
+			{ name: "Away for…", tags: ["simple", "pro"], values: {} },
+			{ name: "Back in 5", tags: ["simple", "pro"], values: { mode: "down", minutes: 5, font: "Oswald", fontsize: 40 } },
+			{ name: "Cozy break", tags: ["cozy", "cute"], values: { label: "tea break", stack: true, font: "Kalam", fontsize: 46, bg: "3b2a20", bgopacity: 0.8, fg: "fff3dc", accent: "f5b971", radius: 22 } },
+			{ name: "Arcade continue?", tags: ["gaming", "retro"], values: { mode: "down", minutes: 3, labeldown: "Continue in", donetext: "Insert coin", stack: true, font: "Press Start 2P", fontsize: 26, bgopacity: 0, accent: "ff2d55", fg: "ffe600" } },
+			{ name: "Neon pause", tags: ["cyber"], values: { label: "Paused", stack: true, font: "Orbitron", fontsize: 40, bg: "0a0018", bgopacity: 0.7, fg: "8ef9ff", accent: "ff3ec8", radius: 4 } }
+		],
+		css: [
+			".sct{display:inline-flex;align-items:baseline;white-space:nowrap;font-weight:700;font-variant-numeric:tabular-nums;transition:opacity .5s,transform .5s cubic-bezier(.2,.9,.2,1);}",
+			".sct.stack{flex-direction:column;align-items:center;line-height:1.1;}",
+			".sct-label{font-size:.5em;letter-spacing:.12em;text-transform:uppercase;margin-right:.6em;}",
+			".sct.stack .sct-label{margin:0 0 .2em;}",
+			".sct.off{opacity:0;transform:translateY(30%);}",
+			".sct.done .sct-time{animation:sct-pulse 1.6s ease-in-out infinite;}",
+			"@keyframes sct-pulse{0%,100%{opacity:1}50%{opacity:.5}}"
+		].join("\n"),
+		render: function (root, c, ctx) {
+			SSO.loadFont(c.font);
+			var base = "sct" + (c.stack ? " stack" : ""), el = box(root, c, base);
+			el.innerHTML = '<span class="sct-label" style="color:' + SSO.color(c.accent) + '"></span><span class="sct-time"></span>';
+			var label = el.querySelector(".sct-label"), time = el.querySelector(".sct-time");
+			var keys = words(c.when), preview = ctx && ctx.preview, alive = true, since = Date.now(), frozen = 0;
+			var on = !SSO.obs.available() || !keys.length || preview;
+			SSO.onCleanup(root, function () { alive = false; });
+			function scene(name) {
+				var match = !keys.length || sceneHas(keys, name);
+				if (match) { since = Date.now(); on = true; }
+				else if (on) { frozen = Date.now() - since; on = false; }
+				tick();
+			}
+			function tick() {
+				if (!alive) { return; }
+				var ms = on ? Date.now() - since : frozen, left;
+				if (c.mode === "down") {
+					left = c.minutes * 60000 - (preview ? ms % 12000 * (c.minutes * 60000 / 9000) : ms);
+					if (left <= 0) { label.textContent = ""; time.textContent = c.donetext; }
+					else { label.textContent = c.labeldown; time.textContent = SSO.formatDuration(left, { ceil: true }); }
+				} else { label.textContent = c.label; time.textContent = SSO.formatDuration(preview ? ms + 151000 : ms); }
+				label.style.display = label.textContent ? "" : "none";
+				el.className = base + (!on && c.hide ? " off" : "") + (c.mode === "down" && left <= 0 ? " done" : "");
+			}
+			SSO.onCleanup(root, SSO.obs.on("obsSceneChanged", function (d) { if (d && d.name) { scene(d.name); } }));
+			// A source that only lives in the BRB scene starts over each time that scene comes up.
+			SSO.onCleanup(root, SSO.obs.on("obsSourceVisibleChanged", function (d) { if (d && d.visible && on) { since = Date.now(); tick(); } }));
+			if (SSO.obs.available() && keys.length && !preview) { on = false; SSO.obs.scene(function (sc) { if (alive && sc && sc.name) { scene(sc.name); } }); }
+			tick();
+			setInterval(tick, 250);
+		}
+	});
+
+	// ---------------------------------------------------------------- show rundown
+	SSO.register({
+		id: "rundown",
+		name: "Show rundown",
+		category: "obs",
+		description: "Your running order for the stream. The part you are on lights up by itself as you change scenes, finished parts get ticked off, and it shows how long you have been on the current one.",
+		size: [420, 330],
+		sizeFor: function (c) {
+			var n = Math.max(1, SSO.lines(c.items).length);
+			return c.layout === "row" ? [Math.min(1900, Math.round(n * c.fontsize * 9 + 60)), Math.round(c.fontsize * (c.title ? 5.2 : 3.4))] : [Math.round(c.fontsize * 17), Math.round(c.fontsize * (n * 1.95 + (c.title ? 3.2 : 1.6)))];
+		},
+		fields: [
+			{ key: "title", label: "Title (blank = none)", type: "text", group: "Content", default: "Today's show" },
+			{ key: "items", label: "Parts of the show (Name|scene name contains, one per line)", type: "textarea", group: "Content", default: "Starting soon|start\nJust chatting|chat\nGameplay|game\nBe right back|brb, be right back, break\nEnding|end", help: "A part lights up when the OBS scene name contains its keyword (several keywords: separate with commas). Leave the keyword off to match the part's own name." },
+			{ key: "ticks", label: "Tick off finished parts", type: "bool", group: "Content", default: true },
+			{ key: "showtime", label: "Show the time on the current part", type: "bool", group: "Content", default: true },
+			{ key: "layout", label: "Layout", type: "select", group: "Style", default: "list", options: [["list", "List"], ["row", "Row along the screen"]] },
+			{ key: "dim", label: "Brightness of the other parts", type: "range", group: "Style", default: 0.6, min: 0.15, max: 1, step: 0.05 }
+		].concat(lookFields({ fontsize: 22, font: "Inter", bgopacity: 0.6, accent: "ffd23f", radius: 14 })),
+		presets: [
+			{ name: "Today's show", tags: ["simple", "pro"], values: {} },
+			{ name: "Progress row", tags: ["pro", "simple"], values: { layout: "row", title: "", fontsize: 20, radius: 40 } },
+			{ name: "Podcast segments", tags: ["pro", "elegant"], values: { title: "Episode 42", items: "Cold open|intro\nNews|news\nInterview|guest, interview\nQ&A|q&a, questions\nOutro|outro, end", font: "Playfair Display", accent: "e8c37a", bg: "1a1410", bgopacity: 0.85 } },
+			{ name: "Game night levels", tags: ["gaming", "retro"], values: { title: "Stage select", items: "Warm up|start\nRanked|ranked, game\nViewer games|viewer\nBoss fight|boss\nGG|end", font: "Press Start 2P", fontsize: 13, accent: "53fc18", bg: "000000", bgopacity: 0.8, radius: 2 } },
+			{ name: "Cozy to-do", tags: ["cozy", "cute"], values: { title: "today's plan", font: "Kalam", fontsize: 26, accent: "f5b971", bg: "3b2a20", bgopacity: 0.8, fg: "fff3dc", radius: 22 } }
+		],
+		css: [
+			".rd{display:inline-block;text-align:left;min-width:11em;}",
+			".rd-title{font-size:.7em;letter-spacing:.14em;text-transform:uppercase;opacity:.8;margin:0 .5em .5em;}",
+			".rd-list{display:flex;flex-direction:column;}",
+			".rd.row .rd-list{flex-direction:row;align-items:center;}",
+			".rd-item{display:flex;align-items:center;padding:.32em .6em;border-radius:.5em;white-space:nowrap;transition:opacity .5s,background .5s,transform .5s cubic-bezier(.2,.9,.2,1);}",
+			".rd.row .rd-item{margin-right:.3em;}",
+			".rd-mark{position:relative;flex:none;width:.95em;height:.95em;margin-right:.6em;border-radius:50%;box-shadow:inset 0 0 0 .12em currentColor;opacity:.7;transition:background .4s,box-shadow .4s,opacity .4s;}",
+			".rd-item.done .rd-mark:after{content:'';position:absolute;left:.3em;top:.12em;width:.24em;height:.5em;border:solid currentColor;border-width:0 .13em .13em 0;transform:rotate(45deg);}",
+			".rd-item.done .rd-name{text-decoration:line-through;text-decoration-thickness:.07em;}",
+			".rd-item.cur{font-weight:700;transform:scale(1.03);transform-origin:0 50%;opacity:1 !important;}",
+			".rd-item.cur .rd-mark{opacity:1;animation:rd-pulse 1.8s ease-in-out infinite;}",
+			"@keyframes rd-pulse{0%,100%{transform:scale(1)}50%{transform:scale(.72)}}",
+			".rd-name{flex:1 1 auto;}",
+			".rd-time{margin-left:.9em;font-size:.8em;font-variant-numeric:tabular-nums;opacity:.85;}"
+		].join("\n"),
+		render: function (root, c, ctx) {
+			SSO.loadFont(c.font);
+			var el = panel(root, c, "rd" + (c.layout === "row" ? " row" : "")), preview = ctx && ctx.preview, alive = true;
+			var accent = SSO.color(c.accent), key = "rundown:" + (c.title || "show");
+			var parts = SSO.lines(c.items).map(function (line) {
+				var b = line.split("|"), name = b[0].trim();
+				return { name: name, keys: words(b.length > 1 && b[1].trim() ? b.slice(1).join("|") : name) };
+			}).filter(function (p) { return p.name; });
+			el.innerHTML = (c.title ? '<div class="rd-title">' + esc(c.title) + "</div>" : "") + '<div class="rd-list">' + parts.map(function (p) {
+				return '<div class="rd-item"><span class="rd-mark"></span><span class="rd-name">' + esc(p.name) + '</span><span class="rd-time"></span></div>';
+			}).join("") + "</div>";
+			var rows = el.querySelectorAll(".rd-item");
+			// Remembered for a few hours, so a source that reloads on every scene switch keeps its ticks.
+			var st = { cur: -1, since: Date.now(), done: [], seen: 0 };
+			if (!preview) { try { var saved = JSON.parse(SSO.store.get(key) || "null"); if (saved && Date.now() - saved.seen < 4 * 3600000 && saved.n === parts.length) { st = saved; } } catch (e) {} }
+			SSO.onCleanup(root, function () { alive = false; });
+			function save() { if (!preview) { st.seen = Date.now(); st.n = parts.length; SSO.store.set(key, JSON.stringify(st)); } }
+			function paint() {
+				var i, row, cur;
+				for (i = 0; i < rows.length; i++) {
+					row = rows[i]; cur = i === st.cur;
+					row.className = "rd-item" + (cur ? " cur" : "") + (!cur && c.ticks && st.done.indexOf(i) !== -1 ? " done" : "");
+					row.style.opacity = cur ? "1" : String(c.dim);
+					row.style.background = cur ? SSO.rgba(c.accent, 0.2) : "";
+					row.querySelector(".rd-mark").style.cssText = cur ? "background:" + accent + ";box-shadow:none;color:" + accent : "";
+					row.querySelector(".rd-time").textContent = cur && c.showtime ? SSO.formatDuration(Date.now() - st.since) : "";
+				}
+			}
+			function go(i) {
+				if (i === st.cur) { return; }
+				if (st.cur !== -1 && st.done.indexOf(st.cur) === -1) { st.done.push(st.cur); }
+				st.cur = i; st.since = Date.now();
+				save(); paint();
+			}
+			function scene(name) {
+				for (var i = 0; i < parts.length; i++) { if (sceneHas(parts[i].keys, name)) { go(i); return; } }
+				go(-1);
+			}
+			SSO.onCleanup(root, SSO.obs.on("obsSceneChanged", function (d) { if (d && d.name) { scene(d.name); } }));
+			SSO.onCleanup(root, SSO.obs.on("obsStreamingStarted", function () { st.done = []; save(); paint(); }));
+			if (preview) {
+				var at = 1; st.cur = 1; st.done = [0];
+				setInterval(function () { at = (at + 1) % parts.length; if (!at) { st.done = []; st.cur = -1; } go(at); }, 2600);
+			} else { SSO.obs.scene(function (sc) { if (alive && sc && sc.name) { scene(sc.name); } }); }
+			paint();
+			var beat = 0;
+			setInterval(function () { if (alive) { paint(); if (++beat % 15 === 0) { save(); } } }, 1000);
+		}
+	});
+
+	// ---------------------------------------------------------------- stream recap
+	function shortTime(ms) {
+		var p = SSO.splitDuration(ms), h = p.d * 24 + p.h;
+		return h ? h + "h " + SSO.pad(p.m) + "m" : p.m ? p.m + "m " + SSO.pad(p.s) + "s" : p.s + "s";
+	}
+	SSO.register({
+		id: "recap",
+		name: "Stream recap card",
+		category: "obs",
+		description: "An end card that fills itself in from OBS: how long you were live, how many scene changes and saved replays, and the scene you spent the most time in. It appears on your ending scene or when the stream stops.",
+		size: [640, 380],
+		fields: [
+			{ key: "title", label: "Title", type: "text", group: "Content", default: "Thanks for watching!" },
+			{ key: "show", label: "Show it", type: "select", group: "Content", default: "end", options: [["end", "On my ending scene, and when the stream stops"], ["always", "All the time"]] },
+			{ key: "when", label: "Ending scenes: name contains (comma separated)", type: "text", group: "Content", default: "end, outro, bye, thanks, credits", show: { show: "end" } },
+			{ key: "live", label: "Time live", type: "bool", group: "Content", default: true },
+			{ key: "changes", label: "Scene changes", type: "bool", group: "Content", default: true },
+			{ key: "clips", label: "Replays saved", type: "bool", group: "Content", default: true },
+			{ key: "top", label: "Scene you spent the most time in", type: "bool", group: "Content", default: true },
+			{ key: "footer", label: "Small text at the bottom", type: "text", group: "Content", default: "See you next time" },
+			{ key: "gap", label: "Treat as the same stream if it comes back within (minutes)", type: "number", group: "Content", default: 30, min: 1, max: 1440, step: 1 },
+			{ key: "key", label: "Recap name (use different names for separate recaps)", type: "text", group: "Content", default: "main" }
+		].concat(SSO.fxFields("Style")).concat(lookFields({ fontsize: 24, font: "Poppins", bgopacity: 0.78, accent: "ffd23f", radius: 20 })),
+		presets: [
+			{ name: "Thanks for watching", tags: ["simple", "pro"], values: {} },
+			{ name: "GG stats", tags: ["gaming"], values: { title: "GG!", fx: "retro", fx1: "ff2d55", fx2: "ffe600", fx3: "6b00ff", font: "Bungee", bgopacity: 0.6, accent: "53fc18", footer: "Same time tomorrow" } },
+			{ name: "Cozy goodnight", tags: ["cozy", "cute"], values: { title: "goodnight, chat", font: "Kalam", fontsize: 28, bg: "3b2a20", fg: "fff3dc", accent: "f5b971", radius: 28, footer: "thanks for hanging out" } },
+			{ name: "Broadcast sign-off", tags: ["pro", "elegant"], values: { title: "That's the show", font: "Playfair Display", bg: "0f1720", bgopacity: 0.9, accent: "e8c37a", radius: 6 } },
+			{ name: "Neon outro", tags: ["cyber"], values: { title: "Stream over", fx: "neon", fx1: "ff3ec8", fx3: "7a00ff", font: "Orbitron", bg: "0a0018", bgopacity: 0.8, fg: "d8fbff", accent: "8ef9ff", radius: 4 } }
+		],
+		css: [
+			".rc{display:inline-block;text-align:center;transition:opacity .7s,transform .7s cubic-bezier(.2,.9,.2,1);}",
+			".rc.off{opacity:0;transform:translateY(8%) scale(.96);}",
+			".rc-title{font-size:1.7em;font-weight:800;line-height:1.1;margin-bottom:.55em;}",
+			".rc-grid{display:flex;justify-content:center;flex-wrap:wrap;}",
+			".rc-stat{margin:0 .8em .5em;min-width:4.6em;}",
+			".rc-val{font-size:1.75em;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap;}",
+			".rc-val.word{font-size:1.2em;line-height:1.6;max-width:9em;overflow:hidden;text-overflow:ellipsis;}",
+			".rc-lab{font-size:.62em;letter-spacing:.12em;text-transform:uppercase;opacity:.8;white-space:nowrap;}",
+			".rc-foot{margin-top:.5em;font-size:.8em;opacity:.85;}"
+		].join("\n"),
+		render: function (root, c, ctx) {
+			SSO.loadFont(c.font);
+			var el = panel(root, c, "rc off"), preview = ctx && ctx.preview, alive = true, keys = words(c.when), accent = SSO.color(c.accent);
+			if (c.bgopacity > 0) { el.style.padding = "1em 1.4em"; }
+			var store = "recap:" + c.key, session = SSO.session("recap:" + c.key, c.gap, { preview: preview, reset: ctx && ctx.params && ctx.params.has("reset"), waitForStream: SSO.obs.available() });
+			var st = { start: session.start(), changes: 0, clips: 0, per: {}, cur: "", curAt: Date.now(), stopped: 0 };
+			try { var saved = JSON.parse(SSO.store.get(store) || "null"); if (saved && saved.start === st.start && !preview) { st = saved; st.curAt = Date.now(); } } catch (e) {}
+			if (preview) { st = { start: Date.now() - 8040000, changes: 23, clips: 4, per: { "Gameplay": 5200000, "Just Chatting": 2300000 }, cur: "Ending", curAt: Date.now(), stopped: 0 }; }
+			var ending = preview, streaming = !SSO.obs.available(), shown = false, shownAt = 0;
+			SSO.onCleanup(root, function () { alive = false; });
+			function save() { if (!preview) { SSO.store.set(store, JSON.stringify(st)); } }
+			function bank() { if (st.cur) { st.per[st.cur] = (st.per[st.cur] || 0) + Date.now() - st.curAt; } st.curAt = Date.now(); }
+			function fresh() { st = { start: session.start(), changes: 0, clips: 0, per: {}, cur: st.cur, curAt: Date.now(), stopped: 0 }; save(); }
+			function stat(value, label, word) { return '<div class="rc-stat"><div class="rc-val' + (word ? " word" : "") + '" style="color:' + accent + '">' + esc(value) + '</div><div class="rc-lab">' + esc(label) + "</div></div>"; }
+			function paint() {
+				if (!alive) { return; }
+				var show = c.show === "always" || ending || (st.stopped && !streaming) || preview, html = "", best = "", most = 0, k, ms, ease;
+				if (show && !shown) { shownAt = Date.now(); }
+				shown = show;
+				// numbers count up as the card arrives
+				ease = Math.min(1, (Date.now() - shownAt) / 1400); ease = 1 - Math.pow(1 - ease, 3);
+				ms = (st.stopped || Date.now()) - st.start;
+				// the ending scene itself does not count as where the time went
+				for (k in st.per) { if (!sceneHas(keys, k) && st.per[k] + (k === st.cur ? Date.now() - st.curAt : 0) > most) { most = st.per[k] + (k === st.cur ? Date.now() - st.curAt : 0); best = k; } }
+				if (c.live) { html += stat(shortTime(ms * ease), "live"); }
+				if (c.changes) { html += stat(String(Math.round(st.changes * ease)), st.changes === 1 ? "scene change" : "scene changes"); }
+				if (c.clips) { html += stat(String(Math.round(st.clips * ease)), st.clips === 1 ? "replay saved" : "replays saved"); }
+				if (c.top && best) { html += stat(best, "most time in", true); }
+				el.querySelector(".rc-grid").innerHTML = html;
+				el.className = "rc" + (show ? "" : " off");
+			}
+			el.innerHTML = '<div class="rc-title"></div><div class="rc-grid"></div>' + (c.footer ? '<div class="rc-foot">' + esc(c.footer) + "</div>" : "");
+			var title = el.querySelector(".rc-title");
+			title.innerHTML = "<span>" + SSO.fxHTML(c.title, c.fx) + "</span>";
+			if (c.fx && c.fx !== "ransom") { SSO.applyFX(title.firstChild, c.fx, c.fx1, c.fx2, c.fx3); }
+			function scene(name, first) {
+				if (name !== st.cur) { bank(); if (!first && st.cur) { st.changes++; } st.cur = name; save(); }
+				ending = sceneHas(keys, name);
+				paint();
+			}
+			SSO.onCleanup(root, SSO.obs.on("obsSceneChanged", function (d) { if (d && d.name) { scene(d.name, false); } }));
+			SSO.onCleanup(root, SSO.obs.on("obsReplaybufferSaved", function () { st.clips++; save(); paint(); }));
+			SSO.onCleanup(root, SSO.obs.on("obsStreamingStarted", function () { streaming = true; session.resume(); if (session.start() !== st.start) { fresh(); } st.stopped = 0; save(); paint(); }));
+			SSO.onCleanup(root, SSO.obs.on("obsStreamingStopped", function () { streaming = false; session.stopped(); bank(); st.stopped = Date.now(); save(); paint(); }));
+			if (!preview) {
+				SSO.obs.status(function (s) { if (alive && s) { streaming = !!s.streaming; if (streaming) { session.resume(); if (session.start() !== st.start) { fresh(); } st.stopped = 0; } paint(); } });
+				SSO.obs.scene(function (sc) { if (alive && sc && sc.name) { scene(sc.name, true); } });
+			}
+			paint();
+			setInterval(function () { if (alive) { paint(); if (!preview && !st.stopped) { bank(); save(); } } }, 1000);
+			// keep the count-up smooth for the first moments after it appears
+			setInterval(function () { if (alive && shown && Date.now() - shownAt < 1600) { paint(); } }, 60);
+		}
+	});
 })();

@@ -564,10 +564,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (existingTabs.length > 0) {
           // Background.html is already open, switch to it with #editor hash
           const tab = existingTabs[0];
-          await chrome.tabs.update(tab.id, {
-            url: getBackgroundPageUrl({ editor: true }),
-            active: true
-          });
+          const currentUrl = tab.url || tab.pendingUrl;
+          const editorUrl = new URL(currentUrl);
+          editorUrl.hash = 'editor';
+          const update = { active: true };
+          if (editorUrl.href !== currentUrl) update.url = editorUrl.href;
+          await chrome.tabs.update(tab.id, update);
           
           // Focus the window containing the tab
           if (tab.windowId) {
@@ -579,7 +581,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           // No background.html tab exists, create a new one
           const newTab = await chrome.tabs.create({
             url: getBackgroundPageUrl({ editor: true }),
-            active: true
+            active: true,
+            pinned: true
           });
           
           sendResponse({ success: true, message: 'Created new background tab' });

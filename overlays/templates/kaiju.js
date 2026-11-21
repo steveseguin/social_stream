@@ -229,7 +229,7 @@
 				var shake = 0, angle = 0, clock = performance.now();
 				function frame(now) {
 					if (stopped) { return; }
-					var dt = Math.min(0.05, (now - clock) / 1000) * (o.speed || 1); clock = now;
+					var dt = SSO.frameDelta(now - clock) * (o.speed || 1); clock = now;
 					var Wn = host.clientWidth || W, Hn = host.clientHeight || H;
 					if (Wn !== W || Hn !== H) { W = Wn; H = Hn; renderer.setSize(W, H); cam.aspect = W / H; cam.updateProjectionMatrix(); }
 					// walk toward the target, stomping what it touches

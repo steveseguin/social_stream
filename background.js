@@ -13,7 +13,7 @@ var iframe = null;
 var ninjaBridge = null;
 var transportGeneration = 0;
 var transportTask = null;
-var useNinjaSDK = false; // toggled via URL params &sdk/&beta, or can be wired to settings in future
+var useNinjaSDK = true;
 
 var settings = {};
 var messageTimeout = {};
@@ -86,6 +86,35 @@ function filterViewerCountSnapshotMeta(meta) {
 		filtered[type] = meta[type];
 	});
 	return filtered;
+}
+
+// The "Viewer count order" setting: source types in the order the user wants their viewer counts listed.
+function getViewerCountOrder() {
+	return getCachedCommaList(getSettingTextValue("viewerCountOrder"), true);
+}
+
+// Adds the chosen order to a viewer_updates snapshot. Overlays read `order` (see
+// shared/utils/viewerCountOrder.js); the counts are also listed in that order so a page
+// that simply loops over them matches. Nothing changes when no order is set.
+function applyViewerCountOrder(viewerEvent) {
+	const order = getViewerCountOrder();
+	const meta = viewerEvent && viewerEvent.meta;
+	if (!order.length || !meta || typeof meta !== "object" || Array.isArray(meta)) {
+		return viewerEvent;
+	}
+	const rank = function (sourceType) {
+		const type = normalizeSourceType(sourceType);
+		const index = order.findIndex(source => type === source || type.startsWith(source + "-"));
+		return index === -1 ? order.length : index;
+	};
+	const orderedMeta = {};
+	Object.keys(meta)
+		.map((type, index) => ({ type, index, rank: rank(type) }))
+		.sort((a, b) => a.rank - b.rank || a.index - b.index)
+		.forEach(entry => {
+			orderedMeta[entry.type] = meta[entry.type];
+		});
+	return Object.assign({}, viewerEvent, { meta: orderedMeta, order: order.slice() });
 }
 
 function getCachedRoleList(value) {
@@ -630,13 +659,6 @@ async function restoreBrowserHandle(key, mode = "readwrite") {
 
 var urlParams = new URLSearchParams(window.location.search);
 var devmode = urlParams.has("devmode") || false;
-function isTruthyUrlFlag(name) {
-	return urlParams.has(name) && !/^(0|false|off|no)$/i.test(urlParams.get(name) || "1");
-}
-var forceNinjaSDKFromUrl = isTruthyUrlFlag("sdk") || isTruthyUrlFlag("beta");
-var lastUseNinjaSDK = undefined; // track effective SDK usage across settings loads
-// initial default (may be recalculated when settings load)
-useNinjaSDK = false;
 
 var FacebookDupes = "";
 var FacebookDupesTime = null;
@@ -1887,20 +1909,11 @@ function loadSettings(item, resave = false) {
 		reloadNeeded = true;
 		persistSession({ state: isExtensionOn });
 	}
-	// Recompute effective SDK usage on settings load
-	try {
-		const settingsSDK = settings?.sdk?.setting === true || settings?.sdk === true || settings?.usesdk?.setting === true;
-		const effective = !!(forceNinjaSDKFromUrl || settingsSDK);
-		if (lastUseNinjaSDK === undefined) {
-			lastUseNinjaSDK = effective;
-		} else if (effective !== lastUseNinjaSDK) {
-			lastUseNinjaSDK = effective;
-			useNinjaSDK = effective;
-			reloadNeeded = true; // transport mode changed → reinit
-		} else {
-			useNinjaSDK = effective;
-		}
-	} catch (e) {}
+	const sdkEnabled = !getSettingFlag("legacyiframe");
+	if (useNinjaSDK !== sdkEnabled) {
+		useNinjaSDK = sdkEnabled;
+		reloadNeeded = true;
+	}
 
 	if (reloadNeeded) {
 		updateExtensionState(false);
@@ -5683,8 +5696,12 @@ async function sendIndividualLikeAlert(message, tab = false) {
 
 // Only captures still being processed are retained; completed messages need no tombstone cache.
 const pendingModeratedCaptures = new Set();
+function tracksPendingModeration(message) {
+	if (["loco", "x", "twitter"].includes(message.type)) return !!message.meta?.messageId;
+	return ["youtube", "youtubeshorts", "twitch", "kick", "vpzone"].includes(message.type);
+}
 function cancelPendingModeratedCaptures(deletion) {
-	if (!["youtube", "youtubeshorts", "twitch", "kick", "vpzone"].includes(deletion.type)) return;
+	if (!tracksPendingModeration(deletion)) return;
 	const matches = [];
 	pendingModeratedCaptures.forEach(function (pending) {
 		const message = pending.message;
@@ -5854,7 +5871,7 @@ async function processIncomingMessage(message, sender = null) {
 			noteTabActivity(tabIdForActivity, message);
 		}
 
-		const pendingCapture = ["youtube", "youtubeshorts", "twitch", "kick", "vpzone"].includes(message.type)
+		const pendingCapture = tracksPendingModeration(message)
 			? { message: Object.assign({}, message), cancelled: false } : null;
 		if (pendingCapture) pendingModeratedCaptures.add(pendingCapture);
 		try {
@@ -5977,6 +5994,11 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode() });
 		} else if (request.cmd && request.cmd === "getDockTransportHealth") {
 			sendResponse({ state: isExtensionOn, dockTransportHealth: getDockTransportHealth() });
+		} else if (request.cmd && request.cmd === "getViewerCountSources") {
+			// Source types currently reporting a viewer count, for the popup's order control.
+			const activeViewerCountTypes = new Set(Object.keys(buildViewerCountsFromMetaStore()));
+			Object.keys(viewerCounts).forEach(sourceKey => activeViewerCountTypes.add(sourceKey.split("-")[0]));
+			sendResponse({ state: isExtensionOn, viewerCountSources: Array.from(activeViewerCountTypes).filter(Boolean) });
 		} else if (request.cmd && request.cmd === "getSettings") {
 			ensureHandleStatusCache();
 			const cohostCapability = await getOpenAIRealtimeCohostCapability();
@@ -6165,7 +6187,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 
 			// If SDK setting changed, reinitialize transport if extension is ON
 			try {
-				if (request.setting === "sdk" && isExtensionOn && streamID) {
+				if (request.setting === "legacyiframe" && isExtensionOn && streamID) {
 					initTransport(streamID, password);
 				}
 			} catch (e) {
@@ -6512,7 +6534,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			if (request.setting == "showviewercount" || request.setting == "showlikecount") {
 				pushSettingChange();
 			}
-			if (request.setting == "hideViewerCountSources") {
+			if (request.setting == "hideViewerCountSources" || request.setting == "viewerCountOrder") {
 				publishViewerCountsFromMetaStore();
 			}
 
@@ -8171,7 +8193,7 @@ function publishViewerCountsFromMetaStore() {
 	var counts = buildViewerCountsFromMetaStore();
 	updateViewerCount({ event: "viewer_updates", meta: counts });
 
-	var viewerUpdateEvent = { event: "viewer_updates", meta: counts };
+	var viewerUpdateEvent = applyViewerCountOrder({ event: "viewer_updates", meta: counts });
 	sendDataP2P(viewerUpdateEvent);
 	sendTargetP2P(viewerUpdateEvent, "meta");
 	sendTargetP2P(viewerUpdateEvent, "aioverlay");
@@ -8303,9 +8325,9 @@ async function sendToDestinations(message, individualLikeAlreadyRouted, pendingC
 		}
 
 		if (message.event === "viewer_updates" && message.meta && typeof message.meta === "object") {
-			message = Object.assign({}, message, {
+			message = applyViewerCountOrder(Object.assign({}, message, {
 				meta: filterViewerCountSnapshotMeta(message.meta)
-			});
+			}));
 		}
 		if (message.event === "viewer_update" && !message.tid && isViewerCountSourceHidden(message.type)) {
 			return true;
@@ -13595,6 +13617,12 @@ function combineHypeData() {
 		result.combined[sourceType].viewers = viewerCounts[sourceType];
 	}
 
+	// The viewer overlay arranges its platforms itself; hand it the chosen order.
+	const viewerCountOrder = getViewerCountOrder();
+	if (viewerCountOrder.length) {
+		result.order = viewerCountOrder.slice();
+	}
+
 	// Add unique ID if specified
 	if (settings.hypeUniqueId) {
 		result.uniqueId = settings.hypeUniqueId;
@@ -15245,25 +15273,7 @@ async function destroyNinjaTransport() {
 }
 
 function initTransport(roomStreamID, pass = false) {
-	// Re-evaluate effective SDK flag each init, based on flexible truthy parsing
-	try {
-		const raw = settings && (settings.sdk !== undefined ? settings.sdk : settings.usesdk);
-		let flag = !!forceNinjaSDKFromUrl;
-		if (typeof raw === "boolean") {
-			flag = flag || raw;
-		} else if (raw && typeof raw === "object") {
-			// supports { setting: true/"true"/1 }
-			const v = raw.setting;
-			flag = flag || v === true || v === 1 || (typeof v === "string" && /^(1|true|on|yes)$/i.test(v));
-		} else if (typeof raw === "string") {
-			flag = flag || /^(1|true|on|yes)$/i.test(raw);
-		} else if (raw === 1) {
-			flag = true;
-		}
-		useNinjaSDK = !!flag;
-	} catch (e) {
-		useNinjaSDK = false;
-	}
+	useNinjaSDK = !getSettingFlag("legacyiframe");
 
 	log("Init transport for VDO", useNinjaSDK ? "SDK" : "IFRAME");
 	const generation = cancelPendingNinjaTransport();
@@ -15318,7 +15328,7 @@ async function initializeTransport(roomStreamID, pass, sdkEnabled, generation) {
 				await new Promise(r => setTimeout(r, 600));
 			} catch (e) {}
 			if (!isCurrent()) return;
-			bridge = new NinjaBridge({ debug: devmode });
+			bridge = new NinjaBridge({ debug: devmode, lanOnly: getSettingFlag("lanonly") });
 			ninjaBridge = bridge;
 			try {
 				window.ninjaBridge = ninjaBridge;
@@ -15373,7 +15383,7 @@ async function initializeTransport(roomStreamID, pass, sdkEnabled, generation) {
 					await bridge.destroy();
 				} catch (e) {}
 				if (!isCurrent()) return;
-				bridge = new NinjaBridge({ debug: devmode });
+				bridge = new NinjaBridge({ debug: devmode, lanOnly: getSettingFlag("lanonly") });
 				ninjaBridge = bridge;
 				try {
 					window.ninjaBridge = ninjaBridge;
@@ -16489,6 +16499,9 @@ function getWebsocketSourcePlatformFromUrl(url) {
 	if (lowerUrl.includes("/sources/websocket/vpzone.html")) {
 		return "vpzone";
 	}
+	if (lowerUrl.includes("/sources/websocket/x.html")) {
+		return "x";
+	}
 	return "";
 }
 
@@ -16623,6 +16636,17 @@ function forwardPlatformBanCommand(payload) {
 
 function forwardSourceControlToWebsocketPages(control, payload) {
 	if (!payload || typeof payload !== "object") {
+		return;
+	}
+	if (payload.type === "x" || payload.type === "twitter") {
+		const tabId = Number(payload.tid);
+		if (control === "deleteMessage" && isExtensionOn && payload.messageId && Number.isInteger(tabId) && tabId > 0) {
+			chrome.tabs.query({}, function (tabs) {
+				const tab = (tabs || []).find(entry => entry.id === tabId);
+				if (chrome.runtime.lastError || !tab || getWebsocketSourcePlatformFromUrl(tab.url) !== "x") return;
+				chrome.tabs.sendMessage(tab.id, { type: "SOURCE_CONTROL", control, platform: "x", payload }, function () { chrome.runtime.lastError; });
+			});
+		}
 		return;
 	}
 	// Pins must stay with the originating Twitch connection; never broadcast them.

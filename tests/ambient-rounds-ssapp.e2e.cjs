@@ -46,14 +46,13 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
   await page.screenshot({path:path.join(output,slug+'-desktop.png'),omitBackground:true});
   await page.waitForFunction(()=>!document.getElementById('result').hidden,{},{timeout:65000});assert((await page.locator('#result').textContent()).length>0);await page.screenshot({path:path.join(output,slug+'-result.png'),omitBackground:true});
   await page.waitForFunction(()=>document.getElementById('round').textContent==='Round 2',{},{timeout:12000});
-  await page.locator('#pause').click();assert.equal(await page.locator('#meter').textContent(),'Paused');
-  await page.locator('#restart').click();assert((await page.locator('#players').innerText()).startsWith('0 '));
+  assert.equal(await page.locator('button, #controls, #host-controls, #connection').count(),0);
   await app.evaluate(({BrowserWindow},url)=>BrowserWindow.getAllWindows().find(w=>w.webContents.getURL()===url).setContentSize(390,700),page.url());
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   if(slug==='mazeraid')assert(await page.locator('#playfield').evaluate(c=>Math.abs(c.width/c.height-innerWidth/innerHeight)<.01));
   await page.screenshot({path:path.join(output,slug+'-mobile.png'),omitBackground:true});
   await app.evaluate(({BrowserWindow},url)=>BrowserWindow.getAllWindows().find(w=>w.webContents.getURL()===url).setContentSize(1100,820),page.url());
-  console.log('PASS '+slug+' relay, chat, pause, reset and narrow layout');
+  console.log('PASS '+slug+' relay, chat and narrow layout');
  }
  assert.deepEqual(errors,[]);console.log('Screenshots: '+output);
  }finally{await app.close();for(const c of relay.clients)c.terminate();await new Promise(r=>relay.close(r));await new Promise(r=>avatarServer.close(r));}

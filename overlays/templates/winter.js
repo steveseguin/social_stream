@@ -37,7 +37,7 @@
 		function frame(now) {
 			if (!alive) { return; }
 			if (last === null) { last = now; }
-			var dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
+			var dt = SSO.frameDelta(now - last); last = now; t += dt;
 			fn(t, dt);
 			if (alive) { id = requestAnimationFrame(frame); }
 		}

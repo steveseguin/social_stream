@@ -1,4 +1,22 @@
 window.SSNGamesCatalog = [
+  {"id":"marblerace","title":"Marble Race","category":"Party","description":"Join with one command and watch your marble, wearing your picture, race everyone else down a new obstacle course every time.","command":"!play","path":"games/marblerace.html","image":"images/games/marblerace.jpg","demo":true,"audience":"2+ chatters"},
+  {"id":"streamboss","title":"Stream Boss","category":"Cooperative","description":"Every message chips at the boss, tips and subs hit hard, and whoever lands the final blow becomes the next boss.","command":"Say anything in chat","path":"games/streamboss.html","image":"images/games/streamboss.jpg","demo":true,"audience":"Solo-friendly"},
+  {"id":"trivia","title":"Trivia","category":"Puzzle","description":"A quiz show with ten question packs or your own questions. Fastest correct answers climb the board.","command":"a, b, c or d","path":"games/trivia.html","image":"images/games/trivia.jpg","demo":true,"audience":"Solo-friendly"},
+  {"id":"streambingo","title":"Stream Bingo","category":"Cooperative","description":"A shared card of things that might happen on stream. Chat calls a square when it happens; a full line is a bingo.","command":"1 to 25","path":"games/streambingo.html","image":"images/games/streambingo.jpg","demo":true,"audience":"3+ chatters"},
+  {"id":"cliffclimb","title":"Cliff Climb","category":"Party","description":"Every message is a hop up the cliff. The race runs up the two sides of the screen and leaves the middle clear.","command":"Say anything in chat","path":"games/cliffclimb.html","image":"images/games/cliffclimb.jpg","demo":true,"audience":"2+ chatters"},
+  {"id":"chatcrowd","title":"Chat Crowd","category":"Creative","description":"Everyone who chats becomes a little character with their own picture, strolling along the bottom of the stream and reacting when they talk.","command":"!jump, !wave, !dance, !hug, !duel","path":"games/chatcrowd.html","image":"images/games/chatcrowd.jpg","demo":true,"audience":"Solo-friendly"},
+  {"id":"rollcall","title":"Roll Call","category":"Show","description":"A starting-soon countdown where everyone who says hello lands on a growing wall of faces.","command":"Say anything in chat","path":"games/rollcall.html","image":"images/games/rollcall.jpg","demo":true,"audience":"Solo-friendly"},
+  {"id":"aquarium","title":"Chat Aquarium","category":"Show","description":"A calm break screen: every chatter is a fish with their own picture, and a tip drops treasure for the whole tank.","command":"Say anything in chat","path":"games/aquarium.html","image":"images/games/aquarium.jpg","demo":true,"audience":"Solo-friendly"},
+  {"id":"groupphoto","title":"Group Photo","category":"Show","description":"An end-of-show send-off: everyone who says goodbye walks into frame, the camera flashes, and the picture drops out as a print.","command":"Say anything in chat","path":"games/groupphoto.html","image":"images/games/groupphoto.jpg","demo":true,"audience":"Solo-friendly"},
+  {"id":"podium","title":"Winners\u2019 Podium","category":"Show","description":"The stream\u2019s top chatters across every game, counted in stars and shown on a podium. Made for the end of a show.","command":"!stars","path":"games/podium.html","image":"images/games/podium.jpg","demo":true,"audience":"Solo-friendly"},
+  {"id":"rotation","title":"Game Rotation","category":"Show","description":"One browser source that plays a list of games in turn, and can let chat vote on the next one.","command":"1, 2 or 3 to vote","path":"games/rotation.html","image":"images/games/rotation.jpg","demo":false,"audience":"Solo-friendly"},
+  {"id":"pegdrop","title":"Peg Drop","category":"Party","description":"Drop your ball from the moving chute and let the pegs decide your score. Built for portrait streams.","command":"!drop","path":"games/pegdrop.html","image":"images/games/pegdrop.jpg","demo":true,"audience":"Solo-friendly"},
+  {"id":"chatblocks","title":"Chat Blocks","category":"Cooperative","description":"A falling-block puzzle the whole chat steers by voting for a column. Built for portrait streams.","command":"1 to 8, or spin","path":"games/chatblocks.html","image":"images/games/chatblocks.jpg","demo":true,"audience":"Solo-friendly"},
+  {"id":"skydrop","title":"Sky Drop","category":"Party","description":"Jump from the airship, steer left and right against the wind, and land on the bullseye. Built for portrait streams.","command":"!jump","path":"games/skydrop.html","image":"images/games/skydrop.jpg","demo":true,"audience":"Solo-friendly"},
+  {"id":"towerduel","title":"Tower Duel","category":"Teams","description":"Chat splits into two teams that stack towers down each side of the screen, leaving the middle clear.","command":"Say anything in chat","path":"games/towerduel.html","image":"images/games/towerduel.jpg","demo":true,"audience":"2+ chatters"},
+  {"id":"frontrow","title":"Front Row","category":"Show","description":"A starting-soon countdown where every chatter takes a seat and the crowd goes wild when the show begins.","command":"Say anything in chat","path":"games/frontrow.html","image":"images/games/frontrow.jpg","demo":true,"audience":"Solo-friendly"},
+  {"id":"keepitup","title":"Keep It Up","category":"Show","description":"A break-time game: every message bumps the balloon, and chat tries to beat its longest rally.","command":"Say anything in chat","path":"games/keepitup.html","image":"images/games/keepitup.jpg","demo":true,"audience":"Solo-friendly"},
+  {"id":"encore","title":"Encore","category":"Show","description":"An end-of-show send-off where every chatter launches a firework with their picture in it.","command":"Say anything in chat","path":"games/encore.html","image":"images/games/encore.jpg","demo":true,"audience":"Solo-friendly"},
   {"id":"quickcall","title":"Quick Call","category":"Party","description":"Wait for your name, type your random code, and race for the fastest reply.","command":"!quick","path":"games/quickcall.html","image":"images/games/quickcall.jpg","demo":true,"audience":"Solo-friendly"},
   {
     "id": "mazeraid",
@@ -306,7 +324,7 @@ window.SSNGamesCatalog = [
     "path": "games/petrace.html",
     "image": "images/games/petrace.jpg",
     "demo": true,
-    "audience": "3+ chatters"
+    "audience": "2+ chatters"
   },
   {
     "id": "wordchain",
@@ -375,13 +393,73 @@ window.SSNGamesCatalog = [
     "audience": "2+ chatters"
   },
   {
-    "id": "phraseguess",
-    "title": "Phrase Guessing",
-    "category": "Puzzle",
-    "description": "Guess the host's phrases as their letters are gradually revealed.",
-    "command": "Guess the phrase",
-    "path": "games/phraseguess.html",
-    "image": "images/games/phraseguess.jpg",
+    "id": "seismograph",
+    "title": "Chat Quake",
+    "category": "Hype",
+    "description": "Turn chat excitement into a live seismograph with quakes, magnitudes, and a record to beat.",
+    "inspiration": {
+      "author": "Matthew Busel",
+      "name": "ChatQuake",
+      "url": "https://github.com/Mattbusel/chatquake/tree/b9750522acdc00aa96dc0d4b91a90402599c5dc8"
+    },
+    "command": "Say anything in chat",
+    "path": "games/seismograph.html",
+    "image": "images/games/seismograph.jpg",
+    "demo": true,
+    "audience": "Solo-friendly"
+  },
+  {
+    "id": "quakecity",
+    "title": "Quake City",
+    "category": "Hype",
+    "description": "Excited chat shakes a skyline down, and every rebuild is taller and tougher.",
+    "command": "Say anything in chat",
+    "path": "games/quakecity.html",
+    "image": "images/games/quakecity.jpg",
+    "demo": true,
+    "audience": "Solo-friendly"
+  },
+  {
+    "id": "hypeflight",
+    "title": "Hype Flight",
+    "category": "Hype",
+    "description": "Keep a little bird flying through easy gaps with nothing but chat hype.",
+    "command": "Say anything in chat",
+    "path": "games/hypeflight.html",
+    "image": "images/games/hypeflight.jpg",
+    "demo": true,
+    "audience": "Solo-friendly"
+  },
+  {
+    "id": "chatvolcano",
+    "title": "Chat Volcano",
+    "category": "Hype",
+    "description": "Build pressure with chat until the volcano erupts, bigger each time.",
+    "command": "Say anything in chat",
+    "path": "games/chatvolcano.html",
+    "image": "images/games/chatvolcano.jpg",
+    "demo": true,
+    "audience": "Solo-friendly"
+  },
+  {
+    "id": "hyperocket",
+    "title": "Hype Rocket",
+    "category": "Hype",
+    "description": "Fuel a rocket with chat hype and fly it to farther and farther destinations.",
+    "command": "Say anything in chat",
+    "path": "games/hyperocket.html",
+    "image": "images/games/hyperocket.jpg",
+    "demo": true,
+    "audience": "Solo-friendly"
+  },
+  {
+    "id": "chatcampfire",
+    "title": "Chat Campfire",
+    "category": "Hype",
+    "description": "Feed a shared campfire with chat and keep it burning as long as you can.",
+    "command": "Say anything in chat",
+    "path": "games/chatcampfire.html",
+    "image": "images/games/chatcampfire.jpg",
     "demo": true,
     "audience": "Solo-friendly"
   }

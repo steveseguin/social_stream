@@ -21,43 +21,152 @@
 </head>
 <body>
 	<div id="sso-root"></div>
-	<script src="core.js?v=17"></script>
+	<script>
+	// Load governor. Where the machine cannot keep up (OBS with browser hardware acceleration switched off, a laptop already
+	// busy with a game), animated overlays draw at 30, 20 or 15 fps instead of fighting the stream for the
+	// processor. Animations keep their speed, because they step by elapsed time. Overlays that can draw at a lower resolution
+	// without changing how they look (they ask through SSO_FRAMES.onScale) do that first. The frame rate comes back once things
+	// are calm, and what this source needed is remembered for half an hour so the next show starts that way.
+	// &fps=full turns all of this off; &fps=30, &fps=20 or &fps=15 holds that rate; &quality=0.75 or 0.5 holds that resolution.
+	(function () {
+		var raf = window.requestAnimationFrame, ric = window.requestIdleCallback, query = new URLSearchParams(location.search), asked = query.get("fps"), want = parseInt(asked, 10);
+		if (!raf || asked === "full") { return; }
+		var fixedFps = want > 0 ? Math.max(15, Math.min(60, want)) : 0, fixedRes = parseFloat(query.get("quality")), fixed = fixedFps > 0 || fixedRes > 0;
+		var level = 0, res = 1, hold = 0, frameMs = 0, nextDraw = null, scalers = [];
+		var queue = [], active = [], nextId = 1, pending = false, prev = 0, gap = 16.7, ran = false, winStart = 0, renders = 0, drawnGaps = [], spent = 0, idle = 0, idleAsked = false, calm = 0, retry = 12, lastUp = -99;
+		var KEY = "sso:load:v2:" + location.pathname + location.search;
+		// With a resolution to give up, that goes first (levels 1-2) and frames after (3-5); without one, frames straight away (1-3).
+		function top() { return scalers.length ? 5 : 3; }
+		function plan() {
+			var before = res;
+			if (fixed) { res = fixedRes > 0 ? Math.max(0.3, Math.min(1, fixedRes)) : 1; hold = fixedFps ? Math.ceil(60 / fixedFps) - 1 : 0; }
+			else if (scalers.length) { res = [1, 0.75, 0.56][Math.min(level, 2)]; hold = Math.max(0, level - 2); }
+			else { res = 1; hold = Math.min(3, level); }
+			frameMs = fixedFps ? 1000 / fixedFps : hold ? (hold + 1) * 1000 / 60 : 0;
+			nextDraw = null;
+			if (res !== before) { scalers.forEach(function (fn) { try { fn(res); } catch (e) {} }); }
+		}
+		if (!fixed) {
+			try { var saved = String(localStorage.getItem(KEY) || "").split(":"); if (Date.now() - (+saved[1] || 0) < 1800000) { level = Math.max(0, Math.min(5, +saved[0] || 0)); } } catch (e) {}
+		}
+		plan();
+		function onIdle(deadline) { idleAsked = false; idle += Math.min(deadline.timeRemaining(), gap); }
+		// load: share of the main thread that was not idle (drawing, painting). slow: share of drawn frames delayed beyond the normal source interval.
+		function judge(t) {
+			var span = t - winStart, load = Math.max(0, Math.min(1, ric ? 1 - idle / span : spent / span)), secs = t / 1000, was = level;
+			// The lower quartile estimates the source's normal frame interval despite occasional stalls.
+			drawnGaps.sort(function (a, b) { return a - b; });
+			var slowAfter = Math.max(40, 1.5 * (drawnGaps[Math.floor(drawnGaps.length / 4)] || 0));
+			var slow = 0;
+			for (var i = drawnGaps.length - 1; i >= 0 && drawnGaps[i] > slowAfter; i--) { slow++; }
+			var slowShare = drawnGaps.length ? slow / drawnGaps.length : 0;
+			winStart = t; renders = 0; drawnGaps.length = 0; spent = 0; idle = 0;
+			if (fixed || secs < 1.5) { return; }
+			if ((load > 0.7 && level < top()) || (slowShare > 0.3 && level < top() - 1)) {
+				level++; calm = 0;
+				// Speeding back up just failed, so wait longer before trying that again.
+				if (secs - lastUp < 10) { retry = Math.min(300, retry * 2); }
+			} else if (hold > 0 && load * (hold + 1) / hold < 0.4 && slowShare < 0.05) {
+				// Only frames are given back; a resolution that was given up stays that way for this run.
+				calm += span / 1000;
+				if (calm >= retry) { level--; calm = 0; lastUp = secs; }
+			} else { calm = 0; }
+			if (level !== was) {
+				plan();
+				try { localStorage.setItem(KEY, level + ":" + Date.now()); } catch (e) {}
+			}
+		}
+		function pump(t) {
+			pending = false;
+			gap = prev ? t - prev : 16.7;
+			prev = t;
+			// A long gap is a hidden source or a stalled page, not a slow frame.
+			if (gap > 250) { winStart = t; renders = 0; drawnGaps.length = 0; spent = 0; idle = 0; gap = 16.7; nextDraw = null; }
+			else if (ran && gap > 0) { drawnGaps.push(gap); }
+			ran = false;
+			if (!queue.length) { return; }
+			if (ric && !idleAsked) { idleAsked = true; ric(onIdle); }
+			if (!winStart) { winStart = t; }
+			// Schedule by time: OBS and monitors may supply 30, 60, 120 or other native frame rates.
+			if (frameMs && nextDraw !== null && t < nextDraw - 0.1) { pending = true; raf(pump); return; }
+			if (frameMs) { nextDraw = nextDraw === null || t - nextDraw >= frameMs ? t + frameMs : nextDraw + frameMs; }
+			var list = queue, t0 = performance.now(), i;
+			active = list;
+			queue = [];
+			for (i = 0; i < list.length; i++) {
+				if (!list[i].fn) { continue; }
+				try { list[i].fn(t); } catch (e) { (function (err) { setTimeout(function () { throw err; }, 0); })(e); }
+			}
+			active = [];
+			spent += performance.now() - t0;
+			renders++; ran = true;
+			if (t - winStart >= 1000 && renders >= 5) { judge(t); }
+			if (queue.length && !pending) { pending = true; raf(pump); }
+		}
+		window.requestAnimationFrame = function (fn) {
+			var id = nextId++;
+			queue.push({ id: id, fn: fn });
+			if (!pending) { pending = true; raf(pump); }
+			return id;
+		};
+		window.cancelAnimationFrame = function (id) {
+			for (var i = 0; i < queue.length; i++) { if (queue[i].id === id) { queue[i].fn = null; return; } }
+			for (var j = 0; j < active.length; j++) { if (active[j].id === id) { active[j].fn = null; return; } }
+		};
+		window.SSO_FRAMES = {
+			skipping: function () { return hold; },
+			level: function () { return level; },
+			scale: function () { return res; },
+			// For overlays that draw in their own units and so look the same at any canvas resolution: fn(scale) is called
+			// whenever the scale changes. Returns a function that stops the calls.
+			onScale: function (fn) {
+				scalers.push(fn);
+				plan();
+				return function () { var i = scalers.indexOf(fn); if (i >= 0) { scalers.splice(i, 1); } };
+			},
+			set: function (n) { level = Math.max(0, Math.min(top(), n | 0)); plan(); }
+		};
+	})();
+	</script>
+	<script src="core.js?v=21"></script>
 	<script src="templates/countries.js?v=15"></script>
-	<script src="templates/engines.js?v=17"></script>
+	<script src="templates/engines.js?v=19"></script>
 	<script src="templates/socials.js?v=18"></script>
 	<script src="templates/time.js?v=17"></script>
-	<script src="templates/scenes.js?v=19"></script>
-	<script src="templates/maps.js?v=17"></script>
+	<script src="templates/scenes.js?v=21"></script>
+	<script src="templates/maps.js?v=18"></script>
 	<script src="templates/fun.js?v=15"></script>
 	<script src="templates/text.js?v=15"></script>
 	<script src="templates/gaming.js?v=17"></script>
-	<script src="templates/obs.js?v=15"></script>
-	<script src="templates/pets.js?v=15"></script>
-	<script src="templates/extra.js?v=23"></script>
-	<script src="templates/themes.js?v=17"></script>
-	<script src="templates/music.js?v=15"></script>
+	<script src="templates/obs.js?v=16"></script>
+	<script src="templates/petrig.js?v=1"></script>
+	<script src="templates/pets.js?v=16"></script>
+	<script src="templates/extra.js?v=24"></script>
+	<script src="templates/themes.js?v=19"></script>
+	<script src="templates/music.js?v=16"></script>
 	<script src="templates/promo.js?v=15"></script>
 	<script src="templates/live.js?v=16"></script>
-	<script src="templates/games.js?v=15"></script>
-	<script src="templates/reef.js?v=15"></script>
-	<script src="templates/kaiju.js?v=15"></script>
-	<script src="templates/party.js?v=15"></script>
-	<script src="templates/cozy.js?v=16"></script>
-	<script src="templates/themebar.js?v=15"></script>
-	<script src="templates/winter.js?v=2"></script>
+	<script src="templates/games.js?v=16"></script>
+	<script src="templates/reef.js?v=16"></script>
+	<script src="templates/kaiju.js?v=16"></script>
+	<script src="templates/party.js?v=17"></script>
+	<script src="templates/cozy.js?v=17"></script>
+	<script src="templates/themebar.js?v=16"></script>
+	<script src="templates/winter.js?v=3"></script>
 	<script src="templates/winterstrip.js?v=2"></script>
 	<script src="templates/winterscenes.js?v=2"></script>
 	<script src="templates/winterfx.js?v=2"></script>
-	<script src="templates/frames2.js?v=1"></script>
+	<script src="templates/frames2.js?v=2"></script>
 	<script src="templates/lowerfx.js?v=1"></script>
 	<script src="templates/seasons.js?v=1"></script>
 	<script src="templates/seasondecor.js?v=1"></script>
-	<script src="templates/splat.js?v=1"></script>
-	<script src="templates/three3d.js?v=1"></script>
-	<script src="templates/portrait.js?v=2"></script>
-	<script src="templates/celebrate.js?v=1"></script>
-	<script src="templates/moments.js?v=2"></script>
+	<script src="templates/splat.js?v=3"></script>
+	<script src="templates/three3d.js?v=2"></script>
+	<script src="templates/portrait.js?v=3"></script>
+	<script src="templates/celebrate.js?v=3"></script>
+	<script src="templates/moments.js?v=4"></script>
 	<script src="templates/random.js?v=3"></script>
+	<script src="templates/countscreen.js?v=3"></script>
 	<script src="templates/seasontags.js?v=1"></script>
 	<script>
 	(function () {

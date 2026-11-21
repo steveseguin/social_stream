@@ -579,21 +579,22 @@
 			function fit() { cv.width = cv.clientWidth || window.innerWidth; cv.height = cv.clientHeight || window.innerHeight; }
 			fit();
 			window.addEventListener("resize", fit);
-			var alive = true, frameId;
+			var alive = true, frameId, last = performance.now();
 			SSO.onCleanup(root, function () { alive = false; cancelAnimationFrame(frameId); window.removeEventListener("resize", fit); });
 			for (var i = 0; i < 260; i++) { drops.push({ x: Math.random(), y: Math.random(), v: 0.6 + Math.random(), s: Math.random() }); }
-			(function anim() {
+			(function anim(now) {
 				if (!alive) { return; }
+				var step = SSO.frameDelta(now - last) * 60; last = now;
 				g.clearRect(0, 0, cv.width, cv.height);
 				var kind = wx && wx.kind;
 				if (kind === "rain" || kind === "storm" || kind === "snow") {
 					drops.forEach(function (d) {
 						if (kind === "snow") {
-							d.y += d.v * 0.0012; d.x += Math.sin(d.y * 20 + d.s * 10) * 0.0006;
+							d.y += d.v * 0.0012 * step; d.x += Math.sin(d.y * 20 + d.s * 10) * 0.0006 * step;
 							g.fillStyle = "rgba(255,255,255," + (0.5 + d.s * 0.5) + ")";
 							g.beginPath(); g.arc(d.x * cv.width, d.y * cv.height, 1 + d.s * 2.5, 0, 6.283); g.fill();
 						} else {
-							d.y += d.v * 0.012; d.x -= 0.001;
+							d.y += d.v * 0.012 * step; d.x -= 0.001 * step;
 							g.strokeStyle = "rgba(200,220,255," + (0.25 + d.s * 0.35) + ")";
 							g.lineWidth = 1 + d.s;
 							g.beginPath(); g.moveTo(d.x * cv.width, d.y * cv.height); g.lineTo(d.x * cv.width - 3, d.y * cv.height + 14 + d.s * 10); g.stroke();
@@ -602,7 +603,7 @@
 					});
 				}
 				frameId = requestAnimationFrame(anim);
-			})();
+			})(last);
 			if (c.style === "window" && stars) {
 				stars.width = stars.clientWidth || window.innerWidth;
 				stars.height = stars.clientHeight || window.innerHeight;

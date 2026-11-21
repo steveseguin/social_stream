@@ -452,8 +452,14 @@
 			"matches": ["https://kiwiirc.com/nextclient/*"]
 		},
 		{
+			"js": ["./sources/inject/loco-history.js"],
+			"matches": ["https://*.loco.gg/*", "https://loco.gg/streamers/*", "https://*.loco.com/*", "https://loco.com/stream/*", "https://loco.com/streamers/*", "https://loco.com/chat/streamers/*"],
+			"world": "MAIN",
+			"run_at": "document_start"
+		},
+		{
 			"js": ["./sources/loco.js"],
-			"matches": ["https://*.loco.gg/*", "https://loco.gg/streamers/*", "https://*.loco.com/*", "https://loco.com/streamers/*", "https://loco.com/chat/streamers/*"]
+			"matches": ["https://*.loco.gg/*", "https://loco.gg/streamers/*", "https://*.loco.com/*", "https://loco.com/stream/*", "https://loco.com/streamers/*", "https://loco.com/chat/streamers/*"]
 		},
 		{
 			"js": ["./sources/joystick.js"],
@@ -648,6 +654,10 @@
 		{
 			"js": ["./sources/websocket/vpzone.js"],
 			"matches": ["https://socialstream.ninja/sources/websocket/vpzone*", "https://beta.socialstream.ninja/sources/websocket/vpzone*", "https://socialstream.ninja/beta/sources/websocket/vpzone*", "file:///C:/Users/steve/Code/social_stream/sources/websocket/vpzone.html*", "http://localhost:8080/*/vpzone.html*", "http://localhost:8181/*/vpzone.html*"]
+		},
+		{
+			"js": ["./sources/websocket/x.js"],
+			"matches": ["https://socialstream.ninja/sources/websocket/x.html*", "https://beta.socialstream.ninja/sources/websocket/x.html*", "https://socialstream.ninja/beta/sources/websocket/x.html*"]
 		},
 		{
 			"js": ["./sources/websocket/lumni.js"],

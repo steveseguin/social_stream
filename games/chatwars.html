@@ -20,12 +20,17 @@
             scrollbar-width: none;  /* Firefox */
         }
 
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
         body {
             margin: 0;
             padding: 0;
             background: #1a1a2e;
             overflow: hidden;
-            font-family: 'Arial', sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             color: white;
         }
 
@@ -37,228 +42,247 @@
             background: #000000;
         }
 
-        #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
+        body.transparent {
+            background: transparent;
         }
 
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Team scores */
+        #scoreboard {
+            position: absolute;
+            top: 3vmin;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .team-pill {
+            position: relative;
+            display: inline-block;
+            min-width: 17vmin;
+            height: 8.4vmin;
+            margin: 0 1.2vmin;
+            border-radius: 999px;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            box-sizing: border-box;
+            font-size: 5.4vmin;
+            line-height: 8.2vmin;
+            font-weight: 900;
+            color: #16161d;
+            transition: transform 0.3s ease;
+        }
+
+        .team-pill.lead {
+            transform: scale(1.12);
+        }
+
+        .team-pill.lead::after {
+            content: '👑';
+            position: absolute;
+            top: -2.6vmin;
+            right: -1.4vmin;
+            font-size: 4.4vmin;
+            line-height: 1;
+            transform: rotate(18deg);
+        }
+
+        .team-pill.bump {
+            animation: pill-bump 0.4s ease-out;
+        }
+
+        @keyframes pill-bump {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.25); }
+            100% { transform: scale(1); }
+        }
+
+        /* New recruits float out of their team's score */
+        .recruit {
+            position: absolute;
+            left: 50%;
+            top: 100%;
+            max-width: 26vmin;
+            padding: 0.3vmin 1.8vmin;
+            border-radius: 999px;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            box-sizing: border-box;
+            font-size: 2.8vmin;
+            line-height: 1.4;
+            font-weight: 800;
+            color: #16161d;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            z-index: 30;
+            animation: recruit 2.4s ease-out both;
+        }
+
+        @keyframes recruit {
+            0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
+            15% { transform: translate(-50%, 1vmin) scale(1); opacity: 1; }
+            75% { transform: translate(-50%, 2.4vmin) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, 4vmin) scale(0.9); opacity: 0; }
+        }
+
+        /* The map */
         #battlefield {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            height: 60%;
-            border: 3px solid #fff;
-            border-radius: 15px;
-            overflow: hidden;
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            grid-template-rows: repeat(6, 1fr);
-            gap: 2px;
-            background: #333;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
 
         .territory {
-            background: #555;
-            border: 1px solid #777;
-            position: relative;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
+            position: absolute;
+            border-radius: 22%;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            box-sizing: border-box;
+            transition: background-color 0.3s ease;
         }
 
-        .territory.team-red {
-            background: linear-gradient(45deg, #ff4757, #ff6b7a);
-            color: white;
-            box-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
-        }
+        .team-red, .territory.team-red { background-color: #ff5d6c; }
+        .team-blue, .territory.team-blue { background-color: #4d8dff; }
+        .team-green, .territory.team-green { background-color: #3ddc84; }
+        .team-yellow, .territory.team-yellow { background-color: #ffd23f; }
 
-        .territory.team-blue {
-            background: linear-gradient(45deg, #3742fa, #5352ed);
-            color: white;
-            box-shadow: 0 0 10px rgba(55, 66, 250, 0.5);
-        }
-
-        .territory.team-green {
-            background: linear-gradient(45deg, #2ed573, #7bed9f);
-            color: white;
-            box-shadow: 0 0 10px rgba(46, 213, 115, 0.5);
-        }
-
+        .territory.team-red,
+        .territory.team-blue,
+        .territory.team-green,
         .territory.team-yellow {
-            background: linear-gradient(45deg, #ffa502, #ff9f43);
-            color: black;
-            box-shadow: 0 0 10px rgba(255, 165, 2, 0.5);
+            border-color: rgba(0, 0, 0, 0.2);
+            background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 55%);
         }
 
         .capture-animation {
             animation: capture-pulse 0.5s ease-out;
+            z-index: 10;
         }
 
         @keyframes capture-pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); box-shadow: 0 0 20px currentColor; }
+            0% { transform: scale(0.5); }
+            55% { transform: scale(1.16); }
             100% { transform: scale(1); }
         }
 
-        #team-stats {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 15px 20px;
-            border-radius: 10px;
-            backdrop-filter: blur(1px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 100;
+        .blocked-animation {
+            animation: blocked-shake 0.4s ease-in-out;
         }
 
-        .team-stat {
-            display: flex;
-            align-items: center;
-            margin: 8px 0;
-            font-size: 16px;
-        }
-
-        .team-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            margin-right: 10px;
-            border: 2px solid white;
-        }
-
-        .team-red-color { background: #ff4757; }
-        .team-blue-color { background: #3742fa; }
-        .team-green-color { background: #2ed573; }
-        .team-yellow-color { background: #ffa502; }
-
-        #battle-log {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 300px;
-            height: 200px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            overflow-y: auto;
-            z-index: 100;
-        }
-
-        .log-entry {
-            margin: 5px 0;
-            padding: 5px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            font-size: 14px;
-            opacity: 0.9;
-        }
-
-        #instructions {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            text-align: left;
-            font-size: 16px;
-            z-index: 100;
-        }
-
-        #instructions strong {
-            color: #ffaa00;
-            font-size: 18px;
-        }
-
-        #victory-screen {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            font-size: 48px;
-            font-weight: bold;
-            z-index: 200;
-            display: none;
-            border: 3px solid #ffaa00;
+        @keyframes blocked-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8%); }
+            75% { transform: translateX(8%); }
         }
 
         .battle-effect {
             position: absolute;
-            font-size: 24px;
+            line-height: 1;
             pointer-events: none;
-            z-index: 50;
-            animation: battle-burst 1s ease-out forwards;
+            z-index: 20;
+            animation: battle-explosion 0.8s ease-out both;
         }
 
-        @keyframes battle-burst {
-            0% {
-                opacity: 1;
-                transform: scale(0.5);
-            }
-            50% {
-                opacity: 1;
-                transform: scale(1.2);
-            }
-            100% {
-                opacity: 0;
-                transform: scale(1);
-            }
+        @keyframes battle-explosion {
+            0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+            60% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+        }
+
+        /* The one thing viewers need to know: what to type */
+        #hint {
+            position: absolute;
+            bottom: 3vmin;
+            left: 0;
+            width: 100%;
+            text-align: center;
+        }
+
+        #hint-chip {
+            display: inline-block;
+            padding: 0.9vmin 2.6vmin;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            font-size: 3.8vmin;
+            line-height: 1.3;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        #hint-chip span {
+            margin: 0 1.2vmin;
+        }
+
+        .cmd-red { color: #ff7a86; }
+        .cmd-blue { color: #74a7ff; }
+        .cmd-green { color: #56e59a; }
+        .cmd-yellow { color: #ffd95e; }
+
+        /* Winner */
+        #victory-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 44vmin;
+            height: 44vmin;
+            margin: -22vmin 0 0 -22vmin;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, 0.25);
+            box-sizing: border-box;
+            text-align: center;
+            display: none;
+            z-index: 200;
+            animation: victory-pop 0.6s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+        }
+
+        #victory-badge {
+            margin-top: 6vmin;
+            font-size: 20vmin;
+            line-height: 1.1;
+        }
+
+        #countdown {
+            font-size: 7vmin;
+            line-height: 1;
+            font-weight: 900;
+            color: #16161d;
+        }
+
+        @keyframes victory-pop {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <div id="team-stats">
-            <h3 style="margin-top: 0;">Team Control</h3>
-            <div class="team-stat">
-                <div class="team-color team-red-color"></div>
-                <span>Red: <span id="red-count">0</span> territories</span>
-            </div>
-            <div class="team-stat">
-                <div class="team-color team-blue-color"></div>
-                <span>Blue: <span id="blue-count">0</span> territories</span>
-            </div>
-            <div class="team-stat">
-                <div class="team-color team-green-color"></div>
-                <span>Green: <span id="green-count">0</span> territories</span>
-            </div>
-            <div class="team-stat">
-                <div class="team-color team-yellow-color"></div>
-                <span>Yellow: <span id="yellow-count">0</span> territories</span>
-            </div>
-        </div>
-        
-        <div id="battle-log">
-            <h4 style="margin-top: 0;">Battle Log</h4>
-            <div id="log-content"></div>
-        </div>
-        
         <div id="battlefield"></div>
-        
-        <div id="instructions">
-            <div><strong>⚔️ Chat Wars - How to Play:</strong></div>
-            <div>Type <strong>!red</strong>, <strong>!blue</strong>, <strong>!green</strong>, or <strong>!yellow</strong> to join a team</div>
-            <div>Chat messages help your team capture territory!</div>
-            <div>First team to 50% wins the battle!</div>
+
+        <div id="scoreboard">
+            <div class="team-pill team-red" id="red-pill"><span id="red-count">0</span></div>
+            <div class="team-pill team-blue" id="blue-pill"><span id="blue-count">0</span></div>
+            <div class="team-pill team-green" id="green-pill"><span id="green-count">0</span></div>
+            <div class="team-pill team-yellow" id="yellow-pill"><span id="yellow-count">0</span></div>
         </div>
-        
+
+        <div id="hint">
+            <div id="hint-chip"><span class="cmd-red">!red</span><span class="cmd-blue">!blue</span><span class="cmd-green">!green</span><span class="cmd-yellow">!yellow</span></div>
+        </div>
+
         <div id="victory-screen">
-            <div id="victory-text">VICTORY!</div>
-            <div style="font-size: 24px; margin-top: 20px;">New battle starting in <span id="countdown">10</span>s</div>
+            <div id="victory-badge">🏆</div>
+            <div id="countdown">10</div>
         </div>
     </div>
 
@@ -275,26 +299,30 @@
         } else if (urlParams.has('darkmode')) {
             document.body.classList.add('darkmode');
         }
+        if (urlParams.has('transparent')) {
+            document.body.classList.add('transparent');
+        }
+
+        // Map size (drawn 11 wide in landscape, 11 tall in portrait)
+        const MAP_LONG = 11;
+        const MAP_SHORT = 6;
+        const CAPTURE_COOLDOWN = 500; // ms between captures per team, so a chat flood cannot end a battle instantly
 
         // Game state
         let gameState = {
             territories: [],
             teams: {
-                red: { players: new Set(), territories: 0, power: 0 },
-                blue: { players: new Set(), territories: 0, power: 0 },
-                green: { players: new Set(), territories: 0, power: 0 },
-                yellow: { players: new Set(), territories: 0, power: 0 }
+                red: { players: new Set(), territories: 0, power: 0, lastCapture: 0, home: [0, 0] },
+                blue: { players: new Set(), territories: 0, power: 0, lastCapture: 0, home: [MAP_LONG - 1, 0] },
+                green: { players: new Set(), territories: 0, power: 0, lastCapture: 0, home: [0, MAP_SHORT - 1] },
+                yellow: { players: new Set(), territories: 0, power: 0, lastCapture: 0, home: [MAP_LONG - 1, MAP_SHORT - 1] }
             },
-            totalTerritories: 60,
+            totalTerritories: MAP_LONG * MAP_SHORT,
             battleActive: true,
             lastCaptureTime: Date.now()
         };
 
         const teamColors = ['red', 'blue', 'green', 'yellow'];
-
-        function escapeHtml(str) {
-            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        }
 
         function stripHtml(html) {
             const tmp = document.createElement('template').content.appendChild(document.createElement('div'));
@@ -302,21 +330,54 @@
             return tmp.textContent || tmp.innerText || '';
         }
 
+        // Fit the map into the space between the scores and the hint
+        function layoutBattlefield() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const unit = Math.min(width, height) / 100;
+            const portrait = height > width;
+            const cols = portrait ? MAP_SHORT : MAP_LONG;
+            const rows = portrait ? MAP_LONG : MAP_SHORT;
+
+            const areaLeft = unit * 3;
+            const areaTop = unit * 16;
+            const areaWidth = width - unit * 6;
+            const areaHeight = height - areaTop - unit * 12.5;
+            const cell = Math.max(4, Math.min(areaWidth / cols, areaHeight / rows));
+            const gap = cell * 0.08;
+            const offsetX = areaLeft + (areaWidth - cell * cols) / 2;
+            const offsetY = areaTop + (areaHeight - cell * rows) / 2;
+
+            gameState.territories.forEach(territory => {
+                const col = portrait ? territory.y : territory.x;
+                const row = portrait ? territory.x : territory.y;
+                const style = territory.element.style;
+                style.left = (offsetX + col * cell + gap / 2) + 'px';
+                style.top = (offsetY + row * cell + gap / 2) + 'px';
+                style.width = (cell - gap) + 'px';
+                style.height = (cell - gap) + 'px';
+            });
+
+            gameState.cellSize = cell;
+        }
+
         // Initialize battlefield
         function initBattlefield() {
             const battlefield = document.getElementById('battlefield');
-            battlefield.innerHTML = '';
+            while (battlefield.firstChild) {
+                battlefield.removeChild(battlefield.firstChild);
+            }
             gameState.territories = [];
 
             for (let i = 0; i < gameState.totalTerritories; i++) {
                 const territory = document.createElement('div');
                 territory.className = 'territory';
-                territory.id = `territory-${i}`;
-                territory.textContent = i + 1;
                 battlefield.appendChild(territory);
-                
+
                 gameState.territories.push({
                     id: i,
+                    x: i % MAP_LONG,
+                    y: Math.floor(i / MAP_LONG),
                     team: null,
                     element: territory
                 });
@@ -326,8 +387,10 @@
             Object.values(gameState.teams).forEach(team => {
                 team.territories = 0;
                 team.power = 0;
+                team.lastCapture = 0;
             });
 
+            layoutBattlefield();
             updateDisplay();
         }
 
@@ -339,67 +402,97 @@
             });
         }
 
+        function getTerritory(x, y) {
+            if (x < 0 || y < 0 || x >= MAP_LONG || y >= MAP_SHORT) return null;
+            return gameState.territories[y * MAP_LONG + x];
+        }
+
+        function pickRandom(list) {
+            return list[Math.floor(Math.random() * list.length)];
+        }
+
+        // Work out where a team can push next: empty land beside its own first, then its neighbours
+        function findTarget(teamName) {
+            const team = gameState.teams[teamName];
+            const open = [];
+            const enemy = [];
+
+            gameState.territories.forEach(territory => {
+                if (territory.team !== teamName) return;
+                [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(step => {
+                    const next = getTerritory(territory.x + step[0], territory.y + step[1]);
+                    if (!next || next.team === teamName) return;
+                    if (next.team === null) {
+                        if (open.indexOf(next) === -1) open.push(next);
+                    } else if (enemy.indexOf(next) === -1) {
+                        enemy.push(next);
+                    }
+                });
+            });
+
+            if (open.length > 0) return pickRandom(open);
+            if (enemy.length > 0) return pickRandom(enemy);
+
+            // No land yet (or wiped out): start from the tile nearest the team's corner
+            if (team.territories === 0) {
+                const distance = t => Math.abs(t.x - team.home[0]) + Math.abs(t.y - team.home[1]);
+                const free = gameState.territories.filter(t => t.team === null);
+                const pool = free.length > 0 ? free : gameState.territories.filter(t => t.team !== teamName);
+                pool.sort((a, b) => distance(a) - distance(b));
+                return pool[0] || null;
+            }
+
+            return null;
+        }
+
         // Capture territory
-        function captureTerritory(teamName) {
+        function captureTerritory(teamName, guaranteed) {
             if (!gameState.battleActive) return;
 
             const team = gameState.teams[teamName];
             if (!team || team.players.size === 0) return;
 
-            // Find neutral or weakly defended territories to capture
-            const availableTerritories = gameState.territories.filter(t => {
-                if (t.team === null) return true; // Neutral territory
-                if (t.team === teamName) return false; // Already owned
-                
-                // Can capture from weaker teams
-                const currentTeam = gameState.teams[t.team];
-                return team.power > currentTeam.power * 1.2; // Need 20% more power to capture
-            });
+            const now = Date.now();
+            if (now - team.lastCapture < CAPTURE_COOLDOWN) return;
 
-            if (availableTerritories.length === 0) return;
+            const targetTerritory = findTarget(teamName);
+            if (!targetTerritory) return;
 
-            // Choose territory to capture (prefer neutral, then weakest defended)
-            availableTerritories.sort((a, b) => {
-                if (a.team === null && b.team !== null) return -1;
-                if (a.team !== null && b.team === null) return 1;
-                if (a.team === null && b.team === null) return Math.random() - 0.5;
-                
-                const aPower = gameState.teams[a.team].power;
-                const bPower = gameState.teams[b.team].power;
-                return aPower - bPower;
-            });
-
-            const targetTerritory = availableTerritories[0];
             const oldTeam = targetTerritory.team;
+            let chance;
+            if (oldTeam) {
+                // Taking land from a rival depends on which team is more active
+                const rival = gameState.teams[oldTeam];
+                chance = Math.max(0.2, Math.min(0.85, team.power / (team.power + rival.power + 0.01)));
+            } else {
+                chance = Math.min(0.9, 0.35 + team.power / 20);
+            }
+
+            if (!guaranteed && Math.random() >= chance) {
+                if (oldTeam) {
+                    team.lastCapture = now;
+                    targetTerritory.element.classList.add('blocked-animation');
+                    setTimeout(() => {
+                        targetTerritory.element.classList.remove('blocked-animation');
+                    }, 400);
+                }
+                return;
+            }
+
+            team.lastCapture = now;
+            gameState.lastCaptureTime = now;
 
             // Update territory ownership
             if (oldTeam) {
                 gameState.teams[oldTeam].territories--;
                 targetTerritory.element.classList.remove(`team-${oldTeam}`);
+                createBattleEffect(targetTerritory.element);
             }
 
             targetTerritory.team = teamName;
             targetTerritory.element.classList.add(`team-${teamName}`);
             targetTerritory.element.classList.add('capture-animation');
             team.territories++;
-
-            // Create battle effect
-            createBattleEffect(targetTerritory.element, teamName);
-
-            // Log the capture
-            const logEntry = document.createElement('div');
-            logEntry.className = 'log-entry capture';
-            logEntry.innerHTML = oldTeam 
-                ? `<strong>${teamName.toUpperCase()}</strong> captured territory ${targetTerritory.id + 1} from <strong>${oldTeam.toUpperCase()}</strong>`
-                : `<strong>${teamName.toUpperCase()}</strong> captured territory ${targetTerritory.id + 1}`;
-            
-            const logContent = document.getElementById('log-content');
-            logContent.insertBefore(logEntry, logContent.firstChild);
-            
-            // Keep log manageable
-            while (logContent.children.length > 10) {
-                logContent.removeChild(logContent.lastChild);
-            }
 
             // Remove animation class
             setTimeout(() => {
@@ -411,28 +504,61 @@
         }
 
         // Create battle effect
-        function createBattleEffect(element, teamName) {
+        function createBattleEffect(element) {
             const effect = document.createElement('div');
             effect.className = 'battle-effect';
             effect.textContent = '💥';
-            effect.style.position = 'absolute';
             effect.style.left = (element.offsetLeft + element.offsetWidth / 2) + 'px';
             effect.style.top = (element.offsetTop + element.offsetHeight / 2) + 'px';
-            effect.style.color = getComputedStyle(element).backgroundColor;
-            
+            effect.style.fontSize = (element.offsetWidth * 0.8) + 'px';
+
             document.getElementById('battlefield').appendChild(effect);
-            
+
             setTimeout(() => {
                 if (effect.parentNode) {
                     effect.parentNode.removeChild(effect);
                 }
-            }, 1000);
+            }, 800);
+        }
+
+        function bumpPill(teamName) {
+            const pill = document.getElementById(`${teamName}-pill`);
+            pill.classList.remove('bump');
+            void pill.offsetWidth;
+            pill.classList.add('bump');
+        }
+
+        // Show who just joined a team
+        function showRecruit(teamName, username) {
+            const pill = document.getElementById(`${teamName}-pill`);
+            if (pill.querySelectorAll('.recruit').length >= 2) return;
+
+            const tag = document.createElement('div');
+            tag.className = `recruit team-${teamName}`;
+            tag.textContent = username;
+            pill.appendChild(tag);
+            bumpPill(teamName);
+
+            setTimeout(() => {
+                if (tag.parentNode) tag.parentNode.removeChild(tag);
+            }, 2400);
         }
 
         // Update display
         function updateDisplay() {
+            let best = 0;
+            Object.values(gameState.teams).forEach(team => {
+                best = Math.max(best, team.territories);
+            });
+
             Object.entries(gameState.teams).forEach(([teamName, team]) => {
                 document.getElementById(`${teamName}-count`).textContent = team.territories;
+                const pill = document.getElementById(`${teamName}-pill`);
+                if (best > 0 && team.territories === best) {
+                    pill.classList.add('lead');
+                } else {
+                    pill.classList.remove('lead');
+                }
             });
         }
 
@@ -441,7 +567,7 @@
             if (!gameState.battleActive) return;
 
             const winThreshold = Math.floor(gameState.totalTerritories * 0.5); // 50% to win
-            
+
             for (const [teamName, team] of Object.entries(gameState.teams)) {
                 if (team.territories >= winThreshold) {
                     gameState.battleActive = false;
@@ -454,20 +580,28 @@
         // Show victory screen
         function showVictory(winningTeam) {
             const victoryScreen = document.getElementById('victory-screen');
-            const victoryText = document.getElementById('victory-text');
-            
-            victoryText.textContent = `${winningTeam.toUpperCase()} TEAM WINS!`;
-            victoryText.style.color = getTeamColor(winningTeam);
+
+            // The winner sweeps the rest of the map
+            gameState.territories.forEach((territory, index) => {
+                setTimeout(() => {
+                    if (gameState.battleActive) return;
+                    teamColors.forEach(name => territory.element.classList.remove(`team-${name}`));
+                    territory.element.classList.add(`team-${winningTeam}`);
+                }, 300 + index * 18);
+            });
+
+            victoryScreen.style.backgroundColor = getTeamColor(winningTeam);
             victoryScreen.style.display = 'block';
 
             // Countdown to next battle
             let countdown = 10;
             const countdownElement = document.getElementById('countdown');
-            
+            countdownElement.textContent = countdown;
+
             const countdownInterval = setInterval(() => {
                 countdown--;
                 countdownElement.textContent = countdown;
-                
+
                 if (countdown <= 0) {
                     clearInterval(countdownInterval);
                     victoryScreen.style.display = 'none';
@@ -479,10 +613,10 @@
         // Get team color
         function getTeamColor(teamName) {
             const colors = {
-                red: '#ff4757',
-                blue: '#3742fa',
-                green: '#2ed573',
-                yellow: '#ffa502'
+                red: '#ff5d6c',
+                blue: '#4d8dff',
+                green: '#3ddc84',
+                yellow: '#ffd23f'
             };
             return colors[teamName] || '#ffffff';
         }
@@ -491,7 +625,7 @@
         function startNewBattle() {
             gameState.battleActive = true;
             gameState.lastCaptureTime = Date.now();
-            
+
             // Clear players but keep some for continuity
             Object.values(gameState.teams).forEach(team => {
                 const players = Array.from(team.players);
@@ -504,14 +638,6 @@
             });
 
             initBattlefield();
-
-            // Log new battle
-            const logEntry = document.createElement('div');
-            logEntry.className = 'log-entry battle';
-            logEntry.innerHTML = '<strong>🏴‍☠️ NEW BATTLE BEGINS! 🏴‍☠️</strong>';
-            
-            const logContent = document.getElementById('log-content');
-            logContent.insertBefore(logEntry, logContent.firstChild);
         }
 
         // Process incoming message
@@ -538,7 +664,8 @@
             const teamMatch = message.match(/^!(red|blue|green|yellow)$/);
             if (teamMatch) {
                 const newTeam = teamMatch[1];
-                
+                const alreadyThere = gameState.teams[newTeam].players.has(playerKey);
+
                 // Remove player from all teams
                 Object.values(gameState.teams).forEach(team => {
                     team.players.delete(playerKey);
@@ -550,27 +677,22 @@
                 }
                 gameState.teams[newTeam].players.add(playerKey);
 
-                // Log team join
-                const logEntry = document.createElement('div');
-                logEntry.className = 'log-entry';
-                logEntry.innerHTML = `<strong>${escapeHtml(username)}</strong> joined <strong>${newTeam.toUpperCase()}</strong> team`;
-                
-                const logContent = document.getElementById('log-content');
-                logContent.insertBefore(logEntry, logContent.firstChild);
+                if (!alreadyThere) {
+                    showRecruit(newTeam, stripHtml(username));
+                }
+
+                // A team's first recruit plants its flag straight away
+                gameState.teams[newTeam].power += 1;
+                captureTerritory(newTeam, gameState.teams[newTeam].territories === 0);
 
                 return;
             }
 
-            // Find player's team and add power
+            // Find player's team and push for more territory
             for (const [teamName, team] of Object.entries(gameState.teams)) {
                 if (team.players.has(playerKey)) {
                     team.power += 1;
-                    
-                    // Chance to capture territory based on team activity
-                    const captureChance = Math.min(0.3, team.power / 100); // Max 30% chance
-                    if (Math.random() < captureChance) {
-                        captureTerritory(teamName);
-                    }
+                    captureTerritory(teamName);
                     break;
                 }
             }
@@ -639,35 +761,51 @@
 
             connectWebSocket();
         }
-        
+
         // Demo mode
         if (urlParams.has('demo')) {
-            const demoPlayers = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank'];
-            let demoPlayerTeams = {};
-            
-            // Assign demo players to random teams
-            demoPlayers.forEach(player => {
-                const team = teamColors[Math.floor(Math.random() * teamColors.length)];
-                demoPlayerTeams[player] = team;
-                gameState.teams[team].players.add(player);
-            });
+            const demoPlayers = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry'];
 
-            setInterval(() => {
-                if (!gameState.battleActive) return;
-                
-                const player = demoPlayers[Math.floor(Math.random() * demoPlayers.length)];
-                const messages = ['attack!', 'charge!', 'defend!', 'victory!', 'go team!'];
-                
-                processData({
-                    chatname: player,
-                    chatmessage: messages[Math.floor(Math.random() * messages.length)]
+            // Demo players pick a team the same way real chatters do
+            function demoJoin() {
+                demoPlayers.forEach((player, index) => {
+                    setTimeout(() => {
+                        processData({
+                            chatname: player,
+                            chatmessage: '!' + (index < 4 ? teamColors[index] : pickRandom(teamColors))
+                        });
+                    }, 150 + index * 250);
                 });
-            }, 800);
+            }
+            demoJoin();
+
+            let demoWasActive = true;
+            setInterval(() => {
+                if (!gameState.battleActive) {
+                    demoWasActive = false;
+                    return;
+                }
+                if (!demoWasActive) {
+                    demoWasActive = true;
+                    demoJoin();
+                    return;
+                }
+
+                const messages = ['attack!', 'charge!', 'defend!', 'victory!', 'go team!'];
+
+                processData({
+                    chatname: pickRandom(demoPlayers),
+                    chatmessage: pickRandom(messages)
+                });
+            }, 260);
         }
-        
+
         // Update team power periodically
         setInterval(updateTeamPower, 100);
-        
+
+        // Keep the map fitted to the window
+        window.addEventListener('resize', layoutBattlefield);
+
         // Initialize game
         initBattlefield();
     </script>

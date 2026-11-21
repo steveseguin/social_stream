@@ -430,7 +430,7 @@
 			var fireObj = SSO.fireGL(fireHost, { sources: sources, palette: fire, quality: o.quality || 0.6, speed: o.speed || 1 });
 			(function frame(now) {
 				if (!alive) { return; }
-				var dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt * (o.speed || 1);
+				var dt = SSO.frameDelta(now - last); last = now; t += dt * (o.speed || 1);
 				if (back._fit() || !bg) { front._fit(); build(); }
 				front._fit();
 				var g = back.getContext("2d"), f = front.getContext("2d"), L = G, d = back._d, fl = flicker(t);
@@ -540,7 +540,7 @@
 		}
 		(function frame(now) {
 			if (!alive) { return; }
-			var dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt * (o.speed || 1);
+			var dt = SSO.frameDelta(now - last); last = now; t += dt * (o.speed || 1);
 			var W = cv._w, H = cv._h;
 			if (cv._fit() || !flakes.length) { W = cv._w; H = cv._h; seed(W, H); bg = null; }
 			if (!bg && !o.transparent) { build(W, H); }
@@ -613,7 +613,7 @@
 		}
 		(function frame(now) {
 			if (!alive) { return; }
-			var dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt * (o.speed || 1);
+			var dt = SSO.frameDelta(now - last); last = now; t += dt * (o.speed || 1);
 			if (cv._fit() || !leaves.length) { seed(cv._w, cv._h); bg = null; }
 			var W = cv._w, H = cv._h;
 			if (!bg && !o.transparent) { build(W, H); }
@@ -811,7 +811,7 @@
 			SSO.onCleanup(root, function () { alive = false; cancelAnimationFrame(frameId); });
 			(function frame(now) {
 				if (!alive) { return; }
-				var dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
+				var dt = SSO.frameDelta(now - last); last = now; t += dt;
 				if (back._fit() || !bg) { front._fit(); build(); }
 				var g = back.getContext("2d"), f = front.getContext("2d"), d = back._d, L = G;
 				g.setTransform(d, 0, 0, d, 0, 0); f.setTransform(d, 0, 0, d, 0, 0);

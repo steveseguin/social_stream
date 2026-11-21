@@ -14,7 +14,7 @@
 	}
 	function loop(fn) {
 		var alive = true, last = null, frameId;
-		(function f(now) { if (!alive) { return; } if (last === null) { last = now; } var dt = Math.min(0.05, (now - last) / 1000); last = now; fn(dt); frameId = requestAnimationFrame(f); })(performance.now());
+		(function f(now) { if (!alive) { return; } if (last === null) { last = now; } var dt = SSO.frameDelta(now - last); last = now; fn(dt); frameId = requestAnimationFrame(f); })(performance.now());
 		return { stop: function () { alive = false; cancelAnimationFrame(frameId); } };
 	}
 

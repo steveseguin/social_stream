@@ -20,22 +20,34 @@
             scrollbar-width: none;  /* Firefox */
         }
 
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
         body {
             margin: 0;
             padding: 0;
             background: #1a1a1a;
             overflow: hidden;
-            font-family: 'Arial', sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             color: white;
         }
 
-        #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
+        body.transparent {
+            background: transparent;
         }
 
-        #canvas {
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #canvas, #fx {
             position: absolute;
             top: 0;
             left: 0;
@@ -43,238 +55,256 @@
             height: 100%;
         }
 
+        /* Share of the painted area, one slice per team */
         #team-scores {
             position: absolute;
-            top: 20px;
+            top: 3vmin;
             left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 30px;
-            background: rgba(0,0,0,0.8);
-            padding: 15px 30px;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            font-size: 24px;
-            font-weight: bold;
+            width: 76vmin;
+            height: 7.4vmin;
+            margin-left: -38vmin;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-sizing: border-box;
+            background: rgba(0, 0, 0, 0.45);
+            overflow: hidden;
+            white-space: nowrap;
+            font-size: 0;
         }
 
         .team-score {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .team-indicator {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            box-shadow: 0 0 10px currentColor;
-        }
-
-        #leaderboard {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.8);
-            padding: 20px;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            min-width: 250px;
-        }
-
-        #leaderboard h3 {
-            margin-top: 0;
-            color: #FFD700;
+            display: inline-block;
+            width: 25%;
+            height: 100%;
+            overflow: hidden;
             text-align: center;
-        }
-
-        .player-entry {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 8px 0;
-            padding: 8px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-
-        .player-entry:hover {
-            background: rgba(255,255,255,0.2);
-            transform: translateX(5px);
-        }
-
-        .player-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            margin-right: 10px;
-            box-shadow: 0 0 5px currentColor;
-        }
-
-        #instructions {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            padding: 15px 30px;
-            border-radius: 15px;
-            text-align: center;
-            font-size: 16px;
-        }
-
-        #instructions strong {
-            color: #FFD700;
-            font-size: 18px;
-        }
-
-        .paint-splash {
-            position: absolute;
-            border-radius: 50%;
-            pointer-events: none;
-            animation: splash 0.5s ease-out forwards;
-        }
-
-        @keyframes splash {
-            0% { transform: scale(0); opacity: 1; }
-            100% { transform: scale(1); opacity: 0.8; }
-        }
-
-        .power-up {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            background: rgba(255,255,255,0.2);
-            border: 2px solid white;
-            animation: powerUpPulse 1s ease-in-out infinite;
-        }
-
-        @keyframes powerUpPulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(255,255,255,0.5); }
-            50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(255,255,255,0.8); }
+            font-size: 4.4vmin;
+            line-height: 7.2vmin;
+            font-weight: 900;
+            color: #16161d;
+            transition: width 0.4s ease;
         }
 
         #round-timer {
             position: absolute;
-            top: 100px;
+            top: 12vmin;
             left: 50%;
-            transform: translateX(-50%);
-            font-size: 36px;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            width: 22vmin;
+            margin-left: -11vmin;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            box-sizing: border-box;
+            background: rgba(0, 0, 0, 0.5);
+            text-align: center;
+            font-size: 6vmin;
+            line-height: 1.35;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
         }
 
-        #winner-overlay {
+        #round-timer.ending {
+            color: #ffd23f;
+        }
+
+        /* Top three painters */
+        #leaderboard {
             position: absolute;
+            top: 3vmin;
+            left: 3vmin;
+            width: 36vmin;
+        }
+
+        .player-entry {
+            position: relative;
+            height: 5.4vmin;
+            margin-bottom: 0.8vmin;
+            padding: 0 2vmin 0 5.4vmin;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-sizing: border-box;
+            background: rgba(0, 0, 0, 0.5);
+            font-size: 3vmin;
+            line-height: 5.2vmin;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .player-color {
+            position: absolute;
+            left: 1.2vmin;
+            top: 50%;
+            width: 3vmin;
+            height: 3vmin;
+            margin-top: -1.5vmin;
+            border-radius: 50%;
+        }
+
+        .player-name {
+            display: block;
+            margin-right: 9vmin;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .player-cells {
+            position: absolute;
+            right: 2vmin;
             top: 0;
+            font-weight: 900;
+        }
+
+        .power-up {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1em;
+            height: 1em;
+            margin: -0.5em 0 0 -0.5em;
+            font-size: 8vmin;
+            line-height: 1;
+            text-align: center;
+            animation: power-up-float 1.6s ease-in-out infinite alternate;
+        }
+
+        @keyframes power-up-float {
+            0% { transform: translateY(-1.2vmin) rotate(-8deg); }
+            100% { transform: translateY(1.2vmin) rotate(8deg); }
+        }
+
+        /* The one thing viewers need to know: what to type */
+        #hint {
+            position: absolute;
+            bottom: 3vmin;
             left: 0;
             width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
+            text-align: center;
         }
 
-        #winner-text {
-            font-size: 72px;
-            font-weight: bold;
-            text-shadow: 3px 3px 6px rgba(0,0,0,0.9);
-            margin-bottom: 20px;
+        #hint-chip {
+            display: inline-block;
+            padding: 0.9vmin 2.6vmin;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            font-size: 3.8vmin;
+            line-height: 1.3;
+            font-weight: 800;
+            white-space: nowrap;
         }
 
-        .particle {
+        #hint-chip span {
+            margin: 0 1.2vmin;
+        }
+
+        /* Winner */
+        #winner-overlay {
             position: absolute;
-            width: 4px;
-            height: 4px;
+            top: 50%;
+            left: 50%;
+            width: 44vmin;
+            height: 44vmin;
+            margin: -22vmin 0 0 -22vmin;
             border-radius: 50%;
-            pointer-events: none;
+            border: 1px solid rgba(0, 0, 0, 0.25);
+            box-sizing: border-box;
+            text-align: center;
+            font-size: 24vmin;
+            line-height: 42vmin;
+            display: none;
+            z-index: 200;
+            animation: winner-pop 0.6s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+        }
+
+        @keyframes winner-pop {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+        /* Tall and squarish windows: the painters move below the share bar */
+        body.stacked #team-scores {
+            width: 92vmin;
+            margin-left: -46vmin;
+        }
+
+        body.stacked #round-timer {
+            left: auto;
+            right: 4vmin;
+            margin-left: 0;
+        }
+
+        body.stacked #leaderboard {
+            top: 12vmin;
+            left: 4vmin;
         }
     </style>
 </head>
 <body>
     <div id="game-container">
         <canvas id="canvas"></canvas>
-        
+        <canvas id="fx"></canvas>
+        <div id="power-ups"></div>
+
         <div id="team-scores">
-            <div class="team-score">
-                <div class="team-indicator" style="background-color: #ff6b6b;"></div>
-                <span id="red-score">Red: 0%</span>
-            </div>
-            <div class="team-score">
-                <div class="team-indicator" style="background-color: #4ecdc4;"></div>
-                <span id="blue-score">Blue: 0%</span>
-            </div>
-            <div class="team-score">
-                <div class="team-indicator" style="background-color: #ffe66d;"></div>
-                <span id="yellow-score">Yellow: 0%</span>
-            </div>
-            <div class="team-score">
-                <div class="team-indicator" style="background-color: #a8e6cf;"></div>
-                <span id="green-score">Green: 0%</span>
-            </div>
+            <div class="team-score" id="red-score" style="background-color: #ff5d6c;"></div>
+            <div class="team-score" id="blue-score" style="background-color: #4d8dff;"></div>
+            <div class="team-score" id="yellow-score" style="background-color: #ffd23f;"></div>
+            <div class="team-score" id="green-score" style="background-color: #3ddc84;"></div>
         </div>
-        
+
         <div id="round-timer">2:00</div>
-        
+
         <div id="leaderboard">
-            <h3>🎨 Top Painters</h3>
             <div id="player-list"></div>
         </div>
-        
-        <div id="instructions">
-            <div><strong>🎨 Color Wars</strong></div>
-            <div>Type <b>!red</b>, <b>!blue</b>, <b>!yellow</b>, or <b>!green</b> to paint!</div>
-            <div style="font-size: 14px; opacity: 0.8; margin-top: 5px;">
-                Cover the most area with your team's color!
-            </div>
+
+        <div id="hint">
+            <div id="hint-chip"><span style="color: #ff7a86;">!red</span><span style="color: #74a7ff;">!blue</span><span style="color: #ffd95e;">!yellow</span><span style="color: #56e59a;">!green</span></div>
         </div>
-        
-        <div id="winner-overlay">
-            <div id="winner-text"></div>
-            <div style="font-size: 24px;">Next round starting soon...</div>
-        </div>
+
+        <div id="winner-overlay"></div>
     </div>
-    
+
     <script>
     // Game settings
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    
+    const fxCanvas = document.getElementById('fx');
+    const fx = fxCanvas.getContext('2d');
+
     const teams = {
-        red: { color: '#ff6b6b', players: new Map() },
-        blue: { color: '#4ecdc4', players: new Map() },
-        yellow: { color: '#ffe66d', players: new Map() },
-        green: { color: '#a8e6cf', players: new Map() }
+        red: { color: '#ff5d6c', players: new Map() },
+        blue: { color: '#4d8dff', players: new Map() },
+        yellow: { color: '#ffd23f', players: new Map() },
+        green: { color: '#3ddc84', players: new Map() }
     };
-    
-    const GRID_SIZE = 10;
-    const PAINT_RADIUS = 30;
+
     const ROUND_DURATION = 120; // 2 minutes
-    
+    const MAX_SPLATS = 900;
+
+    // Sizes follow the window, see layout()
+    let unit = 10;
+    let GRID_SIZE = 12;
+    let PAINT_RADIUS = 55;
+
     let grid = [];
+    let splats = [];
     let powerUps = [];
     let particles = [];
+    let rings = [];
+    let tags = [];
     let roundTime = ROUND_DURATION;
+    let roundStarted = false;
     let gameActive = true;
-    
+    let fxDirty = false;
+
     // URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
     const sessionId = urlParams.get('session') || 'test';
     const password = urlParams.get('password') || 'false';
 
-    function escapeHtml(str) {
-        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    if (urlParams.has('transparent')) {
+        document.body.classList.add('transparent');
     }
 
     function stripHtml(html) {
@@ -285,7 +315,7 @@
     function initGrid() {
         const cols = Math.ceil(canvas.width / GRID_SIZE);
         const rows = Math.ceil(canvas.height / GRID_SIZE);
-        
+
         grid = [];
         for (let y = 0; y < rows; y++) {
             grid[y] = [];
@@ -294,97 +324,171 @@
             }
         }
     }
-    
-    function paintArea(x, y, team, username, radius = PAINT_RADIUS, playerKey = username) {
-        const gridX = Math.floor(x / GRID_SIZE);
-        const gridY = Math.floor(y / GRID_SIZE);
-        const radiusInGrid = Math.ceil(radius / GRID_SIZE);
-        
-        let paintedCells = 0;
-        
-        for (let dy = -radiusInGrid; dy <= radiusInGrid; dy++) {
-            for (let dx = -radiusInGrid; dx <= radiusInGrid; dx++) {
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance <= radiusInGrid) {
-                    const gx = gridX + dx;
-                    const gy = gridY + dy;
-                    
-                    if (gx >= 0 && gx < grid[0].length && gy >= 0 && gy < grid.length) {
-                        if (grid[gy][gx] !== team) {
-                            grid[gy][gx] = team;
-                            paintedCells++;
-                        }
-                    }
+
+    // Claim every grid cell under a circle of paint, returns how many changed hands
+    function markCircle(cx, cy, radius, team) {
+        if (!grid.length) return 0;
+        const x0 = Math.max(0, Math.floor((cx - radius) / GRID_SIZE));
+        const x1 = Math.min(grid[0].length - 1, Math.floor((cx + radius) / GRID_SIZE));
+        const y0 = Math.max(0, Math.floor((cy - radius) / GRID_SIZE));
+        const y1 = Math.min(grid.length - 1, Math.floor((cy + radius) / GRID_SIZE));
+        let changed = 0;
+
+        for (let gy = y0; gy <= y1; gy++) {
+            for (let gx = x0; gx <= x1; gx++) {
+                const dx = (gx + 0.5) * GRID_SIZE - cx;
+                const dy = (gy + 0.5) * GRID_SIZE - cy;
+                if (dx * dx + dy * dy <= radius * radius && grid[gy][gx] !== team) {
+                    grid[gy][gx] = team;
+                    changed++;
                 }
             }
         }
-        
+
+        return changed;
+    }
+
+    // Put a splat on the paint layer: one big blob with smaller drops around it
+    function stampSplat(splat) {
+        const x = splat.nx * canvas.width;
+        const y = splat.ny * canvas.height;
+        const radius = splat.scale * unit;
+        let changed = markCircle(x, y, radius, splat.team);
+
+        ctx.fillStyle = teams[splat.team].color;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        splat.drops.forEach(drop => {
+            const dx = x + Math.cos(drop.angle) * radius * drop.distance;
+            const dy = y + Math.sin(drop.angle) * radius * drop.distance;
+            changed += markCircle(dx, dy, radius * drop.size, splat.team);
+            ctx.beginPath();
+            ctx.arc(dx, dy, radius * drop.size, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        return changed;
+    }
+
+    function getPlayer(playerKey, username, team) {
+        const players = teams[team].players;
+        let playerData = players.get(playerKey);
+        if (!playerData) {
+            if (players.size >= 300) {
+                players.delete(players.keys().next().value);
+            }
+            playerData = { name: stripHtml(username), paintedCells: 0, splashes: 0 };
+            players.set(playerKey, playerData);
+        }
+        return playerData;
+    }
+
+    function paintArea(x, y, team, username, radius = PAINT_RADIUS, playerKey = username, credit = true) {
+        const splat = {
+            nx: x / canvas.width,
+            ny: y / canvas.height,
+            team: team,
+            scale: radius / unit,
+            drops: []
+        };
+        for (let i = 0; i < 7; i++) {
+            splat.drops.push({
+                angle: Math.random() * Math.PI * 2,
+                distance: 0.8 + Math.random() * 0.55,
+                size: 0.16 + Math.random() * 0.28
+            });
+        }
+
+        if (splats.length >= MAX_SPLATS) splats.shift();
+        splats.push(splat);
+        const paintedCells = stampSplat(splat);
+
         // Update player stats
-        const playerData = teams[team].players.get(playerKey) || { name: username, paintedCells: 0, splashes: 0 };
-        playerData.paintedCells += paintedCells;
-        playerData.splashes++;
-        teams[team].players.set(playerKey, playerData);
-        
+        if (credit) {
+            const playerData = getPlayer(playerKey, username, team);
+            playerData.paintedCells += paintedCells;
+            playerData.splashes++;
+        }
+
         // Create visual splash effect
         createSplash(x, y, teams[team].color, radius);
-        
-        // Create particles
-        for (let i = 0; i < 20; i++) {
+
+        return paintedCells;
+    }
+
+    function createSplash(x, y, color, radius) {
+        if (rings.length < 30) {
+            rings.push({ x: x, y: y, radius: radius, color: color, life: 1 });
+        }
+
+        for (let i = 0; i < 12 && particles.length < 400; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = radius * (2 + Math.random() * 4);
             particles.push({
                 x: x,
                 y: y,
-                vx: (Math.random() - 0.5) * 10,
-                vy: (Math.random() - 0.5) * 10,
-                color: teams[team].color,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - radius * 2,
+                size: radius * (0.08 + Math.random() * 0.1),
+                color: color,
                 life: 1
             });
         }
-        
-        return paintedCells;
+        fxDirty = true;
     }
-    
-    function createSplash(x, y, color, radius) {
-        const splash = document.createElement('div');
-        splash.className = 'paint-splash';
-        splash.style.left = x + 'px';
-        splash.style.top = y + 'px';
-        splash.style.width = radius * 2 + 'px';
-        splash.style.height = radius * 2 + 'px';
-        splash.style.backgroundColor = color;
-        splash.style.marginLeft = -radius + 'px';
-        splash.style.marginTop = -radius + 'px';
-        document.getElementById('game-container').appendChild(splash);
-        
-        setTimeout(() => splash.remove(), 500);
+
+    // Show who made a splash, right where it landed
+    function showPainter(x, y, username, radius) {
+        if (tags.length >= 10) tags.shift();
+        const name = stripHtml(username);
+        tags.push({
+            x: x,
+            y: y - radius - unit * 3.4,
+            text: name.length > 16 ? name.substring(0, 15) + '…' : name,
+            life: 1
+        });
+        fxDirty = true;
     }
-    
+
+    function placePowerUp(powerUp) {
+        powerUp.x = powerUp.nx * canvas.width;
+        powerUp.y = powerUp.ny * canvas.height;
+        powerUp.element.style.transform = 'translate(' + powerUp.x + 'px, ' + powerUp.y + 'px)';
+    }
+
     function spawnPowerUp() {
-        if (powerUps.length < 3 && Math.random() < 0.01) {
+        if (!gameActive || !roundStarted) return;
+        if (powerUps.length < 3 && Math.random() < 0.08) {
             const types = ['🚀', '💣', '⭐', '🌈'];
-            powerUps.push({
-                x: Math.random() * (canvas.width - 100) + 50,
-                y: Math.random() * (canvas.height - 200) + 100,
+            const powerUp = {
+                nx: 0.08 + Math.random() * 0.84,
+                ny: 0.24 + Math.random() * 0.6,
                 type: types[Math.floor(Math.random() * types.length)],
-                element: null
-            });
-            
-            const powerUp = powerUps[powerUps.length - 1];
-            const element = document.createElement('div');
-            element.className = 'power-up';
-            element.style.left = powerUp.x + 'px';
-            element.style.top = powerUp.y + 'px';
-            element.textContent = powerUp.type;
-            document.getElementById('game-container').appendChild(element);
-            powerUp.element = element;
+                element: document.createElement('div')
+            };
+
+            // The wrapper carries the position so the icon inside is free to bob
+            const icon = document.createElement('div');
+            icon.className = 'power-up';
+            icon.textContent = powerUp.type;
+            powerUp.element.style.position = 'absolute';
+            powerUp.element.style.left = '0';
+            powerUp.element.style.top = '0';
+            powerUp.element.appendChild(icon);
+            document.getElementById('power-ups').appendChild(powerUp.element);
+            placePowerUp(powerUp);
+            powerUps.push(powerUp);
         }
     }
-    
+
     function checkPowerUpCollection(x, y, team, username, playerKey = username) {
         for (let i = powerUps.length - 1; i >= 0; i--) {
             const powerUp = powerUps[i];
             const distance = Math.sqrt(Math.pow(x - powerUp.x, 2) + Math.pow(y - powerUp.y, 2));
-            
-            if (distance < 50) {
+
+            if (distance < PAINT_RADIUS * 1.6) {
                 // Apply power-up effect
                 switch (powerUp.type) {
                     case '🚀': // Speed paint - larger radius
@@ -394,30 +498,28 @@
                     case '💣': // Paint bomb - multiple splashes
                         for (let j = 0; j < 5; j++) {
                             const angle = (Math.PI * 2 / 5) * j;
-                            const bx = x + Math.cos(angle) * 100;
-                            const by = y + Math.sin(angle) * 100;
+                            const bx = x + Math.cos(angle) * PAINT_RADIUS * 2.4;
+                            const by = y + Math.sin(angle) * PAINT_RADIUS * 2.4;
                             paintArea(bx, by, team, username, PAINT_RADIUS, playerKey);
                         }
                         sendResponse(`💣 ${username} triggered a PAINT BOMB!`);
                         break;
                     case '⭐': // Star power - bonus points
-                        const playerData = teams[team].players.get(playerKey) || { name: username, paintedCells: 0, splashes: 0 };
-                        playerData.paintedCells += 100;
-                        teams[team].players.set(playerKey, playerData);
+                        getPlayer(playerKey, username, team).paintedCells += 100;
                         sendResponse(`⭐ ${username} got bonus points!`);
                         break;
                     case '🌈': // Rainbow - paint all colors randomly
                         const allTeams = Object.keys(teams);
                         for (let j = 0; j < 10; j++) {
-                            const rx = x + (Math.random() - 0.5) * 200;
-                            const ry = y + (Math.random() - 0.5) * 200;
+                            const rx = x + (Math.random() - 0.5) * PAINT_RADIUS * 6;
+                            const ry = y + (Math.random() - 0.5) * PAINT_RADIUS * 6;
                             const randomTeam = allTeams[Math.floor(Math.random() * allTeams.length)];
-                            paintArea(rx, ry, randomTeam, username, PAINT_RADIUS / 2, playerKey);
+                            paintArea(rx, ry, randomTeam, username, PAINT_RADIUS / 2, playerKey, false);
                         }
                         sendResponse(`🌈 ${username} created CHAOS!`);
                         break;
                 }
-                
+
                 // Remove power-up
                 powerUp.element.remove();
                 powerUps.splice(i, 1);
@@ -425,178 +527,250 @@
             }
         }
     }
-    
+
     function updateScores() {
         const counts = { red: 0, blue: 0, yellow: 0, green: 0 };
         if (!grid.length || !grid[0]) return counts;
-        const totalCells = grid.length * grid[0].length;
 
+        let painted = 0;
         for (let y = 0; y < grid.length; y++) {
             for (let x = 0; x < grid[y].length; x++) {
                 if (grid[y][x]) {
                     counts[grid[y][x]]++;
+                    painted++;
                 }
             }
         }
-        
+
         Object.keys(teams).forEach(team => {
-            const percentage = Math.round((counts[team] / totalCells) * 100);
-            document.getElementById(`${team}-score`).textContent = `${team.charAt(0).toUpperCase() + team.slice(1)}: ${percentage}%`;
+            const element = document.getElementById(`${team}-score`);
+            if (painted === 0) {
+                element.style.width = '25%';
+                element.textContent = '';
+                return;
+            }
+            const percentage = Math.round((counts[team] / painted) * 100);
+            element.style.width = (counts[team] / painted) * 100 + '%';
+            element.textContent = percentage >= 12 ? percentage + '%' : '';
         });
-        
+
         return counts;
     }
-    
+
     function updateLeaderboard() {
         const allPlayers = [];
-        
+
         Object.entries(teams).forEach(([team, data]) => {
-            data.players.forEach((stats, username) => {
+            data.players.forEach(stats => {
                 allPlayers.push({
-                    username: stats.name,
-                    team,
-                    paintedCells: stats.paintedCells,
-                    color: teams[team].color
+                    name: stats.name,
+                    team: team,
+                    paintedCells: stats.paintedCells
                 });
             });
         });
-        
+
         allPlayers.sort((a, b) => b.paintedCells - a.paintedCells);
-        
+
         const playerList = document.getElementById('player-list');
-        playerList.innerHTML = '';
-        
-        allPlayers.slice(0, 5).forEach(player => {
+        while (playerList.firstChild) {
+            playerList.removeChild(playerList.firstChild);
+        }
+
+        allPlayers.slice(0, 3).forEach(player => {
             const entry = document.createElement('div');
             entry.className = 'player-entry';
-            entry.innerHTML = `
-                <div style="display: flex; align-items: center;">
-                    <div class="player-color" style="background-color: ${player.color};"></div>
-                    <span>${escapeHtml(player.username)}</span>
-                </div>
-                <span>${player.paintedCells} cells</span>
-            `;
+
+            const dot = document.createElement('div');
+            dot.className = 'player-color';
+            dot.style.backgroundColor = teams[player.team].color;
+
+            const name = document.createElement('span');
+            name.className = 'player-name';
+            name.textContent = player.name;
+
+            const cells = document.createElement('span');
+            cells.className = 'player-cells';
+            cells.textContent = player.paintedCells;
+
+            entry.appendChild(dot);
+            entry.appendChild(name);
+            entry.appendChild(cells);
             playerList.appendChild(entry);
         });
     }
-    
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Draw grid
-        for (let y = 0; y < grid.length; y++) {
-            for (let x = 0; x < grid[y].length; x++) {
-                if (grid[y][x]) {
-                    ctx.fillStyle = teams[grid[y][x]].color;
-                    ctx.fillRect(x * GRID_SIZE, y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
-                }
-            }
-        }
-        
-        // Draw particles
+
+    function roundedRect(target, x, y, width, height, radius) {
+        target.beginPath();
+        target.moveTo(x + radius, y);
+        target.arcTo(x + width, y, x + width, y + height, radius);
+        target.arcTo(x + width, y + height, x, y + height, radius);
+        target.arcTo(x, y + height, x, y, radius);
+        target.arcTo(x, y, x + width, y, radius);
+        target.closePath();
+    }
+
+    // Short-lived effects live on their own layer above the paint
+    function draw(elapsed) {
+        if (!fxDirty) return;
+        fx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+
+        rings = rings.filter(ring => {
+            ring.life -= elapsed * 2.2;
+            if (ring.life <= 0) return false;
+            fx.globalAlpha = ring.life * 0.9;
+            fx.strokeStyle = '#ffffff';
+            fx.lineWidth = unit * 0.9 * ring.life;
+            fx.beginPath();
+            fx.arc(ring.x, ring.y, ring.radius * (1.1 + (1 - ring.life) * 0.9), 0, Math.PI * 2);
+            fx.stroke();
+            return true;
+        });
+
         particles = particles.filter(particle => {
-            particle.x += particle.vx;
-            particle.y += particle.vy;
-            particle.vy += 0.5; // gravity
-            particle.life -= 0.02;
-            
+            particle.x += particle.vx * elapsed;
+            particle.y += particle.vy * elapsed;
+            particle.vy += unit * 160 * elapsed; // gravity
+            particle.life -= elapsed * 1.4;
+
             if (particle.life > 0) {
-                ctx.globalAlpha = particle.life;
-                ctx.fillStyle = particle.color;
-                ctx.fillRect(particle.x, particle.y, 4, 4);
+                fx.globalAlpha = Math.min(1, particle.life * 2);
+                fx.fillStyle = particle.color;
+                fx.beginPath();
+                fx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                fx.fill();
                 return true;
             }
             return false;
         });
-        
-        ctx.globalAlpha = 1;
+
+        const fontSize = Math.round(unit * 3);
+        fx.font = '700 ' + fontSize + 'px system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+        fx.textAlign = 'center';
+        fx.textBaseline = 'middle';
+        tags = tags.filter(tag => {
+            tag.life -= elapsed * 0.55;
+            if (tag.life <= 0) return false;
+            const width = fx.measureText(tag.text).width + fontSize * 1.4;
+            const height = fontSize * 1.7;
+            const x = Math.max(width / 2 + unit, Math.min(fxCanvas.width - width / 2 - unit, tag.x));
+            const y = Math.max(height, tag.y) - (1 - tag.life) * unit * 2;
+
+            fx.globalAlpha = Math.min(1, tag.life * 3);
+            roundedRect(fx, x - width / 2, y - height / 2, width, height, height / 2);
+            fx.fillStyle = 'rgba(0, 0, 0, 0.62)';
+            fx.fill();
+            fx.fillStyle = '#ffffff';
+            fx.fillText(tag.text, x, y + fontSize * 0.04);
+            return true;
+        });
+
+        fx.globalAlpha = 1;
+        fxDirty = rings.length > 0 || particles.length > 0 || tags.length > 0;
     }
-    
-    function updateTimer() {
-        if (!gameActive) return;
-        
-        roundTime--;
+
+    function showTimer() {
         const minutes = Math.floor(roundTime / 60);
         const seconds = roundTime % 60;
-        document.getElementById('round-timer').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-        
+        const timer = document.getElementById('round-timer');
+        timer.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        if (roundTime <= 10) {
+            timer.classList.add('ending');
+        } else {
+            timer.classList.remove('ending');
+        }
+    }
+
+    function updateTimer() {
+        // The clock starts with the first splash of a round
+        if (!gameActive || !roundStarted) return;
+
+        roundTime--;
+        showTimer();
+
         if (roundTime <= 0) {
             endRound();
         }
     }
-    
+
     function endRound() {
         gameActive = false;
-        
+
         const scores = updateScores();
         const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
         const winner = sorted[0];
         const isTie = winner[1] === sorted[1][1];
-        
+
         const winnerOverlay = document.getElementById('winner-overlay');
-        const winnerText = document.getElementById('winner-text');
-        if (isTie) {
-            winnerText.textContent = "IT'S A TIE!";
-            winnerText.style.color = '#FFD700';
-        } else {
-            winnerText.textContent = `${winner[0].toUpperCase()} TEAM WINS!`;
-            winnerText.style.color = teams[winner[0]].color;
-        }
-        winnerOverlay.style.display = 'flex';
-        
+        winnerOverlay.textContent = isTie ? '🤝' : '🏆';
+        winnerOverlay.style.backgroundColor = isTie ? '#e9ecef' : teams[winner[0]].color;
+        winnerOverlay.style.display = 'block';
+
         // Celebration particles
-        const celebrationColor = isTie ? '#FFD700' : teams[winner[0]].color;
+        const celebrationColors = isTie ? Object.keys(teams).map(team => teams[team].color) : [teams[winner[0]].color, '#ffffff'];
         for (let i = 0; i < 100; i++) {
             setTimeout(() => {
+                if (gameActive) return;
                 particles.push({
                     x: Math.random() * canvas.width,
-                    y: canvas.height + 10,
-                    vx: (Math.random() - 0.5) * 10,
-                    vy: -Math.random() * 20 - 10,
-                    color: celebrationColor,
-                    life: 1
+                    y: canvas.height + unit,
+                    vx: (Math.random() - 0.5) * unit * 60,
+                    vy: -(Math.random() * 0.5 + 0.6) * Math.sqrt(canvas.height * unit * 320),
+                    size: unit * (0.6 + Math.random() * 0.7),
+                    color: celebrationColors[i % celebrationColors.length],
+                    life: 2
                 });
+                fxDirty = true;
             }, i * 20);
         }
-        
+
         setTimeout(() => {
             startNewRound();
         }, 5000);
     }
-    
+
     function startNewRound() {
         // Reset game state
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         initGrid();
+        splats = [];
         powerUps.forEach(p => p.element && p.element.remove());
         powerUps = [];
         particles = [];
+        rings = [];
+        tags = [];
+        fxDirty = true;
         roundTime = ROUND_DURATION;
+        roundStarted = false;
         gameActive = true;
-        
+
         // Clear player stats
         Object.values(teams).forEach(team => {
             team.players.clear();
         });
-        
+
         document.getElementById('winner-overlay').style.display = 'none';
+        showTimer();
         updateScores();
         updateLeaderboard();
     }
-    
+
     function processPaint(username, team, playerKey = username) {
         if (!gameActive || !teams[team]) return;
-        
+        roundStarted = true;
+
         // Random position for the paint
-        const x = Math.random() * (canvas.width - 100) + 50;
-        const y = Math.random() * (canvas.height - 200) + 100;
-        
+        const x = PAINT_RADIUS + Math.random() * (canvas.width - PAINT_RADIUS * 2);
+        const y = PAINT_RADIUS + Math.random() * (canvas.height - PAINT_RADIUS * 2);
+
         paintArea(x, y, team, username, PAINT_RADIUS, playerKey);
+        showPainter(x, y, username, PAINT_RADIUS);
         checkPowerUpCollection(x, y, team, username, playerKey);
-        
+
         updateScores();
         updateLeaderboard();
     }
-    
+
     function sendResponse(message) {
         if (urlParams.has('demo')) return;
         const response = {
@@ -639,19 +813,39 @@
             }
         }
     }
-    
+
+    // Fit both layers to the window and repaint what is already on the wall
+    function layout() {
+        canvas.width = fxCanvas.width = window.innerWidth;
+        canvas.height = fxCanvas.height = window.innerHeight;
+        unit = Math.min(canvas.width, canvas.height) / 100;
+        GRID_SIZE = Math.max(6, unit * 1.2);
+        PAINT_RADIUS = unit * 5.5;
+        document.body.classList.toggle('stacked', canvas.width / canvas.height < 1.6);
+
+        initGrid();
+        splats.forEach(stampSplat);
+        powerUps.forEach(placePowerUp);
+        fxDirty = true;
+        updateScores();
+    }
+
     // Game loop
-    function gameLoop() {
-        draw();
+    let lastFrame = performance.now();
+    function gameLoop(now) {
+        const elapsed = Math.min(0.1, ((now || lastFrame) - lastFrame) / 1000);
+        lastFrame = now || lastFrame;
+        draw(elapsed);
         requestAnimationFrame(gameLoop);
     }
-    
+
     // Initialize
-    initGrid();
-    gameLoop();
+    layout();
+    showTimer();
+    requestAnimationFrame(gameLoop);
     setInterval(updateTimer, 1000);
     setInterval(spawnPowerUp, 1000);
-    
+
     // Setup iframe communication
     if (!urlParams.has('demo') && !chatRelay.enabled) {
         const iframe = document.createElement("iframe");
@@ -716,21 +910,20 @@
     }
 
     // Handle window resize
-    window.addEventListener('resize', () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        initGrid();
-    });
-    
+    window.addEventListener('resize', layout);
+
     // Demo mode
     if (urlParams.has('demo')) {
         setInterval(() => {
-            const demoUsers = ['Painter1', 'Painter2', 'Painter3', 'Painter4'];
+            const demoUsers = ['Painter1', 'Painter2', 'Painter3', 'Painter4', 'Painter5', 'Painter6'];
             const demoTeams = Object.keys(teams);
-            const user = demoUsers[Math.floor(Math.random() * demoUsers.length)];
-            const team = demoTeams[Math.floor(Math.random() * demoTeams.length)];
-            processPaint(user, team);
-        }, 500);
+            const index = Math.floor(Math.random() * demoUsers.length);
+            // Each demo painter sticks to one team, like a real chatter would
+            processData({
+                chatname: demoUsers[index],
+                chatmessage: '!' + demoTeams[index % demoTeams.length]
+            });
+        }, 450);
     }
     </script>
 </body>

@@ -27,345 +27,352 @@
             src: url(../thirdparty/NotoColorEmoji.ttf);
         }
 
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
         body {
             margin: 0;
             padding: 0;
             background: linear-gradient(to bottom, #1e3c72 0%, #2a5298 100%);
             overflow: hidden;
-            font-family: 'NotoColorEmojiLimited', 'Arial', sans-serif;
+            font-family: 'NotoColorEmojiLimited', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             color: white;
         }
 
+        body.transparent {
+            background: transparent;
+        }
+
         #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-        }
-
-        #tower-area {
-            position: absolute;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 600px;
-            height: calc(100vh - 200px);
-        }
-
-        .emoji-block {
-            position: absolute;
-            font-size: 48px;
-            font-family: 'NotoColorEmojiLimited', 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.5s ease;
-            animation: wobble 2s ease-in-out infinite;
-        }
-
-        @keyframes wobble {
-            0%, 100% { transform: rotate(-1deg); }
-            50% { transform: rotate(1deg); }
-        }
-
-        #ground {
-            position: absolute;
-            bottom: 0;
+            position: fixed;
+            top: 0;
             left: 0;
             width: 100%;
-            height: 100px;
-            background: linear-gradient(to bottom, #2ecc71 0%, #27ae60 100%);
-            border-top: 5px solid #229954;
+            height: 100%;
+            overflow: hidden;
+            --b: 100px;
         }
 
-        #current-emoji {
+        #game-container.shake {
+            animation: tower-shake 0.5s ease-in-out;
+        }
+
+        @keyframes tower-shake {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-1.2vmin, 0.5vmin); }
+            40% { transform: translate(1.2vmin, -0.5vmin); }
+            60% { transform: translate(-0.8vmin, 0.3vmin); }
+            80% { transform: translate(0.6vmin, 0); }
+        }
+
+        /* Background clouds, drifting slowly and sliding down as the tower climbs */
+        #sky {
             position: absolute;
-            top: 50px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 80px;
-            text-shadow: 0 0 20px rgba(255,255,255,0.5);
-            animation: pulse 1s ease-in-out infinite;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
         }
 
-        @keyframes pulse {
-            0%, 100% { transform: translateX(-50%) scale(1); }
-            50% { transform: translateX(-50%) scale(1.1); }
-        }
-
-        #height-indicator {
-            position: absolute;
-            left: 20px;
-            bottom: 120px;
-            font-size: 48px;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-        }
-
-        #contributors {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.7);
-            padding: 20px;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            min-width: 250px;
-        }
-
-        #contributors h3 {
-            margin-top: 0;
-            color: #FFD700;
-            text-align: center;
-        }
-
-        .contributor-entry {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 8px 0;
-            padding: 8px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 8px;
-        }
-
-        #instructions {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            padding: 15px 30px;
-            border-radius: 15px;
-            text-align: center;
-            font-size: 16px;
-        }
-
-        #instructions strong {
-            color: #FFD700;
-            font-size: 18px;
-        }
-
-        .collapse-effect {
-            animation: collapse 1s ease-in forwards;
-        }
-
-        @keyframes collapse {
-            0% { transform: translateY(0) rotate(0deg); }
-            100% { transform: translateY(200px) rotate(720deg); opacity: 0; }
-        }
-
-        #combo-display {
-            position: absolute;
-            top: 150px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 36px;
-            font-weight: bold;
-            color: #FFD700;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        body.transparent #sky {
             display: none;
-        }
-
-        .star-burst {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            background: radial-gradient(circle, #FFD700 0%, transparent 70%);
-            border-radius: 50%;
-            animation: starBurst 1s ease-out forwards;
-        }
-
-        @keyframes starBurst {
-            0% { transform: scale(0) rotate(0deg); opacity: 1; }
-            100% { transform: scale(3) rotate(180deg); opacity: 0; }
-        }
-
-        #wind-indicator {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 24px;
-            background: rgba(0,0,0,0.7);
-            padding: 10px 20px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
         }
 
         .cloud {
             position: absolute;
-            font-size: 48px;
-            opacity: 0.7;
-            animation: drift 20s linear infinite;
+            left: 0;
+            font-size: 12vmin;
+            line-height: 1;
+            opacity: 0.8;
+            animation: float 80s linear infinite;
         }
 
-        @keyframes drift {
-            from { transform: translateX(-100px); }
-            to { transform: translateX(calc(100vw + 100px)); }
+        @keyframes float {
+            0% { transform: translateX(-18vmin); }
+            100% { transform: translateX(calc(100vw + 4vmin)); }
+        }
+
+        /* Everything that scrolls with the camera */
+        #world {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #ground {
+            position: absolute;
+            left: 0;
+            bottom: -40vmin;
+            width: 100%;
+            height: 49vmin;
+            border-radius: 3vmin 3vmin 0 0;
+            background: linear-gradient(to bottom, #3ecf7a 0%, #27ae60 9vmin, #1f8f4f 100%);
+            z-index: 5;
+        }
+
+        /* The tower starts on this slab */
+        #pedestal {
+            position: absolute;
+            left: 50%;
+            width: calc(var(--b) * 1.7);
+            height: calc(var(--b) * 0.2);
+            margin-left: calc(var(--b) * -0.85);
+            border-radius: calc(var(--b) * 0.08) calc(var(--b) * 0.08) 0 0;
+            background: #f1f3f5;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            box-sizing: border-box;
+        }
+
+        .emoji-block {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: var(--b);
+            height: var(--b);
+        }
+
+        .tile {
+            width: 100%;
+            height: 100%;
+            border-radius: 22%;
+            border: 1px solid rgba(0, 0, 0, 0.22);
+            box-sizing: border-box;
+            background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 55%);
+            font-family: 'NotoColorEmojiLimited', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+            font-size: calc(var(--b) * 0.6);
+            line-height: calc(var(--b) * 0.98);
+            text-align: center;
+        }
+
+        .tile.landed {
+            animation: tile-land 0.35s ease-out;
+        }
+
+        .tile.fresh {
+            animation: tile-pop 0.35s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+        }
+
+        @keyframes tile-land {
+            0% { transform: translateY(8%) scale(1.14, 0.8); }
+            60% { transform: translateY(0) scale(0.96, 1.05); }
+            100% { transform: translateY(0) scale(1, 1); }
+        }
+
+        @keyframes tile-pop {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+        /* The emoji waiting to be dropped swings from a rope */
+        #crane {
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: 6;
+        }
+
+        #rope {
+            position: absolute;
+            left: -0.3vmin;
+            top: 0;
+            width: 0.6vmin;
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        #current-emoji {
+            left: calc(var(--b) * -0.5);
+        }
+
+        /* Height, best height and wind */
+        #height-indicator, #best-indicator, #wind-indicator {
+            position: absolute;
+            left: 3vmin;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            box-sizing: border-box;
+            font-weight: 900;
+            white-space: nowrap;
+            z-index: 20;
+        }
+
+        #height-indicator {
+            top: 3vmin;
+            padding: 0 3.4vmin 0 2.4vmin;
+            font-size: 8vmin;
+            line-height: 1.3;
+        }
+
+        #height-indicator.bump {
+            animation: height-bump 0.35s ease-out;
+        }
+
+        @keyframes height-bump {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.18); }
+            100% { transform: scale(1); }
+        }
+
+        #best-indicator, #wind-indicator {
+            padding: 0 2.4vmin 0 1.8vmin;
+            font-size: 4vmin;
+            line-height: 1.5;
+        }
+
+        #best-indicator {
+            top: 15vmin;
+        }
+
+        #wind-indicator {
+            top: 22.5vmin;
+            letter-spacing: 0.1em;
+            transition: opacity 0.4s ease;
+        }
+
+        .hud-icon {
+            display: inline-block;
+            margin-right: 1.4vmin;
+            font-size: 0.7em;
+            vertical-align: 0.1em;
+        }
+
+        /* Top three builders */
+        #contributors {
+            position: absolute;
+            top: 3vmin;
+            right: 3vmin;
+            width: 34vmin;
+            z-index: 20;
+        }
+
+        .contributor-entry {
+            position: relative;
+            height: 5.4vmin;
+            margin-bottom: 0.8vmin;
+            padding: 0 2.2vmin;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-sizing: border-box;
+            background: rgba(0, 0, 0, 0.45);
+            font-size: 3vmin;
+            line-height: 5.2vmin;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .contributor-name {
+            display: block;
+            margin-right: 7vmin;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .contributor-count {
+            position: absolute;
+            right: 2.2vmin;
+            top: 0;
+            font-weight: 900;
+        }
+
+        /* The one thing viewers need to know: what to type */
+        #hint {
+            position: absolute;
+            bottom: 1.8vmin;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 20;
+        }
+
+        #hint-chip {
+            display: inline-block;
+            padding: 0.7vmin 3.4vmin;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            font-size: 4.4vmin;
+            line-height: 1.3;
+            font-weight: 800;
         }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <div id="wind-indicator">Wind: <span id="wind-strength">Calm</span></div>
-        <div id="current-emoji">🎯</div>
-        <div id="combo-display">COMBO x1</div>
-        
-        <div id="tower-area"></div>
-        
-        <div id="ground"></div>
-        
-        <div id="height-indicator">Height: 0m</div>
-        
+        <div id="sky">
+            <div class="cloud" style="top: 18%; animation-delay: -10s;">☁️</div>
+            <div class="cloud" style="top: 42%; animation-delay: -46s; font-size: 9vmin;">☁️</div>
+            <div class="cloud" style="top: -22%; animation-delay: -64s;">☁️</div>
+            <div class="cloud" style="top: -58%; animation-delay: -30s; font-size: 9vmin;">☁️</div>
+            <div class="cloud" style="top: -96%; animation-delay: -5s;">☁️</div>
+            <div class="cloud" style="top: -150%; animation-delay: -52s;">🌙</div>
+        </div>
+
+        <div id="world">
+            <div id="pedestal"></div>
+            <div id="tower-area"></div>
+            <div id="ground"></div>
+        </div>
+
+        <div id="crane">
+            <div id="rope"></div>
+            <div class="emoji-block" id="current-emoji"><div class="tile"></div></div>
+        </div>
+
+        <div id="height-indicator"><span class="hud-icon">📏</span><span id="height-value">0</span></div>
+        <div id="best-indicator"><span class="hud-icon">🏆</span><span id="best-value">0</span></div>
+        <div id="wind-indicator"></div>
+
         <div id="contributors">
-            <h3>🏗️ Tower Builders</h3>
             <div id="contributor-list"></div>
         </div>
-        
-        <div id="instructions">
-            <div><strong>🏗️ Emoji Tower Builder</strong></div>
-            <div>Type <b>!drop</b> to place the emoji!</div>
-            <div style="font-size: 14px; opacity: 0.8; margin-top: 5px;">
-                Work together to build the tallest tower!
-            </div>
+
+        <div id="hint">
+            <div id="hint-chip">!drop</div>
         </div>
-        
-        <!-- Background clouds -->
-        <div class="cloud" style="top: 100px; animation-delay: 0s;">☁️</div>
-        <div class="cloud" style="top: 200px; animation-delay: 5s;">☁️</div>
-        <div class="cloud" style="top: 150px; animation-delay: 10s;">☁️</div>
     </div>
-    
+
     <script>
     // Game state
     const emojis = ['😀', '😎', '🤖', '👻', '🦄', '🐸', '🐙', '🦋', '🌟', '🍕', '🍔', '🎈', '🎮', '💎', '🔥', '❄️', '🌈', '🎵', '🎸', '🏆'];
+    const tileColors = ['#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff', '#a0c4ff', '#bdb2ff', '#ffc6ff', '#ffadad'];
     let currentEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-    let towerBlocks = [];
+    let currentColor = tileColors[Math.floor(Math.random() * tileColors.length)];
+    let towerBlocks = [];   // settled blocks, bottom to top
+    let fallingBlocks = []; // blocks on their way down
+    let looseBlocks = [];   // blocks that missed or toppled
+    let baseLevel = 0;      // settled blocks already scrolled away below the tower
     let towerHeight = 0;
+    let bestHeight = 0;
     let contributors = new Map();
     let windStrength = 0;
     let windDirection = 1;
-    let combo = 0;
-    let lastDropper = null;
     let dropCooldown = false;
-    let collapsing = false;
-    
-    // Physics settings
-    const BLOCK_SIZE = 60;
-    const GRAVITY = 0.5;
-    const MAX_TILT = 15; // degrees
-    
+    let cameraY = 0;
+    let craneX = 0;
+    let craneCenter = 0;
+    let cranePhase = Math.random() * Math.PI * 2;
+
+    // Physics settings, in block lengths
+    const GRAVITY = 30;
+    const SWING_SECONDS = 6.5; // slow enough to time a drop through stream delay
+    const MAX_TOWER_BLOCKS = 40;
+
+    // Sizes follow the window, see layout()
+    const PEDESTAL = 0.2; // height of the slab the tower stands on
+    const view = { width: 0, height: 0, block: 100, groundTop: 0, craneY: 0, swing: 2, visibleLevels: 4 };
+
     // URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
     const sessionId = urlParams.get('session') || 'test';
     const password = urlParams.get('password') || 'false';
-    
-    // Initialize
-    document.getElementById('current-emoji').textContent = currentEmoji;
-    
-    class EmojiBlock {
-        constructor(emoji, x, dropper) {
-            this.emoji = emoji;
-            this.x = x;
-            this.y = window.innerHeight;
-            this.velocity = 0;
-            this.rotation = 0;
-            this.settled = false;
-            this.toppled = false;
-            this.dropper = dropper;
-            this.element = this.createElement();
-        }
-        
-        createElement() {
-            const div = document.createElement('div');
-            div.className = 'emoji-block';
-            div.textContent = this.emoji;
-            div.style.left = this.x + 'px';
-            div.style.bottom = (this.y + 100) + 'px';
-            div.style.transition = 'none';
-            document.getElementById('tower-area').appendChild(div);
-            return div;
-        }
-        
-        update() {
-            if (this.settled) return;
-            
-            // Apply gravity
-            this.velocity += GRAVITY;
-            this.y -= this.velocity;
-            
-            // Apply wind
-            this.x += windStrength * windDirection * 0.1;
-            
-            if (!this.toppled) {
-                // Check collision with ground or other blocks
-                const groundY = 0;
-                let landingY = groundY;
-                
-                // Check collision with other blocks
-                for (const block of towerBlocks) {
-                    if (block === this || !block.settled) continue;
-                    
-                    const blockTop = block.y + BLOCK_SIZE;
-                    if (Math.abs(this.x - block.x) < BLOCK_SIZE * 0.8 && this.y <= blockTop) {
-                        landingY = Math.max(landingY, blockTop);
-                    }
-                }
-                
-                if (this.y <= landingY) {
-                    this.y = landingY;
-                    this.velocity = 0;
-                    this.settled = true;
-                    this.element.style.transition = '';
-                    
-                    // Check if block is stable
-                    if (!this.checkStability()) {
-                        this.topple();
-                    }
-                }
-            }
-            
-            // Update visual position
-            this.element.style.bottom = (this.y + 100) + 'px';
-            this.element.style.left = this.x + 'px';
-            this.element.style.transform = `rotate(${this.rotation}deg)`;
-        }
-        
-        checkStability() {
-            // Check if block has enough support
-            let supportPoints = 0;
-            
-            for (const block of towerBlocks) {
-                if (block === this || !block.settled || block.y >= this.y) continue;
-                
-                const distance = Math.abs(this.x - block.x);
-                if (distance < BLOCK_SIZE * 0.6 && Math.abs(this.y - (block.y + BLOCK_SIZE)) < 5) {
-                    supportPoints++;
-                }
-            }
-            
-            return supportPoints > 0 || this.y === 0;
-        }
-        
-        topple() {
-            if (this.toppled) return;
-            this.toppled = true;
-            this.settled = false;
-            this.rotation = (Math.random() - 0.5) * 180;
-            this.velocity = -5;
-            
-            // Trigger tower collapse if this was a key block
-            const blocksAbove = towerBlocks.filter(b => b.settled && b.y > this.y);
-            if (blocksAbove.length > 2) {
-                setTimeout(() => collapseTower(), 100);
-            }
-        }
-    }
-    
-    function escapeHtml(str) {
-        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    if (urlParams.has('transparent')) {
+        document.body.classList.add('transparent');
     }
 
     function stripHtml(html) {
@@ -374,169 +381,298 @@
         return tmp.textContent || tmp.innerText || '';
     }
 
+    function createBlockElement(emoji, color, parent) {
+        const element = document.createElement('div');
+        element.className = 'emoji-block';
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        tile.textContent = emoji;
+        tile.style.backgroundColor = color;
+        element.appendChild(tile);
+        parent.appendChild(element);
+        return element;
+    }
+
+    // x is measured in blocks from the middle of the window, y in blocks above the ground
+    function placeBlock(element, x, y, rotation) {
+        const left = view.width / 2 + (x - 0.5) * view.block;
+        const top = view.groundTop - (y + 1 + PEDESTAL) * view.block;
+        element.style.transform = 'translate(' + left.toFixed(1) + 'px, ' + top.toFixed(1) + 'px)' + (rotation ? ' rotate(' + rotation.toFixed(1) + 'deg)' : '');
+    }
+
+    function showCurrentEmoji() {
+        const tile = document.getElementById('current-emoji').firstChild;
+        tile.textContent = currentEmoji;
+        tile.style.backgroundColor = currentColor;
+        tile.classList.remove('fresh');
+        void tile.offsetWidth;
+        tile.classList.add('fresh');
+    }
+
+    function layout() {
+        view.width = window.innerWidth;
+        view.height = window.innerHeight;
+        const unit = Math.min(view.width, view.height) / 100;
+        const portrait = view.height > view.width;
+
+        view.block = portrait ? view.width * 0.15 : Math.min(view.height * 0.125, view.width * 0.075);
+        view.groundTop = view.height - unit * 9;
+        // In tall and squarish windows the emoji hangs below the scores instead of between them
+        view.craneY = unit * (view.width / view.height < 1.6 ? 36 : 14);
+        view.swing = portrait ? 1.8 : 2.1;
+        view.visibleLevels = Math.max(2, (view.groundTop - view.craneY) / view.block - PEDESTAL - 2.2);
+
+        document.getElementById('game-container').style.setProperty('--b', view.block + 'px');
+        document.getElementById('pedestal').style.top = (view.groundTop - PEDESTAL * view.block) + 'px';
+        document.getElementById('rope').style.height = (view.craneY - view.block / 2) + 'px';
+        document.getElementById('current-emoji').style.top = (view.craneY - view.block / 2) + 'px';
+
+        towerBlocks.forEach((block, index) => placeBlock(block.element, block.x, baseLevel + index, 0));
+    }
+
     function dropEmoji(username, playerKey = username) {
         if (dropCooldown) {
             sendResponse(`@${username}, wait a moment before dropping!`);
             return;
         }
-        
-        // Calculate drop position based on current emoji position
-        const currentEmojiElement = document.getElementById('current-emoji');
-        const rect = currentEmojiElement.getBoundingClientRect();
-        const towerArea = document.getElementById('tower-area').getBoundingClientRect();
-        const x = rect.left + rect.width / 2 - towerArea.left - BLOCK_SIZE / 2;
-        
-        // Create new block
-        const block = new EmojiBlock(currentEmoji, x, username);
-        towerBlocks.push(block);
-        
+
+        // The block falls from wherever the rope is right now
+        const block = {
+            emoji: currentEmoji,
+            color: currentColor,
+            x: craneX,
+            y: cameraY + (view.groundTop - view.craneY) / view.block - 0.5 - PEDESTAL,
+            vx: 0,
+            vy: 0,
+            rotation: 0,
+            spin: 0,
+            dropper: stripHtml(username),
+            playerKey: playerKey,
+            element: createBlockElement(currentEmoji, currentColor, document.getElementById('tower-area'))
+        };
+        placeBlock(block.element, block.x, block.y, 0);
+        fallingBlocks.push(block);
+
         // Update contributor stats
         const prior = contributors.get(playerKey);
-        contributors.set(playerKey, {name: username, count: (prior ? prior.count : 0) + 1});
-        updateContributors();
-        
-        // Check for combo
-        if (playerKey === lastDropper) {
-            combo++;
-            if (combo > 1) {
-                showCombo(combo);
-            }
-        } else {
-            combo = 0;
+        contributors.set(playerKey, {name: block.dropper, count: (prior ? prior.count : 0) + 1});
+        if (contributors.size > 300) {
+            contributors.delete(contributors.keys().next().value);
         }
-        lastDropper = playerKey;
-        
+        updateContributors();
+
         // Set cooldown
         dropCooldown = true;
-        setTimeout(() => dropCooldown = false, 1000);
-        
-        // Get new emoji
-        currentEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-        document.getElementById('current-emoji').textContent = currentEmoji;
-        
-        // Animate drop
-        animateCurrentEmoji();
-    }
-    
-    function animateCurrentEmoji() {
-        const element = document.getElementById('current-emoji');
-        element.style.animation = 'none';
+        document.getElementById('current-emoji').style.visibility = 'hidden';
         setTimeout(() => {
-            element.style.animation = 'pulse 1s ease-in-out infinite';
-        }, 10);
+            dropCooldown = false;
+
+            // Get new emoji
+            currentEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+            currentColor = tileColors[Math.floor(Math.random() * tileColors.length)];
+            document.getElementById('current-emoji').style.visibility = 'visible';
+            showCurrentEmoji();
+        }, 1000);
     }
-    
-    function updateTower() {
-        // Update all blocks
-        towerBlocks.forEach(block => block.update());
-        
-        // Remove blocks that fell off screen
-        towerBlocks = towerBlocks.filter(block => {
-            if (block.y < -500) {
+
+    function landBlock(block) {
+        block.y = baseLevel + towerBlocks.length;
+        placeBlock(block.element, block.x, block.y, 0);
+        block.element.firstChild.classList.add('landed');
+        towerBlocks.push(block);
+
+        checkStability();
+
+        // Blocks far below the camera are no longer needed
+        if (towerBlocks.length > MAX_TOWER_BLOCKS) {
+            towerBlocks.splice(0, 10).forEach(old => old.element.remove());
+            baseLevel += 10;
+        }
+
+        updateHeight();
+    }
+
+    // A stack only stands while everything above a block is centred over it
+    function checkStability() {
+        for (let i = 0; i < towerBlocks.length - 1; i++) {
+            let sum = 0;
+            for (let j = i + 1; j < towerBlocks.length; j++) {
+                sum += towerBlocks[j].x;
+            }
+            const balance = sum / (towerBlocks.length - 1 - i) - towerBlocks[i].x;
+
+            if (Math.abs(balance) > 0.5) {
+                collapseTower(i + 1, balance > 0 ? 1 : -1);
+                return;
+            }
+        }
+    }
+
+    // Everything from the given level up tips over the side
+    function collapseTower(fromIndex, direction) {
+        const finalHeight = baseLevel + towerBlocks.length;
+        const fallen = towerBlocks.splice(fromIndex);
+
+        fallen.forEach((block, index) => {
+            block.y = baseLevel + fromIndex + index;
+            block.vx = direction * (1.5 + index * 0.7);
+            block.vy = 2 + Math.random() * 2;
+            block.spin = direction * (140 + index * 50);
+            block.element.firstChild.classList.remove('landed');
+            looseBlocks.push(block);
+        });
+
+        if (fallen.length >= 2) {
+            const container = document.getElementById('game-container');
+            container.classList.remove('shake');
+            void container.offsetWidth;
+            container.classList.add('shake');
+        }
+
+        if (fallen.length >= 3) {
+            sendResponse(`💥 Tower collapsed! Final height: ${finalHeight}m`);
+        }
+    }
+
+    function updateHeight() {
+        const height = baseLevel + towerBlocks.length;
+        if (height === towerHeight) return;
+
+        const indicator = document.getElementById('height-indicator');
+        if (height > towerHeight) {
+            indicator.classList.remove('bump');
+            void indicator.offsetWidth;
+            indicator.classList.add('bump');
+        }
+
+        towerHeight = height;
+        document.getElementById('height-value').textContent = towerHeight;
+
+        if (towerHeight > bestHeight) {
+            bestHeight = towerHeight;
+            document.getElementById('best-value').textContent = bestHeight;
+        }
+    }
+
+    function updateTower(elapsed) {
+        // Blocks on their way down
+        fallingBlocks = fallingBlocks.filter(block => {
+            const topLevel = baseLevel + towerBlocks.length;
+            const topBlock = towerBlocks[towerBlocks.length - 1];
+            block.vy -= GRAVITY * elapsed;
+            block.vx += windStrength * windDirection * 0.35 * elapsed;
+            block.x += block.vx * elapsed;
+            block.y += block.vy * elapsed;
+
+            if (block.y <= topLevel) {
+                // The first block has to land on the slab, later ones on the block below
+                const offset = block.x - (topBlock ? topBlock.x : 0);
+                const reach = topBlock ? 0.72 : 0.85;
+
+                if (Math.abs(offset) <= reach) {
+                    // a landing block settles a little toward the middle of whatever it hit
+                    block.x -= offset * 0.2;
+                    landBlock(block);
+                    return false;
+                }
+
+                // Missed: clip the corner and tumble away, or drop straight past
+                const side = offset > 0 ? 1 : -1;
+                if (Math.abs(offset) < 1) {
+                    block.y = topLevel;
+                    block.vy = 4;
+                    block.vx = side * 3.5;
+                }
+                block.spin = side * 260;
+                looseBlocks.push(block);
+                return false;
+            }
+
+            placeBlock(block.element, block.x, block.y, 0);
+            return true;
+        });
+
+        // Blocks falling off the side
+        looseBlocks = looseBlocks.filter(block => {
+            block.vy -= GRAVITY * elapsed;
+            block.x += block.vx * elapsed;
+            block.y += block.vy * elapsed;
+            block.rotation += block.spin * elapsed;
+
+            if (block.y < cameraY - 3) {
                 block.element.remove();
                 return false;
             }
+
+            placeBlock(block.element, block.x, block.y, block.rotation);
             return true;
         });
-        
-        // Calculate tower height
-        let maxHeight = 0;
-        towerBlocks.forEach(block => {
-            if (block.settled && block.y > maxHeight) {
-                maxHeight = block.y;
-            }
-        });
-        
-        towerHeight = Math.floor(maxHeight / 10);
-        document.getElementById('height-indicator').textContent = `Height: ${towerHeight}m`;
-        
-        // Move current emoji horizontally
-        const currentEmojiElement = document.getElementById('current-emoji');
-        const movement = Math.sin(Date.now() * 0.001) * 100;
-        currentEmojiElement.style.left = `calc(50% + ${movement}px)`;
+
+        // The camera climbs with the tower
+        const cameraTarget = Math.max(0, baseLevel + towerBlocks.length - view.visibleLevels);
+        cameraY += (cameraTarget - cameraY) * Math.min(1, elapsed * 3);
+        if (Math.abs(cameraTarget - cameraY) < 0.002) cameraY = cameraTarget;
+        const shift = Math.round(cameraY * view.block);
+        document.getElementById('world').style.transform = 'translateY(' + shift + 'px)';
+        document.getElementById('sky').style.transform = 'translateY(' + Math.round(shift * 0.3) + 'px)';
+
+        // Swing the waiting emoji, staying roughly above the top of the tower
+        const aim = towerBlocks.length ? towerBlocks[towerBlocks.length - 1].x * 0.5 : 0;
+        craneCenter += (aim - craneCenter) * Math.min(1, elapsed * 1.5);
+        cranePhase += elapsed * Math.PI * 2 / SWING_SECONDS;
+        craneX = craneCenter + Math.sin(cranePhase) * view.swing;
+        document.getElementById('crane').style.transform = 'translateX(' + (view.width / 2 + craneX * view.block).toFixed(1) + 'px)';
     }
-    
+
     function updateWind() {
         // Random wind changes
-        if (Math.random() < 0.02) {
-            windStrength = Math.random() * 3;
+        if (Math.random() < 0.12) {
+            windStrength = Math.random() < 0.25 ? 0 : Math.random() * 3;
             windDirection = Math.random() > 0.5 ? 1 : -1;
-            
-            const windNames = ['Calm', 'Light Breeze', 'Moderate Wind', 'Strong Wind'];
-            const windIndex = Math.min(windNames.length - 1, Math.floor(windStrength / 3 * windNames.length));
-            document.getElementById('wind-strength').textContent = windNames[windIndex];
+            showWind();
         }
     }
-    
-    function collapseTower() {
-        if (collapsing) return;
-        collapsing = true;
-        
-        // Make all blocks fall
-        towerBlocks.forEach((block, index) => {
-            setTimeout(() => {
-                block.element.classList.add('collapse-effect');
-                setTimeout(() => block.element.remove(), 1000);
-            }, index * 50);
-        });
-        
-        // Show final height
-        sendResponse(`💥 Tower collapsed! Final height: ${towerHeight}m`);
-        
-        // Reset game after delay
-        setTimeout(() => {
-            towerBlocks = [];
-            towerHeight = 0;
-            combo = 0;
-            contributors.clear();
-            updateContributors();
-            collapsing = false;
-            document.getElementById('tower-area').innerHTML = '';
-            sendResponse('🏗️ New tower started! Type !drop to build!');
-        }, 2000);
+
+    // One to three arrows pointing the way the wind blows
+    function showWind() {
+        const indicator = document.getElementById('wind-indicator');
+        const level = windStrength <= 0.3 ? 0 : Math.min(3, Math.ceil(windStrength));
+        if (level === 0) {
+            indicator.style.opacity = '0';
+            return;
+        }
+        indicator.style.opacity = '1';
+        indicator.textContent = windDirection > 0 ? '💨 ' + '›'.repeat(level) : '‹'.repeat(level) + ' 💨';
     }
-    
+
     function updateContributors() {
         const list = document.getElementById('contributor-list');
-        list.innerHTML = '';
-        
+        while (list.firstChild) {
+            list.removeChild(list.firstChild);
+        }
+
         const sorted = Array.from(contributors.entries())
             .sort((a, b) => b[1].count - a[1].count)
-            .slice(0, 5);
-        
+            .slice(0, 3);
+
         sorted.forEach(([, player]) => {
-            const username = player.name, blocks = player.count;
             const div = document.createElement('div');
             div.className = 'contributor-entry';
-            div.innerHTML = `
-                <span>${escapeHtml(username)}</span>
-                <span>${blocks} blocks</span>
-            `;
+
+            const name = document.createElement('span');
+            name.className = 'contributor-name';
+            name.textContent = player.name;
+
+            const count = document.createElement('span');
+            count.className = 'contributor-count';
+            count.textContent = player.count;
+
+            div.appendChild(name);
+            div.appendChild(count);
             list.appendChild(div);
         });
     }
-    
-    function showCombo(count) {
-        const display = document.getElementById('combo-display');
-        display.textContent = `COMBO x${count}`;
-        display.style.display = 'block';
-        
-        // Create star burst effect
-        for (let i = 0; i < 5; i++) {
-            const star = document.createElement('div');
-            star.className = 'star-burst';
-            star.style.left = '50%';
-            star.style.top = '150px';
-            star.style.transform = `translateX(-50%) rotate(${i * 72}deg)`;
-            document.getElementById('game-container').appendChild(star);
-            setTimeout(() => star.remove(), 1000);
-        }
-        
-        setTimeout(() => {
-            display.style.display = 'none';
-        }, 2000);
-    }
-    
+
     function sendResponse(message) {
         if (urlParams.has('demo')) return;
         const response = {
@@ -575,15 +711,42 @@
             dropEmoji(data.chatname, JSON.stringify([data.type || '', String(data.userid || data.username || data.chatname)]));
         }
     }
-    
+
+    // Demo builders wait for the emoji to line up, and sometimes get it wrong
+    let demoNextDrop = 0;
+    let demoAim = 0.3;
+    function demoBuilder(now) {
+        if (dropCooldown || now < demoNextDrop) return;
+        const top = towerBlocks[towerBlocks.length - 1];
+        if (Math.abs(craneX - (top ? top.x : 0)) > demoAim) return;
+
+        const demoUsers = ['Builder1', 'Builder2', 'Builder3'];
+        processData({
+            chatname: demoUsers[Math.floor(Math.random() * demoUsers.length)],
+            chatmessage: '!drop'
+        });
+        demoNextDrop = now + 1100 + Math.random() * 700;
+        demoAim = Math.random() < 0.8 ? 0.3 : 1.3;
+    }
+
     // Game loop
-    function gameLoop() {
-        updateTower();
-        updateWind();
+    let lastFrame = performance.now();
+    function gameLoop(now) {
+        const elapsed = Math.min(0.05, ((now || lastFrame) - lastFrame) / 1000);
+        lastFrame = now || lastFrame;
+        updateTower(elapsed);
+        if (urlParams.has('demo')) demoBuilder(lastFrame);
         requestAnimationFrame(gameLoop);
     }
-    gameLoop();
-    
+
+    // Initialize
+    layout();
+    showCurrentEmoji();
+    showWind();
+    window.addEventListener('resize', layout);
+    setInterval(updateWind, 1000);
+    requestAnimationFrame(gameLoop);
+
     // Setup iframe communication
     if (!urlParams.has('demo') && !chatRelay.enabled) {
     const iframe = document.createElement("iframe");
@@ -646,17 +809,6 @@
         }
 
         connectWebSocket();
-    }
-    
-    // Demo mode
-    if (urlParams.has('demo')) {
-        setInterval(() => {
-            if (Math.random() < 0.3) {
-                const demoUsers = ['Builder1', 'Builder2', 'Builder3'];
-                const user = demoUsers[Math.floor(Math.random() * demoUsers.length)];
-                dropEmoji(user);
-            }
-        }, 3000);
     }
     </script>
 </body>

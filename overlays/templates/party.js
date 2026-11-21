@@ -439,7 +439,7 @@
 				var flip = function (d) { inner.style.transform = d > 0 ? "" : "scaleX(-1)"; };
 				(function step(now) {
 					if (!alive) { return; }
-					var dt = Math.min(0.05, (now - last) / 1000); last = now;
+					var dt = SSO.frameDelta(now - last); last = now;
 					if (pause > 0) { pause -= dt; }
 					else {
 						var moon = el.className.indexOf("moonwalk") !== -1;
@@ -514,7 +514,7 @@
 			SSO.onCleanup(root, function () { alive = false; cancelAnimationFrame(frameId); window.removeEventListener("resize", fit); });
 			(function frame(now) {
 				if (!alive) { return; }
-				var dt = Math.min(0.05, (now - last) / 1000); last = now;
+				var dt = SSO.frameDelta(now - last); last = now;
 				var W = cv.width, H = cv.height, src = sources(W, H), base = Math.min(W, H) * 0.13 * c.intensity;
 				g.clearRect(0, 0, W, H);
 				// scenery
@@ -740,17 +740,106 @@
 	});
 
 	// ---------------------------------------------------------------- confetti / money rain
+	// Everything that falls is painted once into a small picture and then stamped each frame, so a heavy rain stays cheap.
+	var skyCache = {};
+	function skyArt(key, w, h, paint) {
+		if (skyCache[key]) { return skyCache[key]; }
+		var cv = document.createElement("canvas");
+		cv.width = w; cv.height = h;
+		paint(cv.getContext("2d"), w, h);
+		skyCache[key] = cv;
+		return cv;
+	}
+	// Out-of-focus copy for pieces far away or right in front of the lens.
+	function skySoft(key, src, px) {
+		return skyArt(key + "~" + px, src.width, src.height, function (g) {
+			if ("filter" in g) { g.filter = "blur(" + px + "px)"; }
+			g.drawImage(src, px * 2, px * 2, src.width - px * 4, src.height - px * 4);
+		});
+	}
+	function skyRound(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.lineTo(x + w - r, y); g.quadraticCurveTo(x + w, y, x + w, y + r); g.lineTo(x + w, y + h - r); g.quadraticCurveTo(x + w, y + h, x + w - r, y + h); g.lineTo(x + r, y + h); g.quadraticCurveTo(x, y + h, x, y + h - r); g.lineTo(x, y + r); g.quadraticCurveTo(x, y, x + r, y); g.closePath(); }
+	function skyBill(back) {
+		return skyArt("bill" + (back ? 1 : 0), 256, 112, function (g) {
+			var gr = g.createLinearGradient(0, 0, 0, 112), y, i;
+			gr.addColorStop(0, back ? "#a9d59f" : "#d6efcb"); gr.addColorStop(0.55, back ? "#86bd7d" : "#b3dba8"); gr.addColorStop(1, back ? "#6aa565" : "#93c98a");
+			g.fillStyle = gr; skyRound(g, 1, 1, 254, 110, 7); g.fill();
+			g.strokeStyle = "#2c6630"; g.lineWidth = 3.5; skyRound(g, 8.5, 8.5, 239, 95, 4); g.stroke();
+			g.lineWidth = 1; g.strokeStyle = "rgba(44,102,48,.6)"; skyRound(g, 14, 14, 228, 84, 3); g.stroke();
+			// fine wavy lines, like the engraving on a banknote
+			g.strokeStyle = "rgba(44,102,48,.2)";
+			for (y = 20; y < 94; y += 4.5) {
+				g.beginPath();
+				for (i = 18; i <= 238; i += 6) { if (i === 18) { g.moveTo(i, y + Math.sin(i * 0.11 + y) * 1.4); } else { g.lineTo(i, y + Math.sin(i * 0.11 + y) * 1.4); } }
+				g.stroke();
+			}
+			[52, 204].forEach(function (cx) {
+				g.fillStyle = "rgba(44,102,48,.28)"; g.beginPath(); g.arc(cx, 56, 19, 0, 6.283); g.fill();
+				g.strokeStyle = "rgba(44,102,48,.55)"; g.lineWidth = 1.5; g.beginPath(); g.arc(cx, 56, 14, 0, 6.283); g.stroke();
+			});
+			g.fillStyle = back ? "#c4e5ba" : "#eefae8"; g.beginPath(); g.ellipse(128, 56, 36, 39, 0, 0, 6.283); g.fill();
+			g.strokeStyle = "#2c6630"; g.lineWidth = 2.5; g.stroke();
+			g.fillStyle = "#24552a"; g.textAlign = "center"; g.textBaseline = "middle";
+			g.font = "bold 58px Georgia, 'Times New Roman', serif"; g.fillText("$", 128, 59);
+			g.font = "bold 18px Georgia, 'Times New Roman', serif";
+			g.fillText("100", 36, 26); g.fillText("100", 220, 26); g.fillText("100", 36, 88); g.fillText("100", 220, 88);
+			// light along the top edge, shade along the bottom
+			var edge = g.createLinearGradient(0, 0, 0, 112);
+			edge.addColorStop(0, "rgba(255,255,255,.4)"); edge.addColorStop(0.12, "rgba(255,255,255,0)"); edge.addColorStop(0.86, "rgba(0,0,0,0)"); edge.addColorStop(1, "rgba(0,0,0,.18)");
+			g.fillStyle = edge; skyRound(g, 1, 1, 254, 110, 7); g.fill();
+		});
+	}
+	// The bill's outline in one flat colour, laid over it to darken it as it turns away from the light.
+	function skyBillShade() { return skyArt("billshade", 256, 112, function (g) { g.fillStyle = "#0b2a14"; skyRound(g, 1, 1, 254, 110, 7); g.fill(); }); }
+	function skySheen() {
+		return skyArt("sheen", 96, 8, function (g) {
+			var gr = g.createLinearGradient(0, 0, 96, 0);
+			gr.addColorStop(0, "rgba(255,255,255,0)"); gr.addColorStop(0.5, "rgba(255,255,255,.75)"); gr.addColorStop(1, "rgba(255,255,255,0)");
+			g.fillStyle = gr; g.fillRect(0, 0, 96, 8);
+		});
+	}
+	function skyCoin() {
+		return skyArt("coin", 96, 96, function (g) {
+			var gr = g.createRadialGradient(34, 30, 6, 48, 48, 48);
+			gr.addColorStop(0, "#fff8c8"); gr.addColorStop(0.45, "#f6c544"); gr.addColorStop(1, "#a8740a");
+			g.fillStyle = gr; g.beginPath(); g.arc(48, 48, 47, 0, 6.283); g.fill();
+			g.strokeStyle = "#8a5c06"; g.lineWidth = 3; g.beginPath(); g.arc(48, 48, 45.5, 0, 6.283); g.stroke();
+			// milled rim
+			g.strokeStyle = "rgba(138,92,6,.5)"; g.lineWidth = 1.2;
+			for (var i = 0; i < 44; i++) { var a = i * 6.283 / 44; g.beginPath(); g.moveTo(48 + Math.cos(a) * 39.5, 48 + Math.sin(a) * 39.5); g.lineTo(48 + Math.cos(a) * 44, 48 + Math.sin(a) * 44); g.stroke(); }
+			g.strokeStyle = "rgba(138,92,6,.8)"; g.lineWidth = 2.5; g.beginPath(); g.arc(48, 48, 35, 0, 6.283); g.stroke();
+			g.strokeStyle = "rgba(255,250,210,.85)"; g.lineWidth = 1.6; g.beginPath(); g.arc(48, 48, 32.5, 2.7, 5.1); g.stroke();
+			g.textAlign = "center"; g.textBaseline = "middle"; g.font = "bold 50px Georgia, 'Times New Roman', serif";
+			g.fillStyle = "#9a6a08"; g.fillText("$", 49.5, 52);
+			g.fillStyle = "#ffe890"; g.fillText("$", 48, 50);
+		});
+	}
+	function skyGlint() {
+		return skyArt("glint", 64, 64, function (g) {
+			g.fillStyle = "#fff";
+			g.beginPath(); g.moveTo(32, 0); g.quadraticCurveTo(32, 32, 64, 32); g.quadraticCurveTo(32, 32, 32, 64); g.quadraticCurveTo(32, 32, 0, 32); g.quadraticCurveTo(32, 32, 32, 0); g.fill();
+		});
+	}
+	function skyPetal(col) {
+		return skyArt("petal" + col, 64, 44, function (g) {
+			var gr = g.createLinearGradient(0, 0, 64, 0);
+			gr.addColorStop(0, "#ffffff"); gr.addColorStop(0.35, col); gr.addColorStop(1, col);
+			g.fillStyle = gr;
+			g.beginPath(); g.moveTo(2, 22); g.bezierCurveTo(14, 2, 46, 0, 62, 22); g.bezierCurveTo(46, 44, 14, 42, 2, 22); g.fill();
+			g.strokeStyle = "rgba(190,70,110,.28)"; g.lineWidth = 1.5; g.beginPath(); g.moveTo(8, 22); g.quadraticCurveTo(32, 18, 56, 22); g.stroke();
+		});
+	}
 	SSO.register({
 		id: "skyfall",
 		name: "Confetti & money rain",
 		category: "fun",
-		description: "Paper confetti, fluttering dollar bills, gold coins or petals drifting down — they tumble and flip like real paper. Runs gently all the time, or in short bursts.",
+		description: "Paper confetti, fluttering dollar bills, gold coins or petals drifting down — they tumble and flip like real paper, near ones big and soft, far ones small. Runs gently all the time, or in short bursts.",
 		size: [1280, 720],
 		fields: [
 			{ key: "kind", label: "What falls", type: "select", group: "Rain", default: "confetti", options: [["confetti", "Confetti"], ["money", "Dollar bills"], ["coins", "Gold coins"], ["mixed", "Bills and coins"], ["snow", "Snowflakes"], ["petals", "Flower petals"], ["leaves", "Autumn leaves"], ["streamers", "Streamers"]] },
 			{ key: "amount", label: "How many", type: "range", group: "Rain", default: 80, min: 5, max: 300, step: 5 },
 			{ key: "speed", label: "Fall speed", type: "range", group: "Rain", default: 1, min: 0.3, max: 3, step: 0.1 },
 			{ key: "size", label: "Piece size", type: "range", group: "Rain", default: 1, min: 0.4, max: 3, step: 0.1 },
+			{ key: "depth", label: "Depth: some pieces near the lens, some far away", type: "bool", group: "Rain", default: true },
 			{ key: "mode", label: "When", type: "select", group: "Rain", default: "always", options: [["always", "All the time"], ["burst", "Bursts now and then"]] },
 			{ key: "every", label: "Burst every (seconds)", type: "number", group: "Rain", default: 60, min: 5, max: 3600, step: 5, show: { mode: "burst" } },
 			{ key: "onshow", label: "Burst when the OBS source is shown", type: "bool", group: "Rain", default: true, show: { mode: "burst" } },
@@ -775,87 +864,132 @@
 			var cv = document.createElement("canvas");
 			cv.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;";
 			root.appendChild(cv);
-			var g = cv.getContext("2d"), pieces = [], dpr = Math.min(window.devicePixelRatio || 1, 2);
-			function fit() { cv.width = (root.clientWidth || 1280) * dpr; cv.height = (root.clientHeight || 720) * dpr; }
+			var g = cv.getContext("2d"), pieces = [], dpr = Math.min(window.devicePixelRatio || 1, 2), W = 0, H = 0;
+			function fit() { dpr = Math.min(window.devicePixelRatio || 1, 2); W = cv.width = Math.round((root.clientWidth || 1280) * dpr); H = cv.height = Math.round((root.clientHeight || 720) * dpr); }
 			fit(); window.addEventListener("resize", fit);
 			var cols = String(c.colors || "").split(/[ ,]+/).filter(Boolean).map(function (h) { return SSO.color(h); });
 			if (!cols.length) { cols = ["#ff4d8d", "#ffd400", "#22d3ee"]; }
 			var PET = ["#ffd1dc", "#ffc0cb", "#ffb7c5", "#fde2e8"], LEAF = ["#d9480f", "#e8590c", "#f08c00", "#c92a2a", "#a0522d", "#e67700"];
-			function make(top) {
-				var W = cv.width, H = cv.height, k = c.kind;
+			function shade(hex) { var m = /^#?([0-9a-f]{6})$/i.exec(hex); if (!m) { return hex; } var n = parseInt(m[1], 16); return "rgb(" + Math.round((n >> 16) * 0.68) + "," + Math.round(((n >> 8) & 255) * 0.68) + "," + Math.round((n & 255) * 0.68) + ")"; }
+			var dark = {};
+			cols.forEach(function (col) { dark[col] = shade(col); });
+			// z: 0 is far away, 1 is close to the lens. Pieces are kept sorted far to near so near ones cover far ones.
+			function make(top, z) {
+				var k = c.kind;
 				if (k === "mixed") { k = Math.random() < 0.6 ? "money" : "coins"; }
-				var depth = Math.random();
-				var s = dpr * c.size * (k === "money" ? 58 : k === "coins" ? 18 : k === "leaves" ? 22 : k === "snow" ? 2 + depth * depth * 9 : k === "petals" ? 9 : k === "streamers" ? 6 : 13) * (k === "snow" ? 1 : 0.8 + Math.random() * 0.4);
-				return { k: k, x: Math.random() * W, y: top ? -s * 3 - Math.random() * H * 0.3 : Math.random() * H, s: s,
-					vy: dpr * (k === "coins" ? 140 : k === "money" ? 55 : k === "snow" ? 18 + depth * 60 : 45) * c.speed * (0.7 + Math.random() * 0.6), depth: depth, li: Math.floor(Math.random() * 7),
+				if (z == null) { z = c.depth ? Math.random() : 0.62; }
+				var zs = k === "snow" ? 1 : 0.58 + 0.8 * z * z;
+				var s = dpr * c.size * (k === "money" ? 96 : k === "coins" ? 21 : k === "leaves" ? 22 : k === "snow" ? 2 + z * z * 9 : k === "petals" ? 13 : k === "streamers" ? 6 : 16) * zs * (k === "snow" ? 1 : 0.85 + Math.random() * 0.3);
+				return { k: k, z: z, zs: zs, x: Math.random() * W, y: !top ? Math.random() * H : c.mode === "always" ? -s * (0.7 + Math.random()) : -s * 3 - Math.random() * H * 0.3, s: s, a: 0.72 + 0.28 * Math.min(1, z * 1.6),
+					soft: c.depth && (z < 0.2 || z > 0.95) ? (z > 0.95 ? 4 : 2) : 0,
+					vy: dpr * (k === "coins" ? 150 : k === "money" ? 62 : k === "snow" ? 18 + z * 60 : 48) * c.speed * (0.75 + 0.5 * zs) * (0.8 + Math.random() * 0.4), li: Math.floor(Math.random() * 7), shape: Math.random(),
 					sway: Math.random() * 6.283, swayS: 0.6 + Math.random() * 1.2, rot: Math.random() * 6.283, vr: (Math.random() - 0.5) * 3,
 					flip: Math.random() * 6.283, vf: 2 + Math.random() * 4,
 					col: k === "petals" ? PET[Math.floor(Math.random() * PET.length)] : k === "leaves" ? LEAF[Math.floor(Math.random() * LEAF.length)] : cols[Math.floor(Math.random() * cols.length)] };
 			}
-			if (c.mode === "always") { for (var i = 0; i < c.amount; i++) { pieces.push(make(false)); } }
-			function burst() { for (var i = 0; i < c.amount; i++) { pieces.push(make(true)); } }
+			function insert(p) {
+				var lo = 0, hi = pieces.length;
+				while (lo < hi) { var mid = (lo + hi) >> 1; if (pieces[mid].z < p.z) { lo = mid + 1; } else { hi = mid; } }
+				pieces.splice(lo, 0, p);
+			}
+			var i0;
+			if (c.mode === "always") { for (i0 = 0; i0 < c.amount; i0++) { insert(make(false)); } }
+			function burst() { for (var i = 0; i < c.amount && pieces.length < 900; i++) { insert(make(true)); } }
 			if (c.mode === "burst") {
 				burst();
 				setInterval(burst, Math.max(5, ctx && ctx.preview ? 8 : c.every) * 1000);
 				if (c.onshow) { SSO.onCleanup(root, SSO.obs.on("obsSourceVisibleChanged", function (d) { if (d && d.visible) { burst(); } })); }
 			}
-			function shade(hex) { var m = /^#?([0-9a-f]{6})$/i.exec(hex); if (!m) { return hex; } var n = parseInt(m[1], 16); return "rgb(" + Math.round((n >> 16) * 0.7) + "," + Math.round(((n >> 8) & 255) * 0.7) + "," + Math.round((n & 255) * 0.7) + ")"; }
-			function bill(p) {
-				var w = p.s, h = p.s * 0.45;
-				g.fillStyle = "#8fbf86"; g.fillRect(-w / 2, -h / 2, w, h);
-				g.strokeStyle = "#3f6f3a"; g.lineWidth = Math.max(1, w * 0.04); g.strokeRect(-w / 2 + w * 0.06, -h / 2 + h * 0.12, w * 0.88, h * 0.76);
-				g.fillStyle = "#cfe5c9"; g.beginPath(); g.ellipse(0, 0, h * 0.3, h * 0.34, 0, 0, 6.283); g.fill();
-				g.fillStyle = "#2f5a2b"; g.font = "bold " + (h * 0.5) + "px Arial"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("$", 0, h * 0.03);
-				g.font = "bold " + (h * 0.26) + "px Arial"; g.fillText("100", -w * 0.33, -h * 0.22); g.fillText("100", w * 0.33, h * 0.24);
-			}
-			function coin(p) {
-				var r = p.s;
-				var gr = g.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.1, 0, 0, r);
-				gr.addColorStop(0, "#fff3b0"); gr.addColorStop(0.5, "#f4c542"); gr.addColorStop(1, "#b8860b");
-				g.fillStyle = gr; g.beginPath(); g.arc(0, 0, r, 0, 6.283); g.fill();
-				g.strokeStyle = "#a0740a"; g.lineWidth = r * 0.12; g.beginPath(); g.arc(0, 0, r * 0.75, 0, 6.283); g.stroke();
-			}
-			function leaf(p) {
-				var s = p.s; g.fillStyle = p.col; g.beginPath(); g.moveTo(0, -s); g.quadraticCurveTo(s * 0.8, -s * 0.2, 0, s); g.quadraticCurveTo(-s * 0.8, -s * 0.2, 0, -s); g.fill();
-				g.strokeStyle = "rgba(0,0,0,.25)"; g.lineWidth = 1; g.beginPath(); g.moveTo(0, -s); g.lineTo(0, s * 1.2); g.stroke();
-			}
-			var last = performance.now(), frameId, alive = true;
+			var last = performance.now(), frameId, alive = true, idle = false;
 			SSO.onCleanup(root, function () { alive = false; cancelAnimationFrame(frameId); window.removeEventListener("resize", fit); });
 			(function frame(now) {
 				if (!alive) { return; }
-				var dt = Math.min(0.05, (now - last) / 1000); last = now;
-				var H = cv.height, W = cv.width;
-				g.clearRect(0, 0, W, H);
-				for (var i = pieces.length - 1; i >= 0; i--) {
-					var p = pieces[i];
-					p.sway += p.swayS * dt; p.rot += p.vr * dt; p.flip += p.vf * dt;
-					p.y += p.vy * dt * (p.k === "money" ? 0.8 + 0.4 * Math.abs(Math.sin(p.flip)) : 1);
-					p.x += Math.sin(p.sway) * dpr * (p.k === "coins" ? 8 : p.k === "snow" ? 10 + p.depth * 25 : 40) * dt;
-					if (p.y > H + p.s * 4) {
-						if (c.mode === "always") { pieces[i] = make(true); } else { pieces.splice(i, 1); }
-						continue;
-					}
-					g.save(); g.translate(p.x, p.y); g.rotate(p.k === "coins" || p.k === "snow" && p.depth <= 0.85 ? 0 : p.rot);
-					var fy = Math.cos(p.flip);
-					if (p.k === "snow") {
-						var fs = SSO.flakeSprites ? SSO.flakeSprites() : null;
-						g.globalAlpha = 0.55 + p.depth * 0.4;
-						if (fs) { var fimg = p.depth > 0.85 && p.swayS > 1.4 ? fs[3] : fs[p.depth > 0.7 ? 2 : p.depth > 0.35 ? 1 : 0]; g.drawImage(fimg, -p.s, -p.s, p.s * 2, p.s * 2); }
-						else { g.fillStyle = "#fff"; g.beginPath(); g.arc(0, 0, p.s * 0.6, 0, 6.283); g.fill(); }
-						g.globalAlpha = 1;
-					}
-					else if (p.k === "coins") { g.scale(Math.max(0.12, Math.abs(fy)), 1); coin(p); }
-					else {
-						g.scale(1, Math.max(0.08, Math.abs(fy)));
-						if (p.k === "money") { bill(p); if (fy < 0) { g.fillStyle = "rgba(0,0,0,.12)"; g.fillRect(-p.s / 2, -p.s * 0.225, p.s, p.s * 0.45); } }
-						else if (p.k === "leaves") { if (SSO.leafSprites) { var ls = SSO.leafSprites(); g.drawImage(ls[p.li % ls.length], -p.s, -p.s, p.s * 2, p.s * 2); } else { leaf(p); } }
-						else if (p.k === "petals") { g.fillStyle = p.col; g.beginPath(); g.ellipse(0, 0, p.s, p.s * 0.6, 0, 0, 6.283); g.fill(); }
-						else if (p.k === "streamers") { g.strokeStyle = p.col; g.lineWidth = p.s * 0.6; g.beginPath(); g.moveTo(0, -p.s * 4); for (var q = 1; q <= 8; q++) { g.lineTo(Math.sin(q + p.sway * 3) * p.s, -p.s * 4 + q * p.s); } g.stroke(); }
-						else { g.fillStyle = fy < 0 ? shade(p.col) : p.col; g.fillRect(-p.s / 2, -p.s * 0.35, p.s, p.s * 0.7); }
-					}
-					g.restore();
-				}
 				frameId = requestAnimationFrame(frame);
+				var dt = SSO.frameDelta(now - last); last = now;
+				// Between bursts there is nothing to draw: wipe once, then leave the canvas alone.
+				if (!pieces.length) { if (!idle) { g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H); idle = true; } return; }
+				idle = false;
+				g.setTransform(1, 0, 0, 1, 0, 0);
+				g.clearRect(0, 0, W, H);
+				var n = 0, i, p, fy, afy, cr, sr, rot, w, h, img, r;
+				for (i = 0; i < pieces.length; i++) {
+					p = pieces[i];
+					p.sway += p.swayS * dt; p.flip += p.vf * dt;
+					if (p.k === "money" || p.k === "petals" || p.k === "leaves") {
+						// paper rocks from side to side and slides the way it leans
+						rot = p.rot + 0.55 * Math.sin(p.sway * 0.9);
+						p.y += p.vy * dt * (0.7 + 0.5 * Math.abs(Math.sin(p.flip)));
+						p.x += Math.cos(p.sway * 0.9) * dpr * 46 * p.zs * dt;
+					} else {
+						p.rot += p.vr * dt; rot = p.rot;
+						p.y += p.vy * dt;
+						p.x += Math.sin(p.sway) * dpr * (p.k === "coins" ? 8 : p.k === "snow" ? 10 + p.z * 25 : 40) * dt;
+					}
+					// gone once it is fully below the bottom edge (a streamer hangs four lengths above its own position)
+					if (p.y > H + p.s * (p.k === "streamers" ? 4.5 : p.k === "money" ? 0.7 : 1.6)) {
+						if (c.mode !== "always") { continue; }
+						p = make(true, p.z);
+					}
+					pieces[n++] = p;
+					fy = Math.cos(p.flip);
+					g.globalAlpha = p.a;
+					if (p.k === "money") {
+						afy = Math.abs(fy) < 0.07 ? (fy < 0 ? -0.07 : 0.07) : fy;
+						cr = Math.cos(rot); sr = Math.sin(rot); w = p.s; h = p.s * 0.4375;
+						g.setTransform(cr, sr, -sr * afy, cr * afy, p.x, p.y);
+						img = skyBill(fy < 0);
+						g.drawImage(p.soft ? skySoft("bill" + (fy < 0 ? 1 : 0), img, p.soft) : img, -w / 2, -h / 2, w, h);
+						if (!p.soft) {
+							// darker as it turns edge-on, with a band of light sliding across when it faces the lamp
+							g.globalAlpha = p.a * 0.42 * (1 - Math.abs(fy));
+							g.drawImage(skyBillShade(), -w / 2, -h / 2, w, h);
+							r = Math.sin(p.flip + 0.5);
+							if (r > 0.6 && fy > 0) { g.globalAlpha = p.a * (r - 0.6) * 2.2; g.drawImage(skySheen(), -w * 0.42 + (r - 0.6) * w * 1.4, -h * 0.44, w * 0.3, h * 0.88); }
+						}
+					} else if (p.k === "coins") {
+						afy = Math.max(0.1, Math.abs(fy)); r = p.s;
+						g.setTransform(1, 0, 0, 1, p.x, p.y);
+						if (p.soft) { g.drawImage(skySoft("coin", skyCoin(), p.soft), -r * afy, -r, r * afy * 2, r * 2); }
+						else {
+							// the thickness of the coin shows on the side that is turning towards us
+							g.fillStyle = "#8a5c06";
+							g.beginPath(); g.ellipse(Math.sin(p.flip) * r * 0.16, 0, r * afy, r, 0, 0, 6.283); g.fill();
+							g.drawImage(skyCoin(), -r * afy, -r, r * afy * 2, r * 2);
+							if (fy > 0.94) { w = r * 1.5 * (fy - 0.94) / 0.06; g.drawImage(skyGlint(), -r * 0.35 - w / 2, -r * 0.4 - w / 2, w, w); }
+						}
+					} else if (p.k === "snow") {
+						var fs = SSO.flakeSprites ? SSO.flakeSprites() : null;
+						g.globalAlpha = 0.55 + p.z * 0.4;
+						if (fs) {
+							cr = p.z > 0.85 ? Math.cos(rot) : 1; sr = p.z > 0.85 ? Math.sin(rot) : 0;
+							g.setTransform(cr, sr, -sr, cr, p.x, p.y);
+							g.drawImage(p.z > 0.85 && p.swayS > 1.4 ? fs[3] : fs[p.z > 0.7 ? 2 : p.z > 0.35 ? 1 : 0], -p.s, -p.s, p.s * 2, p.s * 2);
+						} else { g.setTransform(1, 0, 0, 1, p.x, p.y); g.fillStyle = "#fff"; g.beginPath(); g.arc(0, 0, p.s * 0.6, 0, 6.283); g.fill(); }
+					} else {
+						afy = Math.max(0.08, Math.abs(fy)); cr = Math.cos(rot); sr = Math.sin(rot);
+						g.setTransform(cr, sr, -sr * afy, cr * afy, p.x, p.y);
+						if (p.k === "leaves") {
+							if (SSO.leafSprites) { var ls = SSO.leafSprites(); g.drawImage(ls[p.li % ls.length], -p.s, -p.s, p.s * 2, p.s * 2); }
+							else { g.fillStyle = p.col; g.beginPath(); g.moveTo(0, -p.s); g.quadraticCurveTo(p.s * 0.8, -p.s * 0.2, 0, p.s); g.quadraticCurveTo(-p.s * 0.8, -p.s * 0.2, 0, -p.s); g.fill(); }
+						} else if (p.k === "petals") {
+							g.drawImage(skyPetal(p.col), -p.s, -p.s * 0.69, p.s * 2, p.s * 1.38);
+						} else if (p.k === "streamers") {
+							g.strokeStyle = p.col; g.lineWidth = p.s * 0.6; g.lineCap = "round";
+							g.beginPath(); g.moveTo(0, -p.s * 4);
+							for (var q = 1; q <= 8; q++) { g.lineTo(Math.sin(q + p.sway * 3) * p.s, -p.s * 4 + q * p.s); }
+							g.stroke();
+						} else {
+							// confetti: mostly paper rectangles, some dots and triangles, darker on the back
+							g.fillStyle = fy < 0 ? dark[p.col] || p.col : p.col;
+							if (p.shape < 0.68) { g.fillRect(-p.s / 2, -p.s * 0.35, p.s, p.s * 0.7); }
+							else if (p.shape < 0.86) { g.beginPath(); g.arc(0, 0, p.s * 0.42, 0, 6.283); g.fill(); }
+							else { g.beginPath(); g.moveTo(-p.s * 0.5, p.s * 0.4); g.lineTo(p.s * 0.5, p.s * 0.4); g.lineTo(0, -p.s * 0.5); g.closePath(); g.fill(); }
+							if (fy > 0.9) { g.globalAlpha = p.a * (fy - 0.9) * 3.5; g.fillStyle = "#fff"; g.fillRect(-p.s / 2, -p.s * 0.35, p.s, p.s * 0.7); }
+						}
+					}
+				}
+				pieces.length = n;
+				g.globalAlpha = 1;
 			})(last);
 		}
 	});

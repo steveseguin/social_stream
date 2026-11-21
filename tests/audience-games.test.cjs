@@ -100,11 +100,8 @@ test('Real pages render safely, isolate demos, receive only their bridge, and su
             await bridge.evaluate(payload=>parent.postMessage({dataReceived:{overlayNinja:[payload]}},'*'),payload);
             await page.waitForFunction(()=>document.getElementById('participants').textContent==='1');
             assert.equal(await page.locator('#history img').count(),0);
-            await page.locator('#pause').click();
-            await bridge.evaluate(payload=>parent.postMessage({dataReceived:{overlayNinja:payload}},'*'),msg(name==='signallock'?'!code 2345':'!vote 2','Other'));
-            assert.equal(await page.locator('#participants').innerText(),'1');
-            assert.equal(await page.locator('#clock-value').innerText(),'Paused');
-            for(const width of [390,1280]) {await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);}
+            assert.equal(await page.locator('button, #controls, #host-controls, #connection').count(),0);
+            for(const width of [390,1280]) {await page.setViewportSize({width,height:900});await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);}
         }
         assert.deepEqual(errors,[]);
     } finally {await browser.close();}
@@ -124,21 +121,14 @@ test('WebSocket mode joins the existing relay protocol and drives a complete que
         assert.deepEqual(await joined,{join:'private-fixture',out:2,in:1}); assert.equal(page.frames().length,1);
         client.send(JSON.stringify({content:msg('!vote <b>2</b>','A',{textonly:false})}));
         await page.waitForFunction(()=>document.getElementById('participants').textContent==='1');
-        await page.locator('#pause').click();
-        await page.evaluate(()=>window.timeOffset+=60000);
-        await page.locator('#pause').click();
-        assert.notEqual(await page.locator('#clock-value').innerText(),'Complete');
         await page.evaluate(()=>window.timeOffset+=31000);
         await page.waitForFunction(()=>!document.getElementById('result').hidden);
         assert.match(await page.locator('#result').innerText(),/Crystal field/);
         assert.equal(await page.locator('#supplies').innerText(),'3');
         assert.equal(await page.locator('#discoveries').innerText(),'2');
-        await page.locator('#next').click();
+        await page.evaluate(()=>window.timeOffset+=11000); await page.waitForFunction(()=>document.getElementById('round').textContent==='Chapter 2 of 5');
         assert.equal(await page.locator('#round').textContent(),'Chapter 2 of 5');
         assert.equal(await page.locator('#participants').innerText(),'0');
-        await page.locator('#restart').click();
-        assert.equal(await page.locator('#round').textContent(),'Chapter 1 of 5');
-        assert.equal(await page.locator('#supplies').innerText(),'4');
     } finally { await browser.close(); for(const client of server.clients)client.terminate();await new Promise(resolve=>server.close(resolve)); }
 });
 
@@ -155,7 +145,7 @@ test('Word Chain retains its word validation, combo scoring, timer bonus and rea
         assert.equal(await page.locator('.chain-word').count(),2);
         await page.evaluate(()=>{for(let i=0;i<12;i++)addWordToChain('WORD'+i,'Long viewer name');});
         assert.equal(await page.locator('.chain-word').count(),8);
-        for(const width of [390,1280]) {await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);}
+        for(const width of [390,1280]) {await page.setViewportSize({width,height:900});await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);}
     } finally {await browser.close();}
 });
 

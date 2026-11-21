@@ -345,6 +345,7 @@ function setupReturnButton() {
     const backToDashboardButton = document.getElementById('back-to-dashboard');
     if (backToDashboardButton) {
         backToDashboardButton.addEventListener('click', function() {
+            if (window.location.hash === '#editor') history.replaceState(history.state, '', '#dashboard');
             showDashboardView();
         });
     }

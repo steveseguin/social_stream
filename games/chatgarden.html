@@ -29,12 +29,17 @@
             font-display: swap;
         }
 
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
         body {
             margin: 0;
             padding: 0;
             background: linear-gradient(to bottom, #87CEEB 0%, #90EE90 30%, #228B22 100%);
             overflow: hidden;
-            font-family: 'Arial', 'NotoColorEmoji', sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'NotoColorEmoji', sans-serif;
             color: white;
         }
 
@@ -46,212 +51,180 @@
             background: linear-gradient(to bottom, #2c3e50 0%, #34495e 30%, #1a252f 100%);
         }
 
-        #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
+        body.transparent {
+            background: transparent;
         }
 
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Rolling ground the plants grow on */
         #garden-ground {
             position: absolute;
+            left: 0;
             bottom: 0;
             width: 100%;
-            height: 30%;
-            background: linear-gradient(to bottom, #8FBC8F 0%, #228B22 100%);
-            border-top: 3px solid #654321;
+            height: 54%;
+        }
+
+        .hill {
+            position: absolute;
+            height: 100%;
+            border-radius: 50% 50% 0 0 / 14vmin 14vmin 0 0;
+        }
+
+        .hill-back {
+            left: -35%;
+            top: 0;
+            width: 120%;
+            background: #8ed081;
+        }
+
+        .hill-mid {
+            left: 30%;
+            top: 9%;
+            width: 110%;
+            background: #6fc06c;
+        }
+
+        .hill-front {
+            left: -10%;
+            top: 24%;
+            width: 120%;
+            background: #57ad5d;
+        }
+
+        body.darkmode .hill-back { background: #3f6b52; }
+        body.darkmode .hill-mid { background: #34594a; }
+        body.darkmode .hill-front { background: #2a4a3f; }
+
+        #plants {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
         }
 
         .plant {
             position: absolute;
-            bottom: 0;
-            animation: plant-grow 2s ease-out forwards;
-            cursor: pointer;
-            transition: transform 0.3s ease;
+            width: 1em;
+            margin-left: -0.5em;
+            line-height: 1;
+            text-align: center;
         }
 
-        .plant:hover {
-            transform: scale(1.1);
+        .plant::before {
+            content: '';
+            position: absolute;
+            left: 12%;
+            bottom: -0.04em;
+            width: 76%;
+            height: 0.16em;
+            border-radius: 50%;
+            background: rgba(20, 60, 25, 0.28);
         }
 
-        .plant-flower {
-            font-size: 48px;
-            animation: flower-bloom 1.5s ease-out forwards;
+        .plant-body {
+            position: relative;
+            transform-origin: 50% 100%;
+            animation: plant-grow 0.9s cubic-bezier(0.2, 1.5, 0.4, 1) both, plant-sway 3.2s ease-in-out 0.9s infinite alternate;
         }
 
-        .plant-tree {
-            font-size: 64px;
-            animation: tree-grow 2.5s ease-out forwards;
-        }
-
-        .plant-bush {
-            font-size: 36px;
-            animation: bush-spread 2s ease-out forwards;
-        }
-
-        .plant-grass {
-            font-size: 24px;
-            animation: grass-wave 3s ease-in-out infinite;
+        .plant.wilt .plant-body {
+            animation: plant-wilt 0.8s ease-in both;
         }
 
         @keyframes plant-grow {
-            0% {
-                transform: scale(0) translateY(50px);
-                opacity: 0;
-            }
-            100% {
-                transform: scale(1) translateY(0);
-                opacity: 1;
-            }
+            0% { transform: scale(0.05, 0); }
+            100% { transform: scale(1, 1); }
         }
 
-        @keyframes flower-bloom {
-            0% { transform: scale(0) rotate(0deg); }
-            50% { transform: scale(1.2) rotate(180deg); }
-            100% { transform: scale(1) rotate(360deg); }
+        @keyframes plant-sway {
+            0% { transform: rotate(-3deg); }
+            100% { transform: rotate(3deg); }
         }
 
-        @keyframes tree-grow {
-            0% { 
-                transform: scale(0.1) translateY(100px);
-                filter: blur(2px);
-            }
-            100% { 
-                transform: scale(1) translateY(0);
-                filter: blur(0px);
-            }
+        @keyframes plant-wilt {
+            0% { transform: scale(1, 1); opacity: 1; }
+            100% { transform: scale(0.6, 0); opacity: 0; }
         }
 
-        @keyframes bush-spread {
-            0% { transform: scaleX(0.1) scaleY(0.5); }
-            100% { transform: scaleX(1) scaleY(1); }
-        }
-
-        @keyframes grass-wave {
-            0%, 100% { transform: rotate(-2deg); }
-            50% { transform: rotate(2deg); }
-        }
-
-        .plant-label {
+        /* Name of whoever planted it, shown for a moment */
+        .plant-tag {
             position: absolute;
-            bottom: -30px;
             left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
+            bottom: 104%;
+            max-width: 34vmin;
+            padding: 0.5vmin 1.8vmin;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            box-sizing: border-box;
+            color: #24452b;
+            font-size: 2.6vmin;
+            line-height: 1.3;
+            font-weight: 700;
             white-space: nowrap;
-            font-weight: bold;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            animation: tag-show 3.2s ease both;
         }
 
-        .plant:hover .plant-label {
-            opacity: 1;
+        @keyframes tag-show {
+            0% { transform: translate(-50%, 1vmin) scale(0.6); opacity: 0; }
+            8% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+            80% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -1vmin) scale(0.9); opacity: 0; }
         }
 
         .sparkle {
             position: absolute;
-            font-size: 20px;
-            color: #ffd700;
-            animation: sparkle-float 2s ease-out forwards;
+            left: 0;
+            top: 0;
+            font-size: 3.6vmin;
+            line-height: 1;
             pointer-events: none;
-            z-index: 100;
+            animation: sparkle-float 1.6s ease-out both;
         }
 
         @keyframes sparkle-float {
-            0% {
-                opacity: 1;
-                transform: translateY(0) rotate(0deg);
-            }
-            100% {
-                opacity: 0;
-                transform: translateY(-100px) rotate(360deg);
-            }
+            0% { transform: translate(var(--x), var(--y)) scale(0.3); opacity: 0; }
+            20% { transform: translate(var(--x), var(--y)) scale(1); opacity: 1; }
+            100% { transform: translate(var(--x), calc(var(--y) - 12vmin)) scale(0.5) rotate(120deg); opacity: 0; }
         }
 
         .butterfly {
             position: absolute;
-            font-size: 32px;
-            animation: butterfly-flight 8s linear infinite;
-            z-index: 50;
-            pointer-events: none;
+            left: 0;
+            top: 0;
+            font-size: 6.5vmin;
+            line-height: 1;
+            animation: butterfly-flight 9s linear both;
+        }
+
+        .butterfly span {
+            display: block;
+            animation: butterfly-flap 0.35s ease-in-out infinite alternate;
         }
 
         @keyframes butterfly-flight {
-            0% {
-                left: -100px;
-                top: 20%;
-                transform: rotate(0deg);
-            }
-            25% {
-                left: 25%;
-                top: 30%;
-                transform: rotate(15deg);
-            }
-            50% {
-                left: 50%;
-                top: 15%;
-                transform: rotate(-10deg);
-            }
-            75% {
-                left: 75%;
-                top: 35%;
-                transform: rotate(20deg);
-            }
-            100% {
-                left: 110%;
-                top: 25%;
-                transform: rotate(0deg);
-            }
+            0% { transform: translate(-12vmin, var(--y)) rotate(10deg); }
+            25% { transform: translate(25vw, calc(var(--y) + 7vh)) rotate(-8deg); }
+            50% { transform: translate(50vw, calc(var(--y) - 6vh)) rotate(12deg); }
+            75% { transform: translate(75vw, calc(var(--y) + 8vh)) rotate(-10deg); }
+            100% { transform: translate(calc(100vw + 12vmin), var(--y)) rotate(8deg); }
         }
 
-        #garden-stats {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px 20px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 100;
-        }
-
-        .stat-line {
-            margin: 5px 0;
-            font-size: 16px;
-        }
-
-        #growth-meter {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 250px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px 20px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 100;
-        }
-
-        .growth-bar {
-            width: 100%;
-            height: 15px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            margin: 8px 0;
-            overflow: hidden;
-        }
-
-        .growth-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #90EE90, #228B22);
-            border-radius: 8px;
-            transition: width 0.5s ease;
-            width: 0%;
+        @keyframes butterfly-flap {
+            0% { transform: scaleX(1); }
+            100% { transform: scaleX(0.55); }
         }
 
         #weather-system {
@@ -261,126 +234,103 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 20;
+        }
+
+        #sun {
+            position: absolute;
+            top: 4vmin;
+            right: 5vmin;
+            font-size: 15vmin;
+            line-height: 1;
+            animation: sun-shine 5s ease-in-out infinite alternate;
+        }
+
+        @keyframes sun-shine {
+            0% { transform: scale(1) rotate(-6deg); }
+            100% { transform: scale(1.08) rotate(6deg); }
+        }
+
+        .cloud {
+            position: absolute;
+            left: 0;
+            font-size: 14vmin;
+            line-height: 1;
+            opacity: 0.92;
+            animation: cloud-drift 90s linear infinite;
+        }
+
+        @keyframes cloud-drift {
+            0% { transform: translateX(-20vmin); }
+            100% { transform: translateX(calc(100vw + 6vmin)); }
         }
 
         .rain-drop {
             position: absolute;
-            width: 2px;
-            height: 20px;
-            background: linear-gradient(to bottom, transparent, #87CEEB);
-            animation: rain-fall 1s linear infinite;
+            left: 0;
+            top: 0;
+            width: 0.7vmin;
+            height: 4vmin;
+            border-radius: 999px;
+            background: rgba(190, 228, 255, 0.85);
+            animation: rain-fall 0.9s linear both;
         }
 
         @keyframes rain-fall {
-            0% {
-                top: -20px;
-                opacity: 1;
-            }
-            100% {
-                top: 100%;
-                opacity: 0;
-            }
+            0% { transform: translate(var(--x), -6vh); }
+            100% { transform: translate(calc(var(--x) - 4vw), 104vh); }
         }
 
-        .sun-ray {
+        /* The one thing viewers need to know: what to type */
+        #hint {
             position: absolute;
-            top: 10%;
-            right: 10%;
-            font-size: 48px;
-            color: #FFD700;
-            animation: sun-shine 3s ease-in-out infinite;
+            top: 5vmin;
+            left: 5vmin;
+            padding: 1vmin 2.8vmin 1vmin 2vmin;
+            border-radius: 999px;
+            background: rgba(20, 40, 30, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            font-size: 4vmin;
+            line-height: 1.3;
+            font-weight: 800;
+            white-space: nowrap;
+            transition: opacity 0.3s ease;
         }
 
-        @keyframes sun-shine {
-            0%, 100% { 
-                transform: scale(1) rotate(0deg);
-                text-shadow: 0 0 20px #FFD700;
-            }
-            50% { 
-                transform: scale(1.1) rotate(180deg);
-                text-shadow: 0 0 40px #FFD700;
-            }
-        }
-
-        #instructions {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            text-align: left;
-            font-size: 16px;
-            z-index: 100;
-        }
-
-        #instructions strong {
-            color: #90EE90;
-            font-size: 18px;
-        }
-
-        .seasonal-effect {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 15;
+        #hint.swap {
             opacity: 0;
-            transition: opacity 1s ease;
         }
 
-        .spring-petals {
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="%23FFC0CB"/></svg>') repeat;
-            animation: petals-drift 10s linear infinite;
+        #hint-emoji {
+            display: inline-block;
+            margin-right: 1.4vmin;
         }
 
-        @keyframes petals-drift {
-            0% { background-position: 0 -100%; }
-            100% { background-position: 0 100%; }
+        @media (orientation: portrait) {
+            #garden-ground {
+                height: 60%;
+            }
         }
     </style>
 </head>
 <body>
     <div id="game-container">
         <div id="weather-system">
-            <div class="sun-ray" id="sun">☀️</div>
+            <div class="cloud" style="top: 3%; animation-delay: -20s;">☁️</div>
+            <div class="cloud" style="top: 17%; animation-delay: -62s; font-size: 10vmin;">☁️</div>
+            <div class="cloud" style="top: 8%; animation-delay: -84s; font-size: 8vmin;">☁️</div>
+            <div id="sun">☀️</div>
         </div>
-        
-        <div class="seasonal-effect spring-petals" id="seasonal-overlay"></div>
-        
-        <div id="garden-stats">
-            <div class="stat-line">🌱 Plants: <span id="plant-count">0</span></div>
-            <div class="stat-line">🌸 Flowers: <span id="flower-count">0</span></div>
-            <div class="stat-line">🌳 Trees: <span id="tree-count">0</span></div>
-            <div class="stat-line">👨‍🌾 Gardeners: <span id="gardener-count">0</span></div>
+
+        <div id="garden-ground">
+            <div class="hill hill-back"></div>
+            <div class="hill hill-mid"></div>
+            <div class="hill hill-front"></div>
+            <div id="plants"></div>
         </div>
-        
-        <div id="growth-meter">
-            <h4 style="margin-top: 0; color: #90EE90;">🌿 Garden Health</h4>
-            <div>Biodiversity</div>
-            <div class="growth-bar">
-                <div class="growth-fill" id="biodiversity-fill"></div>
-            </div>
-            <div>Growth Rate</div>
-            <div class="growth-bar">
-                <div class="growth-fill" id="growth-fill"></div>
-            </div>
-            <div>Garden Age: <span id="garden-age">0</span>s</div>
-        </div>
-        
-        <div id="garden-ground"></div>
-        
-        <div id="instructions">
-            <div><strong>🌻 Chat Garden - How to Play:</strong></div>
-            <div>Type plant names to grow them!</div>
-            <div><strong>flower</strong>, <strong>tree</strong>, <strong>rose</strong>, <strong>sunflower</strong>, <strong>grass</strong></div>
-            <div>Long messages = bigger plants!</div>
-            <div>Click plants to make them sparkle!</div>
-        </div>
+
+        <div id="effects"></div>
+
+        <div id="hint"><span id="hint-emoji">🌸</span><span id="hint-word">flower</span></div>
     </div>
 
     <script>
@@ -396,20 +346,20 @@
         } else if (urlParams.has('darkmode')) {
             document.body.classList.add('darkmode');
         }
+        if (urlParams.has('transparent')) {
+            document.body.classList.add('transparent');
+        }
 
         // Game state
         let gameState = {
             plants: [],
             totalPlants: 0,
-            flowerCount: 0,
-            treeCount: 0,
             gardeners: new Set(),
-            biodiversity: 0,
-            growthRate: 0,
-            gardenAge: 0,
-            lastPlantTime: Date.now(),
             weatherState: 'sunny'
         };
+
+        const MAX_PLANTS = 60; // keep OBS rendering smooth during chat floods
+        const PLANT_LIFETIME = 150000;
 
         // Plant definitions
         const plantTypes = {
@@ -468,120 +418,147 @@
             return foundPlants;
         }
 
-        // Get random position for plant
+        // Find a spot on the ground that is not already crowded
         function getPlantPosition() {
-            return {
-                left: Math.random() * 85 + 5, // 5% to 90% to avoid edges
-                bottom: Math.random() * 15 // Vary height on ground slightly
-            };
+            let best = null;
+            let bestGap = -1;
+
+            for (let attempt = 0; attempt < 8; attempt++) {
+                const candidate = {
+                    left: Math.random() * 90 + 5,
+                    depth: Math.random()
+                };
+
+                let gap = Infinity;
+                gameState.plants.forEach(plant => {
+                    const dx = candidate.left - plant.left;
+                    const dy = (candidate.depth - plant.depth) * 60;
+                    gap = Math.min(gap, Math.sqrt(dx * dx + dy * dy));
+                });
+
+                if (gap > bestGap) {
+                    bestGap = gap;
+                    best = candidate;
+                }
+            }
+
+            return best;
+        }
+
+        function removePlant(entry) {
+            if (entry.removed) return;
+            entry.removed = true;
+            gameState.plants = gameState.plants.filter(p => p !== entry);
+            entry.element.classList.add('wilt');
+            setTimeout(() => {
+                if (entry.element.parentNode) {
+                    entry.element.parentNode.removeChild(entry.element);
+                }
+            }, 800);
         }
 
         // Create plant element
         function createPlant(plantName, username, messageLength) {
             const plantConfig = plantTypes[plantName];
             const position = getPlantPosition();
-            
+
+            // depth 0 is the far side of the garden, 1 is right at the front
+            const depthScale = 0.6 + position.depth * 0.45;
+            const sizeMultiplier = Math.min(1 + (messageLength / 120), 1.4);
+            let fontSize = 10;
+            if (plantConfig.size === 'small') fontSize = 7;
+            else if (plantConfig.size === 'large') fontSize = 14;
+
             const plant = document.createElement('div');
             plant.className = `plant plant-${plantConfig.type}`;
             plant.style.left = position.left + '%';
-            plant.style.bottom = position.bottom + '%';
-            plant.textContent = plantConfig.emoji;
-            
-            // Scale based on message length (longer messages = bigger plants)
-            const sizeMultiplier = Math.min(1 + (messageLength / 100), 2);
-            let fontSize = 48;
-            if (plantConfig.size === 'small') fontSize = 24;
-            else if (plantConfig.size === 'large') fontSize = 64;
-            
-            plant.style.fontSize = (fontSize * sizeMultiplier) + 'px';
-            
-            // Add label
-            const label = document.createElement('div');
-            label.className = 'plant-label';
-            label.textContent = `${plantName} by ${username}`;
-            plant.appendChild(label);
-            
-            // Click handler for sparkles
-            plant.addEventListener('click', () => createSparkles(plant));
-            
-            document.getElementById('garden-ground').appendChild(plant);
+            plant.style.bottom = (4 + (1 - position.depth) * 70) + '%';
+            plant.style.fontSize = (fontSize * sizeMultiplier * depthScale) + 'vmin';
+            plant.style.zIndex = String(10 + Math.round(position.depth * 100));
 
-            // Cap simultaneous plants to keep OBS rendering smooth during chat floods
-            while (gameState.plants.length >= 80) {
-                const oldest = gameState.plants.shift();
-                if (oldest.element && oldest.element.parentNode) {
-                    oldest.element.remove();
-                }
+            const body = document.createElement('div');
+            body.className = 'plant-body';
+            body.textContent = plantConfig.emoji;
+            body.style.animationDelay = '0s, ' + (0.9 + Math.random() * 1.5) + 's';
+            plant.appendChild(body);
+
+            const tag = document.createElement('div');
+            tag.className = 'plant-tag';
+            tag.textContent = username;
+            plant.appendChild(tag);
+            setTimeout(() => {
+                if (tag.parentNode) tag.parentNode.removeChild(tag);
+            }, 3200);
+
+            document.getElementById('plants').appendChild(plant);
+
+            // Cap simultaneous plants so the garden never turns into a hedge
+            while (gameState.plants.length >= MAX_PLANTS) {
+                removePlant(gameState.plants[0]);
             }
 
-            // Track in game state
-            gameState.plants.push({
+            const entry = {
                 element: plant,
-                type: plantConfig.type,
                 name: plantName,
-                gardener: username,
-                plantTime: Date.now()
-            });
-            
+                left: position.left,
+                depth: position.depth,
+                removed: false
+            };
+            gameState.plants.push(entry);
             gameState.totalPlants++;
-            if (plantConfig.type === 'flower') gameState.flowerCount++;
-            if (plantConfig.type === 'tree') gameState.treeCount++;
-            
-            // Auto-cleanup old plants
-            setTimeout(() => {
-                if (plant.parentNode) {
-                    plant.style.animation = 'plant-grow 1s ease-in reverse';
-                    setTimeout(() => {
-                        if (plant.parentNode) {
-                            plant.remove();
-                            gameState.plants = gameState.plants.filter(p => p.element !== plant);
-                        }
-                    }, 1000);
-                }
-            }, 60000); // Remove after 1 minute
+
+            createSparkles(plant);
+
+            // Old plants make room for new ones
+            setTimeout(() => removePlant(entry), PLANT_LIFETIME);
         }
 
-        // Create sparkle effect
+        // A few sparkles rise from a freshly planted spot
         function createSparkles(plantElement) {
-            for (let i = 0; i < 5; i++) {
+            const rect = plantElement.getBoundingClientRect();
+            for (let i = 0; i < 3; i++) {
                 setTimeout(() => {
                     const sparkle = document.createElement('div');
                     sparkle.className = 'sparkle';
                     sparkle.textContent = '✨';
-                    sparkle.style.bottom = (parseInt(plantElement.style.bottom) + 30) + '%';
-                    sparkle.style.left = (parseFloat(plantElement.style.left) + (Math.random() * 10 - 5)) + '%';
-                    
-                    document.getElementById('game-container').appendChild(sparkle);
-                    
-                    setTimeout(() => sparkle.remove(), 2000);
-                }, i * 100);
+                    sparkle.style.setProperty('--x', (rect.left + Math.random() * rect.width) + 'px');
+                    sparkle.style.setProperty('--y', (rect.top + Math.random() * rect.height * 0.5) + 'px');
+
+                    document.getElementById('effects').appendChild(sparkle);
+
+                    setTimeout(() => sparkle.remove(), 1600);
+                }, 300 + i * 180);
             }
         }
 
         // Create butterfly
         function createButterfly() {
+            if (document.querySelectorAll('.butterfly').length >= 3) return;
+
             const butterfly = document.createElement('div');
             butterfly.className = 'butterfly';
-            butterfly.textContent = '🦋';
-            
-            document.getElementById('game-container').appendChild(butterfly);
-            
-            setTimeout(() => butterfly.remove(), 8000);
+            butterfly.style.setProperty('--y', (window.innerHeight * (0.3 + Math.random() * 0.3)) + 'px');
+            const wings = document.createElement('span');
+            wings.textContent = '🦋';
+            butterfly.appendChild(wings);
+
+            document.getElementById('effects').appendChild(butterfly);
+
+            setTimeout(() => butterfly.remove(), 9000);
         }
 
         // Create rain effect
         function createRain() {
-            for (let i = 0; i < 20; i++) {
+            for (let i = 0; i < 40; i++) {
                 setTimeout(() => {
                     const drop = document.createElement('div');
                     drop.className = 'rain-drop';
-                    drop.style.left = Math.random() * 100 + '%';
-                    drop.style.animationDelay = Math.random() * 1000 + 'ms';
-                    
+                    drop.style.setProperty('--x', (Math.random() * (window.innerWidth * 1.05)) + 'px');
+
                     document.getElementById('weather-system').appendChild(drop);
-                    
-                    setTimeout(() => drop.remove(), 1000);
-                }, i * 50);
+
+                    setTimeout(() => drop.remove(), 900);
+                }, i * 90);
             }
         }
 
@@ -589,51 +566,32 @@
         function updateWeather() {
             const weatherKeys = Object.keys(weatherTypes);
             const newWeather = weatherKeys[Math.floor(Math.random() * weatherKeys.length)];
-            
+
             if (newWeather !== gameState.weatherState) {
                 gameState.weatherState = newWeather;
                 const weather = weatherTypes[newWeather];
-                
+
                 document.getElementById('sun').textContent = weather.icon;
-                
-                if (newWeather === 'rainy') {
+
+                if (newWeather === 'rainy' || newWeather === 'stormy') {
                     createRain();
                 }
             }
         }
 
-        // Calculate garden metrics
-        function updateGardenMetrics() {
-            // Calculate biodiversity (different plant types)
-            const plantTypeSet = new Set(gameState.plants.map(p => p.name));
-            gameState.biodiversity = Math.min(100, (plantTypeSet.size / 10) * 100);
-            
-            // Calculate growth rate (plants per minute)
-            const now = Date.now();
-            const timeSinceLastPlant = now - gameState.lastPlantTime;
-            gameState.growthRate = Math.max(0, 100 - (timeSinceLastPlant / 1000));
-            
-            // Update garden age
-            gameState.gardenAge = Math.floor((now - gameStartTime) / 1000);
-            
-            // Weather effect on growth
-            const weatherMultiplier = weatherTypes[gameState.weatherState].multiplier;
-            gameState.growthRate *= weatherMultiplier;
-        }
-
-        // Update display
-        function updateDisplay() {
-            updateGardenMetrics();
-            
-            document.getElementById('plant-count').textContent = gameState.totalPlants;
-            document.getElementById('flower-count').textContent = gameState.flowerCount;
-            document.getElementById('tree-count').textContent = gameState.treeCount;
-            document.getElementById('gardener-count').textContent = gameState.gardeners.size;
-            document.getElementById('garden-age').textContent = gameState.gardenAge;
-            
-            // Update progress bars
-            document.getElementById('biodiversity-fill').style.width = gameState.biodiversity + '%';
-            document.getElementById('growth-fill').style.width = Math.min(gameState.growthRate, 100) + '%';
+        // Cycle the hint through the plants chat can grow
+        const hintPlants = ['flower', 'tree', 'rose', 'sunflower', 'cactus', 'tulip', 'palm', 'mushroom', 'daisy', 'pine', 'bamboo', 'grass'];
+        let hintIndex = 0;
+        function updateHint() {
+            const hint = document.getElementById('hint');
+            hint.classList.add('swap');
+            setTimeout(() => {
+                hintIndex = (hintIndex + 1) % hintPlants.length;
+                const name = hintPlants[hintIndex];
+                document.getElementById('hint-emoji').textContent = plantTypes[name].emoji;
+                document.getElementById('hint-word').textContent = name;
+                hint.classList.remove('swap');
+            }, 300);
         }
 
         function stripHtml(html) {
@@ -660,25 +618,22 @@
                 message = stripHtml(message);
             }
             const foundPlants = extractPlants(message);
-            
+
             if (foundPlants.length === 0) return;
 
             if (gameState.gardeners.size >= 500) {
                 gameState.gardeners = new Set(Array.from(gameState.gardeners).slice(-250));
             }
             gameState.gardeners.add(username);
-            gameState.lastPlantTime = Date.now();
-            
-            foundPlants.forEach(plantName => {
+
+            foundPlants.slice(0, 5).forEach(plantName => {
                 createPlant(plantName, username, message.length);
             });
 
             // Random butterfly spawn
-            if (Math.random() < 0.1) {
+            if (Math.random() < 0.12) {
                 createButterfly();
             }
-
-            updateDisplay();
         }
 
         // Setup iframe communication
@@ -744,13 +699,13 @@
 
             connectWebSocket();
         }
-        
+
         // Demo mode
         if (urlParams.has('demo')) {
             const demoPlants = Object.keys(plantTypes);
             const demoGardeners = ['GreenThumb', 'PlantLover', 'GardenMaster', 'FloralQueen', 'TreeHugger'];
-            
-            setInterval(() => {
+
+            function demoPlant() {
                 const plant = demoPlants[Math.floor(Math.random() * demoPlants.length)];
                 const gardener = demoGardeners[Math.floor(Math.random() * demoGardeners.length)];
                 const messages = [
@@ -760,30 +715,30 @@
                     `Let's plant ${plant}`,
                     `${plant} power!`
                 ];
-                
+
                 processData({
                     chatname: gardener,
                     chatmessage: messages[Math.floor(Math.random() * messages.length)]
                 });
-            }, 1500 + Math.random() * 2000);
+            }
+
+            // Start with a few plants so the garden is not bare, then keep planting
+            for (let i = 0; i < 9; i++) {
+                setTimeout(demoPlant, 200 + i * 350);
+            }
+            setInterval(demoPlant, 1800);
         }
-        
-        // Initialize
-        const gameStartTime = Date.now();
-        
+
         // Update weather periodically
         setInterval(updateWeather, 30000); // Every 30 seconds
-        
-        // Update metrics periodically
-        setInterval(updateDisplay, 1000);
-        
+
+        // Rotate the hint
+        setInterval(updateHint, 3500);
+
         // Spawn random butterflies
         setInterval(() => {
             if (Math.random() < 0.3) createButterfly();
         }, 15000);
-        
-        // Initialize display
-        updateDisplay();
     </script>
 </body>
 </html>

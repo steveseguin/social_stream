@@ -1889,6 +1889,25 @@
     ]
   },
   {
+    "id": "subscriber-race",
+    "path": "themes/subscriber-race.html",
+    "name": "Subscriber Race",
+    "category": "widgets",
+    "description": "Count new subscribers during a race and show the latest name. Choose the platform and channel in the overlay.",
+    "tags": "subscriptions counter competition score youtube public subscribers paid members twitch kick rumble",
+    "image": "images/overlay-gallery/subscriber-race.webp",
+    "width": 640,
+    "height": 240,
+    "zoom": 1.4,
+    "fixtures": [
+      { "event": "new_follower", "type": "youtube", "userid": "maple", "chatname": "Maple" },
+      { "event": "new_follower", "type": "youtube", "userid": "river", "chatname": "River" },
+      { "event": "new_follower", "type": "youtube", "userid": "juniper", "chatname": "Juniper" }
+    ],
+    "expect": "Latest: Juniper",
+    "delay": 2000
+  },
+  {
     "id": "meta-subathon",
     "path": "meta.html?style=card&subathon=6h&subathonsub=10&subathonbits=4&subathonrules",
     "name": "Subathon Timer",

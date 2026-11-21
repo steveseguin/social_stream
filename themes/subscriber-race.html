@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Show your new subscriber count and latest subscriber on stream with Social Stream Ninja.">
+<title>Subscriber Race | Social Stream Ninja</title>
+<style>
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; background: transparent; color: #faf7ff; font-family: "Barlow", "Segoe UI", sans-serif; }
+body { padding: 8px; }
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid #e8c5ff; outline-offset: 2px; }
+#scoreboard {
+  display: flex; align-items: stretch; padding: 0; text-align: left; color: inherit;
+  width: 420px; max-width: 100%; min-height: 106px; border: 1px solid #9275ad;
+  border-radius: 15px; overflow: hidden; background: linear-gradient(110deg, #312143, #1a1726);
+  box-shadow: 0 2px 7px #180c2a60;
+}
+#score {
+  display: grid; place-items: center; min-width: 94px; padding: 10px 15px;
+  color: #25133c; font-size: 52px; font-weight: 800; font-variant-numeric: tabular-nums;
+  background: linear-gradient(135deg, #ecd2ff 0%, #d3a8fa 55%, #b992ee 55%, #b08ae0 100%);
+}
+.details { min-width: 0; align-self: center; padding: 14px 19px; }
+.heading { display: block; font-weight: 700; font-size: 21px; line-height: 1.16; }
+#latest { display: block; margin-top: 7px; color: #e3d4ef; font-size: 16px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+@keyframes gained { from { color: white; transform: scale(1.14); } to { transform: scale(1); } }
+@media (prefers-reduced-motion: no-preference) { #score.pulse { animation: gained 480ms ease-out; } }
+form { width: 420px; max-width: 100%; background: #241d30; border: 1px solid #8a729f; border-radius: 14px; padding: 17px 20px; }
+h1 { margin: 0 0 12px; font-size: 22px; }
+label, summary { display: block; margin: 9px 0 4px; font-size: 14px; }
+summary { display: list-item; cursor: pointer; }
+input, select { width: 100%; padding: 7px 9px; border-radius: 6px; border: 1px solid #8a7698; background: #16121e; color: #fff; }
+.hint { margin: 6px 0; color: #d8cce1; font-size: 13px; line-height: 1.35; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.actions button { padding: 7px 12px; color: #201329; background: #e0baff; border: 0; border-radius: 6px; font-weight: 650; }
+.actions button[type="button"] { color: #f4e9ff; background: #493953; }
+#error { margin: 6px 0 0; color: #ffcfbd; }
+</style>
+</head>
+<body>
+<button id="scoreboard" type="button" hidden title="Click in OBS Interact for settings or a new race">
+  <span id="score">0</span>
+  <span class="details"><span class="heading" id="heading">New subscribers</span><span id="latest"></span></span>
+</button>
+<form id="setup">
+  <h1>Subscriber race</h1>
+  <label for="link">Your Social Stream Ninja dock link</label>
+  <input type="password" id="link" required autocomplete="off" placeholder="Paste dock link" spellcheck="false">
+  <label for="mode">Count</label>
+  <select id="mode">
+    <option value="youtube">YouTube public subscribers</option>
+    <option value="youtube-members">YouTube paid members</option>
+    <option value="twitch">Twitch new subscriptions</option>
+    <option value="kick">Kick new subscriptions</option>
+    <option value="rumble">Rumble new subscriptions</option>
+  </select>
+  <p class="hint" id="sourceHint"></p>
+  <details><summary>Filter by channel</summary>
+    <label for="channel">Channel name in SSN (optional)</label>
+    <input id="channel" autocomplete="off" placeholder="All channels on the selected platform">
+  </details>
+  <div class="actions">
+    <button id="copy" type="button" hidden>Copy OBS link</button>
+    <button id="start" type="submit">Start race</button>
+    <button id="reset" type="button" hidden>Reset score</button>
+    <button id="cancel" type="button" hidden>Cancel</button>
+  </div>
+  <p class="hint" id="instructions">In OBS, right-click the source and choose Interact. Click the scoreboard to return here.</p>
+  <input id="manualCopy" aria-label="OBS Browser Source URL" readonly hidden>
+  <p role="alert" id="error"></p>
+</form>
+<script>
+(function () {
+  "use strict";
+  const byId = id => document.getElementById(id);
+  const form = byId("setup");
+  const card = byId("scoreboard");
+  const mode = byId("mode");
+  const connectionParams = ["session", "password", "lanonly", "server", "server2", "server3", "localserver", "localserverport"];
+  const params = new URLSearchParams(location.search);
+  new URLSearchParams(location.hash.slice(1)).forEach((value, key) => params.set(key, value));
+  window.addEventListener("hashchange", () => location.reload());
+  const hosted = location.protocol === "https:" || location.protocol === "http:";
+  const hints = {
+    youtube: "Connect the YouTube API source as the channel owner. YouTube reports public subscriptions only and alerts can arrive late.",
+    "youtube-members": "Connect your YouTube live source in SSN to receive new membership notices.",
+    twitch: "Connect Twitch EventSub as the broadcaster in SSN.",
+    kick: "Connect the Kick event source for your channel in SSN.",
+    rumble: "Connect your Rumble Live Stream API source in SSN."
+  };
+  function copyConnection(from, to) {
+    connectionParams.forEach(key => { if (from.has(key)) to.set(key, from.get(key)); });
+  }
+  let initial = null;
+  if (params.get("session")) {
+    const dock = new URL("../dock.html", location.href);
+    copyConnection(params, dock.searchParams);
+    initial = { link: dock.href, mode: Object.prototype.hasOwnProperty.call(hints, params.get("platform")) ? params.get("platform") : "youtube",
+      channel: params.get("channel") || "" };
+  }
+  const storageKey = "ssn-subscriber-race-v1:" + location.pathname + (initial ?
+    JSON.stringify([params.get("session"), initial.mode, channelName(initial.channel)]) : "");
+  let race = null;
+  let seen = new Set();
+  let bridge = null;
+  let socket = null;
+  let retry = 0;
+  let resetPending = false;
+  function newRace(config) {
+    return { config: config, since: Date.now(), total: 0, latest: "", latestAt: 0, seen: [] };
+  }
+  function save() {
+    race.seen = Array.from(seen);
+    // A configured link already carries its connection settings.
+    localStorage.setItem(storageKey, JSON.stringify(initial ? Object.assign({}, race, { config: undefined }) : race));
+  }
+  function display(pulse) {
+    byId("heading").textContent = race.config.mode === "youtube-members" ? "New members" : "New subscribers";
+    byId("score").textContent = String(race.total);
+    byId("latest").textContent = race.latest ? "Latest: " + race.latest : "Waiting for the first " +
+      (race.config.mode === "youtube-members" ? "member" : "subscriber");
+    if (pulse) {
+      byId("score").classList.remove("pulse");
+      void byId("score").offsetWidth;
+      byId("score").classList.add("pulse");
+    }
+  }
+  function showCard() { form.hidden = true; card.hidden = false; display(false); }
+  function showSetup() {
+    card.hidden = true;
+    form.hidden = false;
+    if (race) {
+      byId("link").value = race.config.link;
+      mode.value = race.config.mode;
+      byId("channel").value = race.config.channel;
+    }
+    byId("start").textContent = race ? "Show scoreboard" : "Start race";
+    byId("copy").hidden = !hosted || !!window.obsstudio;
+    if (!byId("copy").hidden) {
+      byId("instructions").textContent = "Paste the copied link into an OBS Browser Source.";
+      if (!race) byId("start").textContent = "Preview";
+    }
+    byId("copy").textContent = "Copy OBS link";
+    byId("manualCopy").hidden = true;
+    byId("reset").hidden = byId("cancel").hidden = !race;
+    resetPending = false;
+    byId("reset").textContent = "Reset score";
+    byId("error").textContent = "";
+    byId("sourceHint").textContent = hints[mode.value];
+  }
+  function readConnection(link) {
+    const params = new URL(link).searchParams;
+    const room = (params.get("session") || "").trim();
+    if (!room || room.includes(",")) throw Error("Paste the dock link for one SSN session.");
+    const route = params.has("server2") && !params.get("server") ? "server2" :
+      (params.has("server") ? "server" : "");
+    let endpoint = "";
+    if (route) {
+      const port = Number(params.get("localserverport"));
+      const fallback = params.has("localserver") ? "ws://127.0.0.1:" +
+        (Number.isInteger(port) && port >= 1024 && port <= 65535 ? port : 3000) :
+        "wss://io.socialstream.ninja/" + (route === "server2" ? "extension" : "api");
+      endpoint = params.get(route) || fallback;
+      if (!/^wss?:\/\//i.test(endpoint)) throw Error("The dock link contains an invalid relay address.");
+      new URL(endpoint);
+    }
+    return { room: room, password: params.get("password") || "false", lan: params.has("lanonly"),
+      endpoint: endpoint, channel: route === "server2" ? 4 : 1 };
+  }
+  function disconnect() {
+    clearTimeout(retry);
+    if (bridge) { bridge.remove(); bridge = null; }
+    if (socket) { socket.onclose = socket.onmessage = null; socket.close(); socket = null; }
+  }
+  function connect(connection) {
+    disconnect();
+    if (connection.endpoint) {
+      function open() {
+        socket = new WebSocket(connection.endpoint);
+        socket.onopen = function () {
+          this.send(JSON.stringify({ join: connection.room, in: connection.channel, out: 3 }));
+        };
+        socket.onmessage = function (event) {
+          let packet;
+          try { packet = JSON.parse(event.data); } catch (_) { return; }
+          if (packet && (!packet.target || ["null", "alerts", "dock"].includes(packet.target))) {
+            receive(packet.overlayNinja || packet);
+          }
+        };
+        socket.onclose = () => { retry = setTimeout(open, 2500); };
+      }
+      open();
+      return;
+    }
+    const room = encodeURIComponent(connection.room);
+    bridge = document.createElement("iframe");
+    bridge.style.cssText = "position:fixed;left:-100px;width:0;height:0;border:0";
+    bridge.tabIndex = -1;
+    bridge.setAttribute("aria-hidden", "true");
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&label=alerts&push&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&view=" +
+      room + "&room=" + room + "&password=" + encodeURIComponent(connection.password) + (connection.lan ? "&lanonly" : "");
+    document.body.appendChild(bridge);
+  }
+  window.addEventListener("message", function (event) {
+    if (!bridge || event.source !== bridge.contentWindow) return;
+    const packet = event.data && event.data.dataReceived;
+    if (packet) receive(packet.overlayNinja);
+  });
+  function channelName(value) { return String(value || "").trim().replace(/^@/, "").toLowerCase(); }
+  function timeOf(value) {
+    if (!value) return 0;
+    if (typeof value === "string" && !/^\d+$/.test(value)) return Date.parse(value) || 0;
+    const n = Number(value);
+    return Number.isFinite(n) ? (n < 100000000000 ? n * 1000 : n) : 0;
+  }
+  function record(owner, userId, deliveryId, name, timestamp) {
+    if (timestamp && timestamp < race.since) return false;
+    const userKey = userId && "person:" + owner + userId;
+    const deliveryKey = deliveryId && "event:" + owner + deliveryId;
+    if ((userKey && seen.has(userKey)) || (deliveryKey && seen.has(deliveryKey))) return false;
+    if (userKey) seen.add(userKey);
+    if (deliveryKey) seen.add(deliveryKey);
+    race.total++;
+    const when = timestamp || Date.now();
+    if (when >= race.latestAt) {
+      race.latestAt = when;
+      race.latest = String(name || "Anonymous").slice(0, 160);
+    }
+    return true;
+  }
+  function receive(data) {
+    if (!data || typeof data !== "object" || !race) return;
+    if (Array.isArray(data)) { data.forEach(receive); return; }
+    if (data.action || data.cmd || data.delete) return;
+    if (data.content && typeof data.content === "object") { receive(data.content); return; }
+    const meta = data.meta || {};
+    const platform = data.type === "youtubeshorts" ? "youtube" : data.type;
+    const selected = race.config.mode;
+    if (platform !== (selected === "youtube-members" ? "youtube" : selected)) return;
+    const allowedChannel = channelName(race.config.channel);
+    if (allowedChannel && ![data.sourceName, data.channel, meta.ownerChannelId].some(v => channelName(v) === allowedChannel)) return;
+    if (data.isGift || meta.isGift || data.isGifted || meta.isGifted) return;
+    const owner = meta.ownerChannelId || data.sourceId || data.sourceName || data.channel || "";
+    const prefix = JSON.stringify([platform, owner]) + ":";
+    let changed = false;
+    if (selected === "youtube") {
+      if (data.event !== "new_follower") return;
+      const people = Array.isArray(meta.subscribers) ? meta.subscribers : [meta];
+      people.forEach(function (person) {
+        if (!person || typeof person !== "object") return;
+        const subscriberId = person.channelId || data.userid;
+        const deliveryId = subscriberId && person.subscribedAt ? JSON.stringify([subscriberId, person.subscribedAt]) :
+          (!Array.isArray(meta.subscribers) ? eventKey(data, meta) : "");
+        if (record(prefix, subscriberId, deliveryId, person.title || data.chatname,
+          timeOf(person.subscribedAt) || timeOf(data.timestamp))) changed = true;
+      });
+    } else {
+      const expected = selected === "youtube-members" ? "sponsorship" : "new_subscriber";
+      if (data.event !== expected || meta.eventType === "upgrade" || meta.eventType === "renewal") return;
+      const id = data.userid || meta.userId;
+      changed = record(prefix, id, eventKey(data, meta), data.chatname, timeOf(meta.subscribedOn) || timeOf(data.timestamp));
+    }
+    if (changed) { display(true); save(); }
+  }
+  function eventKey(data, meta) {
+    if (meta.messageId || data.nativeMessageId) return "native:" + (meta.messageId || data.nativeMessageId);
+    if (data.id !== undefined && data.id !== null) return JSON.stringify([data.id, data.chatname, data.timestamp]);
+    return "";
+  }
+  function formConfig() {
+    return { link: byId("link").value.trim(), mode: mode.value, channel: byId("channel").value.trim() };
+  }
+  function overlayURL(config) {
+    const url = new URL(location.href);
+    url.search = "";
+    const options = new URLSearchParams();
+    copyConnection(new URL(config.link).searchParams, options);
+    options.set("platform", config.mode);
+    if (config.channel) options.set("channel", config.channel);
+    // Keep the private session and password in the fragment when sharing an OBS link.
+    url.hash = options.toString();
+    return url.href;
+  }
+  byId("copy").onclick = async function () {
+    if (!form.reportValidity()) return;
+    const config = formConfig();
+    try { readConnection(config.link); }
+    catch (_) { byId("error").textContent = "Paste your full SSN dock link."; return; }
+    byId("error").textContent = "";
+    const link = overlayURL(config);
+    try {
+      await navigator.clipboard.writeText(link);
+      this.textContent = "Copied";
+    } catch (_) {
+      byId("manualCopy").value = link;
+      byId("manualCopy").hidden = false;
+      byId("manualCopy").select();
+    }
+  };
+  form.oninput = function () {
+    byId("copy").textContent = "Copy OBS link";
+    byId("manualCopy").hidden = true;
+  };
+  mode.onchange = () => { byId("sourceHint").textContent = hints[mode.value]; };
+  card.onclick = showSetup;
+  byId("cancel").onclick = showCard;
+  byId("reset").onclick = function () {
+    if (!resetPending) { resetPending = true; this.textContent = "Confirm reset to 0"; return; }
+    // Replayed deliveries stay excluded, but people can participate in another race.
+    seen = new Set(Array.from(seen).filter(key => key.startsWith("event:")));
+    race = newRace(race.config);
+    save();
+    showCard();
+  };
+  form.onsubmit = function (event) {
+    event.preventDefault();
+    const config = formConfig();
+    let connection;
+    try { connection = readConnection(config.link); }
+    catch (e) { byId("error").textContent = e instanceof TypeError ? "Paste your full SSN dock link." : e.message; return; }
+    const sameRace = race && readConnection(race.config.link).room === connection.room &&
+      race.config.mode === config.mode && channelName(race.config.channel) === channelName(config.channel);
+    if ((initial && (!sameRace || race.config.link !== config.link)) || (!initial && hosted && !window.obsstudio)) {
+      history.replaceState(null, "", overlayURL(config));
+      location.reload();
+      return;
+    }
+    if (!sameRace) { race = newRace(config); seen = new Set(); }
+    const reconnect = !sameRace || race.config.link !== config.link;
+    race.config = config;
+    try { save(); }
+    catch (_) { byId("error").textContent = "Allow browser storage to save the race score."; return; }
+    if (reconnect || (!bridge && !socket)) connect(connection);
+    showCard();
+  };
+  try {
+    race = JSON.parse(localStorage.getItem(storageKey));
+    if (initial) {
+      if (!race || !Number.isSafeInteger(race.total) || !Array.isArray(race.seen)) race = newRace(initial);
+      race.config = initial;
+    }
+    if (race && race.config && hints[race.config.mode] && Number.isSafeInteger(race.total) && Array.isArray(race.seen)) {
+      seen = new Set(race.seen);
+      if (initial) save();
+      connect(readConnection(race.config.link));
+      showCard();
+      return;
+    }
+  } catch (_) {}
+  race = null;
+  showSetup();
+
+})();
+</script>
+</body>
+</html>

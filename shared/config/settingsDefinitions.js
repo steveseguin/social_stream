@@ -854,6 +854,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "other_filters",
     description: "Selected source types to exclude from viewer-count totals while leaving chat capture enabled."
   },
+  "viewerCountOrder": {
+    type: "text",
+    category: "streaming_chat_dock_overlay",
+    description: "Source types in the order their viewer counts are listed, e.g. twitch, youtube, kick. Used by every overlay that shows per-platform viewer counts; other sources follow."
+  },
   "stripatext": {
     type: "boolean",
     category: "streaming_chat_dock_overlay",
@@ -1499,10 +1504,10 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "streaming_chat_dock_overlay",
     description: "Set emoji scale 1.00x."
   },
-  "sdk": {
+  "legacyiframe": {
     type: "boolean",
     category: "global_settings_and_tools",
-    description: "When enabled, use SDK transport (beta)."
+    description: "Use the legacy iframe connection."
   },
   "seventv": {
     type: "boolean",

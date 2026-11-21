@@ -288,7 +288,7 @@ test('Pending capture cancellation preserves platform and exact-ID boundaries', 
     { message: { type: 'discord', id: 'native-1', chatname: 'Viewer' } }
   ];
   const c = vm.createContext({ pendingModeratedCaptures: new Set(pending) });
-  install(c, read('background.js'), ['cancelPendingModeratedCaptures']);
+  install(c, read('background.js'), ['tracksPendingModeration', 'cancelPendingModeratedCaptures']);
   c.cancelPendingModeratedCaptures({ type: 'kick', id: 'native-1', onlyLast: true });
   assert.deepEqual(pending.map(p => !!p.cancelled), [true, true, false, false, false]);
   c.cancelPendingModeratedCaptures({ type: 'discord', id: 'native-1' });

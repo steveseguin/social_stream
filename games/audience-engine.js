@@ -43,14 +43,14 @@
         if (this.phase !== 'active') return;
         this.phase = 'result';
         if (this.mode === 'signal') {
-            this.result = winner ? winner + ' opened the signal. Nice teamwork.' : 'Signal closed. The code was ' + this.secret + '.';
+            this.result = winner ? winner + ' cracked the code!' : 'Signal closed. The code was ' + this.secret + '.';
         } else {
             var counts = [0, 0, 0]; this.votes.forEach(function (v) { counts[v]++; });
             var best = Math.max.apply(null, counts), tied = [];
             counts.forEach(function (n, i) { if (n === best) tied.push(i); });
             var selected = tied[Math.floor(this.random() * tied.length)], choice = chapters[this.stage].choices[selected];
             this.supplies += choice[2]; this.discoveries += choice[3];
-            this.result = choice[0] + '. ' + choice[1] + (tied.length > 1 ? '. Tie: route chosen at random.' : '.');
+            this.result = choice[0] + (tied.length > 1 ? ' · Tie-break' : '');
         }
     };
     Game.prototype.next = function () {

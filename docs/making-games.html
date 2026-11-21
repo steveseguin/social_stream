@@ -91,9 +91,9 @@
                 <li>Open the starter <em>without</em> <code>?demo</code>, using your session ID (and password, if you set one).</li>
                 <li>Check it in a browser. Then add the same link to OBS as a Browser Source, for example 1000 &times; 800.</li>
             </ol>
-            <pre>https://socialstream.ninja/games/templates/coin-rocket.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;clean</pre>
+            <pre>https://socialstream.ninja/games/templates/coin-rocket.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD</pre>
             <ul class="guide-list">
-                <li><code>&amp;clean</code> hides the inspector, connection status, and host buttons.</li>
+                <li>Live links show only the game. Add <code>&amp;controls</code> to inspect incoming events or reset the game in a private browser tab. Demo previews include sample buttons.</li>
                 <li>No password? Leave out <code>&amp;password=&hellip;</code>.</li>
                 <li>On the beta site, keep <code>/beta/</code> before <code>games/</code>.</li>
             </ul>
@@ -122,7 +122,7 @@
                 <li>In OBS, leave <strong>Local file</strong> unchecked. Paste the full address into the Browser Source <strong>URL</strong> field.</li>
                 <li>After each edit, refresh the Browser Source.</li>
             </ol>
-            <pre><code>file:///C:/SSN/social_stream-beta/games/templates/my-rocket.html?session=YOUR_SESSION&amp;clean</code></pre>
+            <pre><code>file:///C:/SSN/social_stream-beta/games/templates/my-rocket.html?session=YOUR_SESSION</code></pre>
             <p>Use your real path. Don't move the extracted folder. The session is your SSN connection ID, not the game name. Remove <code>demo</code> for live input. Keep SSN and capture running. More examples: <a href="overlay-customization-guide.html#local-file">file setup guide</a>.</p>
             <div class="guide-note"><strong>Editing an existing game?</strong> You can copy any page from <code>games/</code>. <code>games.html</code> and <code>battle.html</code> have their own game logic. The starters' rule settings are not a shared game API.</div>
 
@@ -132,7 +132,7 @@
 <pre><code>Customize [game file] to match [reference], at [canvas size].
 Include its existing CSS/JS and local artwork/audio. Preserve the game's
 rules, controls, gift/coin/USD distinctions, streak handling, duplicate
-handling, and demo/clean modes. Change the visual design, not the reward rules,
+handling, and demo/controls/clean modes. Change the visual design, not the reward rules,
 unless I explicitly specify a rule change. Keep session/password and
 transport parsing, relative paths, and Chrome 80-compatible classic scripts.
 Read docs/event-reference.html and docs/making-games.html.

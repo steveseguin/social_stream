@@ -6,6 +6,7 @@
     <meta name="robots" content="noindex">
   <script type="text/javascript" src="./js/local-server-url.js"></script>
   <script src="./shared/overlay-control-transport.js"></script>
+  <script src="./shared/utils/viewerCountOrder.js"></script>
   <script src="./libs/objects.js"></script>
   <script src="./shared/utils/chatHtml.js"></script>
   <script src="./currency.js"></script>
@@ -1033,6 +1034,8 @@
             var hypeTrainRemoveTimer = null;
             var HYPE_TRAIN_REMOVE_DELAY_MS = 30000;
             var viewerCounts = Object.create(null);
+            // Platform order: the app's shared setting, or &viewercountorder on this link. Alphabetical otherwise.
+            var viewerCountOrder = SSNViewerCountOrder.create(urlParams);
             var sequenceCounter = 0;
             var iframe = null;
             var sockets = [];
@@ -1725,7 +1728,7 @@
                     });
                 }
 
-                var platforms = Object.keys(viewerCounts).sort();
+                var platforms = viewerCountOrder.sort(Object.keys(viewerCounts).sort());
                 var total = 0;
                 for (var i = 0; i < platforms.length; i++) {
                     var platform = platforms[i];
@@ -2201,6 +2204,7 @@
                         syncViewerEntries(false);
                     }
                 } else if (normalizedEventName === "viewer_updates" && isPlainObject(meta)) {
+                    viewerCountOrder.setAppOrder(data.order);
                     viewerCounts = Object.create(null);
                     Object.keys(meta).forEach(function (platform) {
                         var numeric = parseNumber(meta[platform]);

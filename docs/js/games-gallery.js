@@ -28,6 +28,18 @@
         img.src=sourceURL(game.image);img.alt=siteText('{0} in Social Stream Ninja',[siteText(game.title)]);img.loading='lazy';img.width=1280;img.height=800;shot.appendChild(img);card.appendChild(shot);
         shot.onclick=function(){var dialog=document.getElementById('game-preview');document.getElementById('preview-image').src=sourceURL(game.image);document.getElementById('preview-image').alt=img.alt;document.getElementById('preview-caption').textContent=siteText(game.title)+': '+siteText(game.description);if(dialog.showModal)dialog.showModal();else window.open(sourceURL(game.image),'_blank','noopener');};
         var copy=el('div',null,'game-copy');copy.appendChild(el('span',game.category,'game-type'));copy.appendChild(el('h2',game.title));copy.appendChild(el('span',game.audience,'game-audience'));copy.appendChild(el('p',game.description));
+        if (game.inspiration) {
+            card.id = game.id;
+            var credit = el('p');
+            credit.textContent = siteText("Inspired by {0}'s", [game.inspiration.author]);
+            var project = el('a', game.inspiration.name, 'guide');
+            project.href = game.inspiration.url;
+            project.rel = 'noreferrer';
+            credit.appendChild(document.createTextNode(' '));
+            credit.appendChild(project);
+            credit.appendChild(document.createTextNode('.'));
+            copy.appendChild(credit);
+        }
         var favorite=el('button',null,'game-favorite');favorite.type='button';
         function favoriteState(){var selected=favorites.has(game.id);favorite.textContent=selected?'\u2605':'\u2606';favorite.setAttribute('aria-label',siteText('Favorite {0}',[siteText(game.title)]));favorite.setAttribute('aria-pressed',String(selected));favorite.title=selected?'Remove from favorites':'Save to favorites';}
         favoriteState();favorite.onclick=function(){if(favorites.has(game.id))favorites.delete(game.id);else favorites.add(game.id);favoriteState();saveFavorites();filter();};card.appendChild(favorite);

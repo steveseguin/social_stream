@@ -3175,8 +3175,6 @@ function enableBackgroundKeepAlive() {
 	  const cachedCustomDataTime = localStorage.getItem('customEmoteDataTime');
 	  const cachedCustomData = (cachedCustomDataStr && cachedCustomDataTime && (now - parseInt(cachedCustomDataTime)) < CACHE_DURATION) ? cachedCustomDataStr : null;
 	  
-	  const promises = [];
-	  
 	  // Handle standard emojis
 	  const standardEmojiPromise = 
 		fetch('emotes.json', {
@@ -3209,11 +3207,6 @@ function enableBackgroundKeepAlive() {
 		  return [];
 		});
 	  
-	  promises.push(standardEmojiPromise.then(data => {
-		processEmojiData(data);
-		return data;
-	  }));
-
 	  // Handle custom emotes
 	  const customEmotePromise = fetch('custom_emotes.json', {
 		mode: 'cors',
@@ -3245,13 +3238,11 @@ function enableBackgroundKeepAlive() {
 		return [];
 	  });
 	  
-		  promises.push(customEmotePromise.then(data => {
-			processCustomEmoteData(data);
-			return data;
-		  }));
-	
-		  return Promise.all(promises).finally(markEmojiAssetsReady);
-		}
+	  return Promise.all([standardEmojiPromise, customEmotePromise]).then(([standard, custom]) => {
+		processEmojiData(standard);
+		processCustomEmoteData(custom);
+	  }).finally(markEmojiAssetsReady);
+	}
 
 	function replaceEmojis(message) {
 		if (!message || typeof message !== 'string') {
@@ -3334,8 +3325,8 @@ function enableBackgroundKeepAlive() {
 		return result;
 	}
 
-	function replaceChannelEmojiShortcutsInEscapedHtml(html) {
-		if (!html || !channelShortcutMap.size) {
+	function replaceEmojiShortcutsInEscapedHtml(html) {
+		if (!html || (!channelShortcutMap.size && !shortcutMap.size)) {
 			return html || '';
 		}
 		return String(html).split(/(<[^>]+>)/g).map(function(part) {
@@ -3343,7 +3334,7 @@ function enableBackgroundKeepAlive() {
 				return part;
 			}
 			return part.replace(/:([^:\s<>]+):/g, function(match) {
-				const emojiInfo = channelShortcutMap.get(match);
+				const emojiInfo = channelShortcutMap.get(match) || shortcutMap.get(match);
 				if (!emojiInfo || !emojiInfo.url) {
 					return match;
 				}
@@ -7155,7 +7146,7 @@ function enableBackgroundKeepAlive() {
 				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 				const textOnlyMode = Boolean(settings.textonlymode);
 				// textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
-				const messageWithEmojis = (!textOnlyMode && richMessage && richMessage.html) ? replaceChannelEmojiShortcutsInEscapedHtml(richMessage.html) : replaceEmojis(messageText);
+				const messageWithEmojis = (!textOnlyMode && richMessage && richMessage.html) ? replaceEmojiShortcutsInEscapedHtml(richMessage.html) : replaceEmojis(messageText);
 				let basePlainText = (richMessage && richMessage.plainText)
 					? richMessage.plainText
 					: (typeof messageData.plainTextMessage === 'string' && messageData.plainTextMessage.trim())

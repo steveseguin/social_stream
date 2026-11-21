@@ -1,4 +1,4 @@
-/*! VDO.Ninja SDK v1.6.1
+/*! VDO.Ninja SDK v1.6.2
  * Copyright (c) 2025-2026 Steve Seguin. All rights reserved.
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -371,6 +371,20 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
 (function (global) {
     'use strict';
 
+    // Match the VDO.Ninja iframe's LAN policy for both SDP and trickled candidates.
+    function isLanCandidate(line) {
+        if (typeof line !== 'string') return false;
+        const fields = line.trim().split(/\s+/);
+        if (fields[6] !== 'typ' || fields[7] !== 'host') return false;
+        const address = fields[4];
+        if (/^[\w.-]+\.local$/i.test(address)) return true;
+        if (!/^\d{1,3}(?:\.\d{1,3}){3}$/.test(address)) return false;
+        const octets = address.split('.').map(Number);
+        if (octets.some(octet => octet > 255)) return false;
+        return octets[0] === 10 || (octets[0] === 192 && octets[1] === 168) ||
+            (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31);
+    }
+
     class VDONinjaSDK extends EventTarget {
         /**
          * SDK Version
@@ -378,7 +392,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          * @returns {string} Current SDK version
          */
         static get VERSION() {
-            return '1.6.1';
+            return '1.6.2';
         }
         
         /**
@@ -584,6 +598,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          *   - null/undefined: Auto-fetch optimal TURN servers from API (default)
          *   - false: Disable TURN servers, use only STUN
          *   - Array: Custom TURN server configuration
+         * @param {boolean} options.lanOnly - Use only private IPv4 or mDNS host candidates (default: false)
          * @param {boolean} options.forceTURN - Force relay mode through TURN servers for privacy (default: false)
          * @param {number} options.turnCacheTTL - TURN server cache time-to-live in minutes (default: 5)
          * @param {Array} options.stunServers - STUN server configuration (default: Google & VDO.Ninja STUN)
@@ -703,6 +718,10 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             
             // Configuration
             this.turnServers = options.turnServers !== undefined ? options.turnServers : null; // null = auto fetch, false = none, array = custom
+            this.lanOnly = options.lanOnly === true;
+            if (this.lanOnly && (options.forceTURN || options.configuration?.iceTransportPolicy === 'relay')) {
+                throw new TypeError('lanOnly and relay-only mode cannot be combined');
+            }
             this.forceTURN = options.forceTURN || false; // Force relay mode for privacy
             this.turnCacheTTL = options.turnCacheTTL || 5; // TURN cache time-to-live in minutes
             this.stunServers = options.stunServers || [
@@ -717,12 +736,16 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             
             this._turnPromise = null; // For caching TURN server fetch
             this._turnList = null; // Cached TURN servers
+            this._turnExpiresAt = 0;
             
             // Reconnection settings
             this._reconnectAttempts = 0;
             this._maxReconnectAttempts = options.maxReconnectAttempts || 5;
             this._reconnectDelay = options.reconnectDelay || 1000;
             this._reconnectTimer = null;
+            this._reconnectGeneration = 0;
+            // Socket, room and view waits must settle when local teardown starts.
+            this._pendingConnectionWaits = new Set();
             this._signalingQueue = [];
             this._signalingQueueLimit = Number.isFinite(options.signalingQueueLimit) ?
                 Math.max(1, Math.floor(options.signalingQueueLimit)) : 30;
@@ -752,7 +775,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
 
             // Peer recovery is local-only and uses the existing SDP/ICE messages.
             this.autoRecover = options.autoRecover !== false;
-            this.autoRelay = options.autoRelay !== false;
+            this.autoRelay = !this.lanOnly && options.autoRelay !== false;
             this.disconnectGracePeriod = Number.isFinite(options.disconnectGracePeriod) ?
                 Math.max(0, options.disconnectGracePeriod) : 5000;
             this.recoveryTimeout = Number.isFinite(options.recoveryTimeout) ?
@@ -855,6 +878,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          * @returns {Promise} Resolves when connected
          */
         async connect(options = {}) {
+            const generation = this._reconnectGeneration;
             // An explicit disconnect owns the current socket and peer generation until
             // its close event has fired. Waiting here prevents a late close from the old
             // socket from marking a newly connected generation as disconnected.
@@ -864,6 +888,9 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 if (this._teardownPromise === pendingTeardown) {
                     this._teardownPromise = null;
                 }
+            }
+            if (generation !== this._reconnectGeneration) {
+                throw new Error('Connection operation cancelled by disconnect');
             }
 
             // Initialize required properties if missing
@@ -909,12 +936,21 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             }
             
             return new Promise((resolve, reject) => {
+                const cancel = () => finish(new Error('Connection operation cancelled by disconnect'));
+                const finish = (error) => {
+                    this._pendingConnectionWaits.delete(cancel);
+                    if (error) reject(error);
+                    else resolve();
+                };
+                this._pendingConnectionWaits.add(cancel);
                 try {
+                    this._assertConnectionGeneration(generation);
                     const signaling = new WebSocket(this.host);
                     this.signaling = signaling;
                     
                     signaling.onopen = () => {
-                        if (this.signaling !== signaling) return;
+                        if (this.signaling !== signaling || this._intentionalDisconnect ||
+                            generation !== this._reconnectGeneration) return;
                         this._log('WebSocket connected');
                         this.state.connected = true;
                         if (!this._isReconnecting) {
@@ -926,13 +962,15 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                         this._flushSignalingQueue();
                         
                         this._emit('connected');
+                        if (generation !== this._reconnectGeneration || this._intentionalDisconnect) return;
                         this._emitIframeCompatible('hss-connection', 'connected');
                         
-                        resolve();
+                        finish();
                     };
                     
                     signaling.onmessage = async (event) => {
-                        if (this.signaling !== signaling) return;
+                        if (this.signaling !== signaling || this._intentionalDisconnect ||
+                            generation !== this._reconnectGeneration) return;
                         try {
                             const msg = JSON.parse(event.data);
                             this._logMessage('IN', msg, 'WebSocket');
@@ -946,7 +984,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                         if (this.signaling !== signaling) return;
                         this._log('WebSocket error:', error);
                         this._emit('error', { error: 'WebSocket error', details: error });
-                        reject(error);
+                        finish(error);
                     };
                     
                     signaling.onclose = () => {
@@ -954,6 +992,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                         // connection generation. This also makes a forced-close fallback
                         // harmless if its close event arrives unusually late.
                         if (this.signaling !== signaling) return;
+                        finish(new Error('Signaling socket closed before connection completed'));
                         this._log('WebSocket closed');
                         this.state.connected = false;
                         // These describe the current socket generation. Desired room,
@@ -982,7 +1021,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                     
                 } catch (error) {
                     this._log('Connection error:', error);
-                    reject(error);
+                    finish(error);
                 }
             });
         }
@@ -1008,6 +1047,10 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             if (this._teardownPromise) return this._teardownPromise;
 
             this._intentionalDisconnect = true;
+            // Invalidate async reconnect work that has already left its timer.
+            this._reconnectGeneration++;
+            for (const cancel of this._pendingConnectionWaits) cancel();
+            this._pendingConnectionWaits.clear();
 
             if (this._pendingRequests) {
                 for (const pending of Object.values(this._pendingRequests)) {
@@ -1027,6 +1070,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             if (this._stoppedViews) this._stoppedViews.clear();
             if (this._signalingQueue) this._signalingQueue.length = 0;
             if (this._pendingIceCandidates) this._pendingIceCandidates.clear();
+            if (this._pendingViews) this._pendingViews.clear();
             if (this._failedViewerConnections) {
                 for (const failed of this._failedViewerConnections.values()) {
                     if (failed && failed.timer) clearTimeout(failed.timer);
@@ -1253,8 +1297,10 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          * @private
          */
         async _attemptReconnect() {
-            if (this._isReconnecting) return;
-            
+            if (this._isReconnecting || this._intentionalDisconnect) return;
+
+            const generation = this._reconnectGeneration;
+            const isCurrent = () => generation === this._reconnectGeneration && !this._intentionalDisconnect;
             this._isReconnecting = true;
             this._reconnectAttempts++;
             
@@ -1263,20 +1309,26 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             
             this._emit('reconnecting', { 
                 attempt: this._reconnectAttempts, 
-                maxAttempts: this._maxReconnectAttempts 
+                maxAttempts: this._maxReconnectAttempts
             });
-            
+            if (!isCurrent()) return;
+
             this._reconnectTimer = setTimeout(async () => {
+                if (!isCurrent()) return;
+                this._reconnectTimer = null;
                 try {
                     await this.connect();
+                    if (!isCurrent()) return;
 
                     await this._restoreConnectionIntent();
-                    
-                    this._emit('reconnected');
+                    if (!isCurrent()) return;
+
                     this._reconnectAttempts = 0;
                     this._isReconnecting = false;
+                    this._emit('reconnected');
                     
                 } catch (error) {
+                    if (!isCurrent()) return;
                     this._log('Reconnection failed:', error);
                     this._isReconnecting = false;
                     
@@ -1295,7 +1347,9 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          * @private
          */
         async _restoreConnectionIntent() {
-            if (this._restoringIntent) return;
+            if (this._restoringIntent || this._intentionalDisconnect) return;
+            const generation = this._reconnectGeneration;
+            const isCurrent = () => generation === this._reconnectGeneration && !this._intentionalDisconnect;
             this._restoringIntent = true;
 
             try {
@@ -1309,6 +1363,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                         password: typeof intent.room.password === 'string'
                             ? decodeURIComponent(intent.room.password) : intent.room.password
                     });
+                    if (!isCurrent()) return;
                 }
 
                 if (intent.publishing && intent.publishing.active) {
@@ -1322,21 +1377,31 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                     } else if (publishing.stream) {
                         await this.publish(publishing.stream, options);
                     }
+                    if (!isCurrent()) return;
                 }
 
                 if (intent.views && typeof intent.views.entries === 'function') {
                     for (const [streamID, viewOptions] of intent.views.entries()) {
+                        if (!isCurrent()) return;
                         if (this._stoppedViews && this._stoppedViews.has(streamID)) continue;
                         // Start each play restoration without serially waiting up to
                         // the view timeout for unavailable peers.
                         this.view(streamID, { ...viewOptions, _intentReplay: true }).catch(error => {
+                            if (!isCurrent()) return;
                             this._log('Failed to restore view intent for', streamID, error.message || error);
                             this._setupViewRetry(streamID, viewOptions, 2000);
                         });
                     }
                 }
             } finally {
-                this._restoringIntent = false;
+                if (isCurrent()) this._restoringIntent = false;
+            }
+        }
+
+        /** @private Reject work owned by an explicitly disconnected session. */
+        _assertConnectionGeneration(generation) {
+            if (generation !== this._reconnectGeneration || this._intentionalDisconnect) {
+                throw new Error('Connection operation cancelled by disconnect');
             }
         }
 
@@ -1405,6 +1470,8 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          * @returns {Promise} Resolves when room is joined
          */
         async joinRoom(options = {}) {
+            const generation = this._reconnectGeneration;
+            this._assertConnectionGeneration(generation);
             if (!this.state.connected) {
                 throw new Error('Not connected to signaling server');
             }
@@ -1439,12 +1506,14 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             }
 
             await this._ensurePasswordHash();
+            this._assertConnectionGeneration(generation);
 
             // Hash room name if password is not explicitly false
             let hashedRoom = room;
             const __effectivePasswordForRoom = this._getEffectivePassword();
             if (__effectivePasswordForRoom !== null) {
                 hashedRoom = await this._hashRoom(room, __effectivePasswordForRoom);
+                this._assertConnectionGeneration(generation);
             }
 
             this._log('Joining room:', room, 'with hash:', hashedRoom);
@@ -1466,17 +1535,30 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 joinMessage.claim = true;
             }
 
-            this._sendMessageWS(joinMessage);
+            this._assertConnectionGeneration(generation);
 
             // Wait for room join confirmation (listing message)
             return new Promise((resolve, reject) => {
+                const cleanup = () => {
+                    clearTimeout(timeout);
+                    this.removeEventListener('_roomJoined', handleListing);
+                    this._pendingConnectionWaits.delete(cancel);
+                };
+                const cancel = () => {
+                    cleanup();
+                    reject(new Error('Connection operation cancelled by disconnect'));
+                };
                 const timeout = setTimeout(() => {
+                    cleanup();
                     reject(new Error('Room join timeout'));
                 }, 10000);
 
                 const handleListing = (event) => {
-                    clearTimeout(timeout);
-                    this.removeEventListener('_roomJoined', handleListing);
+                    if (generation !== this._reconnectGeneration || this._intentionalDisconnect) {
+                        cancel();
+                        return;
+                    }
+                    cleanup();
                     
                     this.state.room = room;
                     this.state.roomJoined = true;
@@ -1486,6 +1568,8 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 };
 
                 this.addEventListener('_roomJoined', handleListing);
+                this._pendingConnectionWaits.add(cancel);
+                this._sendMessageWS(joinMessage);
             });
         }
 
@@ -1520,6 +1604,8 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          * @returns {Promise} Resolves when publishing starts
          */
         async publish(stream, options = {}) {
+            const generation = this._reconnectGeneration;
+            this._assertConnectionGeneration(generation);
             if (!this.state.connected) {
                 throw new Error('Not connected to signaling server');
             }
@@ -1537,11 +1623,13 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             
             // Resolve desired media preferences for outgoing tracks
             const mediaPreferences = await this._extractPublisherMediaOptions(options);
+            this._assertConnectionGeneration(generation);
             if (mediaPreferences) {
                 this._publishMediaConfig = mediaPreferences;
             }
             if (this._publishMediaConfig) {
                 await this._applyLocalMediaPreferences(this.localStream, this._publishMediaConfig);
+                this._assertConnectionGeneration(generation);
             }
 
             // Use provided streamID, fall back to pending value from constructor/property, then generate
@@ -1581,6 +1669,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                     room: options.room, 
                     password: options.password
                 });
+                this._assertConnectionGeneration(generation);
             }
 
             // Generate hashed streamID
@@ -1589,6 +1678,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 const __effectivePassword = this._getEffectivePassword();
                 if (__effectivePassword !== null) {
                     hashedStreamID = await this._hashStreamID(streamID, __effectivePassword);
+                    this._assertConnectionGeneration(generation);
                 }
             }
 
@@ -1623,6 +1713,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             };
 
             this._emit('publishing', { streamID, hashedStreamID });
+            this._assertConnectionGeneration(generation);
             
             // Add our own stream to tracking
             if (this.streams) {
@@ -1649,6 +1740,8 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          * @returns {Promise<string>} Stream ID
          */
         async announce(options = {}) {
+            const generation = this._reconnectGeneration;
+            this._assertConnectionGeneration(generation);
             if (!this.state.connected) {
                 throw new Error('Not connected to signaling server');
             }
@@ -1656,6 +1749,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             if (options.role !== undefined) {
                 console.warn('[VDONinja SDK] announce({ role }) is not used. Remove role and just call announce().');
                 this._emit('alert', { message: 'announce({ role }) is ignored. Remove role and call announce({ streamID }).' });
+                this._assertConnectionGeneration(generation);
             }
 
             // Persist label if provided for downstream DC open
@@ -1694,6 +1788,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                     room: options.room, 
                     password: options.password
                 });
+                this._assertConnectionGeneration(generation);
             }
 
             // Generate hashed streamID
@@ -1702,6 +1797,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 const __effectivePassword = this._getEffectivePassword();
                 if (__effectivePassword !== null) {
                     hashedStreamID = await this._hashStreamID(streamID, __effectivePassword);
+                    this._assertConnectionGeneration(generation);
                 }
             }
 
@@ -1847,6 +1943,8 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          * @returns {Promise<RTCPeerConnection>} The peer connection
          */
         async view(streamID, options = {}) {
+            const generation = this._reconnectGeneration;
+            this._assertConnectionGeneration(generation);
             if (!this.state.connected) {
                 throw new Error('Not connected to signaling server');
             }
@@ -1879,6 +1977,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                     const __effectivePassword = this._getEffectivePassword();
                     if (__effectivePassword !== null) {
                         hashedStreamID = await this._hashStreamID(streamID, __effectivePassword);
+                        this._assertConnectionGeneration(generation);
                     }
                 }
                 
@@ -1924,13 +2023,25 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 // The connection will be created when we receive the offer
                 // For now, return a promise that resolves when connection is ready
                 return new Promise((resolve, reject) => {
+                    const cleanup = () => {
+                        clearInterval(checkConnection);
+                        clearTimeout(timeout);
+                        this._pendingConnectionWaits.delete(cancel);
+                    };
+                    const cancel = () => {
+                        cleanup();
+                        reject(new Error('Connection operation cancelled by disconnect'));
+                    };
                     const checkConnection = setInterval(() => {
+                        if (generation !== this._reconnectGeneration || this._intentionalDisconnect) {
+                            cancel();
+                            return;
+                        }
                         // Look for a connection with this streamID
                         for (const [uuid, connections] of this.connections) {
                             const conn = connections.viewer;
                             if (conn && conn.streamID === streamID && conn.pc) {
-                                clearInterval(checkConnection);
-                                clearTimeout(timeout);
+                                cleanup();
                                 this._pendingViews.delete(streamID);
                                 resolve(conn.pc);
                                 return;
@@ -1939,17 +2050,22 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                     }, 100);
 
                     const timeout = setTimeout(() => {
-                        clearInterval(checkConnection);
+                        if (generation !== this._reconnectGeneration || this._intentionalDisconnect) {
+                            cancel();
+                            return;
+                        }
+                        cleanup();
                         // Don't reject - instead set up retry mechanism
                         this._log(`Stream ${streamID} not available yet, will retry in 15 minutes`);
                         this._setupViewRetry(streamID, options);
                         resolve(null); // Resolve without error - we're still waiting
                     }, 15000);
+                    this._pendingConnectionWaits.add(cancel);
                 });
 
             } catch (error) {
                 this._log('Error in view:', error.message);
-                this._pendingViews.delete(streamID);
+                if (generation === this._reconnectGeneration) this._pendingViews.delete(streamID);
                 throw error;
             }
         }
@@ -1961,6 +2077,8 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          * @param {Object} options - View options
          */
         _setupViewRetry(streamID, options, delay = this._viewRetryInterval) {
+            if (this._intentionalDisconnect || this._stoppedViews.has(streamID)) return;
+            const generation = this._reconnectGeneration;
             // Clear any existing retry timer for this stream
             if (this._viewRetryTimers.has(streamID)) {
                 clearTimeout(this._viewRetryTimers.get(streamID));
@@ -1968,6 +2086,8 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             
             // Set up new retry timer
             const retryTimer = setTimeout(() => {
+                if (generation !== this._reconnectGeneration || this._intentionalDisconnect ||
+                    this._stoppedViews.has(streamID)) return;
                 this._log(`Retrying view for stream: ${streamID}`);
                 this._viewRetryTimers.delete(streamID);
                 
@@ -4525,6 +4645,20 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             }
         }
 
+        _filterLanDescription(description) {
+            if (!this.lanOnly) return description;
+            const sdp = description.sdp.split('\n').filter(line =>
+                !/^a=candidate:/i.test(line.trimStart()) || isLanCandidate(line)
+            ).join('\n');
+            return { type: description.type, sdp };
+        }
+
+        async _createLocalOffer(pc, options) {
+            const offer = await pc.createOffer(options);
+            await pc.setLocalDescription(offer);
+            return this._filterLanDescription(offer);
+        }
+
         /**
          * Create an offer for a connection
          * @private
@@ -4565,8 +4699,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 await this._applyEncodingPreferencesToConnection(connection);
 
                 // Create offer
-                const offer = await connection.pc.createOffer();
-                await connection.pc.setLocalDescription(offer);
+                const offer = await this._createLocalOffer(connection.pc);
 
                 this._log('Created offer successfully');
                 return offer;
@@ -4858,6 +4991,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          */
         async _applyLocalMediaPreferences(stream, config) {
             if (!stream || !config) return;
+            const generation = this._reconnectGeneration;
 
             const videoSettings = config.video;
             if (!videoSettings || !videoSettings.resolution) return;
@@ -4881,6 +5015,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
 
             const videoTracks = stream.getVideoTracks ? stream.getVideoTracks() : [];
             for (const track of videoTracks) {
+                if (generation !== this._reconnectGeneration || this._intentionalDisconnect) return;
                 if (!track || typeof track.applyConstraints !== 'function') continue;
                 try {
                     await track.applyConstraints(constraints);
@@ -5150,7 +5285,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             const answer = await connection.pc.createAnswer();
             await connection.pc.setLocalDescription(answer);
 
-            return answer;
+            return this._filterLanDescription(answer);
         }
 
         /**
@@ -5164,6 +5299,8 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 this._log('Empty ICE candidate, gathering complete');
                 return;
             }
+
+            if (this.lanOnly && !isLanCandidate(event.candidate.candidate)) return;
 
             // Try data channel first for individual candidates; if it succeeds, do NOT also send via WebSocket.
             // This matches reference webrtc.js behavior: once DC is open, signaling uses DC instead of WSS.
@@ -5366,38 +5503,29 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             }
         }
 
-        _hasTurnServer(configuration) {
-            const servers = configuration && Array.isArray(configuration.iceServers) ? configuration.iceServers : [];
-            return servers.some(server => {
-                const urls = Array.isArray(server.urls) ? server.urls : [server.urls || server.url];
-                return urls.some(url => typeof url === 'string' && /^turns?:/i.test(url));
-            });
-        }
-
-        _escalateConnectionToRelay(connection) {
-            if (!connection.pc || typeof connection.pc.setConfiguration !== 'function') return false;
+        _escalateConnectionToRelay(connection, iceServers) {
+            if (this.lanOnly || !connection.pc || typeof connection.pc.setConfiguration !== 'function') return false;
             const current = (typeof connection.pc.getConfiguration === 'function') ?
                 connection.pc.getConfiguration() : this.configuration;
-            if (!this._hasTurnServer(current)) return false;
-            if (current.iceTransportPolicy === 'relay') return true;
-
-            const next = { ...current };
-            if (Array.isArray(current.iceServers)) {
-                const stuns = [];
-                const turns = [];
-                for (const server of current.iceServers) {
-                    const urls = Array.isArray(server.urls) ? server.urls : [server.urls || server.url];
-                    if (urls.some(url => typeof url === 'string' && /^turns?:/i.test(url))) turns.push(server);
-                    else stuns.push(server);
-                }
-                if (turns.length > 1) turns.push(turns.shift());
-                next.iceServers = stuns.concat(turns);
-            }
-            next.iceTransportPolicy = 'relay';
+            const isTurn = server => {
+                const urls = Array.isArray(server.urls) ? server.urls : [server.urls || server.url];
+                return urls.some(url => typeof url === 'string' && /^turns?:/i.test(url));
+            };
+            const existing = current.iceServers || [];
+            const turns = (iceServers || existing).filter(isTurn);
+            if (!turns.length) return false;
+            const stuns = existing.filter(server => !isTurn(server));
+            const refreshed = { ...current, iceServers: stuns.concat(turns) };
+            if (turns.length > 1) turns.push(turns.shift());
+            const next = { ...current, iceServers: stuns.concat(turns), iceTransportPolicy: 'relay' };
 
             try {
                 connection.pc.setConfiguration(next);
-                connection.originalConfiguration = current;
+                if (current.iceTransportPolicy === 'relay') {
+                    if (connection.originalConfiguration) connection.originalConfiguration.iceServers = refreshed.iceServers;
+                    return true;
+                }
+                connection.originalConfiguration = refreshed;
                 connection.relayEscalated = true;
                 this._emit('relayEscalated', {
                     uuid: connection.uuid,
@@ -5477,7 +5605,19 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             } else if (connection.recoveryStage === 1 && this.autoRelay) {
                 phase = 'relay';
                 connection.recoveryStage = 2;
-                if (this._escalateConnectionToRelay(connection)) {
+                // A long-lived peer can still have the credentials from its first negotiation.
+                let iceServers;
+                if (this.turnServers !== false) {
+                    try {
+                        const config = await this._getICEConfiguration();
+                        iceServers = config.iceServers;
+                    } catch (error) {
+                        this._log('TURN lookup during peer recovery failed:', error.message || error);
+                    }
+                }
+                if (this._intentionalDisconnect || !this._isCurrentConnection(connection) ||
+                    connection._finalized || !connection.recovering || connection.recoveryStage !== 2) return;
+                if (this._escalateConnectionToRelay(connection, iceServers)) {
                     started = await this._requestConnectionICERestart(connection, `${reason}-relay`);
                 }
             }
@@ -5816,7 +5956,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
 
             try {
                 // Set remote description
-                await connection.pc.setRemoteDescription(new RTCSessionDescription(msg.description));
+                await connection.pc.setRemoteDescription(new RTCSessionDescription(this._filterLanDescription(msg.description)));
                 await this._drainPendingICE(msg.UUID, 'local', connection);
 
                 // Create and send answer
@@ -5899,7 +6039,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             }
 
             try {
-                await connection.pc.setRemoteDescription(new RTCSessionDescription(msg.description));
+                await connection.pc.setRemoteDescription(new RTCSessionDescription(this._filterLanDescription(msg.description)));
                 await this._drainPendingICE(msg.UUID, 'remote', connection);
                 this._log('Remote description set successfully');
             } catch (error) {
@@ -6010,6 +6150,8 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 }
             }
 
+            if (this.lanOnly && !isLanCandidate(msg.candidate?.candidate)) return;
+
             // Find the correct connection based on type field
             // IMPORTANT: VDO.Ninja uses the 'type' field to route messages when you have both 
             // viewing and publishing connections to the same peer UUID.
@@ -6088,6 +6230,12 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 }
             }
             
+            if (this.lanOnly) {
+                if (!Array.isArray(msg.candidates)) return;
+                msg.candidates = msg.candidates.filter(candidate => isLanCandidate(candidate?.candidate));
+                if (!msg.candidates.length) return;
+            }
+
             this._log(`Received ICE candidates bundle - type: ${msg.type}, UUID: ${msg.UUID}, session: ${msg.session}`);
             this._log(`Candidates count: ${msg.candidates ? msg.candidates.length : 0}`);
 
@@ -6326,6 +6474,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          * @returns {Promise<void>}
          */
         async _ensurePasswordHash() {
+            const generation = this._reconnectGeneration;
             if (this.password === false || this.password === null) {
                 this._passwordHash = null;
                 this._passwordHashKey = null;
@@ -6361,6 +6510,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 } catch (error) {
                     this._log('Failed to ensure password hash:', error);
                 }
+                if (generation !== this._reconnectGeneration) return;
                 if (this._passwordHash && this._passwordHashKey === hashKey && typeof this._passwordHash === 'string' && this._passwordHash.length > 0) {
                     return;
                 }
@@ -6375,7 +6525,8 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
 
             try {
                 const hash = await promise;
-                if (this._passwordHashPromise === promise && this._passwordHashPromiseKey === hashKey) {
+                if (generation === this._reconnectGeneration &&
+                    this._passwordHashPromise === promise && this._passwordHashPromiseKey === hashKey) {
                     this._passwordHash = hash;
                     this._passwordHashKey = hashKey;
                 }
@@ -6424,12 +6575,15 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          * @param {Object} msg - Listing message
          */
         async _handleListing(msg) {
+            const generation = this._reconnectGeneration;
             this._log('Processing listing');
 
             await this._ensurePasswordHash();
+            if (generation !== this._reconnectGeneration || this._intentionalDisconnect) return;
 
             // Emit internal event for room joined
             this._emit('_roomJoined');
+            if (generation !== this._reconnectGeneration || this._intentionalDisconnect) return;
 
             // Emit listing event for compatibility with Gemini example
             if (msg.list && Array.isArray(msg.list)) {
@@ -7328,7 +7482,10 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
             // For stream IDs, we need to generate a hash from password + salt
             // and append it to the streamID (no underscore)
             if (!this._passwordHash) {
-                this._passwordHash = await this._generateHash(password + this.salt, 6);
+                const generation = this._reconnectGeneration;
+                const hash = await this._generateHash(password + this.salt, 6);
+                if (generation === this._reconnectGeneration) this._passwordHash = hash;
+                return streamID + hash;
             }
             return streamID + this._passwordHash;
         }
@@ -7420,9 +7577,9 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          * Get from local storage
          * @private
          * @param {string} key - Storage key
-         * @returns {any} Stored value or null
+         * @returns {Object|null} Stored value and expiry, or null
          */
-        _getStorage(key) {
+        _getStorageEntry(key) {
             if (typeof localStorage === 'undefined') return null;
             
             try {
@@ -7432,12 +7589,12 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 const data = JSON.parse(item);
                 
                 // Check if expired
-                if (data.expiry && Date.now() > data.expiry) {
+                if (data.expiry && Date.now() >= data.expiry) {
                     localStorage.removeItem(key);
                     return null;
                 }
                 
-                return data.value;
+                return data;
             } catch (e) {
                 this._log('Storage read error:', e);
                 return null;
@@ -7471,13 +7628,6 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          * @returns {Promise<Array>} TURN server list
          */
         async _fetchTURNServers() {
-            // Check cache first
-            const cached = this._getStorage('turnlist');
-            if (cached) {
-                this._log('Using cached TURN servers');
-                return cached;
-            }
-
             const timestamp = Date.now();
             let getTurnURL = "https://turnservers.vdo.ninja/";
             
@@ -7491,16 +7641,13 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 }
             }
 
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000);
             try {
-                // Fetch with timeout
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2000);
-                
+
                 const response = await fetch(`${getTurnURL}?ts=${timestamp}`, {
                     signal: controller.signal
                 });
-                
-                clearTimeout(timeoutId);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -7519,6 +7666,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 
             } catch (error) {
                 this._log('Failed to fetch TURN servers, using fallback:', error.message);
+                this._turnFetchFailed = true;
                 
                 // Fallback TURN servers
                 return [
@@ -7579,6 +7727,8 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                         locale: "use1"
                     }
                 ];
+            } finally {
+                clearTimeout(timeoutId);
             }
         }
 
@@ -7602,13 +7752,21 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 return;
             }
 
-            // Otherwise, fetch from API
+            if (this._turnList !== null && Date.now() < this._turnExpiresAt) return;
             if (!this._turnPromise) {
+                const cached = this._getStorageEntry('turnlist');
+                if (Array.isArray(cached?.value) && cached.expiry > Date.now()) {
+                    this._turnList = this._processTURNs(cached.value);
+                    this._turnExpiresAt = Math.min(cached.expiry, Date.now() + this.turnCacheTTL * 60000);
+                    return;
+                }
+                this._turnFetchFailed = false;
                 this._turnPromise = this._fetchTURNServers().then(servers => {
                     this._turnList = this._processTURNs(servers);
+                    this._turnExpiresAt = Date.now() + (this._turnFetchFailed ? 30000 : this.turnCacheTTL * 60000);
                     this._log('TURN servers loaded:', this._turnList.length);
                     return this._turnList;
-                });
+                }).finally(() => { this._turnPromise = null; });
             }
 
             await this._turnPromise;
@@ -7620,10 +7778,8 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
          * @returns {Promise<Object>} RTCConfiguration object
          */
         async _getICEConfiguration() {
-            // Setup TURN servers if not already done
-            if (this._turnList === null) {
-                await this._setupTURNServers();
-            }
+            if (this.lanOnly) return { iceServers: [], sdpSemantics: 'unified-plan' };
+            await this._setupTURNServers();
 
             const iceServers = [...this.stunServers];
             
@@ -7709,8 +7865,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                         await this._applyEncodingPreferencesToConnection(connection);
                         
                         // Renegotiate connection
-                        const offer = await connection.pc.createOffer();
-                        await connection.pc.setLocalDescription(offer);
+                        const offer = await this._createLocalOffer(connection.pc);
                         
                         const offerMsg = {
                             UUID: connection.uuid,
@@ -7781,8 +7936,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                             connection.pc.removeTrack(sender);
                             
                             // Renegotiate connection
-                            const offer = await connection.pc.createOffer();
-                            await connection.pc.setLocalDescription(offer);
+                            const offer = await this._createLocalOffer(connection.pc);
                             
                             const offerMsg = {
                                 UUID: connection.uuid,
@@ -8729,8 +8883,7 @@ const VDON_RESOURCE_CHUNK_SIZE = 16384;
                 }
                 
                 // Also initiate from our side
-                const offer = await connection.pc.createOffer({ iceRestart: true });
-                await connection.pc.setLocalDescription(offer);
+                const offer = await this._createLocalOffer(connection.pc, { iceRestart: true });
                 
                 // Compute streamID to send for ICE restart via WebSocket
                 let streamIDToSend = connection.streamID;

@@ -36,12 +36,10 @@ test('Pages isolate demo traffic, render transparent layers, receive their bridg
   for(const [slug,command] of [['mazeraid','hi'],['fireflycatch','!catch'],['cometrally','!boost']]){
    const url=pathToFileURL(path.join(__dirname,'../games',slug+'.html')).href;
    await page.goto(url+'?demo&server&session=never-connect');assert.equal(page.frames().length,1);
-   await page.goto(url+'?session=fixture&clean');assert.equal(await page.locator('#controls').isVisible(),false);assert.equal(await page.locator('#connection').isVisible(),false);assert.equal(await page.evaluate(()=>getComputedStyle(document.body).backgroundColor),'rgba(0, 0, 0, 0)');
+   await page.goto(url+'?session=fixture');assert.equal(await page.locator('button, #controls, #host-controls, #connection').count(),0);assert.equal(await page.evaluate(()=>getComputedStyle(document.body).backgroundColor),'rgba(0, 0, 0, 0)');
    await page.evaluate(m=>postMessage({dataReceived:{overlayNinja:m}},'*'),msg(command));assert.match(await page.locator('#players').textContent(),/^0 /);
    const bridge=page.frames().find(f=>f!==page.mainFrame());await bridge.waitForLoadState();await bridge.evaluate(m=>parent.postMessage({dataReceived:{overlayNinja:m}},'*'),msg(command,'<img src=x onerror=alert(1)>'));
    await page.waitForFunction(()=>document.getElementById('players').textContent.startsWith('1 '));assert.equal(await page.locator('#layer img').count(),0);
-   await page.evaluate(()=>document.getElementById('pause').click());await bridge.evaluate(m=>parent.postMessage({dataReceived:{overlayNinja:m}},'*'),msg(command,'Other'));assert.match(await page.locator('#players').textContent(),/^1 /);assert.equal(await page.locator('#meter').textContent(),'Paused');
-   await page.evaluate(()=>document.getElementById('restart').click());assert.match(await page.locator('#players').textContent(),/^0 /);
    for(const width of [390,1280]){await page.setViewportSize({width,height:800});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));}
   }
   assert.deepEqual(errors,[]);
