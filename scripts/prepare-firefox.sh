@@ -45,6 +45,7 @@ rsync -a \
     --exclude='docs/***' \
     --exclude='lite/' \
     --exclude='/cloud/' \
+    --exclude='/media/creator-pack/' \
     --exclude='tests/' \
     --exclude='scripts/' \
     --exclude='node_modules/' \
