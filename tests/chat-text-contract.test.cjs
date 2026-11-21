@@ -299,6 +299,7 @@ const metadataOverlays = [...new Set(['dock.html', 'featured.html', 'bot.html', 
             section('sources/websocket/twitch.js', '\tfunction normalizeTwitchLogin(', '\tfunction rememberTwitchDisplayName('),
             section('sources/websocket/twitch.js', '\t\tfunction convertChatPayloadToLegacyMessage(payload)', '\tfunction convertMembershipPayloadToUserNotice('),
             section('sources/websocket/twitch.js', '\tfunction replaceEmotesWithImages(', '\tlet globalBadges'),
+            section('sources/websocket/twitch.js', '\tfunction toTimestampMs(', '\tfunction buildHypeTrainMeta('),
             section('sources/websocket/twitch.js', '\tasync function processMessage(parsedMessage)', '\tfunction addEvent(description)')
           ].join('\n') });
           await page.evaluate(async input => processMessage(convertChatPayloadToLegacyMessage(input)), input);

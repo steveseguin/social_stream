@@ -802,6 +802,8 @@
 		batch.forEach(function (m) {
 			if (m && m.content) m = m.content;
 			if (!m || typeof m !== 'object') return;
+			// Captions are the host's own speech shown as text. They are not chat activity.
+			if (m.type === 'captions') return;
 			var type = String(m.type || '').toLowerCase();
 			if ((only.length && only.indexOf(type) < 0) || hide.indexOf(type) >= 0) return;
 			if (membersOnly && !m.membership && !m.hasDonation && type !== 'demo') return;

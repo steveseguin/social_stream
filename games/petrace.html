@@ -793,6 +793,8 @@
     }
     
     function processData(data) {
+        // Captions are the host's own speech shown as text. They are not chat to take part with.
+        if (data && (data.content || data).type === "captions") return;
         if (!data || typeof data !== 'object') return;
         if (data.content) {
             data = data.content;

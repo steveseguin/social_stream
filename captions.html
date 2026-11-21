@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="description" content="Captions. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+		<meta name="robots" content="noindex">
+		<link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>Captions | Social Stream Ninja</title>
+		<link rel="stylesheet" href="voice-control.css" />
+		<style>
+			#mode.off {
+				color: #afbdd0;
+			}
+		</style>
+		<script src="js/local-server-url.js"></script>
+	</head>
+	<body>
+		<main>
+			<header>
+				<small>SOCIAL STREAM NINJA</small>
+				<h1>Captions</h1>
+				<p>Say it. See it in chat.</p>
+			</header>
+			<section>
+				<div class="status"><b id="phase">Stopped</b><span id="mode">NOT CONNECTED</span></div>
+				<p id="message" role="status"></p>
+				<label for="language">Language</label>
+				<div class="row"><select id="language"></select></div>
+				<label for="name">Name shown</label>
+				<div class="row"><input id="name" type="text" maxlength="60" placeholder="Captions" autocomplete="off" /></div>
+				<div class="buttons"><button id="start" class="primary">Start listening</button><button id="stop" disabled>Stop</button><button id="copy" hidden>Copy this page's link</button></div>
+			</section>
+			<section>
+				<h2>Last heard</h2>
+				<p id="heard" class="heard">Nothing yet.</p>
+				<p id="interim" class="hint" aria-hidden="true"></p>
+			</section>
+			<p class="note">Uses this browser's speech recognition and your default microphone. Keep this tab open while you stream.</p>
+		</main>
+		<script src="shared/operator-connection.js"></script>
+		<script src="captions.js"></script>
+	</body>
+</html>

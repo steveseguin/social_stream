@@ -12343,6 +12343,10 @@
 					var makeBlurred = false;
 					var isDeletedMessage = showDeleted && deletedDockMessages.has(data);
 					var suppressLiveSideEffects = prependMode === true || processDataOptions.suppressLiveSideEffects === true || isDeletedMessage;
+					// Captions are the host's own speech shown as text. They are listed and saved like any row, but
+					// are not chat input: no custom actions, auto-featuring, beep, dock commands, question or queue
+					// tracking, auto-pinning or automatic TTS.
+					var suppressChatSideEffects = suppressLiveSideEffects || data.type === "captions";
 
 					if (debug){
 						console.log(data);
@@ -12513,7 +12517,7 @@
 					}
 				}
 
-					if (!suppressLiveSideEffects) {
+					if (!suppressChatSideEffects) {
 						try {
 							if (applyCustomActions) {
 								let response = applyCustomActions(data); // Any custom actions (not synced with github)
@@ -13461,7 +13465,7 @@
 					const metaPinnedTarget = data.meta && data.meta.pinnedTarget;
 					const metaPinned = data.meta && data.meta.pinned === true && (!metaPinnedTarget || metaPinnedTarget === thisLabel);
 
-					if (!suppressLiveSideEffects) {
+					if (!suppressChatSideEffects) {
 						if (metaFeatured) {
 							if (autoTimeoutEnabled) {
 								autoShowQueue.push(node);
@@ -13578,7 +13582,7 @@
 						enqueueTypewriter(contentElement, node);
 					}
 					
-					if (!suppressLiveSideEffects) {
+					if (!suppressChatSideEffects) {
 						const shouldBeep = shouldDockBeep(data, mod);
 						if (shouldBeep) { 
 							if (!(data.command && doNotTTSBeep) && !(nobeepevent && data.event) && !(nobeepmod && mod) && !(nobeephost && host) && !(nobeepbot && bot)){
@@ -13589,7 +13593,7 @@
 					
 					cleanUpOldNodes();
 
-					if (!suppressLiveSideEffects) {
+					if (!suppressChatSideEffects) {
 						applyBotActions(data); // Official actions
                         if (window.SSNQuestionTracker) window.SSNQuestionTracker.add(node, data);
 

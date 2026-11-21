@@ -2461,8 +2461,8 @@ function setupSourceSelection(inputId, isSettingBased = false) {
     updateSourceTypeList(inputId);
 }
 
-function setupViewerCountSourceTags() {
-    const inputId = 'hideViewerCountSources';
+// A list of sources picked from a dropdown and shown as icon tags. Used by every input named in sourceSelectTagInputs.
+function setupSourceSelectTags(inputId) {
     const input = document.getElementById(inputId);
     if (!input) return;
 
@@ -2509,6 +2509,43 @@ function setupViewerCountSourceTags() {
     });
 
     updateSourceTypeList(inputId);
+}
+
+// Captions: says next to the room field whether SSN is connected to the Caption.Ninja room.
+function refreshCaptionsStatus() {
+    const status = document.getElementById('captionsStatus');
+    const toggle = document.querySelector('input[data-setting="captionninja"]');
+    if (!status || !toggle) return;
+    if (!toggle.checked) {
+        status.textContent = '';
+        return;
+    }
+    try {
+        chrome.runtime.sendMessage({ cmd: 'getCaptionStatus' }, function(response) {
+            chrome.runtime.lastError;
+            const captions = response && response.captions;
+            if (!captions || !toggle.checked) return;
+            if (captions.state === 'connected') {
+                status.textContent = captions.received ? `✅ Connected · ${captions.received} received` : '✅ Connected';
+            } else if (captions.state === 'connecting') {
+                status.textContent = '⏳ Connecting…';
+            } else if (captions.state === 'noroom') {
+                status.textContent = 'Enter your room';
+            } else if (captions.state === 'problem') {
+                status.textContent = '⚠️ ' + captions.problem;
+            } else {
+                status.textContent = 'Turn SSN on to connect';
+            }
+        });
+    } catch (e) {
+        console.warn('Unable to look up the captions status:', e);
+    }
+}
+
+function setupCaptionsStatus() {
+    if (!document.getElementById('captionsStatus')) return;
+    refreshCaptionsStatus();
+    setInterval(refreshCaptionsStatus, 2000);
 }
 
 // Viewer count order: one shared setting, edited by dragging platform chips into place.
@@ -2751,10 +2788,13 @@ function setupViewerCountOrder() {
 const eventTemplates = {
   botReply: (id) => `
     <div class="event-container">
-      <label class="switch" style="vertical-align: top; margin: 26px 0 0 0">
-        <input type="checkbox" data-setting="botReplyMessageEvent${id}">
-        <span class="slider round"></span>
-      </label>
+      <div class="popup-toggle-row">
+        <label class="switch">
+          <input type="checkbox" id="botReplyMessageEvent${id}" data-setting="botReplyMessageEvent${id}">
+          <span class="slider round"></span>
+        </label>
+        <label for="botReplyMessageEvent${id}" data-translate="enable-this-command">Enable this command</label>
+      </div>
       <div style="display:inline-block">
         <div class="textInputContainer" style="width: 235px">
           <input type="text" id="botReplyMessageCommand${id}" maxlength="200" class="textInput" autocomplete="off" placeholder="!discord, !ds, !disc" data-textsetting="botReplyMessageCommand${id}">
@@ -3200,7 +3240,7 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 }
 
 const sourceTypes = ['relaytargets','eventsSources','ttssources'];
-const sourceSelectTagInputs = ['hideViewerCountSources'];
+const sourceSelectTagInputs = ['hideViewerCountSources', 'captionstargets'];
 const commaTagInputs = ['questionKeywords', 'filtercommandscustomwords', 'bottriggerwords', 'filterevents', 'dockfilterevents', 'featuredfilterevents', 'exactblockedmessages'];
 const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers', 'filterfeaturedusers'];
 // These are canonical payload types that cannot be inferred reliably from a
@@ -4002,6 +4042,36 @@ function syncSupportedServerParamsForTarget(targetId, targetElement, sourceEleme
   targetElement.raw = cleanURL(targetElement.raw);
 }
 
+// The captions page sends commands to SSN like the Dock does, so its link follows the Dock's route:
+// peer-to-peer normally, or the relay when "Dock sends its commands to Extension via server" is on.
+// With both relay switches on, it uses the same endpoint the Dock would.
+function buildCaptionsMicUrl(url) {
+  if (!url) return url;
+  ["server2", "server3"].forEach(function(paramName) {
+    url = removeQueryParamWithValue(url, paramName);
+  });
+  if (isBothParamChecked("server3")) {
+    const dock = document.getElementById("dock");
+    url = updateURL(getServerParamToken("server3", dock), url);
+    if (isBothParamChecked("server2")) {
+      url = updateURL(getServerParamToken("server2", dock), url);
+    }
+  }
+  return cleanURL(url);
+}
+
+// Caption.Ninja's capture page links itself to this session with &ssn=, so the captions it sends
+// count as the host's. Only the session and its password go in; the page keeps them out of the
+// overlay links it generates.
+function buildCaptionNinjaLinkedUrl(streamId, passwordParams) {
+  let url = "https://caption.ninja/?ssn=" + encodeURIComponent(streamId || "");
+  const sessionPassword = new URLSearchParams(String(passwordParams || "").replace(/^&/, "")).get("password");
+  if (sessionPassword) {
+    url += "&ssnpassword=" + encodeURIComponent(sessionPassword);
+  }
+  return url;
+}
+
 function getSelectedChatOverlayTemplatePath() {
   const selector = document.getElementById("overlay-preset-select");
   if (selector && selector.value) {
@@ -4368,6 +4438,15 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   const obsControlDockUrl = document.getElementById("obs_control_dock_url");
   if (obsControlDockUrl) {
     obsControlDockUrl.href = buildGeneratedUrl("obs-control-dock.html", `session=${encodeURIComponent(streamID)}${getLocalServerConnectionParams()}`, baseURL);
+  }
+
+  const captionsMicUrl = document.getElementById("captions_mic_url");
+  if (captionsMicUrl) {
+    captionsMicUrl.href = buildCaptionsMicUrl(buildGeneratedUrl("captions.html", `session=${encodeURIComponent(streamID)}${password}`, baseURL));
+  }
+  const captionsCnUrl = document.getElementById("captions_cn_url");
+  if (captionsCnUrl) {
+    captionsCnUrl.href = buildCaptionNinjaLinkedUrl(streamID, password);
   }
 
 	const streamElementsImporterUrl = document.getElementById("streamelements_importer_link");
@@ -5091,6 +5170,14 @@ function update(response, sync = true) {
             const obsControlDockUrl = document.getElementById("obs_control_dock_url");
             if (obsControlDockUrl) {
                 obsControlDockUrl.href = baseURL + "obs-control-dock.html?session=" + encodeURIComponent(response.streamID) + getLocalServerConnectionParams();
+            }
+            const captionsMicUrl = document.getElementById("captions_mic_url");
+            if (captionsMicUrl) {
+                captionsMicUrl.href = buildCaptionsMicUrl(baseURL + "captions.html?session=" + encodeURIComponent(response.streamID) + password);
+            }
+            const captionsCnUrl = document.getElementById("captions_cn_url");
+            if (captionsCnUrl) {
+                captionsCnUrl.href = buildCaptionNinjaLinkedUrl(response.streamID, password);
             }
             // The hideLinks variable is not reset to false globally here, its state is managed by the checkbox and classList.
 
@@ -8229,7 +8316,7 @@ function refreshGeneratedConnectionLinks(paramName, value) {
         setGeneratedLink(element, replaceGeneratedConnectionParam(element.raw, paramName, value));
     });
 
-    ['sampleoverlay', 'remote_control_url', 'obs_control_dock_url', 'games_gallery_url', 'games_gallery_menu_url'].forEach(function(elementId) {
+    ['sampleoverlay', 'remote_control_url', 'obs_control_dock_url', 'captions_mic_url', 'games_gallery_url', 'games_gallery_menu_url'].forEach(function(elementId) {
         const link = document.getElementById(elementId);
         if (!link || !link.href) return;
         link.href = replaceGeneratedConnectionParam(link.href, paramName, value);
@@ -9797,6 +9884,14 @@ function refreshLinks(){
   ["dock", "overlay"].forEach(function(targetId) {
     syncSupportedServerParamsForTarget(targetId, document.getElementById(targetId), selectionSource, null, selectionTokens);
   });
+  const captionsMicLink = document.getElementById("captions_mic_url");
+  if (captionsMicLink && captionsMicLink.href) {
+    captionsMicLink.href = buildCaptionsMicUrl(captionsMicLink.href);
+  }
+  const captionsCnLink = document.getElementById("captions_cn_url");
+  if (captionsCnLink && lastResponse && lastResponse.streamID) {
+    captionsCnLink.href = buildCaptionNinjaLinkedUrl(lastResponse.streamID, lastResponse.password ? "&password=" + encodeURIComponent(lastResponse.password) : "");
+  }
 
   let hideLinks = false;
   document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
@@ -12667,8 +12762,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	// Initialize blocked words tag input
 	setupBlockedWordsInput();
-	setupViewerCountSourceTags();
+	sourceSelectTagInputs.forEach(setupSourceSelectTags);
 	setupViewerCountOrder();
+	setupCaptionsStatus();
 	commaTagInputs.forEach((inputId) => {
 		setupCommaTagInput(inputId);
 	});

@@ -8842,6 +8842,52 @@ details.wrapper[open] > .collapsible-text {
 								<hr>
 
 
+								<!-- Captions: the host's speech as messages -->
+								<div title="Shows what you say as messages in the dock and overlays, read from your Caption.Ninja room. These captions are never posted to chat, because anyone who has the room name can add to them." data-keywords="captions caption ninja subtitles closed captions cc speech voice microphone transcript speech to text stt">
+									<label class="switch">
+										<input type="checkbox" data-setting="captionninja" />
+										<span class="slider round"></span>
+									</label>
+									<img class="icon" src="./sources/images/captions.png" alt="" style="display: inline-block;" />
+									Show Caption.Ninja captions as messages
+								</div>
+								<div data-keywords="captions caption ninja room link subtitles speech voice">
+									<div class="textInputContainer" style="display: inline-grid; width: 250px;" title="The room from your Caption.Ninja page. You can paste its overlay link.">
+										<input type="text" id="captionninjaroom" class="textInput" autocomplete="off" placeholder="Room name or Caption.Ninja link" data-textsetting="captionninjaroom" />
+										<label for="captionninjaroom"><span class="popup-control-icon" aria-hidden="true">🔗</span>Caption.Ninja room</label>
+									</div>
+									<span id="captionsStatus" role="status"></span>
+								</div>
+								<div title="No Caption.Ninja needed: this page listens with your browser's own speech recognition and sends what you say to SSN. Open it in Chrome or Edge and keep the tab open. Only captions from this page can be posted to chat." data-keywords="captions microphone browser speech recognition voice to text dictate talk speak stt">
+									<span class="popup-control-icon" aria-hidden="true">🎙️</span>
+									<a target="_blank" rel="noopener" class="options-link rounded_area" id="captions_mic_url" href="https://socialstream.ninja/captions.html">Use my browser's microphone instead</a>
+								</div>
+								<div title="Opens Caption.Ninja linked privately to this SSN session, so its captions count as yours and can be posted to chat. Keep that page's address to yourself. The overlay link it shows is still safe to share." data-keywords="captions caption ninja link private connect post chat speech microphone">
+									<span class="popup-control-icon" aria-hidden="true">🔗</span>
+									<a target="_blank" rel="noopener" class="options-link rounded_area" id="captions_cn_url" href="https://caption.ninja/">Open Caption.Ninja linked to SSN</a>
+								</div>
+								<div title="Sends your captions to the chats you pick below, from your own account. This covers SSN's microphone page and a Caption.Ninja page linked to SSN, never captions that are only read from a room. List your account names under the hosts' names and the copies that come back are hidden." data-keywords="captions post chat send speech voice twitch youtube kick subtitles">
+									<label class="switch">
+										<input type="checkbox" data-setting="captionspost" />
+										<span class="slider round"></span>
+									</label>
+									<span><span class="popup-control-icon" aria-hidden="true">💬</span>Post my captions to chat</span>
+								</div>
+								<div data-keywords="captions post chat destinations platforms pick choose">
+									<div class="textInputContainer" style="width: 95%;" title="Pick the chats that receive your captions. Nothing is posted until you pick one.">
+										<input type="text" id="captionstargets" class="textInput instant" autocomplete="off" placeholder="Select chats below" data-textsetting="captionstargets" />
+										<label for="captionstargets"><span class="popup-control-icon" aria-hidden="true">🎯</span>Post to these chats</label>
+									</div>
+								</div>
+								<div data-keywords="captions post chat delay spacing batch seconds rate">
+									<div class="textInputContainer" style="display: inline-grid; width: 160px;" title="Wait at least this long between posts to each chat, joining what you said in between. 0 posts every caption on its own.">
+										<input type="number" id="captionsgap" class="textInput" min="0" max="120" value="0" autocomplete="off" data-numbersetting="captionsgap" />
+										<label for="captionsgap"><span class="popup-control-icon" aria-hidden="true">⏱️</span>Seconds between posts</label>
+									</div>
+								</div>
+								<p class="popup-guide-link"><a href="https://socialstream.ninja/beta/docs/index.html?file=captions.md" target="_blank" rel="noopener">📖 Captions setup guide</a></p>
+								<hr>
+
 								<!-- Video Stats Polling -->
 								<div title="Poll a video server stats endpoint and send bitrate/health data as meta events.">
 									<label class="switch">

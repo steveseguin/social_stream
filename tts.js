@@ -1884,6 +1884,13 @@ TTS.speechMeta = function(data, allow = false) {
         console.error("TTS.speechMeta: No data provided");
         return;
     }
+
+    // Captions are the host's own speech, and so may be a chat message that matches a caption the
+    // host just posted. Reading either aloud would feed the microphone again, so they are only
+    // spoken when someone asks for that message directly.
+    if ((data.type === "captions" || (data.meta && data.meta.captionCopy === true)) && !allow) {
+        return;
+    }
     
     if (TTS.skipTTSMessages && !data.hasDonation) {
         if (parseInt(data.id||0) % TTS.skipTTSMessages !== 0) {

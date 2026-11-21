@@ -87,6 +87,7 @@
                                     <li><a href="#twitch-dom">Twitch DOM</a></li>
                                     <li><a href="#twitch-ws">Twitch EventSub</a></li>
                                     <li><a href="#obs-flow-actions">OBS</a></li>
+                                    <li><a href="#captions">Captions</a></li>
                                     <li><a href="#streamlabs-alertbox">Streamlabs</a></li>
                                     <li><a href="#tiktok">TikTok</a></li>
                                     <li><a href="#whatnot">Whatnot</a></li>
@@ -1017,6 +1018,17 @@
                         </tbody>
                     </table>
                 </div>
+                </article>
+
+                <article class="platform-card" id="captions">
+                    <h3>Captions</h3>
+                    <p class="source-note">Implementation: <code>shared/captions/background.js</code> (Caption.Ninja room reader and caption intake) and <code>captions.html</code> (browser microphone page). A Caption.Ninja capture page can also link itself to the session with <code>&amp;ssn=</code>. Guide: <a href="index.html?file=captions.md">captions.md</a>.</p>
+                    <ul class="requirements">
+                        <li>Each finished caption is a chat row with <code>type: "captions"</code>, a plain-text <code>chatmessage</code> of up to 500 characters with <code>textonly: true</code>, and <code>chatname</code> set to the caption label or <code>Captions</code>. A longer caption becomes several rows. Word-by-word interim text is not sent.</li>
+                        <li><code>host: true</code> is set only on captions that reach SSN over the session's own connection: the microphone page, or a Caption.Ninja capture page linked with the session. Anyone who knows a Caption.Ninja room name can publish to it, so captions read from a room carry no <code>host</code> flag and are never posted to chat. A linked capture page sends each caption both ways; SSN pairs the two copies by the page's publisher id and the caption id, and shows one.</li>
+                        <li>Captions go to the dock and overlay feed and are saved to history, and take no other exit. Chat commands, bots, points, Event Flow, relay, giveaways, polls, the map, the word cloud, GIF commands, sticker rewards, the audience room, credits, and the H2R, webhook, Discord and Streamer.bot outputs do not receive them, and <code>tts.js</code> does not read them automatically. Pages that take chat as input should ignore <code>type: "captions"</code>.</li>
+                        <li>Posting captions to chat is a separate opt-in that needs at least one picked chat. When a chat returns such a post from the posting account, that copy is not delivered again. A source that signs in can tell SSN which account it sends with by sending <code>{ postingAccount: { userid, username } }</code> to the background (the Twitch WebSocket source does); otherwise the hosts' names list is used. A message with the same text from a confirmed different account is delivered unchanged. One from a sender who cannot be identified is delivered with <code>reflection: true</code> and <code>meta.captionCopy: true</code>, and is not relayed, answered by bots or read aloud.</li>
+                    </ul>
                 </article>
 
                 <article class="platform-card" id="obs-flow-actions">

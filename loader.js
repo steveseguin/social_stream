@@ -70,6 +70,7 @@ async function loadScriptsInOrder() {
         './shared/music-host.js',
         './shared/audience-room/connector.js',
         './shared/audience-room/background.js',
+        './shared/captions/background.js',
         './db.js?v=2',
         './ai.js?v=2',
         './shared/aiEventOverlay/core.js',

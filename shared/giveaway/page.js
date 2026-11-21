@@ -614,7 +614,8 @@
             if (!data || typeof data !== 'object') {
                 return;
             }
-            if (data.bot || data.reflection || data.replay || data.history || data.reload || data.private || data.event || isSpinning) return;
+            // Captions (type "captions") are the host's own speech shown as text; they never enter.
+            if (data.bot || data.reflection || data.replay || data.history || data.reload || data.private || data.event || data.type === 'captions' || isSpinning) return;
             var msg = data.chatmessage;
             if (typeof msg !== 'string' || !msg) {
                 return;

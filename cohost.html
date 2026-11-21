@@ -2749,6 +2749,8 @@
 				const payload = unwrapCohostLiveChatPayload(input);
 				if (!payload || typeof payload !== "object") return null;
 				if (payload.bot === true || payload.fromBot === true) return null;
+				// Captions are the host's own speech shown as text, not chat for the co-host to answer.
+				if (payload.type === "captions") return null;
 				const plainText = payload.meta && typeof payload.meta.plainText === "string" ? payload.meta.plainText : "";
 				const text = cohostLiveChatHtmlToText(plainText || payload.chatmessage || payload.message || payload.text || "").slice(0, COHOST_LIVE_CHAT_MESSAGE_MAX_CHARS);
 				if (!text) return null;

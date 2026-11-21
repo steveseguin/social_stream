@@ -1627,6 +1627,32 @@ try{
 	var userDetails = {};
 	var userDetailsById = {};
 
+	async function fetchTwitchUserProfile(url, token) {
+		const controller = typeof AbortController === 'function' ? new AbortController() : null;
+		let timer;
+		const deadline = new Promise((_, reject) => {
+			timer = setTimeout(() => {
+				if (controller) controller.abort();
+				reject(new Error('Twitch user profile request timed out'));
+			}, 5000);
+		});
+		try {
+			const request = fetch(url, {
+				headers: { 'Client-ID': getTwitchApiClientId(), 'Authorization': `Bearer ${token}` },
+				...(controller ? { signal: controller.signal } : {})
+			}).then(async response => {
+				if (!response.ok) {
+					await handleTwitchApiAuthError(response, url);
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+				return response.json();
+			});
+			return await Promise.race([request, deadline]);
+		} finally {
+			clearTimeout(timer);
+		}
+	}
+
 	async function getUserInfo(username) {
 		
 		if (userDetails[username]){
@@ -1644,11 +1670,7 @@ try{
 		}
 
 		try {
-			const response = await fetchWithTimeout(`https://api.twitch.tv/helix/users?login=${username}`, 5000, {'Client-ID': getTwitchApiClientId(), 'Authorization': `Bearer ${token}`});
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-			const data = await response.json();
+			const data = await fetchTwitchUserProfile(`https://api.twitch.tv/helix/users?login=${username}`, token);
 			const deets = data.data[0];
 			userDetails[username] = deets;
 			if (deets && deets.id) {
@@ -1676,11 +1698,7 @@ try{
 		}
 
 		try {
-			const response = await fetchWithTimeout(`https://api.twitch.tv/helix/users?id=${encodeURIComponent(userId)}`, 5000, {'Client-ID': getTwitchApiClientId(), 'Authorization': `Bearer ${token}`});
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-			const data = await response.json();
+			const data = await fetchTwitchUserProfile(`https://api.twitch.tv/helix/users?id=${encodeURIComponent(userId)}`, token);
 			const deets = data.data[0];
 			userDetailsById[userId] = deets;
 			if (deets && deets.login) {
@@ -2161,6 +2179,7 @@ async function ensureChatClientInstance() {
 		}
 		tokenRefreshResumePending = false;
 		currentAuthUser = authUser;
+		reportPostingAccount();
 		twitchChatWriteAuthorized = hasTwitchScope(authUser, 'user:write:chat');
 		token = getStoredToken() || token;
 
@@ -2760,7 +2779,9 @@ async function ensureChatClientInstance() {
 				}
 				if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
 					sendMessage(request.message, { messageOrigin: request.messageOrigin })
-						.then((result) => sendResponse(result?.ok === true))
+						.then((result) => sendResponse(request.detail === true
+							? { ok: result?.ok === true, busy: result?.busy === true }
+							: result?.ok === true))
 						.catch((err) => {
 							console.error('Twitch extension SEND_MESSAGE failed', err);
 							sendResponse(false);
@@ -3154,7 +3175,8 @@ async function ensureChatClientInstance() {
 		}
 		if (chatSendInFlight) {
 			console.warn('Twitch chat send ignored because another send is already in progress.');
-			return unsentResult;
+			// busy: nothing was attempted, so a caller that asked for detail can safely try again.
+			return Object.assign({ busy: true }, unsentResult);
 		}
 		if (!isTwitchChatConnected()) {
 			const socketConnected = chatClient?.getState?.().status === 'connected';
@@ -4164,6 +4186,20 @@ async function ensureChatClientInstance() {
 	}
 
 	var settings = {};
+
+	// Tells SSN which account this page sends chat with. SSN uses it to tell its own posts coming
+	// back from someone else typing the same words. Repeated in case SSN restarted or the sign-in changed.
+	function reportPostingAccount() {
+		try {
+			const account = currentAuthUser && currentAuthUser.user_id
+				? { userid: String(currentAuthUser.user_id), username: currentAuthUser.login || '' }
+				: null;
+			chrome.runtime.sendMessage(chrome.runtime.id, { postingAccount: account }, function() {
+				chrome.runtime.lastError;
+			});
+		} catch(e) {}
+	}
+	setInterval(reportPostingAccount, 60000);
 
 	function pushMessage(data) {
 		try {

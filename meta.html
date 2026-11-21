@@ -1892,7 +1892,8 @@
             // Mods, hosts and admins only: a viewer must not be able to change a counter or the subathon clock.
             function handleChatCommand(data) {
                 // The same rule giveaways use, so a command relayed to several platforms only counts once.
-                if (data.event || data.bot || data.private || data.reflection) return false;
+                // Captions (the host's speech shown as text) never run a command.
+                if (data.event || data.bot || data.private || data.reflection || data.type === "captions") return false;
                 var text = String(data.chatmessage || "").trim();
                 if (text.charAt(0) !== "!") return false;
                 var trusted = !!(data.mod || data.host || data.admin);

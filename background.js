@@ -4516,6 +4516,107 @@ function forgetYouTubeChannel(tabId) {
 	youtubeChannelByTab.delete(tabId);
 }
 
+var pendingGlobalEmotes = Object.create(null);
+const GLOBAL_EMOTE_CHAT_WAIT_MS = 2000;
+
+function loadGlobalEmotes(provider, load) {
+	if (!pendingGlobalEmotes[provider]) {
+		const ready = load().catch(function (error) {
+			console.warn("Global emote lookup failed", provider, error);
+		});
+		// One deadline per cold lookup. Filters and source scripts still need the full list.
+		let timer;
+		const forChat = Promise.race([ready, new Promise(resolve => {
+			timer = setTimeout(resolve, GLOBAL_EMOTE_CHAT_WAIT_MS);
+		})]);
+		pendingGlobalEmotes[provider] = { ready, forChat };
+		ready.then(function () {
+			clearTimeout(timer);
+			delete pendingGlobalEmotes[provider];
+		});
+	}
+	return pendingGlobalEmotes[provider];
+}
+
+async function loadGlobalBTTV() {
+	Globalbttv = getItemWithExpiry("globalbttv2");
+
+	if (!Globalbttv) {
+		const data = await fetch("https://api.betterttv.net/3/cached/emotes/global")
+			.then(result => result.json()).catch(() => null);
+		if (Array.isArray(data)) {
+			Globalbttv = data.reduce((acc, emote) => {
+				const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/2x`;
+				acc[emote.code] = imageUrl;
+				return acc;
+			}, {});
+			setItemWithExpiry("globalbttv2", Globalbttv);
+		} else {
+			Globalbttv = [];
+		}
+	} else {
+		log("Globalbttv recovererd from storage");
+	}
+}
+
+async function loadGlobalSEVENTV() {
+	Globalseventv = getItemWithExpiry("globalseventv");
+
+	if (!Globalseventv) {
+		const data = await fetch("https://7tv.io/v3/emote-sets/global")
+			.then(result => result.json())
+			.catch(err => {
+				console.error(err);
+			});
+		if (data && Array.isArray(data.emotes)) {
+			Globalseventv = data.emotes.reduce((acc, emote) => {
+				const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`;
+				if (emote.flags) {
+					acc[emote.name] = { url: imageUrl, zw: true };
+				} else {
+					acc[emote.name] = imageUrl;
+				}
+				return acc;
+			}, {});
+			setItemWithExpiry("globalseventv", Globalseventv);
+		} else {
+			Globalseventv = [];
+		}
+	} else {
+		log("Globalseventv recovererd from storage");
+	}
+}
+
+async function loadGlobalFFZ() {
+	Globalffz = getItemWithExpiry("globalffz");
+
+	if (!Globalffz) {
+		// Use FFZ API to get global emotes
+		const data = await fetch("https://api.frankerfacez.com/v1/set/global")
+			.then(result => result.json())
+			.catch(err => {
+				console.error(err);
+			});
+		if (data && data.sets) {
+			Globalffz = Object.values(data.sets)
+				.flatMap(set =>
+					set.emoticons.map(emote => ({
+						[emote.name]: {
+							url: emote.urls["1"], // Use 1x size as default
+							zw: emote.modifier // FFZ uses 'modifier' flag for zero-width emotes
+						}
+					}))
+				)
+				.reduce((acc, curr) => Object.assign(acc, curr), {});
+			setItemWithExpiry("globalffz", Globalffz);
+		} else {
+			Globalffz = {};
+		}
+	} else {
+		log("Globalffz recovered from storage");
+	}
+}
+
 async function getBTTVEmotes(url = false, type = null, channel = null) {
 	var bttv = {};
 	var userID = false;
@@ -4686,34 +4787,7 @@ async function getBTTVEmotes(url = false, type = null, channel = null) {
 			}
 		}
 
-		if (!Globalbttv) {
-			Globalbttv = getItemWithExpiry("globalbttv2");
-
-			if (!Globalbttv) {
-				Globalbttv = await fetch("https://api.betterttv.net/3/cached/emotes/global")
-					.then(result => {
-						return result.json();
-					})
-					.then(result => {
-						return result;
-					})
-					.catch(err => {
-						//log(err);
-					});
-				if (Globalbttv) {
-					Globalbttv = Globalbttv.reduce((acc, emote) => {
-						const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/2x`;
-						acc[emote.code] = imageUrl;
-						return acc;
-					}, {});
-					setItemWithExpiry("globalbttv2", Globalbttv);
-				} else {
-					Globalbttv = [];
-				}
-			} else {
-				log("Globalbttv recovererd from storage");
-			}
-		}
+		if (!Globalbttv) await loadGlobalEmotes("bttv", loadGlobalBTTV).ready;
 
 		if (Globalbttv) {
 			if (!bttv) {
@@ -4964,38 +5038,7 @@ async function getSEVENTVEmotes(url = false, type = null, channel = null, userID
 			}
 		}
 
-		if (!Globalseventv) {
-			Globalseventv = getItemWithExpiry("globalseventv");
-
-			if (!Globalseventv) {
-				Globalseventv = await fetch("https://7tv.io/v3/emote-sets/global")
-					.then(result => {
-						return result.json();
-					})
-					.then(result => {
-						return result;
-					})
-					.catch(err => {
-						console.error(err);
-					});
-				if (Globalseventv && Globalseventv.emotes) {
-					Globalseventv = Globalseventv.emotes.reduce((acc, emote) => {
-						const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`;
-						if (emote.flags) {
-							acc[emote.name] = { url: imageUrl, zw: true };
-						} else {
-							acc[emote.name] = imageUrl;
-						}
-						return acc;
-					}, {});
-					setItemWithExpiry("globalseventv", Globalseventv);
-				} else {
-					Globalseventv = [];
-				}
-			} else {
-				log("Globalseventv recovererd from storage");
-			}
-		}
+		if (!Globalseventv) await loadGlobalEmotes("seventv", loadGlobalSEVENTV).ready;
 		if (Globalseventv) {
 			if (!seventv) {
 				seventv = {};
@@ -5143,35 +5186,7 @@ async function getFFZEmotes(url = false, type = null, channel = null) {
 			}
 		}
 
-		if (!Globalffz) {
-			Globalffz = getItemWithExpiry("globalffz");
-
-			if (!Globalffz) {
-				// Use FFZ API to get global emotes
-				Globalffz = await fetch("https://api.frankerfacez.com/v1/set/global")
-					.then(result => result.json())
-					.catch(err => {
-						console.error(err);
-					});
-				if (Globalffz && Globalffz.sets) {
-					Globalffz = Object.values(Globalffz.sets)
-						.flatMap(set =>
-							set.emoticons.map(emote => ({
-								[emote.name]: {
-									url: emote.urls["1"], // Use 1x size as default
-									zw: emote.modifier // FFZ uses 'modifier' flag for zero-width emotes
-								}
-							}))
-						)
-						.reduce((acc, curr) => Object.assign(acc, curr), {});
-					setItemWithExpiry("globalffz", Globalffz);
-				} else {
-					Globalffz = {};
-				}
-			} else {
-				log("Globalffz recovered from storage");
-			}
-		}
+		if (!Globalffz) await loadGlobalEmotes("ffz", loadGlobalFFZ).ready;
 		if (Globalffz) {
 			if (!ffz) {
 				ffz = {};
@@ -5758,6 +5773,14 @@ async function processIncomingMessage(message, sender = null) {
 			}
 		}
 
+		// A caption SSN posted to chat is already shown as a caption. When that chat sends it back and
+		// the sender is a known host, the copy is dropped here. Caption posts are tracked apart from the
+		// text match below, so they can never make it hide a viewer who typed the same words.
+		const captionReturn = window.ssnCaptions ? window.ssnCaptions.checkReturn(message) : "";
+		if (captionReturn === "own") {
+			return;
+		}
+
 		let reflection = false;
 
 		// checkExactDuplicateAlreadyReceived only does work if there was a message responsein the last 10 seconds.
@@ -5769,6 +5792,13 @@ async function processIncomingMessage(message, sender = null) {
 
 		if (reflection === null) {
 			reflection = true;
+		}
+
+		// The same words as a caption post, from a sender who is not a known host: maybe the host's own
+		// copy, maybe a viewer. Keep it, but do not relay it, answer it or read it aloud.
+		if (captionReturn === "unknown") {
+			reflection = true;
+			message.meta = Object.assign({}, message.meta && typeof message.meta === "object" ? message.meta : {}, { captionCopy: true });
 		}
 
 		if (reflection) {
@@ -5999,6 +6029,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			const activeViewerCountTypes = new Set(Object.keys(buildViewerCountsFromMetaStore()));
 			Object.keys(viewerCounts).forEach(sourceKey => activeViewerCountTypes.add(sourceKey.split("-")[0]));
 			sendResponse({ state: isExtensionOn, viewerCountSources: Array.from(activeViewerCountTypes).filter(Boolean) });
+		} else if (request.cmd && request.cmd === "getCaptionStatus") {
+			// Connection state of the captions source, for the popup.
+			sendResponse({ state: isExtensionOn, captions: window.ssnCaptions ? window.ssnCaptions.getStatus() : null });
 		} else if (request.cmd && request.cmd === "getSettings") {
 			ensureHandleStatusCache();
 			const cohostCapability = await getOpenAIRealtimeCohostCapability();
@@ -7256,6 +7289,13 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			if (!settings.disabletiktokpoke && hasSenderTabId && senderTabUrl) {
 				pokeSite(senderTabUrl, senderTabId);
 			}
+		} else if ("postingAccount" in request) {
+			// A source says which account it sends chat with, so SSN can tell its own posts coming back
+			// from someone else typing the same words.
+			if (window.ssnCaptions && hasSenderTabId) {
+				window.ssnCaptions.setAccount(senderTabId, request.postingAccount);
+			}
+			sendResponse({ state: isExtensionOn });
 		} else if ("keepAlive" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 			const keepAliveMessage = {};
@@ -8205,7 +8245,8 @@ function hasTargetedMetaPayload(message) {
 	}
 	if (message.meta && typeof message.meta === "object" && !Array.isArray(message.meta)) {
 		const metaKeys = Object.keys(message.meta);
-		if (metaKeys.length === 1 && metaKeys[0] === "webhookId") {
+		// captionCopy only marks a chat row; it is not data for the meta overlays.
+		if (metaKeys.length === 1 && (metaKeys[0] === "webhookId" || metaKeys[0] === "captionCopy")) {
 			return false;
 		}
 	}
@@ -8244,29 +8285,18 @@ async function sendToDestinations(message, individualLikeAlreadyRouted, pendingC
 		if (message.chatmessage) {
 			// Relay boundary: sanitize HTML-mode chatmessage only. textonly=true is literal text, so bypass HTML parsing/filtering and preserve the flag.
 			if (!message.textonly) {
-				if (settings.bttv) {
-					if (!Globalbttv) {
-						await getBTTVEmotes();
-					}
-					if (Globalbttv) {
-						message.chatmessage = replaceEmotesWithImages(message.chatmessage, Globalbttv);
-					}
+				const bttvLoad = settings.bttv && !Globalbttv && loadGlobalEmotes("bttv", loadGlobalBTTV).forChat;
+				const sevenTvLoad = settings.seventv && !Globalseventv && loadGlobalEmotes("seventv", loadGlobalSEVENTV).forChat;
+				const ffzLoad = settings.ffz && !Globalffz && loadGlobalEmotes("ffz", loadGlobalFFZ).forChat;
+				if (bttvLoad || sevenTvLoad || ffzLoad) await Promise.all([bttvLoad, sevenTvLoad, ffzLoad]);
+				if (settings.bttv && Globalbttv) {
+					message.chatmessage = replaceEmotesWithImages(message.chatmessage, Globalbttv);
 				}
-				if (settings.seventv) {
-					if (!Globalseventv) {
-						await getSEVENTVEmotes();
-					}
-					if (Globalseventv) {
-						message.chatmessage = replaceEmotesWithImages(message.chatmessage, Globalseventv, true);
-					}
+				if (settings.seventv && Globalseventv) {
+					message.chatmessage = replaceEmotesWithImages(message.chatmessage, Globalseventv, true);
 				}
-				if (settings.ffz) {
-					if (!Globalffz) {
-						await getFFZEmotes();
-					}
-					if (Globalffz) {
-						message.chatmessage = replaceEmotesWithImages(message.chatmessage, Globalffz, true);
-					}
+				if (settings.ffz && Globalffz) {
+					message.chatmessage = replaceEmotesWithImages(message.chatmessage, Globalffz, true);
 				}
 				message.chatmessage = filterXSS(message.chatmessage);
 			} //else {
@@ -8316,6 +8346,21 @@ async function sendToDestinations(message, individualLikeAlreadyRouted, pendingC
 
 		if (isEventBlockedByCustomFilter(message)) {
 			return false;
+		}
+
+		// Captions are speech, not chat. They are shown in the dock and overlays and saved to history,
+		// and take none of the exits further down: no audience room, credits, translation, giveaway,
+		// poll, map, word cloud, GIF command, sticker reward, H2R, webhook, Discord or Streamer.bot.
+		if (message.type === "captions") {
+			if (pendingCapture && pendingCapture.cancelled) return false;
+			try {
+				sendDataP2P(message);
+			} catch (e) {
+				console.error(e);
+			}
+			sendToDisk(message);
+			message.idx = await addMessageDB(message);
+			return true;
 		}
 
 		var individualLikeRouting = routeIndividualLikeEvent(message, !!individualLikeAlreadyRouted);
@@ -11538,6 +11583,27 @@ async function routeStreamDeckRemoteRequest(request, context) {
 				result: router.makeError(request, validation.code || "INVALID_REQUEST", validation.message || "The remote-control request is invalid.")
 			};
 		}
+	}
+	// The Captions page sends what the host said. It needs the same host permission as the buttons below.
+	if (request.operatorRelay === true && request.action === "caption") {
+		if (!isExtensionOn || settings.disablehost) return { kind: "command", result: router.makeError(request, "CONTROL_UNAVAILABLE", "Social Stream is off.") };
+		const caption = request.value && typeof request.value === "object" ? request.value : {};
+		// A linked Caption.Ninja capture page also publishes each caption to its public room. It gives
+		// its publisher id here, and each caption's id, so SSN can pair the two copies and show one.
+		if (caption.linked === true) {
+			if (!window.ssnCaptions || !window.ssnCaptions.linkPublisher(caption.pub)) {
+				return { kind: "command", result: router.makeError(request, "INVALID_VALUE", "A publisher id is needed.") };
+			}
+			return { kind: "command", result: router.makeResponse(request, { accepted: true }, "accepted") };
+		}
+		if (typeof caption.text === "string" && caption.text.length > 2000) {
+			return { kind: "command", result: router.makeError(request, "PAYLOAD_TOO_LARGE", "A caption is limited to 2000 characters.") };
+		}
+		// This page reaches SSN over the session's own connection, so its captions count as the host's.
+		if (!window.ssnCaptions || typeof caption.text !== "string" || !window.ssnCaptions.addPrivateCopy(caption.text, typeof caption.name === "string" ? caption.name : "", window.ssnCaptions.pairKey(caption.pub, caption.id), window.ssnCaptions.partOf(caption.at, caption.of))) {
+			return { kind: "command", result: router.makeError(request, "INVALID_VALUE", "A caption needs some text.") };
+		}
+		return { kind: "command", result: router.makeResponse(request, { accepted: true }, "accepted") };
 	}
 	// These existing OBS buttons predate the versioned Stream Deck action list.
 	// Keep their ordinary host behavior, scoped to operator-page requests.
@@ -17441,6 +17507,37 @@ function isWebsocketSourceTabUrl(url) {
 	return !!(url && url.includes("/sources/websocket/") && (url.includes("socialstream.ninja") || url.startsWith("file://") || url.startsWith("chrome-extension://")));
 }
 
+// Sends a caption post to a WebSocket source and waits for the source's own answer, in the
+// extension and in SSApp alike. Resolves "sent", "busy" (the source was in the middle of another
+// send and attempted nothing) or "failed" (refused, unknown, or no answer in time).
+function sendCaptionToWebsocketSourceTab(tabId, message) {
+	return new Promise(resolve => {
+		let settled = false;
+		const finish = outcome => {
+			if (settled) return;
+			settled = true;
+			clearTimeout(timer);
+			resolve(outcome);
+		};
+		const timer = setTimeout(() => finish("failed"), 12000);
+		try {
+			const pending = chrome.tabs.sendMessage(tabId, { type: "SEND_MESSAGE", message: message, messageOrigin: "caption", detail: true }, function (response) {
+				chrome.runtime.lastError;
+				if (response && typeof response === "object") {
+					finish(response.ok === true ? "sent" : response.busy === true ? "busy" : "failed");
+				} else {
+					finish(response === true ? "sent" : "failed");
+				}
+			});
+			if (pending && typeof pending.catch === "function") {
+				pending.catch(() => finish("failed"));
+			}
+		} catch (e) {
+			finish("failed");
+		}
+	});
+}
+
 function relayMessageToWebsocketSourceTab(tabId, message, messageOrigin = "relay", youtubeReplyVideoId) {
 	try {
 		chrome.tabs.sendMessage(
@@ -17611,6 +17708,27 @@ async function dispatchRelayMessageToTab(tab, data, options = {}) {
 	}
 
 	if (isWebsocketSourceTabUrl(url) || (isSSAPP && tab.virtualSourceTarget === "discord")) {
+		if (messageOrigin === "caption") {
+			// A caption post is recorded first, so its returning copy is recognised however fast the chat
+			// echoes it. Then it waits for the source to say whether it really sent it: the caption queue
+			// sends nothing more to this chat until that answer arrives, and retries if the source was busy.
+			relayTabContext.storeMessage(data.response);
+			const outcome = await sendCaptionToWebsocketSourceTab(tab.id, data.response);
+			// Reported per chat tab: with two tabs of one platform, only the one that was busy is asked again.
+			if (Array.isArray(data.captionOutcomes)) {
+				data.captionOutcomes.push({ tab: tab.id, outcome: outcome });
+			}
+			if (outcome === "sent") {
+				lastSentMessage = sanitizeMessageForTracking(data.response, false);
+				lastSentTimestamp = Date.now();
+				lastMessageCounter = 0;
+				messageTimeout[tab.id] = Date.now();
+			} else if (outcome === "busy" && window.ssnCaptions) {
+				// Nothing was attempted, so no copy will come back for this record.
+				window.ssnCaptions.forgetPost(tab.id, checkExactDuplicateAlreadyRelayed(String(data.response), false, false, true));
+			}
+			return;
+		}
 		if (relayMessageToWebsocketSourceTab(tab.id, data.response, messageOrigin, data.youtubeReplyVideoId)) {
 			relayTabContext.storeMessage(data.response);
 			lastSentMessage = sanitizeMessageForTracking(data.response, false);
@@ -17772,9 +17890,16 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 
 	lastAntiSpam = messageCounter;
 
+	// Stage TEN is sent to here, before the chat tabs are filtered by destination. A caption post names
+	// the one chat it is for: it goes to Stage TEN only when Stage TEN is that chat, and then without
+	// the copy to Social Stream Chat that the Stage TEN helper also sends.
 	if (settings.s10apikey && settings.s10) {
 		try {
-			handleStageTen(data, metadata);
+			if (messageOrigin !== "caption") {
+				handleStageTen(data, metadata);
+			} else if (String(data.destination || "").toLowerCase() === "stageten") {
+				sendToS10({ chatmessage: data.response, type: "socialstream", chatimg: "https://socialstream.ninja/icons/icon-128.png" }, true);
+			}
 		} catch (e) {}
 	}
 
@@ -17839,7 +17964,8 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 		await processRelayTabBatch(tabs, published, !hasSpecificTids || needsValidation ? tab => isValidTab(tab, routingData, reverse, published, now, overrideTimeout, relayMode, { chatbotDestinationRoles, relayRoleAllowList, relayRoleBlockList }) : null, processTab);
 
 		// If no platform match was found, fall back to matching a custom destination against the tab URL.
-		if (routingData.destination && !processedAnyTab) {
+		// Not for caption posts: those go to the picked chat type or nowhere.
+		if (routingData.destination && !processedAnyTab && messageOrigin !== "caption") {
 			published = {};
 			await processRelayTabBatch(tabs, published, tab => isValidTab(tab, routingData, reverse, published, now, overrideTimeout, relayMode, { destinationMode: "url", chatbotDestinationRoles, relayRoleAllowList, relayRoleBlockList }), processTab);
 		}
@@ -17884,6 +18010,11 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
 
 // Helper function to handle message store
 function handleMessageStore(tabId, msg2Save, now, relayMode, origin = "relay") {
+	// Caption posts are tracked by the captions module, apart from the text-only reflection check.
+	if (origin === "caption" && window.ssnCaptions) {
+		window.ssnCaptions.recordPost(tabId, msg2Save, now);
+		return;
+	}
 	try {
 		if (!messageStore[tabId]) {
 			messageStore[tabId] = [];
@@ -19915,7 +20046,7 @@ async function applyBotActions(data, tab = false, userFiltersOnly = false) {
 		}
 
 		const emoteOnlyModeEnabled = !!(settings.emoteonlymode && (settings.emoteonlymode.setting ?? settings.emoteonlymode));
-		if (emoteOnlyModeEnabled && hadOriginalChatMessage) {
+		if (emoteOnlyModeEnabled && originalChatMessage) {
 			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 			const emoteOnlyMessage = await buildEmoteOnlyMessage(data.chatmessage || "", Boolean(data.textonly || settings.textonlymode));
 			data.chatmessage = emoteOnlyMessage;
