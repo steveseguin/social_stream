@@ -39,8 +39,9 @@
                 socket.send(JSON.stringify({ join: session.split(',')[0], out: requestChannel, in: 7 }));
                 // Only read current state. Never replay a start/reset on reconnect.
                 function request() {
-                    if (socket.readyState === 1 && ['poll', 'hype', 'map', 'timer', 'ticker', 'spotify', 'music'].indexOf(target) !== -1) {
-                        socket.send(JSON.stringify({ ssnControlRequest: { target: target, client: client } }));
+                    var requestTarget = target === 'tipjar' && options && options.versus ? 'versus' : target;
+                    if (socket.readyState === 1 && ['poll', 'hype', 'map', 'timer', 'ticker', 'spotify', 'music', 'versus'].indexOf(requestTarget) !== -1) {
+                        socket.send(JSON.stringify({ ssnControlRequest: { target: requestTarget, client: client } }));
                     }
                 }
                 request();

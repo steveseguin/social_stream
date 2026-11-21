@@ -15681,6 +15681,21 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						log("ignore callback for this action");
 					});
 				}
+			} else if (msg.cmd == "resetversus"){
+				if (confirm("Start a new Versus race at 0 for your side?")){
+					chrome.runtime.sendMessage(msg, function (response) {
+						log("ignore callback for this action");
+					});
+				}
+			} else if (msg.cmd == "setversuscount"){
+				var versusCount = parseFloat(msg.value);
+				if (isNaN(versusCount) || versusCount < 0){
+					alert("Enter your count first.");
+					return;
+				}
+				chrome.runtime.sendMessage(msg, function (response) {
+					log("ignore callback for this action");
+				});
 			} else if (msg.cmd == "resettipjar"){
 				var confirmResetTipJar = confirm("Reset the connected Tip Jar/Goal to 0?");
 				if (confirmResetTipJar){

@@ -7517,6 +7517,10 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		} else if (request.cmd && request.cmd === "resettipjar") {
 			sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
 			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "resetversus") {
+			sendResponse({ state: isExtensionOn, success: !!(window.versusService && window.versusService.reset()) });
+		} else if (request.cmd && request.cmd === "setversuscount") {
+			sendResponse({ state: isExtensionOn, success: !!(window.versusService && window.versusService.setCount(request.value)) });
 		} else if (request.cmd && request.cmd === "resetmetastats") {
 			sendTargetP2P({ cmd: "resetmetastats" }, "meta");
 			sendResponse({ state: isExtensionOn });
@@ -8454,6 +8458,9 @@ async function sendToDestinations(message, individualLikeAlreadyRouted, pendingC
 	var isAlertMessage = !!(message && (message.event || isDonationMessage));
 	var excludeFromDockAsAlert = !!(settings.excludeAlertsDock && isAlertMessage && !isDonationAlert);
 	var isReactionMessage = reactionEventName === "reaction";
+
+	// The Versus board's score is kept by this host, so a copy of the board that opens late still shows it.
+	if (window.versusService) window.versusService.count(message);
 
 	try {
 		if (!excludeFromDockAsAlert) {
@@ -13844,7 +13851,7 @@ function prepareOverlayControl(data, target) {
 		(target === "poll" && (data.settings || data.setting || data.cmd)) || (target === "hype" && data.hype) ||
         (target === "map" && (data.settings || data.setting || ["startmap", "pausemap", "resetmap"].includes(data.cmd))) ||
         (target === "timer" && data.timer) || (target === "ticker" && data.ticker) || (target === "spotify" && data.spotify) || (target === "music" && data.music) ||
-        (target === "tipjar" && ["resettipjar", "settipjaramount"].includes(data.cmd)) ||
+        (target === "tipjar" && (["resettipjar", "settipjaramount"].includes(data.cmd) || data.versusState)) ||
         (target === "meta" && ["resetmetastats", "metastats"].includes(data.cmd)) ||
         ((target === "alerts" || target === "dock") && data.action === "eventOverlayControl" && data.surface === (target === "alerts" ? "alerts" : "events")) || (target === "alerts" && data.action === "clearAlerts") || (target === "bot" && data.action === "clearBotOverlay") ||
         (target === "wordcloud" && (data.chatmessage || "state" in data)) || (target === "gif" && data.contentimg) ||
@@ -13920,7 +13927,11 @@ function handleOverlayControlRequest(data, socket, replyChannel, allowSnapshot) 
 	}
 	if (!allowSnapshot) return true;
 	var request = data.ssnControlRequest, packet;
-	if (request.target === "poll") {
+	if (request.target === "versus" && window.versusService) {
+		const score = window.versusService.snapshot();
+		if (!score) return true;
+		packet = prepareOverlayControl({ versusState: score }, "tipjar");
+	} else if (request.target === "poll") {
 		packet = prepareOverlayControl({ settings: settings }, "poll");
 
 	} else if (request.target === "hype") {
@@ -15940,6 +15951,13 @@ async function processIncomingRequest(request, UUID = false) {
 	if (request && request.ssnControlRequest && request.ssnControlRequest.target === "leaderboard" && UUID) {
 		if (isExtensionOn) {
 			await broadcastPointsLeaderboard("connected", undefined, packet => sendDataP2P(packet, UUID));
+		}
+		return true;
+	}
+	if (request && request.action === "requestVersusScore" && UUID) {
+		if (isExtensionOn && window.versusService) {
+			const score = window.versusService.snapshot();
+			if (score) sendDataP2P({ versusState: score }, UUID);
 		}
 		return true;
 	}

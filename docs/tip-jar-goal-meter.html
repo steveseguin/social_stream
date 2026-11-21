@@ -233,6 +233,27 @@
                     <p>Each new supporter adds one, and donations are ignored. The paid option also adds one for each gifted sub and leaves out renewals. The Counter shows the picture and name of the latest supporter, and takes the same theme, accent, opacity, and total size options as the panels.</p>
                     <p>YouTube subscribers need the YouTube WebSocket (API) source. YouTube is checked every five minutes and only reports people whose subscriptions are public, so that count can run late and low.</p>
 
+                    <h3 id="versus">Race a friend for new followers</h3>
+                    <p>The Versus board puts two channels side by side, each with its own count of new followers. It is in beta, so both of you run the beta version of Social Stream Ninja, swap session IDs, and add the same link to OBS as a browser source:</p>
+                    <p><code>https://socialstream.ninja/beta/tipjar.html?session=YOUR_SESSION&amp;session2=FRIENDS_SESSION&amp;style=versus&amp;name=You&amp;name2=Friend</code></p>
+                    <figure class="guide-figure">
+                        <img src="images/guides/tip-jar-versus.jpg" alt="Versus board with two channels at 12 and 4 new followers, and pie tallies of 0 and 2." class="guide-image guide-image-medium" loading="lazy" width="640" height="430">
+                        <figcaption>Every 5 new followers on one side lands a pie on the other.</figcaption>
+                    </figure>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>I want to&hellip;</th><th>Add to the link</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="I want to">Land a reward on the other side for every 5 new followers</td><td data-label="Add to the link"><code>&amp;every=5</code></td></tr>
+                            <tr><td data-label="I want to">Make the reward a pie</td><td data-label="Add to the link"><code>&amp;everyicon=pie</code> &middot; also <code>star</code>, or an emoji</td></tr>
+                            <tr><td data-label="I want to">Count followers from some platforms only</td><td data-label="Add to the link"><code>&amp;tipjarsource=youtube,twitch</code></td></tr>
+                            <tr><td data-label="I want to">Show a picture for each side</td><td data-label="Add to the link"><code>&amp;avatar=IMAGE_LINK&amp;avatar2=IMAGE_LINK</code></td></tr>
+                            <tr><td data-label="I want to">Pick each side's colour</td><td data-label="Add to the link"><code>&amp;accent=%23b388ff&amp;accent2=%23ffb347</code></td></tr>
+                        </tbody>
+                    </table>
+                    <p>This style is set up from the link and is not in the Display Style list. Each of you keeps your own count in Social Stream Ninja, so both streams show the same score, even when one overlay opens late or reloads.</p>
+                    <p>Each of you presses <strong>Reset my Versus count</strong> in the Tip Jar settings when the race starts. The board uses the follow time for Twitch and YouTube, and counts TikTok follows as they arrive. Use <strong>Set my Versus count</strong> to correct your side.</p>
+                    <p>YouTube and Twitch followers arrive through their WebSocket (API) sources, and YouTube has to be signed in as the channel owner. TikTok follows come through the normal TikTok capture.</p>
+
                     <h3>Count subs and memberships too</h3>
                     <ol class="guide-steps">
                         <li>Turn on <strong>Hype Cup Scoring</strong>.</li>
