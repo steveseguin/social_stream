@@ -7019,98 +7019,64 @@ details.wrapper[open] > .collapsible-text {
 				</div>
 			</div>
 
-			<div class="link beginner-basic" title="Posts what you say to your chats." data-keywords="captions caption subtitles closed captions cc speech voice microphone mic transcript speech to text stt dictate talk speak voice to chat" data-panel-section="captions">
+			<div class="link beginner-basic" data-keywords="captions caption subtitles closed captions cc speech voice microphone mic transcript speech to text stt dictate talk speak voice to chat" data-panel-section="captions">
 				<h2 class="captions_title">
-					<span class="title-group"><span class="emoji" aria-hidden="true">🎙️</span><span>Captions</span></span>
-					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy captions link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
-					<label for="help-captions" class="help-link rounded_area" tabindex="0" role="button" title="Click for detailed help">?</label>
+					<span class="title-group"><span class="emoji" aria-hidden="true">🎙️</span><span data-translate="captions-title">Captions</span></span>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy microphone link" data-copy="true"><span data-translate="captions-copy-mic">Copy microphone link</span></button>
+					<label for="help-captions" class="help-link rounded_area" tabindex="0" role="button" title="Captions guide">?</label>
 				</h2>
 				<input type="checkbox" id="help-captions" class="link-help-toggle">
 				<div class="link-help-content">
-					<strong>Your voice, posted to your chats.</strong>
-					<p>Open the link, click <strong>Start listening</strong> and speak. Each finished sentence is posted to every connected chat from your own account, so it shows up in your dock like anything else you type there.</p>
-					<ul>
-						<li>In Chrome or Edge it uses the browser's speech recognition, in many languages</li>
-						<li>In the desktop app it uses recognition built into the app, in English</li>
-						<li>Pick chats below to post to only some of them, or keep captions in your dock only</li>
-						<li>Keep the page open while you stream</li>
-					</ul>
-					<p class="popup-guide-link"><a href="https://socialstream.ninja/beta/docs/index.html?file=captions.md" target="_blank" rel="noopener">📖 Captions guide</a></p>
+					<p class="popup-guide-link"><a href="https://socialstream.ninja/beta/docs/index.html?file=captions.md" target="_blank" rel="noopener">📖 <span data-translate="captions-guide">Captions guide</span></a></p>
 				</div>
-				<p class="popup-section-description"><span>Speak, and your words are posted to your chats.</span></p>
+				<p class="popup-section-description"><span data-translate="captions-intro">Open the microphone link to start listening.</span></p>
 				<div id="captions" data-raw="" class="streaming_chat"><a href="" id="captionslink"></a></div>
 			</div>
 
 			<div class="wrapper beginner-basic" data-panel-section="captions">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-captions-post-options" />
-					<label class="collapsible-label" for="wrapper-captions-post-options"><span>💬 Where captions go</span></label>
+					<label class="collapsible-label" for="wrapper-captions-post-options"><span aria-hidden="true">💬</span> <span data-translate="captions-where">Where captions go</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group">
 								<div data-keywords="captions post chat destinations connected where status choose">
 									<span id="captionsTargetsStatus" role="status"></span>
 									<span id="captionsChoice" hidden>
-										<button type="button" id="captionsChoosePost" class="popup-secondary-button" title="Posts what you say to your chats, from your own account. Asked once, so that speech never goes public by itself.">Post to my chats</button>
-										<button type="button" id="captionsChooseDock" class="popup-secondary-button" title="Shows your captions in the dock and overlays only. Nothing is posted.">Dock only</button>
+										<button type="button" id="captionsChoosePost" class="popup-secondary-button" title="Your chat posts use your own account." data-translate="captions-post">Post to my chats</button>
+										<button type="button" id="captionsChooseDock" class="popup-secondary-button" title="Dock only, do not post to chat" data-translate="captions-dock">My dock only</button>
 									</span>
 								</div>
 								<div data-keywords="captions post chat destinations platforms pick choose only twitch youtube kick">
-									<div class="textInputContainer" style="width: 95%;" title="Captions are posted to every connected chat, from your own account. Pick chats here to post to those only. This covers the Captions page and a Caption.Ninja page linked to SSN, never captions that are only read from a room.">
-										<input type="text" id="captionstargets" class="textInput instant" autocomplete="off" placeholder="All connected chats" data-textsetting="captionstargets" />
-										<label for="captionstargets"><span class="popup-control-icon" aria-hidden="true">🎯</span>Only post to these chats</label>
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="captionstargets" class="textInput instant" autocomplete="off" data-textsetting="captionstargets" />
+										<label for="captionstargets"><span class="popup-control-icon" aria-hidden="true">🎯</span><span data-translate="captions-targets">Only post to these chats</span></label>
 									</div>
 								</div>
-								<div class="isolate" title="Translates your captions for one chat, or for the dock when Dock only is on. A chat with a language gets that language or nothing, never the words as spoken. It does not add a chat: it only changes the language of one already in use. Uses the translator chosen under Auto Translate." data-keywords="captions translate translation language spanish french german per chat multilingual">
+								<div class="isolate" data-keywords="captions translate translation language spanish french german per chat multilingual">
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" id="captionslanguages" class="textInput instant hidden" autocomplete="off" data-textsetting="captionslanguages" />
-										<label for="captionsLanguageWhere"><span class="popup-control-icon" aria-hidden="true">🌐</span>Translate for a chat</label>
+										<label for="captionsLanguageWhere"><span class="popup-control-icon" aria-hidden="true">🌐</span><span data-translate="captions-translate">Translate for a chat or dock</span></label>
 									</div>
 									<div id="captionslanguagesList" class="source-list-container"></div>
 									<div class="add-source-container">
-										<select id="captionsLanguageWhere" aria-label="Chat to translate for"><option value="" selected>Select chat</option><option value="dock">SSN dock</option></select>
-										<select id="captionsLanguageTo" aria-label="Language to translate into"><option value="" selected>Language</option></select>
-										<button type="button" id="captionsLanguageAdd">Add</button>
+										<select id="captionsLanguageWhere"><option value="" selected data-translate="captions-select">Select chat</option><option value="dock" data-translate="captions-ssn-dock">SSN dock</option></select>
+										<select id="captionsLanguageTo" title="Subtitle language"><option value="" selected data-translate="captions-language">Language</option></select>
+										<button type="button" id="captionsLanguageAdd" data-translate="captions-add">Add</button>
 									</div>
 								</div>
 								<div data-keywords="captions post chat delay spacing batch seconds rate">
-									<div class="textInputContainer" style="display: inline-grid; width: 160px;" title="Wait at least this long between posts to each chat, joining what you said in between. 0 posts every caption on its own.">
+									<div class="textInputContainer" style="display: inline-grid; width: 160px;" title="Set to 0 to post each caption separately.">
 										<input type="number" id="captionsgap" class="textInput" min="0" max="120" value="0" autocomplete="off" data-numbersetting="captionsgap" />
-										<label for="captionsgap"><span class="popup-control-icon" aria-hidden="true">⏱️</span>Seconds between posts</label>
+										<label for="captionsgap"><span class="popup-control-icon" aria-hidden="true">⏱️</span><span data-translate="captions-gap">Seconds between posts</span></label>
 									</div>
 								</div>
-								<div title="Shows your captions straight in the dock and overlays, marked CC, under the first of your hosts' names. Nothing is posted to any chat." data-keywords="captions dock only local overlay no post private do not post chat">
+								<div title="Dock only, do not post to chat" data-keywords="captions dock only local overlay no post private do not post chat">
 									<label class="switch">
-										<input type="checkbox" data-setting="captionsdockonly" />
+										<input type="checkbox" aria-labelledby="label-captions-dock-switch" data-setting="captionsdockonly" />
 										<span class="slider round"></span>
 									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">🖥️</span>Dock only, do not post to chat</span>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<div class="wrapper beginner-basic" data-panel-section="captions">
-				<div class="collapsible">
-					<input type="checkbox" class="collapsible-input" id="wrapper-captions-page-options" />
-					<label class="collapsible-label" for="wrapper-captions-page-options"><span>🎙️ Captions page options</span></label>
-					<div class="collapsible-text">
-						<div class="options">
-							<div class="options_group">
-								<div title="The language you speak. Left on the page's choice, the page starts in your browser's language and remembers what you pick there." data-keywords="captions language speech recognition microphone spoken">
-									<span><span class="popup-control-icon" aria-hidden="true">🌐</span>Language</span>
-									<select id="captionsLanguage" data-optionparam34="lang">
-										<option value="">Chosen on the page</option>
-									</select>
-								</div>
-								<div title="Starts listening as soon as the page opens, once the browser has been allowed to use the microphone." data-keywords="captions autostart automatic start listening microphone">
-									<label class="switch">
-										<input type="checkbox" data-param34="autostart" />
-										<span class="slider round"></span>
-									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">▶️</span>Start listening when the page opens</span>
+									<span><span class="popup-control-icon" aria-hidden="true">🖥️</span><span id="label-captions-dock-switch" data-translate="captions-dock-switch">Dock only, do not post to chat</span></span>
 								</div>
 							</div>
 						</div>
@@ -7121,57 +7087,58 @@ details.wrapper[open] > .collapsible-text {
 			<div class="wrapper beginner-basic" data-panel-section="captions">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-captions-overlay-options" />
-					<label class="collapsible-label" for="wrapper-captions-overlay-options"><span>🖼️ Captions overlay for OBS</span></label>
+					<label class="collapsible-label" for="wrapper-captions-overlay-options"><span aria-hidden="true">🖼️</span> <span data-translate="captions-overlay">Captions overlay for OBS</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group">
 								<div data-keywords="captions overlay open connected status obs">
 									<span id="captionsOverlayStatus" role="status"></span>
 								</div>
-								<div class="link beginner-basic" style="margin:0;" title="Shows what you say as subtitles on your stream, including the words still being spoken. Add this link as a browser source in OBS. Open the Captions page as well: that is where the listening happens." data-keywords="captions overlay obs browser source subtitles closed captions live text on stream">
-									<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy captions overlay link to clipboard" data-copy="true"><span data-translate="copy">Copy link</span></button>
+								<div class="link beginner-basic" style="margin:0;" title="In OBS, add a Browser source and paste the overlay link." data-keywords="captions overlay obs browser source subtitles closed captions live text on stream">
+									<p class="popup-section-description"><span data-translate="captions-obs-how">In OBS, add a Browser source and paste the overlay link.</span></p>
+									<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy overlay link" data-copy="true"><span data-translate="captions-copy-obs">Copy overlay link</span></button>
 									<div id="captionsoverlay" data-raw="" class="single_message"><a href="" id="captionsoverlaylink"></a></div>
 								</div>
-								<div title="Shows the captions translated into this language. A translated overlay shows finished sentences only. Each overlay link has its own language, so two OBS sources can show two languages." data-keywords="captions overlay language translate translation spanish french">
-									<span><span class="popup-control-icon" aria-hidden="true">🌐</span>Language</span>
+								<div data-keywords="captions overlay language translate translation spanish french">
+									<label for="captionsOverlayLanguage"><span class="popup-control-icon" aria-hidden="true">🌐</span><span data-translate="captions-subtitle-language">Subtitle language</span></label>
 									<select id="captionsOverlayLanguage" data-optionparam35="lang">
-										<option value="">As spoken</option>
+										<option value="" data-translate="captions-as-spoken">As spoken</option>
 									</select>
 								</div>
 								<div data-keywords="captions overlay lines rows how many">
-									<span><span class="popup-control-icon" aria-hidden="true">📄</span>Lines shown</span>
-									<select data-optionparam35="lines">
+									<label for="captionsOverlayLines"><span class="popup-control-icon" aria-hidden="true">📄</span><span data-translate="captions-lines">Lines shown</span></label>
+									<select id="captionsOverlayLines" data-optionparam35="lines">
 										<option value="">2</option>
 										<option value="1">1</option>
 										<option value="3">3</option>
 										<option value="4">4</option>
 									</select>
 								</div>
-								<div title="How long a finished sentence stays on screen." data-keywords="captions overlay seconds duration show time stay">
-									<span><span class="popup-control-icon" aria-hidden="true">⏱️</span>A line stays for</span>
-									<select data-optionparam35="showtime">
-										<option value="">6 seconds</option>
-										<option value="3">3 seconds</option>
-										<option value="10">10 seconds</option>
-										<option value="20">20 seconds</option>
-										<option value="0">Until newer lines replace it</option>
+								<div data-keywords="captions overlay seconds duration show time stay">
+									<label for="captionsOverlayShowtime"><span class="popup-control-icon" aria-hidden="true">⏱️</span><span data-translate="captions-duration">Display time</span></label>
+									<select id="captionsOverlayShowtime" data-optionparam35="showtime">
+										<option value="" data-translate="captions-seconds-6">6 seconds</option>
+										<option value="3" data-translate="captions-seconds-3">3 seconds</option>
+										<option value="10" data-translate="captions-seconds-10">10 seconds</option>
+										<option value="20" data-translate="captions-seconds-20">20 seconds</option>
+										<option value="0" data-translate="captions-keep">Until replaced</option>
 									</select>
 								</div>
 								<div data-keywords="captions overlay font size text bigger smaller">
-									<span><span class="popup-control-icon" aria-hidden="true">🔠</span>Text size</span>
-									<select data-optionparam35="fontsize">
-										<option value="">Medium</option>
-										<option value="28">Small</option>
-										<option value="54">Large</option>
-										<option value="72">Extra large</option>
+									<label for="captionsOverlayFontsize"><span class="popup-control-icon" aria-hidden="true">🔠</span><span data-translate="captions-size">Text size</span></label>
+									<select id="captionsOverlayFontsize" data-optionparam35="fontsize">
+										<option value="" data-translate="captions-medium">Medium</option>
+										<option value="28" data-translate="captions-small">Small</option>
+										<option value="54" data-translate="captions-large">Large</option>
+										<option value="72" data-translate="captions-xl">Extra large</option>
 									</select>
 								</div>
 								<div data-keywords="captions overlay align left center right position">
-									<span><span class="popup-control-icon" aria-hidden="true">↔️</span>Alignment</span>
-									<select data-optionparam35="align">
-										<option value="">Center</option>
-										<option value="left">Left</option>
-										<option value="right">Right</option>
+									<label for="captionsOverlayAlign"><span class="popup-control-icon" aria-hidden="true">↔️</span><span data-translate="captions-align">Alignment</span></label>
+									<select id="captionsOverlayAlign" data-optionparam35="align">
+										<option value="" data-translate="captions-center">Center</option>
+										<option value="left" data-translate="captions-left">Left</option>
+										<option value="right" data-translate="captions-right">Right</option>
 									</select>
 								</div>
 							</div>
@@ -7182,27 +7149,53 @@ details.wrapper[open] > .collapsible-text {
 
 			<div class="wrapper beginner-basic" data-panel-section="captions">
 				<div class="collapsible">
-					<input type="checkbox" class="collapsible-input" id="wrapper-captions-captionninja-options" />
-					<label class="collapsible-label" for="wrapper-captions-captionninja-options"><span>🔗 Captions from Caption.Ninja</span></label>
+					<input type="checkbox" class="collapsible-input" id="wrapper-captions-page-options" />
+					<label class="collapsible-label" for="wrapper-captions-page-options"><span aria-hidden="true">🎙️</span> <span data-translate="captions-mic-options">Microphone options</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group">
-								<div title="Opens Caption.Ninja linked privately to this SSN session, so its captions count as yours and can be posted to chat. Keep that page's address to yourself. The overlay link it shows is still safe to share." data-keywords="captions caption ninja link private connect post chat speech microphone">
-									<span class="popup-control-icon" aria-hidden="true">🔗</span>
-									<a target="_blank" rel="noopener" class="options-link rounded_area" id="captions_cn_url" href="https://caption.ninja/">Open Caption.Ninja linked to SSN</a>
+								<div data-keywords="captions language speech recognition microphone spoken">
+									<label for="captionsLanguage"><span class="popup-control-icon" aria-hidden="true">🌐</span><span data-translate="captions-spoken">Spoken language</span></label>
+									<select id="captionsLanguage" data-optionparam34="lang">
+										<option value="" data-translate="captions-on-page">Chosen on the page</option>
+									</select>
 								</div>
-								<div title="Shows what is said in your Caption.Ninja room as messages in the dock and overlays. These captions are never posted to chat, because anyone who has the room name can add to them." data-keywords="captions caption ninja subtitles closed captions cc speech voice microphone transcript speech to text stt room">
+								<div title="Start listening when the page opens" data-keywords="captions autostart automatic start listening microphone">
 									<label class="switch">
-										<input type="checkbox" data-setting="captionninja" />
+										<input type="checkbox" aria-labelledby="label-captions-autostart" data-param34="autostart" />
+										<span class="slider round"></span>
+									</label>
+									<span><span class="popup-control-icon" aria-hidden="true">▶️</span><span id="label-captions-autostart" data-translate="captions-autostart">Start listening when the page opens</span></span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="wrapper beginner-basic" data-panel-section="captions">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-captions-captionninja-options" />
+					<label class="collapsible-label" for="wrapper-captions-captionninja-options"><span aria-hidden="true">🔗</span> <span data-translate="captions-cn">Captions from Caption.Ninja</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<div data-keywords="captions caption ninja link private connect post chat speech microphone">
+									<span class="popup-control-icon" aria-hidden="true">🔗</span>
+									<a target="_blank" rel="noopener" class="options-link rounded_area" id="captions_cn_url" title="Keep this microphone link private." href="https://caption.ninja/" data-translate="captions-cn-link">Open Caption.Ninja linked to SSN</a>
+								</div>
+								<div title="Room captions appear in the dock and overlays." data-keywords="captions caption ninja subtitles closed captions cc speech voice microphone transcript speech to text stt room">
+									<label class="switch">
+										<input type="checkbox" aria-labelledby="label-captions-cn-show" data-setting="captionninja" />
 										<span class="slider round"></span>
 									</label>
 									<img class="icon" src="./sources/images/captions.png" alt="" style="display: inline-block;" />
-									Show Caption.Ninja captions as messages
+									<span id="label-captions-cn-show" data-translate="captions-cn-show">Show captions from a room</span>
 								</div>
 								<div data-keywords="captions caption ninja room link subtitles speech voice">
-									<div class="textInputContainer" style="display: inline-grid; width: 250px;" title="The room from your Caption.Ninja page. You can paste its overlay link.">
+									<div class="textInputContainer" style="display: inline-grid; width: 250px;">
 										<input type="text" id="captionninjaroom" class="textInput" autocomplete="off" placeholder="Room name or Caption.Ninja link" data-textsetting="captionninjaroom" />
-										<label for="captionninjaroom"><span class="popup-control-icon" aria-hidden="true">🔗</span>Caption.Ninja room</label>
+										<label for="captionninjaroom"><span class="popup-control-icon" aria-hidden="true">🔗</span><span data-translate="captions-room">Caption.Ninja room</span></label>
 									</div>
 									<span id="captionsStatus" role="status"></span>
 								</div>
@@ -18461,7 +18454,7 @@ details.wrapper[open] > .collapsible-text {
         <script src="shared/alerts/sound-library.js"></script>
         <link rel="stylesheet" href="popup-ui.css">
         <script src="shared/captions/languages.js"></script>
-        <script type="text/javascript" src="popup.js?v=7"></script>
+        <script type="text/javascript" src="popup.js?v=8"></script>
         <script src="js/popup-capture-reminder.js"></script>
         <script src="shared/stickers/catalog.js"></script>
         <script src="shared/stickers/popup.js"></script>

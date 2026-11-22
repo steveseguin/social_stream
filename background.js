@@ -5733,6 +5733,7 @@ function cancelPendingModeratedCaptures(deletion) {
 		} else if (deletion.type === "twitch" && deletion.meta && deletion.meta.pluralmind && deletion.username) {
 			if (message.username !== deletion.username) return;
 		} else if (deletion.chatname && message.chatname !== deletion.chatname) return;
+		// A platform-only delete intentionally cancels every pending capture in its scope.
 		matches.push(pending);
 	});
 	if (deletion.onlyLast && !deletion.id && !(deletion.meta && deletion.meta.messageId)) matches.splice(0, Math.max(0, matches.length - 1));
@@ -6656,6 +6657,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			sendResponse({ state: isExtensionOn });
 		} else if ("delete" in request) {
 			sendResponse({ state: isExtensionOn });
+			// Forward platform-only deletes: the sender can request a platform clear without a message ID or user.
 			if (isExtensionOn && (request.delete.type || request.delete.chatname || request.delete.id)) {
 				forgetLocalCensorMessages(request.delete, sender?.tab);
 				cancelPendingModeratedCaptures(request.delete);

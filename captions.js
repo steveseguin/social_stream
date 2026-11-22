@@ -11,12 +11,11 @@
 	// The desktop app's own windows have the speech recognition API but no speech service behind it,
 	// so the browser's recogniser never works there. The app runs Whisper locally instead (English
 	// only), and the page asks the app whether it may use that. Older app versions say no.
+	var t = window.SSNPageI18n.t;
 	var insideDesktopApp = typeof window.ninjafy === "object" && window.ninjafy !== null;
 	var Recognition = insideDesktopApp ? null : window.SpeechRecognition || window.webkitSpeechRecognition;
 	var Desktop = insideDesktopApp ? window.SSNDesktopCaptionRecognition : null;
 	var desktop = insideDesktopApp ? "checking" : ""; // "checking", "unavailable", or what the app says it can do
-	var BROWSER_NOTE = "Uses this browser's speech recognition and your default microphone. Keep this tab open while you stream.";
-	var DESKTOP_NOTE = "Uses speech recognition built into the desktop app, with your default microphone. It recognises English, and downloads about 42 MB the first time. Chrome or Edge is quicker and knows more languages: copy this page's link to use one. Keep this window open while you stream.";
 	var LANGUAGES = window.SSN_CAPTION_LANGUAGES || [];
 
 	var MAX_SEND_LENGTH = 1500;
@@ -34,6 +33,8 @@
 	var unanswered = 0; // "Where do captions go" queries in a row that SSN did not answer.
 	var silent = false; // SSN is connected but not answering this page.
 	var needsChoice = false; // SSN says the host has not yet chosen where their captions go.
+	var lastWhere = null;
+	var hostUnavailable = false;
 	var overlayOpen = false; // SSN says a captions overlay is open, so words in progress are worth sending.
 	var liveSent = "";
 	var liveLanguage = "";
@@ -86,37 +87,37 @@
 	function progressText(status) {
 		var phase = status && status.phase;
 		if (phase === "speech") {
-			return "Hearing you…";
+			return t("captions-listening", "Listening");
 		}
 		if (phase === "transcribing" || phase === "queued") {
-			return "Working out what you said…";
+			return t("captions-transcribing", "Recognising speech…");
 		}
 		if (phase === "model-download-needed") {
-			return "Downloading speech recognition (about 42 MB, once)…";
+			return t("captions-model", "Downloading speech recognition (42 MB)…");
 		}
 		if (phase === "download") {
-			return "Downloading speech recognition… " + Math.round(status.progress || 0) + "%";
+			return t("captions-model", "Downloading speech recognition (42 MB)…") + " " + Math.round(status.progress || 0) + "%";
 		}
 		if (phase === "model-loading") {
-			return "Getting speech recognition ready…";
+			return t("captions-readying", "Preparing microphone…");
 		}
 		if (phase === "busy") {
-			return "Still catching up, so the last phrase was skipped.";
+			return t("captions-busy", "Recognition is busy. The last phrase was skipped.");
 		}
 		return "";
 	}
 
 	function render() {
-		$("phase").textContent = listening ? "Listening" : "Stopped";
+		$("phase").textContent = listening ? t("captions-listening", "Listening") : t("captions-stopped", "Stopped");
 		$("phase").className = listening ? "phase on" : "phase";
-		$("mode").textContent = connected ? "Connected" : "Not connected";
+		$("mode").textContent = connected ? t("captions-connected", "Connected") : t("captions-offline", "Not connected");
 		$("mode").className = connected ? "" : "off";
 		$("start").disabled = listening || !canListen() || !session;
 		$("stop").disabled = !listening;
 		// Offered wherever Chrome or Edge would do better: always in the desktop app, and in a browser
 		// that cannot listen.
 		$("copy").hidden = !session || (!insideDesktopApp && !!Recognition && !serviceMissing);
-		var note = insideDesktopApp ? (desktopReady() ? DESKTOP_NOTE : "") : BROWSER_NOTE;
+		var note = insideDesktopApp ? (desktopReady() ? t("captions-desktop-note", "Keep this window open. The desktop microphone recognises English after you pause. For other languages, open the microphone link in Chrome or Edge.") : "") : t("captions-browser-note", "Keep this tab open while you speak. It uses your default microphone.");
 		$("note").textContent = note;
 		$("note").hidden = !note;
 		// Opened without a session (from a guide or a bookmark): ask for it rather than sit there disabled.
@@ -127,16 +128,17 @@
 		$("controls").hidden = needsChoice;
 		var message = notice;
 		if (insideDesktopApp && desktop === "checking") {
-			message = "Checking the desktop app's speech recognition…";
-		} else if (insideDesktopApp && !desktopReady()) {
-			message = "This version of the desktop app cannot listen to a microphone. Update the app, or copy this page's link and open it in Chrome or Edge.";
+			message = t("captions-readying", "Preparing microphone…");
+		} else if (insideDesktopApp ? !desktopReady() : !Recognition) {
+			message = t("captions-no-speech", "Speech recognition is unavailable here.") + " " + t("captions-use-browser", "Copy the microphone link and open it in Chrome or Edge.");
 		} else if (insideDesktopApp && !englishChosen()) {
-			message = "The desktop app recognises English only. Choose English, or copy this page's link and open it in Chrome or Edge.";
-		} else if (!insideDesktopApp && !Recognition) {
-			message = "This browser has no speech recognition. Open this page in Chrome or Edge.";
+			message = t("captions-english", "The desktop app recognises English only.") + " " + t("captions-use-browser", "Copy the microphone link and open it in Chrome or Edge.");
 		}
-		if (!message && silent && connected) {
-			message = "Social Stream Ninja is not answering this page. Check that it is switched on and that its host functions are not disabled.";
+		if (!message && session && !connected) {
+			message = t("captions-enable", "Switch on Social Stream Ninja");
+		}
+		if (!message && (silent || hostUnavailable) && connected) {
+			message = t("captions-not-answering", "SSN cannot receive captions. Check that SSN is on and host functions are enabled.");
 		}
 		// Nothing is said when all is well: the buttons, Listening and the line below say enough.
 		$("message").textContent = message;
@@ -164,8 +166,10 @@
 			unanswered = 0;
 			// A refusal (SSN is off, or will not take captions) leaves nothing true to say here.
 			showWhere(result && result.ok !== false ? result.payload : null);
-			if (silent) {
+			var unavailable = !!(result && result.ok === false);
+			if (silent || hostUnavailable !== unavailable) {
 				silent = false;
+				hostUnavailable = unavailable;
 				render();
 			}
 			return;
@@ -176,7 +180,8 @@
 		clearTimeout(pendingRequests[id]);
 		delete pendingRequests[id];
 		if (result && result.ok === false) {
-			say((result.error && result.error.message) || "Social Stream did not accept that caption.", true);
+			console.warn("Caption not accepted:", result.error);
+			say(t("captions-unsent", "Caption not sent. Check the connection to SSN."), true);
 			return;
 		}
 		showWhere(result && result.payload);
@@ -188,6 +193,7 @@
 	// Where captions are going, as SSN reports it: the chats they are posted to, the dock only, or
 	// nowhere because no chat is connected. An SSN that does not report it leaves the line empty.
 	function showWhere(payload) {
+		lastWhere = payload;
 		var line = $("where");
 		if (payload && typeof payload.overlay === "boolean") {
 			overlayOpen = payload.overlay;
@@ -215,16 +221,17 @@
 		var none = false;
 		var languages = (payload && payload.languages) || {};
 		if (payload && payload.dock === true) {
-			text = languages.dock ? "Captions go to your dock only, in " + languageName(languages.dock.to) + "." : "Captions go to your dock only.";
+			text = t("captions-dock-status", "Sending captions to your dock") + (languages.dock ? " (" + languageName(languages.dock.to) + ")" : "");
 		} else if (chats && chats.length) {
-			text = "Posting to: " + chats.map(function (chat) {
+			var names = chats.map(function (chat) {
 				return languages[chat] ? chat + " (" + languageName(languages[chat].to) + ")" : chat;
 			}).join(", ");
+			text = t("captions-posting", "Posting to {chats}", { chats: names });
 			if (payload.failed > 0) {
-				text += " (" + payload.failed + " not sent)";
+				text += " · " + t("captions-failed", "Not sent: {n}", { n: payload.failed });
 			}
 		} else if (chats) {
-			text = "No chat is connected in Social Stream Ninja, so captions have nowhere to go. Open your chats there.";
+			text = t("captions-no-chats", "No chat connected for posting");
 			none = true;
 		}
 		line.textContent = text;
@@ -235,7 +242,7 @@
 
 	function languageName(code) {
 		try {
-			return new Intl.DisplayNames(["en"], { type: "language" }).of(code) || code;
+			return new Intl.DisplayNames([document.documentElement.lang || "en"], { type: "language" }).of(code) || code;
 		} catch (e) {
 			return code;
 		}
@@ -253,9 +260,9 @@
 			}
 			seen[entry.to] = true;
 			var name = languageName(entry.to);
-			var note = entry.state === "preparing" ? "Preparing " + name : entry.state === "unsupported" ? name + " is not available with this translator" : name + " could not be prepared; trying again";
+			var note = entry.state === 'preparing' ? t("captions-preparing", "Preparing {language}", { language: name }) : entry.state === 'unsupported' ? t("captions-unavailable", "Unavailable: {language}", { language: name }) : t("captions-retrying", "Retrying {language}", { language: name });
 			if (entry.skipped > 0) {
-				note += " · " + entry.skipped + (entry.skipped === 1 ? " caption skipped" : " captions skipped");
+				note += " · " + t("captions-skipped", "Skipped: {n}", { n: entry.skipped });
 			}
 			notes.push(note);
 		});
@@ -334,6 +341,7 @@
 		var list = $("earlier");
 		if (captionsHeard) {
 			var item = document.createElement("li");
+			item.dir = "auto";
 			item.textContent = $("heard").textContent;
 			list.insertBefore(item, list.firstChild);
 			while (list.children.length > 4) {
@@ -360,14 +368,14 @@
 		}
 		remember(text);
 		if (!connection || !connection.ready()) {
-			say("Not connected to Social Stream, so that was not sent.", true);
+			say(t("captions-unsent", "Caption not sent. Check the connection to SSN."), true);
 			return;
 		}
 		requestCounter += 1;
 		var id = "captions-" + Date.now() + "-" + requestCounter;
 		pendingRequests[id] = setTimeout(function () {
 			delete pendingRequests[id];
-			say("Social Stream did not confirm the last caption. Is it switched on?", true);
+			say(t("captions-not-answering", "SSN cannot receive captions. Check that SSN is on and host functions are enabled."), true);
 		}, 8000);
 		try {
 			connection.send({
@@ -381,7 +389,7 @@
 		} catch (e) {
 			clearTimeout(pendingRequests[id]);
 			delete pendingRequests[id];
-			say("Not connected to Social Stream, so that was not sent.", true);
+			say(t("captions-unsent", "Caption not sent. Check the connection to SSN."), true);
 		}
 	}
 
@@ -438,27 +446,21 @@
 				return;
 			}
 			if (event.error === "not-allowed" || event.error === "service-not-allowed") {
-				halt("The microphone is blocked for this page. Allow it, then start again.");
+				halt(t("captions-allow", "Allow microphone access, then start listening again."));
 			} else if (event.error === "audio-capture") {
-				halt("No microphone was found.");
+				halt(t("captions-missing", "No microphone found."));
 			} else if (event.error === "language-not-supported") {
-				halt("This browser cannot recognise that language.");
+				halt(t("captions-unsupported", "Choose another spoken language."));
 			} else if (event.error === "network" || event.error === "local-failed") {
 				// "local-failed" is the desktop app's own recognition going wrong.
 				serviceFailures += 1;
 				if (!heardAnything && serviceFailures >= 3) {
 					serviceMissing = true;
-					halt(insideDesktopApp ? "The desktop app's speech recognition is not working. Copy this page's link and open it in Chrome or Edge." : "The speech service could not be reached. Some browsers do not have one: open this page in Chrome or Edge.");
+					halt(t("captions-no-speech", "Speech recognition is unavailable here.") + " " + t("captions-use-browser", "Copy the microphone link and open it in Chrome or Edge."));
 					return;
 				}
 				restartDelay = Math.min(restartDelay * 2, 10000);
-				if (!insideDesktopApp) {
-					say("The speech service could not be reached. Trying again.");
-				} else if (event.error === "network") {
-					say("Speech recognition could not be downloaded. Trying again.");
-				} else {
-					say("The desktop app's speech recognition had a problem. Trying again.");
-				}
+				say(t("captions-retry", "Speech recognition interrupted. Trying again…"));
 			}
 			// "no-speech" and "aborted" just lead to the next session.
 		};
@@ -558,12 +560,12 @@
 
 	function setupLanguage() {
 		var select = $("language");
-		var wanted = params.get("lang") || stored("language") || navigator.language || "en-US";
+		var wanted = params.get("lang") || stored("language") || (insideDesktopApp ? "en-US" : navigator.language) || "en-US";
 		var match = "";
 		LANGUAGES.forEach(function (entry) {
 			var option = document.createElement("option");
 			option.value = entry[0];
-			option.textContent = entry[1];
+			option.textContent = languageName(entry[0]);
 			select.appendChild(option);
 			if (entry[0].toLowerCase() === wanted.toLowerCase()) {
 				match = entry[0];
@@ -605,10 +607,20 @@
 		$("stop").addEventListener("click", stop);
 		$("copy").addEventListener("click", function () {
 			var done = function () {
-				$("copy").textContent = "Link copied";
+				$("copy").textContent = t("captions-copied", "Link copied");
 			};
 			try {
 				var link = new URL(location.href);
+				if (link.hostname === "cache.socialstream.ninja") {
+					var betaMirror = link.pathname.indexOf("/beta/") === 0;
+					link.hostname = betaMirror ? "beta.socialstream.ninja" : "socialstream.ninja";
+					if (betaMirror) link.pathname = link.pathname.slice(5);
+				} else if (link.protocol === "file:" || link.protocol === "chrome-extension:" || link.protocol === "moz-extension:") {
+					// SSApp can open a packaged main copy or an unpacked development copy.
+					var packagedMain = link.pathname.indexOf("/social_stream_fallback/main/") !== -1;
+					var site = packagedMain ? "https://socialstream.ninja/" : "https://beta.socialstream.ninja/";
+					link = new URL("captions.html" + link.search + link.hash, site);
+				}
 				link.searchParams.set("lang", $("language").value);
 				navigator.clipboard.writeText(link.href).then(done, function () {});
 			} catch (e) {}
@@ -641,6 +653,7 @@
 		if (session && typeof window.SSNOperatorConnection === "function") {
 			connection = window.SSNOperatorConnection(params, session, receive, function (isConnected) {
 				connected = !!isConnected;
+				hostUnavailable = false;
 				render();
 				whereRequests = {};
 				unanswered = 0;
@@ -678,5 +691,14 @@
 		}
 	}
 
+	window.addEventListener("ssn-page-language-changed", function () {
+		document.title = t("captions-title", "Captions") + " | Social Stream Ninja";
+		render();
+		showWhere(lastWhere);
+		if (!captionsHeard) $("heard").textContent = t("captions-empty", "Nothing yet.");
+		Array.prototype.forEach.call($("language").options, function (option) {
+			option.textContent = languageName(option.value);
+		});
+	});
 	setup();
 })();

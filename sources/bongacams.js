@@ -1,8 +1,8 @@
 (function () {
-	if (!/(^|\.)bongacams\.com$/.test(location.hostname)) return;
+	var moderationHost = /(^|\.)bongacams\.com$/.test(location.hostname);
 	function room() { return location.pathname.toLowerCase().replace(/\/$/, ""); }
 	function startModerationReader() {
-		if (window.__ssnCamModerationReader) return;
+		if (!moderationHost || window.__ssnCamModerationReader) return;
 		window.__ssnCamModerationReader = true;
 		var attached, waiting = [];
 		var detach;
@@ -64,6 +64,7 @@
 		try { chrome.runtime.sendMessage(chrome.runtime.id, { delete: { type: "bongacams", meta: { messageId: id } } }, function () {}); } catch (_) {}
 	}
 	function trackModeration(row, data) {
+		if (!moderationHost) return true;
 		if (deletedRows.has(row)) return false;
 		var element = row.matches(".msg_row") ? row : row.querySelector(".msg_row");
 		var match = element && element.className.match(/(?:^|\s)js-chat_msg_(\d+)(?:\s|$)/);
@@ -80,7 +81,7 @@
 		trim(records);
 		return true;
 	}
-	document.addEventListener("ssn-cam-moderation", function (event) {
+	if (moderationHost) document.addEventListener("ssn-cam-moderation", function (event) {
 		try {
 			var data = JSON.parse(event.detail);
 			if (!data || data.type !== "bongacams" || data.room !== room()) return;
@@ -98,7 +99,7 @@
 		} catch (_) {}
 	});
 	if (window.ninjafy) startModerationReader();
-	document.dispatchEvent(new Event("ssn-bongacams-moderation-ready"));
+	if (moderationHost) document.dispatchEvent(new Event("ssn-bongacams-moderation-ready"));
 
 
 	var settings = {};

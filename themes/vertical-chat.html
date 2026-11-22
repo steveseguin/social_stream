@@ -612,6 +612,7 @@ body.collection-chat.style-music .message::after { right: 0.7em; width: 2.4em; h
                 return message.dataset.userid === String(d.userid);
             }
             if (d.chatname && message.dataset.chatname !== String(d.chatname)) { return false; }
+            // Without a message ID, match the supplied user or platform. A platform alone intentionally matches all its messages.
             return !!(d.chatname || d.type);
         }, onlyLast || d.onlyLast);
     }

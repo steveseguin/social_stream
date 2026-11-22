@@ -454,6 +454,7 @@ body, html {
             if (deleteData.type && message.dataset.sourceType !== String(deleteData.type)) {
                 return false;
             }
+            // Without a message ID, match the supplied user or platform. A platform alone intentionally matches all its messages.
             return !!(deleteData.chatname || deleteData.type);
         }, onlyLast || deleteData.onlyLast);
     }

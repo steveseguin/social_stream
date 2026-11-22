@@ -1,8 +1,8 @@
 (function () {
-	if (!/(^|\.)stripchat\.com$/.test(location.hostname)) return;
+	var moderationHost = /(^|\.)stripchat\.com$/.test(location.hostname);
 	function room() { return location.pathname.toLowerCase().replace(/\/$/, ""); }
 	function startModerationReader() {
-		if (window.__ssnCamModerationReader) return;
+		if (!moderationHost || window.__ssnCamModerationReader) return;
 		window.__ssnCamModerationReader = true;
 		var attached, waiting = [];
 		var detach;
@@ -82,6 +82,7 @@
 		try { chrome.runtime.sendMessage(chrome.runtime.id, { delete: { type: "stripchat", meta: { messageId: id } } }, function () {}); } catch (_) {}
 	}
 	function trackModeration(row, data) {
+		if (!moderationHost) return true;
 		if (deletedRows.has(row)) return false;
 		var native = row.getAttribute("data-message-id");
 		var id = native ? native : rowIds.get(row);
@@ -96,7 +97,7 @@
 		trim(records);
 		return true;
 	}
-	document.addEventListener("ssn-cam-moderation", function (event) {
+	if (moderationHost) document.addEventListener("ssn-cam-moderation", function (event) {
 		try {
 			var data = JSON.parse(event.detail);
 			if (!data || data.type !== "stripchat" || data.room !== room()) return;
@@ -114,7 +115,7 @@
 		} catch (_) {}
 	});
 	if (window.ninjafy) startModerationReader();
-	document.dispatchEvent(new Event("ssn-stripchat-moderation-ready"));
+	if (moderationHost) document.dispatchEvent(new Event("ssn-stripchat-moderation-ready"));
 
 
 	var settings = {};

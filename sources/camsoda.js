@@ -1,8 +1,8 @@
 (function () {
-	if (!/(^|\.)camsoda\.com$/.test(location.hostname)) return;
+	var moderationHost = /(^|\.)camsoda\.com$/.test(location.hostname);
 	function room() { return location.pathname.toLowerCase().replace(/\/$/, ""); }
 	function startModerationReader() {
-		if (window.__ssnCamModerationReader) return;
+		if (!moderationHost || window.__ssnCamModerationReader) return;
 		window.__ssnCamModerationReader = true;
 		var attached, waiting = [];
 		var detach, sodaHandler, sodaRoom = "";
@@ -81,6 +81,7 @@
 		try { chrome.runtime.sendMessage(chrome.runtime.id, { delete: { type: "camsoda", meta: { messageId: id } } }, function () {}); } catch (_) {}
 	}
 	function trackModeration(row, data) {
+		if (!moderationHost) return true;
 		if (deletedRows.has(row)) return false;
 		var id = rowIds.get(row);
 		if (!id) {
@@ -94,7 +95,7 @@
 		trim(records);
 		return true;
 	}
-	document.addEventListener("ssn-cam-moderation", function (event) {
+	if (moderationHost) document.addEventListener("ssn-cam-moderation", function (event) {
 		try {
 			var data = JSON.parse(event.detail);
 			if (!data || data.type !== "camsoda" || data.room !== room()) return;
@@ -110,7 +111,7 @@
 		} catch (_) {}
 	});
 	if (window.ninjafy) startModerationReader();
-	document.dispatchEvent(new Event("ssn-camsoda-moderation-ready"));
+	if (moderationHost) document.dispatchEvent(new Event("ssn-camsoda-moderation-ready"));
 
 	 
 	 

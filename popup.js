@@ -75,6 +75,8 @@ function applyPopupTranslationLanguageImmediately(lang) {
 			}
 			applyPopupTextDirection(normalized);
 			miniTranslate(document.body);
+			refreshCaptionLanguageLabels();
+			refreshCaptionsStatus();
 			renderHandleStatus();
 		})
 		.catch(function(error) {
@@ -244,7 +246,7 @@ function mergeHandleStatusFromBackground(statusMap = {}) {
 	}
 }
 
-function getHandleStatusTranslation(key, fallback, values = {}) {
+function formatPopupTranslation(key, fallback, values = {}) {
 	return String(getTranslation(key, fallback)).replace(/\{(\w+)\}/g, function(match, name) {
 		return Object.prototype.hasOwnProperty.call(values, name) ? values[name] : match;
 	});
@@ -252,23 +254,23 @@ function getHandleStatusTranslation(key, fallback, values = {}) {
 
 function getHandleStatusLabel(key, entry) {
 	const label = HANDLE_STATUS_LABELS[key] || ["file-status-selected-file", "Selected file"];
-	const fallback = getHandleStatusTranslation(label[0], label[1]);
+	const fallback = formatPopupTranslation(label[0], label[1]);
 	const fileName = entry.name || fallback;
 	switch (entry.status) {
 		case HANDLE_STATUS_STATES.ACTIVE:
-			return getHandleStatusTranslation("file-status-active", "Active: {file}", { file: fileName });
+			return formatPopupTranslation("file-status-active", "Active: {file}", { file: fileName });
 		case HANDLE_STATUS_STATES.READY:
-			return getHandleStatusTranslation("file-status-ready", "Ready: {file}", { file: fileName });
+			return formatPopupTranslation("file-status-ready", "Ready: {file}", { file: fileName });
 		case HANDLE_STATUS_STATES.NEEDS_PERMISSION:
 			return entry.name
-				? getHandleStatusTranslation("file-status-needs-permission-file", "Needs permission: {file}", { file: entry.name })
-				: getHandleStatusTranslation("file-status-needs-permission", "Needs permission");
+				? formatPopupTranslation("file-status-needs-permission-file", "Needs permission: {file}", { file: entry.name })
+				: formatPopupTranslation("file-status-needs-permission", "Needs permission");
 		case HANDLE_STATUS_STATES.ERROR:
 			return entry.name
-				? getHandleStatusTranslation("file-status-error-file", "Error: {file}", { file: entry.name })
-				: getHandleStatusTranslation("file-status-file-error", "File error");
+				? formatPopupTranslation("file-status-error-file", "Error: {file}", { file: entry.name })
+				: formatPopupTranslation("file-status-file-error", "File error");
 		default:
-			return getHandleStatusTranslation("file-status-none", "No file selected");
+			return formatPopupTranslation("file-status-none", "No file selected");
 	}
 }
 
@@ -278,10 +280,10 @@ function getHandleStatusDetail(key, entry) {
 	}
 	if (entry.status === HANDLE_STATUS_STATES.MISSING) {
 		const help = HANDLE_STATUS_HELP[key];
-		return help ? getHandleStatusTranslation(help[0], help[1]) : "";
+		return help ? formatPopupTranslation(help[0], help[1]) : "";
 	}
 	if (!entry.persisted && (entry.status === HANDLE_STATUS_STATES.ACTIVE || entry.status === HANDLE_STATUS_STATES.READY)) {
-		return getHandleStatusTranslation("file-status-reselect-after-reload", "Needs to be selected again after reloading.");
+		return formatPopupTranslation("file-status-reselect-after-reload", "Needs to be selected again after reloading.");
 	}
 	return "";
 }
@@ -2040,6 +2042,7 @@ function updateSourceTypeList(type) {
         const remove = document.createElement('button');
         remove.className = 'remove-source';
         remove.dataset.sourceType = source;
+        remove.setAttribute("aria-label", formatPopupTranslation("captions-remove", "Remove {name}", { name: source }));
         remove.textContent = '×';
         row.appendChild(label);
         row.appendChild(remove);
@@ -2490,7 +2493,7 @@ function setupSourceSelectTags(inputId) {
     addContainer.className = 'add-source-container';
     addContainer.innerHTML = `
         <select id="new${inputId}Type">
-            <option value="" selected>Select source</option>
+            <option value="" selected data-translate="captions-source">Select source</option>
         </select>
         <button id="add${inputId}">Add</button>
     `;
@@ -2500,6 +2503,8 @@ function setupSourceSelectTags(inputId) {
     container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
 
     const select = document.getElementById(`new${inputId}Type`);
+    miniTranslate(addContainer);
+    if (inputId === "captionstargets") container.querySelector("label").htmlFor = select.id;
     setupLazySourceSelect(select);
     ensureLazySourcesLoaded(function() {
         appendSourceOptions(select);
@@ -2543,22 +2548,23 @@ function refreshCaptionsStatus() {
             }
             if (where && targets) {
                 if (!targets.on) {
-                    where.textContent = 'Switch SSN on to post captions';
+                    where.textContent = getTranslation("captions-enable", "Switch on Social Stream Ninja");
                 } else if (targets.choose) {
                     // Posting is public, so it waits for the host to say so once.
-                    where.textContent = '⚠️ Choose where your captions go:';
+                    where.textContent = "⚠️ " + getTranslation("captions-choose", "Choose where your captions go");
                 } else if (targets.dockOnly) {
                     const dockLanguage = targets.languages && targets.languages.dock;
-                    where.textContent = '🖥️ Captions go to your dock only' + (dockLanguage ? ', in ' + captionLanguageName(dockLanguage.to) : '') + captionLanguageNotes(targets.languages || {});
+                    where.textContent = '🖥️ ' + getTranslation("captions-dock-status", "Sending captions to your dock") + (dockLanguage ? ' (' + captionLanguageName(dockLanguage.to) + ')' : '') + captionLanguageNotes(targets.languages || {});
                 } else if (document.querySelector('input[data-setting="disablehost"]:checked')) {
-                    where.textContent = '⚠️ Host functions are disabled in Settings, so nothing can be posted';
+                    where.textContent = "⚠️ " + getTranslation("captions-disabled", "Host functions are disabled in Settings");
                 } else if (targets.chats && targets.chats.length) {
                     const languages = targets.languages || {};
-                    where.textContent = '✅ Posting to: ' + targets.chats.map(function(chat) {
+                    const chats = targets.chats.map(function(chat) {
                         return languages[chat] ? chat + ' (' + captionLanguageName(languages[chat].to) + ')' : chat;
-                    }).join(', ') + (targets.failed > 0 ? ' (' + targets.failed + ' not sent)' : '') + captionLanguageNotes(languages);
+                    }).join(', ');
+                    where.textContent = '✅ ' + formatPopupTranslation("captions-posting", "Posting to {chats}", { chats }) + (targets.failed > 0 ? ' · ' + formatPopupTranslation("captions-failed", "Not sent: {n}", { n: targets.failed }) : '') + captionLanguageNotes(languages);
                 } else {
-                    where.textContent = '⚠️ No chat is connected, so captions have nowhere to go';
+                    where.textContent = getTranslation("captions-no-chats", "No chat connected for posting");
                 }
             }
             // Which captions overlays are open now, so the host can tell their OBS source connected.
@@ -2566,30 +2572,35 @@ function refreshCaptionsStatus() {
             if (overlayStatus && targets) {
                 const open = Array.isArray(targets.overlays) ? targets.overlays : [];
                 if (!targets.on) {
-                    overlayStatus.textContent = 'Switch SSN on to use the overlay';
+                    overlayStatus.textContent = getTranslation("captions-enable", "Switch on Social Stream Ninja");
+                } else if (!Array.isArray(targets.overlays)) {
+                    overlayStatus.textContent = getTranslation("captions-update", "Update or reload SSN to use the overlay");
                 } else if (!open.length) {
-                    overlayStatus.textContent = 'No overlay is open right now';
+                    overlayStatus.textContent = getTranslation("captions-no-overlay", "No overlay connected");
                 } else {
                     const waiting = {};
                     open.forEach(function(entry) { if (entry.to) waiting[entry.to] = entry; });
-                    overlayStatus.textContent = '✅ Open now: ' + open.map(function(entry) {
-                        return entry.to ? captionLanguageName(entry.to) : 'As spoken';
-                    }).join(', ') + (targets.choose ? ' · ⚠️ Choose where your captions go first' : captionLanguageNotes(waiting));
+                    const names = open.map(function(entry) {
+                        return entry.to ? captionLanguageName(entry.to) : getTranslation("captions-as-spoken", "As spoken");
+                    }).join(', ');
+                    overlayStatus.textContent = '✅ ' + formatPopupTranslation("captions-open", "Open now: {names}", { names }) + (targets.choose ? ' · ⚠️ ' + getTranslation("captions-choose", "Choose where your captions go") : captionLanguageNotes(waiting));
                 }
             }
             const captions = response && response.captions;
             if (!captions || !toggle.checked) return;
             if (captions.state === 'connected') {
                 const fromRoom = typeof captions.roomReceived === 'number' ? captions.roomReceived : captions.received;
-                status.textContent = fromRoom ? `✅ Connected · ${fromRoom} received` : '✅ Connected';
+                status.textContent = '✅ ' + getTranslation("captions-connected", "Connected") + (fromRoom ? ' · ' + formatPopupTranslation("captions-received", "Received: {n}", { n: fromRoom }) : '');
             } else if (captions.state === 'connecting') {
-                status.textContent = '⏳ Connecting…';
+                status.textContent = "⏳ " + getTranslation("captions-connecting", "Connecting…");
             } else if (captions.state === 'noroom') {
-                status.textContent = 'Enter your room';
+                status.textContent = getTranslation("captions-enter-room", "Enter your room name");
             } else if (captions.state === 'problem') {
-                status.textContent = '⚠️ ' + captions.problem;
+                status.textContent = '⚠️ ' + (captions.problem === "Private relay rooms are not supported."
+                    ? getTranslation("captions-private-room", "Private relay rooms cannot connect here. Use a public room.")
+                    : getTranslation("captions-invalid-room", "Enter a public Caption.Ninja room name or room link"));
             } else {
-                status.textContent = 'Turn SSN on to connect';
+                status.textContent = getTranslation("captions-enable", "Switch on Social Stream Ninja");
             }
         });
     } catch (e) {
@@ -2601,7 +2612,7 @@ function refreshCaptionsStatus() {
 // are kept in a hidden text setting as "youtube:es, dock:fr".
 function captionLanguageName(code) {
     try {
-        return new Intl.DisplayNames(['en'], { type: 'language' }).of(code) || code;
+        return new Intl.DisplayNames([document.documentElement.lang || 'en'], { type: 'language' }).of(code) || code;
     } catch (e) {
         return code;
     }
@@ -2616,8 +2627,8 @@ function captionLanguageNotes(languages) {
         if (!entry || entry.state === 'ready' || seen[entry.to]) return;
         seen[entry.to] = true;
         const name = captionLanguageName(entry.to);
-        let note = entry.state === 'preparing' ? 'Preparing ' + name : entry.state === 'unsupported' ? name + ' is not available with this translator' : name + ' could not be prepared; trying again';
-        if (entry.skipped > 0) note += ' · ' + entry.skipped + (entry.skipped === 1 ? ' caption skipped' : ' captions skipped');
+        let note = entry.state === 'preparing' ? formatPopupTranslation("captions-preparing", "Preparing {language}", { language: name }) : entry.state === 'unsupported' ? formatPopupTranslation("captions-unavailable", "Unavailable: {language}", { language: name }) : formatPopupTranslation("captions-retrying", "Retrying {language}", { language: name });
+        if (entry.skipped > 0) note += ' · ' + formatPopupTranslation("captions-skipped", "Skipped: {n}", { n: entry.skipped });
         notes.push(note);
     });
     return notes.length ? ' · ⏳ ' + notes.join('. ') : '';
@@ -2648,7 +2659,7 @@ function renderCaptionLanguageTags(states) {
     const input = document.getElementById('captionslanguages');
     const list = document.getElementById('captionslanguagesList');
     if (!input || !list) return;
-    const key = input.value + '|' + JSON.stringify(states || {});
+    const key = document.documentElement.lang + '|' + input.value + '|' + JSON.stringify(states || {});
     if (key === captionLanguageTagsShown) return;
     captionLanguageTagsShown = key;
     list.textContent = '';
@@ -2657,7 +2668,13 @@ function renderCaptionLanguageTags(states) {
         row.className = 'username-tag';
         const label = document.createElement('span');
         const state = states && states[tag.where] ? states[tag.where].state : '';
-        label.textContent = (tag.where === 'dock' ? 'SSN dock' : tag.where) + ' → ' + captionLanguageName(tag.to) + (state === 'preparing' ? ' (preparing)' : state === 'unsupported' ? ' (not available)' : state === 'failed' ? ' (could not be prepared)' : '');
+        const place = tag.where === 'dock' ? getTranslation("captions-ssn-dock", "SSN dock") : tag.where;
+        const language = captionLanguageName(tag.to);
+        let description = language;
+        if (state === 'preparing') description = formatPopupTranslation("captions-preparing", "Preparing {language}", { language });
+        if (state === 'unsupported') description = formatPopupTranslation("captions-unavailable", "Unavailable: {language}", { language });
+        if (state === 'failed') description = formatPopupTranslation("captions-retrying", "Retrying {language}", { language });
+        label.textContent = place + ' → ' + description;
         if (tag.where !== 'dock') {
             const sourceType = document.createElement('span');
             sourceType.className = 'source-type';
@@ -2672,7 +2689,7 @@ function renderCaptionLanguageTags(states) {
         remove.type = 'button';
         remove.className = 'remove-source';
         remove.dataset.captionLanguage = tag.where;
-        remove.setAttribute('aria-label', 'Remove ' + tag.where);
+        remove.setAttribute('aria-label', formatPopupTranslation("captions-remove", "Remove {name}", { name: place }));
         remove.textContent = '×';
         row.appendChild(label);
         row.appendChild(remove);
@@ -2733,10 +2750,26 @@ function setupCaptionsLanguages() {
         if (Array.prototype.some.call(select.options, function(option) { return option.value === entry[0]; })) return;
         const option = document.createElement('option');
         option.value = entry[0];
-        option.textContent = entry[1];
+        option.textContent = captionLanguageName(entry[0]);
         select.appendChild(option);
     });
     select.value = chosen;
+}
+
+function refreshCaptionLanguageLabels() {
+    if (document.body.classList.contains('hidelinks')) {
+        ['captions', 'captionsoverlay'].forEach(function(id) {
+            const link = document.getElementById(id + 'link');
+            if (link) link.textContent = hiddenLinkText(id);
+        });
+    }
+    ['captionsLanguage', 'captionsLanguageTo', 'captionsOverlayLanguage'].forEach(function(id) {
+        const select = document.getElementById(id);
+        if (!select) return;
+        Array.from(select.options).forEach(function(option) {
+            if (option.value) option.textContent = captionLanguageName(option.value);
+        });
+    });
 }
 
 function setupCaptionsStatus() {
@@ -4356,6 +4389,12 @@ function getGeneratedLinkParams(primaryElement, fallbackElement) {
   return "";
 }
 
+function hiddenLinkText(id) {
+  if (id === "captions") return getTranslation("captions-mic", "Microphone");
+  if (id === "captionsoverlay") return getTranslation("captions-overlay", "Captions overlay for OBS");
+  return "Click to open link";
+}
+
 function getGeneratedLinkDisplayUrl(element, url) {
   const value = typeof url === "string" ? url : "";
   const elementId = element && element.id ? element.id : "";
@@ -4375,12 +4414,12 @@ function setGeneratedLink(element, url) {
     link = element.querySelector("a");
   }
   if (!link) {
-    element.innerHTML = `<a target='_blank' id='${linkId}' href='${element.raw}'>${document.body.classList.contains("hidelinks") ? "Click to open link" : getGeneratedLinkDisplayUrl(element, element.raw)}</a>`;
+    element.innerHTML = `<a target='_blank' id='${linkId}' href='${element.raw}'>${document.body.classList.contains("hidelinks") ? escapeHtml(hiddenLinkText(element.id)) : getGeneratedLinkDisplayUrl(element, element.raw)}</a>`;
     return;
   }
 
   link.href = element.raw;
-  link.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : getGeneratedLinkDisplayUrl(element, element.raw);
+  link.innerText = document.body.classList.contains("hidelinks") ? hiddenLinkText(element.id) : getGeneratedLinkDisplayUrl(element, element.raw);
 }
 
 function moveChatOverlayThemeOptions() {
@@ -4620,7 +4659,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     
     if (element) {
       const linkStyle = page.style ? `style="${page.style}"` : "";
-	  element.innerHTML = `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${hideLinks ? "Click to open link" : visibleURL}</a>`;
+	  element.innerHTML = `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${hideLinks ? escapeHtml(hiddenLinkText(page.id)) : visibleURL}</a>`;
       element.raw = fullURL;
       syncSupportedServerParamsForTarget(page.id, element, serverParamTokenSource, page.path, serverParamTokens);
     }
@@ -5473,7 +5512,8 @@ function update(response, sync = true) {
                     applyPopupTextDirection(
                         response.settings.translationlanguage && response.settings.translationlanguage.optionsetting
                     );
-                    miniTranslate(document.body); // Assuming miniTranslate is defined
+                    miniTranslate(document.body);
+                    refreshCaptionLanguageLabels();
                 }
 
                 createTabsFromSettings(response); // Assuming createTabsFromSettings is defined
@@ -10175,7 +10215,7 @@ function refreshLinks(){
         linkElement.href = cleanedUrl; // Update the link's href
 
         // Update link's text based on hideLinks status
-        linkElement.innerText = currentHideLinks ? "Click to open link" : getGeneratedLinkDisplayUrl(divElement, cleanedUrl);
+        linkElement.innerText = currentHideLinks ? hiddenLinkText(divElement.id) : getGeneratedLinkDisplayUrl(divElement, cleanedUrl);
       }
     });
 

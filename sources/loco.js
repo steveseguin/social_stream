@@ -1,34 +1,44 @@
 (function () {
-	if (!/(^|\.)loco\.(com|gg)$/.test(location.hostname)) return;
 	function watchChatResponses() {
+		if (!/(^|\.)loco\.(com|gg)$/.test(location.hostname)) return;
 		if (window.__ssnLocoHistory || !window.Response) return;
 		window.__ssnLocoHistory = true;
 		var endpoint = /^https:\/\/api\.loco\.com\/chat\/v2\/streams\/([^/?]+)\/(history|chat|replaychat)\/?(?:\?|$)/;
-		var history = new Map();
-		var lateStreams = new Map();
-		// Older SSApp injects after navigation. If history was already read,
-		// use IDs from the site's live batches to distinguish late-rendered rows.
-		performance.getEntriesByType("resource").forEach(function (entry) {
-			var match = endpoint.exec(entry.name);
-			if (match && match[2] === "history") lateStreams.set(match[1], new Set());
-		});
+		var streams = new Map();
+		var injectedAt = performance.now();
+		function streamState(id) {
+			if (!streams.has(id)) {
+				streams.set(id, { history: null, live: new Set(), late: false });
+				if (streams.size > 8) streams.delete(streams.keys().next().value);
+			}
+			return streams.get(id);
+		}
+		function missedHistory(id, state) {
+			if (!window.ninjafy || state.history || state.late) return state.late;
+			// A history request can start before desktop injection and finish just
+			// before its rows render. Check the completed request at that point.
+			state.late = performance.getEntriesByType("resource").some(function (entry) {
+				if (entry.startTime > injectedAt) return false;
+				var match = endpoint.exec(entry.name);
+				return match && match[1] === id && match[2] === "history";
+			});
+			return state.late;
+		}
 		var json = Response.prototype.json;
 		Response.prototype.json = function () {
 			var result = json.apply(this, arguments);
 			var match = endpoint.exec(this.url);
-			if (!match || (match[2] !== "history" && !lateStreams.has(match[1]))) return result;
+			if (!match || (match[2] !== "history" && !window.ninjafy)) return result;
+			var state = streamState(match[1]);
 			return result.then(function (data) {
 				if (!data || !Array.isArray(data.chats)) return data;
-				var ids = match[2] === "history" ? new Set() : lateStreams.get(match[1]);
-				data.chats.forEach(function (chat) {
-					if (chat && chat.id) ids.add(String(chat.id));
-				});
 				if (match[2] === "history") {
-					history.set(match[1], ids);
-					if (history.size > 8) history.delete(history.keys().next().value);
-				} else {
-					while (ids.size > 5000) ids.delete(ids.values().next().value);
-					document.dispatchEvent(new Event("ssn-loco-live-batch"));
+					state.history = new Set();
+					data.chats.forEach(function (chat) { if (chat && chat.id) state.history.add(String(chat.id)); });
+				} else if (data.chats.length && (!state.history || state.late)) {
+					data.chats.forEach(function (chat) { if (chat && chat.id) state.live.add(String(chat.id)); });
+					while (state.live.size > 5000) state.live.delete(state.live.values().next().value);
+					if (missedHistory(match[1], state)) document.dispatchEvent(new Event("ssn-loco-live-batch"));
 				}
 				return data;
 			});
@@ -37,9 +47,8 @@
 			var row = event.target, list = row.closest && row.closest(".chat-elements-list");
 			if (!list) return;
 			var stream = list.id.replace(/^chat-(?:container|popup)-/, "");
-			var id = row.getAttribute("data-chat-message-id");
-			var known = history.get(stream), live = lateStreams.get(stream);
-			if ((known && known.has(id)) || (live && !live.has(id))) event.preventDefault();
+			var id = row.getAttribute("data-chat-message-id"), state = streamState(stream);
+			if ((state.history && state.history.has(id)) || (!state.live.has(id) && missedHistory(stream, state))) event.preventDefault();
 		});
 	}
 	if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.id) {

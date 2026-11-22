@@ -44,6 +44,7 @@
 		line.className = className;
 		var words = document.createElement("span");
 		words.className = "words";
+		words.dir = "auto";
 		line.appendChild(words);
 		box.appendChild(line);
 		return line;
@@ -215,7 +216,10 @@
 	} else {
 		// Opened without its link: say so, since an empty transparent page explains nothing.
 		var notice = document.getElementById("notice");
-		notice.textContent = "Open this overlay from the Captions section of the Social Stream Ninja menu, so it knows your session.";
+		var i18n = document.createElement("script");
+		i18n.src = "translations/page-i18n.js?v=2";
+		i18n.setAttribute("data-interface-language-only", "");
+		document.head.appendChild(i18n);
 		notice.hidden = false;
 	}
 

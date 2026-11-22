@@ -1,8 +1,8 @@
 (function () {
-	if (!/(^|\.)cam4\.com$/.test(location.hostname)) return;
+	var moderationHost = /(^|\.)cam4\.com$/.test(location.hostname);
 	function room() { return location.pathname.toLowerCase().replace(/\/$/, ""); }
 	function startModerationReader() {
-		if (window.__ssnCamModerationReader) return;
+		if (!moderationHost || window.__ssnCamModerationReader) return;
 		window.__ssnCamModerationReader = true;
 		var attached, waiting = [];
 		var cam4Require;
@@ -82,6 +82,7 @@
 		try { chrome.runtime.sendMessage(chrome.runtime.id, { delete: { type: "cam4", meta: { messageId: id } } }, function () {}); } catch (_) {}
 	}
 	function trackModeration(row, data) {
+		if (!moderationHost) return true;
 		var element = row.querySelector("[class*='ChatMessageTypes__msgPosition']") || row;
 		element.dispatchEvent(new CustomEvent("ssn-read-cam4-id", { bubbles: true }));
 		var native = element.getAttribute("data-ssn-cam4-id");
@@ -95,7 +96,7 @@
 		data.meta.messageId = id;
 		return true;
 	}
-	document.addEventListener("ssn-cam-moderation", function (event) {
+	if (moderationHost) document.addEventListener("ssn-cam-moderation", function (event) {
 		try {
 			var data = JSON.parse(event.detail);
 			if (!data || data.type !== "cam4" || data.room !== room()) return;
@@ -105,7 +106,7 @@
 		} catch (_) {}
 	});
 	if (window.ninjafy) startModerationReader();
-	document.dispatchEvent(new Event("ssn-cam4-moderation-ready"));
+	if (moderationHost) document.dispatchEvent(new Event("ssn-cam4-moderation-ready"));
 
 
 	var settings = {};

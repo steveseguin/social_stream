@@ -10,16 +10,21 @@
             : url.href;
     };
 
-    if (root.location.origin !== beta || typeof document === 'undefined') return;
+    if (typeof document === 'undefined') return;
     var script = document.currentScript;
     if (!script) return;
-    if (script.hasAttribute('data-asset-stylesheet')) {
+    if (root.location.origin === beta && script.hasAttribute('data-asset-stylesheet')) {
         // Relative images in this stylesheet resolve against the stylesheet's URL.
         var sheet = script.previousElementSibling;
         sheet.href = root.SSNHostedAssetURL(sheet.href);
     }
     if (script.hasAttribute('data-doc-media')) {
         function updateMedia() {
+            document.querySelectorAll('img[data-hosted-src]').forEach(function (image) {
+                image.src = root.SSNHostedAssetURL(image.getAttribute('data-hosted-src'), document.baseURI);
+                image.hidden = false;
+            });
+            if (root.location.origin !== beta) return;
             document.querySelectorAll('img[src], a[href], option[data-image]').forEach(function (element) {
                 var attr = element.tagName === 'IMG' ? 'src' : element.tagName === 'A' ? 'href' : 'data-image';
                 var value = element.getAttribute(attr);

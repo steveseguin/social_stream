@@ -223,6 +223,7 @@ assert.ok(
     location.search = query;
     const loaded = loadFunctions(["getSourceModeBase", "normalizeGeneratedLinkBase", "buildGeneratedUrl"], {
       location, window: { location }, Beta: false, baseURL: "https://socialstream.ninja/",
+      document: { querySelectorAll: () => [] },
       response: { streamID: "room&one" }, obsControlDockUrl: {}, getLocalServerConnectionParams: () => "",
     });
     vm.runInContext(popupSource.slice(initStart, initEnd) + popupSource.slice(baseStart, baseEnd) + directLink[0], loaded.sandbox);
@@ -651,7 +652,13 @@ assert.ok(popupSource.includes('input.value = currentLinkElement && currentLinkE
 assert.ok(popupSource.includes("input.select();"));
 assert.ok(popupSource.includes("refreshGeneratedConnectionLinks('session', xsx);"));
 assert.ok(popupSource.includes("refreshGeneratedConnectionLinks('password', ele.value || '');"));
-assert.ok(popupSource.includes("${hideLinks ? \"Click to open link\" : visibleURL}</a>"));
+assert.ok(popupSource.includes("${hideLinks ? escapeHtml(hiddenLinkText(page.id)) : visibleURL}</a>"));
+{
+  const { functions } = loadFunctions(["hiddenLinkText"], { getTranslation: (_key, fallback) => fallback });
+  assert.strictEqual(functions.hiddenLinkText("timer"), "Click to open link");
+  assert.strictEqual(functions.hiddenLinkText("captions"), "Microphone");
+  assert.strictEqual(functions.hiddenLinkText("captionsoverlay"), "Captions overlay for OBS");
+}
 assert.ok(popupSource.includes("setGeneratedLink(existingOverlay, existingOverlay.raw);"));
 assert.ok(!popupSource.includes(".wrapper:has(.options_group.single_message)"));
 

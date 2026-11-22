@@ -144,6 +144,7 @@
                     } else if (deletion.username) {
                         if (message.username !== deletion.username) return;
                     } else if (deletion.chatname && message.chatname !== deletion.chatname) return;
+                    // A platform-only delete intentionally clears every moderation record in its scope.
                     matches.push(entry);
                 });
                 if (deletion.onlyLast && !hasId && !(deletion.meta && deletion.meta.messageId)) matches = matches.slice(-1);

@@ -5840,6 +5840,7 @@
 							if (typeof payload.delete.id === "string" && payload.delete.id && payload.delete.id.length <= 192) action = { seq: receipt.seq, id: payload.delete.id };
 							else if (payload.delete.userid && payload.delete.meta && payload.delete.meta.chatroomId) action = { seq: receipt.seq, userid: String(payload.delete.userid), chatroomId: String(payload.delete.meta.chatroomId) };
 							else if (remoteCloudReceipts && ["twitch", "youtube"].indexOf(payload.delete.type) !== -1) {
+								// Preserve a platform-only delete as an explicit clear of all messages from that platform.
 								var field = payload.delete.userid ? "userid" : payload.delete.chatname ? "chatname" : "all";
 								action = { seq: receipt.seq, source: payload.delete.type, field: field, value: field === "all" ? "" : String(payload.delete[field]) };
 							}
@@ -7622,6 +7623,7 @@
 					selector += "," + dataAttributeSelector("data-source-display-name", deleteSourceName) + dataAttributeSelector("data-source-type", data.delete.type);
 					if (deleteSourceName !== data.delete.chatname) selector += "," + dataAttributeSelector("data-chatname", deleteSourceName) + dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.type) {
+					// With no message ID or user, the platform is the target. Match all its messages.
 					selector = dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.chatname) {
 					matchField = "chatname";
