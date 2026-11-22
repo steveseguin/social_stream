@@ -21,7 +21,8 @@
 		{ id: "pets", label: "Pets" },
 		{ id: "obs", label: "Reacts to OBS" },
 		{ id: "holidays", label: "Countries & holidays" },
-		{ id: "fun", label: "Cute & fun" }
+		{ id: "fun", label: "Cute & fun" },
+		{ id: "channelart", label: "Channel page art" }
 	];
 
 	// Extras every overlay understands (handled in view.html).
@@ -38,7 +39,8 @@
 		def.fields = def.fields || [];
 		def.presets = def.presets || [];
 		def.size = def.size || [800, 200];
-		def.fields = def.fields.concat(SSO.GLOBAL_FIELDS);
+		// A still picture (def.still, channel art) is downloaded, never loaded in OBS, so the OBS extras do not apply.
+		if (!def.still) { def.fields = def.fields.concat(SSO.GLOBAL_FIELDS); }
 		templates.push(def);
 		templateMap[def.id] = def;
 	};

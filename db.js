@@ -108,7 +108,10 @@ class MessageStoreDB {
 		
 		this.existenceCache = {
             entries: new Map(),
-            maxSize: options.existenceCacheSize || 100,
+            get maxSize() {
+                if (options.existenceCacheSize > 0) return options.existenceCacheSize;
+                return typeof settings !== 'undefined' && isDatabaseSettingEnabled(settings?.firsttimers) ? 2048 : 100;
+            },
             ttl: options.existenceCacheTTL || 30 * 60 * 1000  // 30 minutes default
         };
         
@@ -122,10 +125,12 @@ class MessageStoreDB {
             timestamp: cachedAt
         });
 
-        if (this.existenceCache.entries.size > this.existenceCache.maxSize) {
-            const oldestKey = this.existenceCache.entries.keys().next().value;
-            if (oldestKey) {
-                this.existenceCache.entries.delete(oldestKey);
+        const { entries, maxSize } = this.existenceCache;
+        if (entries.size > maxSize) {
+            // Turning detection off can put the cache more than one entry over its limit.
+            for (const oldestKey of entries.keys()) {
+                entries.delete(oldestKey);
+                if (entries.size <= maxSize) break;
             }
         }
     }
@@ -189,6 +194,20 @@ class MessageStoreDB {
         return this.db;
     }
 
+    historyTransaction(db, mode, groupWrites = false) {
+        if (groupWrites && this.firstTimerWrite) return this.firstTimerWrite;
+        // A read, clear or other independent operation forms a boundary. A later
+        // message must not join a write transaction from before that operation.
+        const tx = db.transaction(this.storeName, mode);
+        this.firstTimerWrite = groupWrites ? tx : null;
+        if (groupWrites) {
+            Promise.resolve().then(() => {
+                if (this.firstTimerWrite === tx) this.firstTimerWrite = null;
+            });
+        }
+        return tx;
+    }
+
     isMessageExpired(message, now = Date.now()) {
         return isStoredMessageExpired(message, now, this.daysToKeep);
     }
@@ -242,7 +261,7 @@ class MessageStoreDB {
         const records = messages.map(message => this.createMessageRecord(message, true, marker));
 
         return new Promise((resolve, reject) => {
-            const tx = db.transaction(this.storeName, 'readwrite');
+            const tx = this.historyTransaction(db, 'readwrite');
             const store = tx.objectStore(this.storeName);
             const ids = [];
 
@@ -263,12 +282,16 @@ class MessageStoreDB {
         const messageData = this.createMessageRecord(message, preserveTimestamp);
 
         return new Promise((resolve, reject) => {
-            const tx = db.transaction(this.storeName, 'readwrite');
+            // Lookups in one batch finish together. Group their inserts within this
+            // microtask, while resolving each caller only after its record commits.
+            const groupWrites = typeof settings !== 'undefined' && isDatabaseSettingEnabled(settings?.firsttimers) &&
+                message.chatname && message.chatmessage;
+            const tx = this.historyTransaction(db, 'readwrite', groupWrites);
             const store = tx.objectStore(this.storeName);
-            
             const request = store.add(messageData);
-            
-            tx.oncomplete = () => {
+
+            tx.addEventListener('complete', () => {
+                if (request.error) return;
                 // Get the auto-generated ID from the request
                 messageData.id = request.result;
                 message.idx = request.result;
@@ -284,11 +307,13 @@ class MessageStoreDB {
                 });
 
                 resolve(request.result);
+            });
+
+            request.onerror = event => {
+                if (groupWrites) event.preventDefault();
+                reject(request.error);
             };
-            
-            request.onerror = () => reject(request.error);
-            tx.onerror = () => reject(tx.error || new Error('Failed to save chat message'));
-            tx.onabort = () => reject(tx.error || new Error('Chat message save was aborted'));
+            tx.addEventListener('abort', () => reject(tx.error || new Error('Chat message save was aborted')));
         });
     }
 
@@ -299,7 +324,7 @@ class MessageStoreDB {
 		this.syncRetentionCacheMode();
 
 		return new Promise((resolve, reject) => {
-			const tx = db.transaction(this.storeName, 'readwrite');
+			const tx = this.historyTransaction(db, 'readwrite');
 			const store = tx.objectStore(this.storeName);
 			const getRequest = store.get(idx);
 			let merged = null;
@@ -351,7 +376,7 @@ class MessageStoreDB {
 
         const db = await this.ensureDB();
         return new Promise((resolve) => {
-            const tx = db.transaction(this.storeName, 'readonly');
+            const tx = this.historyTransaction(db, 'readonly');
             const index = tx.objectStore(this.storeName).index('timestamp');
             const messages = [];
             
@@ -372,12 +397,7 @@ class MessageStoreDB {
         });
     }
 	
-	async checkUserTypeExists(userIdentifier, type, fallbackChatname = null) {
-		const now = Date.now();
-		this.syncRetentionCacheMode();
-		const cacheKeys = this.getExistenceCacheKeys(userIdentifier, type, fallbackChatname);
-
-		// Check cache first
+    cachedUserActivity(cacheKeys, now) {
         for (const cacheKey of cacheKeys) {
             if (!this.existenceCache.entries.has(cacheKey)) continue;
             const entry = this.existenceCache.entries.get(cacheKey);
@@ -390,6 +410,38 @@ class MessageStoreDB {
             // Expired entry, remove from cache
             this.existenceCache.entries.delete(cacheKey);
         }
+        return null;
+    }
+
+    // A second message from a new chatter must wait until the first one is
+    // stored or filtered. Different chatters can look up history together.
+    async beginFirstTimerCapture(message) {
+        this.syncRetentionCacheMode();
+        const keys = this.getExistenceCacheKeys(message.userid || message.chatname, message.type, message.chatname);
+        if (!this.pendingFirstTimers) this.pendingFirstTimers = new Map();
+        while (!this.cachedUserActivity(keys, Date.now())) {
+            const pending = keys.map(key => this.pendingFirstTimers.get(key)).filter(Boolean);
+            if (pending.length) {
+                await Promise.all(pending);
+                continue;
+            }
+            let finish;
+            const settled = new Promise(resolve => { finish = resolve; });
+            keys.forEach(key => this.pendingFirstTimers.set(key, settled));
+            return () => {
+                keys.forEach(key => this.pendingFirstTimers.delete(key));
+                finish();
+            };
+        }
+        return null;
+    }
+
+    async checkUserTypeExists(userIdentifier, type, fallbackChatname = null) {
+        const now = Date.now();
+        this.syncRetentionCacheMode();
+        const cacheKeys = this.getExistenceCacheKeys(userIdentifier, type, fallbackChatname);
+        const cached = this.cachedUserActivity(cacheKeys, now);
+        if (cached) return cached;
 
         // If database is disabled, do not mark users first-time.
         if (settings?.disableDB?.setting === true || settings?.disableDB === true) {
@@ -402,80 +454,94 @@ class MessageStoreDB {
         const normalizedUserIdentifier = userIdentifier === undefined || userIdentifier === null ? "" : String(userIdentifier).trim();
         const normalizedFallbackChatname = fallbackChatname === undefined || fallbackChatname === null ? "" : String(fallbackChatname).trim();
         const lookups = [];
+        const addLookup = (indexName, name) => {
+            const lower = [name, type, 0];
+            const upper = [name, type, now];
+            lookups.push({ indexName, now, range: IDBKeyRange.bound(lower, upper) });
+        };
         if (normalizedUserIdentifier) {
-            lookups.push({
-                indexName: 'user_id_type_timestamp',
-                lower: [normalizedUserIdentifier, type, 0],
-                upper: [normalizedUserIdentifier, type, now]
-            });
-            lookups.push({
-                indexName: 'user_type_timestamp',
-                lower: [normalizedUserIdentifier, type, 0],
-                upper: [normalizedUserIdentifier, type, now]
-            });
+            addLookup('user_id_type_timestamp', normalizedUserIdentifier);
+            addLookup('user_type_timestamp', normalizedUserIdentifier);
         }
         if (normalizedFallbackChatname && normalizedFallbackChatname !== normalizedUserIdentifier) {
-            lookups.push({
-                indexName: 'user_type_timestamp',
-                lower: [normalizedFallbackChatname, type, 0],
-                upper: [normalizedFallbackChatname, type, now]
-            });
+            addLookup('user_type_timestamp', normalizedFallbackChatname);
         }
 
-        const queryIndex = lookup => new Promise(resolve => {
-            const tx = db.transaction(this.storeName, 'readonly');
-            const store = tx.objectStore(this.storeName);
-            if (!store.indexNames.contains(lookup.indexName)) {
-                resolve({ exists: false, lastActivity: null });
+        await this.readFirstTimerHistory(db, lookups);
+        // Prefer stable user ID, then the legacy username and display name.
+        const result = lookups.find(lookup => lookup.match)?.match || { exists: false, lastActivity: null };
+        if (result.exists) {
+            cacheKeys.forEach(key => this.setExistenceCache(key, { ...result, cachedAt: now }));
+        }
+        return result;
+    }
+
+    readFirstTimerHistory(db, lookups) {
+        return new Promise((resolve, reject) => {
+            if (this.firstTimerReads) {
+                this.firstTimerReads.push({ lookups, resolve, reject });
                 return;
             }
-            const index = store.index(lookup.indexName);
-            const cursorRequest = index.openCursor(IDBKeyRange.bound(lookup.lower, lookup.upper), 'prev');
-
-            cursorRequest.onsuccess = event => {
-                const cursor = event.target.result;
-                if (!cursor) {
-                    resolve({ exists: false, lastActivity: null });
+            this.firstTimerReads = [{ lookups, resolve, reject }];
+            const next = () => {
+                const readers = this.firstTimerReads.splice(0, 128);
+                if (!readers.length) {
+                    this.firstTimerReads = null;
                     return;
                 }
-
-                const message = cursor.value;
-                if (this.isMessageExpired(message, now)) {
-                    cursor.continue();
-                    return;
+                try {
+                    const tx = this.historyTransaction(db, 'readonly');
+                    const store = tx.objectStore(this.storeName);
+                    for (const reader of readers) {
+                        for (const lookup of reader.lookups) {
+                            if (store.indexNames.contains(lookup.indexName)) {
+                                this.readFirstTimerIndex(store.index(lookup.indexName), lookup);
+                            }
+                        }
+                    }
+                    tx.oncomplete = () => {
+                        readers.forEach(reader => reader.resolve());
+                        next();
+                    };
+                    tx.onabort = () => {
+                        readers.forEach(reader => reader.reject(tx.error || new Error('Chatter history read was aborted')));
+                        next();
+                    };
+                } catch (error) {
+                    readers.forEach(reader => reader.reject(error));
+                    // Continue serving later groups if the database was closed.
+                    setTimeout(next, 0);
                 }
-
-                resolve({
-                    exists: true,
-                    lastActivity: message.timestamp ?? null
-                });
             };
-
-            cursorRequest.onerror = () => {
-                console.error('Error checking user type records:', cursorRequest.error);
-                resolve({ exists: false, lastActivity: null, unavailable: true });
-            };
+            next();
         });
-
-        for (const lookup of lookups) {
-            const result = await queryIndex(lookup);
-            if (result.unavailable) {
-                return result;
-            }
-            if (result.exists) {
-                cacheKeys.forEach(cacheKey => {
-                    this.setExistenceCache(cacheKey, {
-                        exists: true,
-                        lastActivity: result.lastActivity,
-                        cachedAt: now
-                    });
-                });
-                return result;
-            }
-        }
-
-        return { exists: false, lastActivity: null };
     }
+
+    readFirstTimerIndex(index, lookup) {
+        // Most lookups during a surge of new viewers miss. Ask for a key first,
+        // then read message bodies only to check retention and last activity.
+        const unavailable = event => {
+            event.preventDefault();
+            lookup.match = { exists: false, lastActivity: null, unavailable: true };
+        };
+        const probe = index.getKey(lookup.range);
+        probe.onerror = unavailable;
+        probe.onsuccess = () => {
+            if (probe.result === undefined) return;
+            const request = index.openCursor(lookup.range, 'prev');
+            request.onerror = unavailable;
+            request.onsuccess = () => {
+                const cursor = request.result;
+                if (!cursor) return;
+                if (this.isMessageExpired(cursor.value, lookup.now)) {
+                    cursor.continue();
+                } else {
+                    lookup.match = { exists: true, lastActivity: cursor.value.timestamp ?? null };
+                }
+            };
+        };
+    }
+
     clearExistenceCache() {
         this.existenceCache.entries.clear();
     }
@@ -488,7 +554,7 @@ class MessageStoreDB {
 		if (settings?.disableDB) return [];
 		
 		return new Promise((resolve) => {
-            const tx = db.transaction(this.storeName, 'readonly');
+            const tx = this.historyTransaction(db, 'readonly');
             const store = tx.objectStore(this.storeName);
             
             // Check if this looks like a userid
@@ -558,7 +624,7 @@ class MessageStoreDB {
         const now = Date.now();
 
         return new Promise((resolve, reject) => {
-            const tx = db.transaction(this.storeName, 'readwrite');
+            const tx = this.historyTransaction(db, 'readwrite');
             const store = tx.objectStore(this.storeName);
             const index = store.index('timestamp');
             let deleted = 0;
@@ -623,7 +689,7 @@ class MessageStoreDB {
 
         const db = await this.ensureDB();
         return new Promise((resolve) => {
-            const tx = db.transaction(this.storeName, 'readonly');
+            const tx = this.historyTransaction(db, 'readonly');
             const index = tx.objectStore(this.storeName).index('timestamp');
             const messages = [];
             const now = Date.now();
@@ -668,7 +734,7 @@ class MessageStoreDB {
         const db = await this.ensureDB();
 
         return new Promise((resolve, reject) => {
-            const tx = db.transaction(this.storeName, 'readwrite');
+            const tx = this.historyTransaction(db, 'readwrite');
             const store = tx.objectStore(this.storeName);
             let deleted = 0;
 
@@ -805,7 +871,7 @@ class MessageStoreMigration {
         const readOnly = action === 'count';
 
         return new Promise((resolve, reject) => {
-            const tx = db.transaction(this.messageStore.storeName, readOnly ? 'readonly' : 'readwrite');
+            const tx = this.messageStore.historyTransaction(db, readOnly ? 'readonly' : 'readwrite');
             const store = tx.objectStore(this.messageStore.storeName);
             const request = store.openCursor();
             let matched = 0;

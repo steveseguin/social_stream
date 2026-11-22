@@ -14,7 +14,7 @@
 	<link rel="icon" href="../favicon.ico">
 	<link rel="stylesheet" href="../docs/css/site-shell.css">
 	<script src="../docs/js/site-shell.js"></script>
-	<link rel="stylesheet" href="studio.css?v=16">
+	<link rel="stylesheet" href="studio.css?v=17">
 </head>
 <body class="site-header-offset studio-index">
 	<a class="studio-skip" href="#gallery">Skip to overlays</a>
@@ -25,7 +25,7 @@
 		<p class="eyebrow">NO SESSION NEEDED</p>
 		<h1>Overlay Studio</h1>
 		<p>Choose a banner, social bar, timer, pet or gaming overlay. Customize it and paste the link into an OBS <b>Browser Source</b>. Styles marked <span class="obs-chip">OBS</span> react to scene changes and going live.</p>
-		<div class="studio-links"><a href="../docs/overlay-gallery.html">Chat overlays &amp; alerts</a><a href="../docs/obs-quick-start.html">OBS setup guide</a></div>
+		<div class="studio-links"><a href="#cat=channelart">Channel panels &amp; offline screens</a><a href="../docs/overlay-gallery.html">Chat overlays &amp; alerts</a><a href="../docs/obs-quick-start.html">OBS setup guide</a></div>
 	</section>
 
 	<div class="filters">
@@ -76,7 +76,7 @@
 	</div>
 
 	</main>
-	<script src="core.js?v=21"></script>
+	<script src="core.js?v=22"></script>
 	<script src="templates/countries.js?v=15"></script>
 	<script src="templates/engines.js?v=19"></script>
 	<script src="templates/socials.js?v=18"></script>
@@ -115,6 +115,7 @@
 	<script src="templates/moments.js?v=4"></script>
 	<script src="templates/random.js?v=3"></script>
 	<script src="templates/countscreen.js?v=3"></script>
+	<script src="templates/channelart.js?v=1"></script>
 	<script src="templates/seasontags.js?v=1"></script>
 	<script>
 	(function () {
@@ -253,6 +254,9 @@
 			frame.style.transform = "scale(" + s + ")";
 		}
 
+		// Channel art is looked at on a channel page, so it is never previewed over the game scene.
+		function thumbBg(card) { return card.def.still && bg === "game" ? "dark" : bg; }
+
 		function pager(el, pages) {
 			el.innerHTML = "";
 			if (pages < 2) { return; }
@@ -320,11 +324,12 @@
 				a.className = "card";
 				a.href = "editor.html?" + card.query;
 				a.innerHTML = '<div class="thumb"></div><div class="meta"><div><div class="name"></div><div class="sub"></div></div><span class="btn small">Customize</span></div>';
-				a.querySelector(".thumb").className = "thumb bg-" + bg;
+				a.querySelector(".thumb").className = "thumb bg-" + thumbBg(card);
 				a.querySelector(".name").textContent = card.preset.name;
 				var sub = a.querySelector(".sub");
 				sub.textContent = card.def.name;
 				if (OBS_TEMPLATES.indexOf(card.def.id) !== -1) { sub.insertAdjacentHTML("beforeend", ' <span class="obs-chip" title="Reacts to OBS scene changes / going live">OBS</span>'); }
+				if (card.def.still) { sub.insertAdjacentHTML("beforeend", ' <span class="obs-chip" title="A picture you download, not an OBS link">PNG</span>'); }
 				grid.appendChild(a);
 				queue.push({ box: a.querySelector(".thumb"), card: card });
 			});
@@ -345,7 +350,7 @@
 			bg = $("bgpick").value;
 			SSO.store.set("gallery-bg", bg);
 			var thumbs = document.querySelectorAll(".thumb");
-			for (var i = 0; i < thumbs.length; i++) { thumbs[i].className = "thumb bg-" + bg; }
+			for (var i = 0; i < thumbs.length; i++) { var shown = thumbs[i].querySelector("iframe"); thumbs[i].className = "thumb bg-" + (shown && shown._card ? thumbBg(shown._card) : bg); }
 		});
 		var segs = document.querySelectorAll(".seg button");
 		for (var k = 0; k < segs.length; k++) {

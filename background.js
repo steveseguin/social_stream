@@ -5906,7 +5906,16 @@ async function processIncomingMessage(message, sender = null) {
 		const pendingCapture = tracksPendingModeration(message)
 			? { message: Object.assign({}, message), cancelled: false } : null;
 		if (pendingCapture) pendingModeratedCaptures.add(pendingCapture);
+		let finishFirstTimer;
 		try {
+			if (message.chatname && message.chatmessage && getSettingFlag("firsttimers") && !getSettingFlag("disableDB")) {
+				try {
+					finishFirstTimer = await messageStoreDB.beginFirstTimerCapture(message);
+				} catch (error) {
+					console.warn("Could not check pending first-time chatter", error);
+				}
+				if (pendingCapture && pendingCapture.cancelled) return;
+			}
 			try {
 				message = await applyBotActions(message, sender?.tab); // perform any immediate actions
 			} catch (e) {
@@ -5927,6 +5936,7 @@ async function processIncomingMessage(message, sender = null) {
 
 			await sendToDestinations(message, individualLikeRouting.routed, pendingCapture); // send the data to the dock
 		} finally {
+			if (finishFirstTimer) finishFirstTimer();
 			if (pendingCapture) pendingModeratedCaptures.delete(pendingCapture);
 		}
 	}
@@ -8565,7 +8575,7 @@ async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, 
 	const db = await messageStoreDB.ensureDB();
 
 	return new Promise((resolve, reject) => {
-		const transaction = db.transaction([messageStoreDB.storeName], "readonly");
+		const transaction = messageStoreDB.historyTransaction(db, "readonly");
 		const store = transaction.objectStore(messageStoreDB.storeName);
 		const index = store.index("timestamp");
 		const messages = [];

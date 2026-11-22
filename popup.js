@@ -7163,6 +7163,7 @@ function processManifestData(data, manifestData) {
             if (Beta) {
                 if (baseURL == "https://socialstream.ninja/") {
                     baseURL = "https://beta.socialstream.ninja/";
+                    updateStudioLinks();
                     if (lastResponse) {
                         update(lastResponse, false);
                     }
@@ -7590,6 +7591,17 @@ const generatedLinkBaseOverride = normalizeGeneratedLinkBase(urlParams.get("gene
 if (generatedLinkBaseOverride) {
 	baseURL = generatedLinkBaseOverride;
 }
+
+// The Overlay Studio links are written for the public site. A beta build opens the beta copy, where new overlays arrive first.
+function updateStudioLinks() {
+	var studioBase = baseURL.indexOf("https://beta.socialstream.ninja/") === 0 ? "https://beta.socialstream.ninja/" : "https://socialstream.ninja/";
+	var links = document.querySelectorAll('.misc-links a[href*="socialstream.ninja/overlays/"]');
+	for (var i = 0; i < links.length; i++) {
+		var href = links[i].getAttribute("href").replace("https://beta.socialstream.ninja/", "https://socialstream.ninja/");
+		links[i].setAttribute("href", href.replace("https://socialstream.ninja/", studioBase));
+	}
+}
+updateStudioLinks();
 
 
 

@@ -11,7 +11,7 @@
 	<link rel="icon" href="../favicon.ico">
 	<link rel="stylesheet" href="../docs/css/site-shell.css">
 	<script src="../docs/js/site-shell.js"></script>
-	<link rel="stylesheet" href="studio.css?v=16">
+	<link rel="stylesheet" href="studio.css?v=17">
 </head>
 <body class="site-header-offset studio-editor">
 	<a class="studio-skip" href="#form">Skip to settings</a>
@@ -27,7 +27,7 @@
 		</aside>
 		<main class="ed-main">
 			<div class="ed-tools">
-				<div class="grp"><label for="w">OBS size</label><input type="number" id="w" aria-label="OBS width" min="50" max="7680"><span class="x">×</span><input type="number" id="h" aria-label="OBS height" min="20" max="4320"></div>
+				<div class="grp" id="sizeGrp"><label for="w">OBS size</label><input type="number" id="w" aria-label="OBS width" min="50" max="7680"><span class="x">×</span><input type="number" id="h" aria-label="OBS height" min="20" max="4320"></div>
 				<div class="grp"><label for="bg">Preview on</label>
 					<select id="bg">
 						<option value="game">Game background</option>
@@ -69,7 +69,7 @@
 	</div>
 	<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-	<script src="core.js?v=21"></script>
+	<script src="core.js?v=22"></script>
 	<script src="templates/countries.js?v=15"></script>
 	<script src="templates/engines.js?v=19"></script>
 	<script src="templates/socials.js?v=18"></script>
@@ -108,6 +108,7 @@
 	<script src="templates/moments.js?v=4"></script>
 	<script src="templates/random.js?v=3"></script>
 	<script src="templates/countscreen.js?v=3"></script>
+	<script src="templates/channelart.js?v=1"></script>
 	<script src="templates/seasontags.js?v=1"></script>
 	<script>
 	(function () {
@@ -115,10 +116,12 @@
 		var params = new URLSearchParams(location.search);
 		var def = SSO.get(params.get("t")) || SSO.list()[0];
 		var cfg = SSO.readConfig(def, location.search);
-		var sizeTouched = params.has("w") || params.has("h");
+		// A still picture (channel art) is downloaded as PNG files; it has no OBS link, size or events.
+		var still = def.still || null;
+		var sizeTouched = !still && (params.has("w") || params.has("h"));
 		var extra = new URLSearchParams();
 		["css", "b64css", "cssb64", "scale"].forEach(function (key) { if (params.has(key)) { extra.set(key, params.get(key)); } });
-		var size = [parseInt(params.get("w"), 10) || 0, parseInt(params.get("h"), 10) || 0];
+		var size = still ? [0, 0] : [parseInt(params.get("w"), 10) || 0, parseInt(params.get("h"), 10) || 0];
 
 		// template picker
 		SSO.CATEGORIES.forEach(function (cat) {
@@ -150,7 +153,7 @@
 				// Presets restyle; the viewer's own text, messages and socials carry over.
 				var keep = {};
 				def.fields.forEach(function (f) {
-					if ((f.type === "text" || f.type === "textarea" || f.type === "socials") && !(f.key in p.values)) { keep[f.key] = cfg[f.key]; }
+					if ((f.type === "text" || f.type === "textarea" || f.type === "socials" || f.keep) && !(f.key in p.values)) { keep[f.key] = cfg[f.key]; }
 				});
 				cfg = SSO.readConfig(def, "");
 				Object.keys(keep).forEach(function (k) { cfg[k] = keep[k]; });
@@ -264,7 +267,13 @@
 						sel.appendChild(opt);
 					});
 					sel.value = value;
-					sel.addEventListener("change", function () { cfg[field.key] = sel.value; update(); refreshVisibility(); });
+					sel.addEventListener("change", function () {
+						cfg[field.key] = sel.value;
+						update();
+						refreshVisibility();
+						// A choice other fields take their look from (a theme) redraws the form.
+						if (field.rebuild) { buildForm(); if ($(id)) { $(id).focus(); } }
+					});
 					wrap.appendChild(sel);
 				} else if (field.type === "textarea") {
 					var ta = document.createElement("textarea");
@@ -307,9 +316,11 @@
 					txt.type = "text";
 					txt.id = id;
 					txt.value = value ? "#" + String(value).replace(/^#/, "") : "";
-					txt.placeholder = field.default === "" ? "none" : "#rrggbb";
+					txt.placeholder = field.placeholder || (field.default === "" ? "none" : "#rrggbb");
 					var syncPick = function () {
 						var v = String(cfg[field.key] || "").replace(/^#/, "");
+						// An empty colour can stand for one the overlay picks itself; show that one in the swatch.
+						if (!v && field.auto) { v = String(field.auto(cfg) || "").replace(/^#/, ""); }
 						if (/^[0-9a-f]{6}/i.test(v)) { pick.value = "#" + v.slice(0, 6); }
 						else if (/^[0-9a-f]{3}$/i.test(v)) { pick.value = "#" + v[0] + v[0] + v[1] + v[1] + v[2] + v[2]; }
 					};
@@ -397,6 +408,8 @@
 		// ---------- preview + output ----------
 		var bg = SSO.store.get("editor-bg") || "game";
 		if (["game", "dark", "light", "checker"].indexOf(bg) === -1) { bg = "game"; }
+		// Channel art is looked at on a channel page, not over a game.
+		if (still) { $("bg").remove(0); if (bg === "game") { bg = "dark"; } }
 		$("bg").value = bg;
 		$("bg").addEventListener("change", function () { bg = $("bg").value; SSO.store.set("editor-bg", bg); $("box").className = "frame-box bg-" + bg; });
 		$("box").className = "frame-box bg-" + bg;
@@ -439,7 +452,8 @@
 			var link = SSO.viewerBase() + "?" + query;
 			$("url").value = link;
 			$("open").href = link;
-			$("hint").innerHTML = "In OBS: <b>Sources → + → Browser</b>, paste the link, and set width <b>" + s[0] + "</b> and height <b>" + s[1] + "</b>. Bookmark this page to edit it later.";
+			$("hint").innerHTML = still ? still.hint : "In OBS: <b>Sources → + → Browser</b>, paste the link, and set width <b>" + s[0] + "</b> and height <b>" + s[1] + "</b>. Bookmark this page to edit it later.";
+			if (still) { stillButtons(); }
 			try { history.replaceState(null, "", "editor.html?" + query + (sizeTouched ? "&w=" + s[0] + "&h=" + s[1] : "")); } catch (e) {}
 			fit();
 			clearTimeout(timer);
@@ -461,21 +475,169 @@
 			if (this.value) { sendObs(this.value, this.options[this.selectedIndex].text); }
 			this.value = "";
 		});
-		$("copy").addEventListener("click", function () {
+		function copyLink(text, message) {
 			var input = $("url");
-			var done = function () { toast("Link copied. Paste it into an OBS Browser Source."); };
+			var done = function () { toast(message); };
 			function fallback() {
+				var row = input.parentNode, was = row.style.display, old = input.value;
+				row.style.display = "";
+				input.value = text;
 				input.focus(); input.select();
 				var copied = false;
 				try { copied = document.execCommand("copy"); } catch (e) {}
 				if (copied) { done(); } else { toast("Link selected. Press Ctrl+C (Command+C on Mac) to copy."); }
+				if (copied) { input.value = old; row.style.display = was; }
 			}
 			if (navigator.clipboard && navigator.clipboard.writeText) {
-				navigator.clipboard.writeText(input.value).then(done, fallback);
+				navigator.clipboard.writeText(text).then(done, fallback);
 			} else {
 				fallback();
 			}
-		});
+		}
+		$("copy").addEventListener("click", function () { copyLink($("url").value, "Link copied. Paste it into an OBS Browser Source."); });
+
+		// ---------- still pictures (channel art): downloads in place of an OBS link ----------
+		var stillRow = null, stillWarn = null, stillKey = null, stillBusy = false, crcTable = null;
+		function saveBlob(blob, name) {
+			var a = document.createElement("a"), href = URL.createObjectURL(blob);
+			a.href = href;
+			a.download = name;
+			document.body.appendChild(a);
+			a.click();
+			setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(href); }, 4000);
+		}
+		function crc32(bytes) {
+			var crc = -1, n, k, c;
+			if (!crcTable) {
+				crcTable = [];
+				for (n = 0; n < 256; n++) {
+					c = n;
+					for (k = 0; k < 8; k++) { c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; }
+					crcTable[n] = c >>> 0;
+				}
+			}
+			for (n = 0; n < bytes.length; n++) { crc = crcTable[(crc ^ bytes[n]) & 255] ^ (crc >>> 8); }
+			return (crc ^ -1) >>> 0;
+		}
+		// A zip with the files stored as they are (PNG is already compressed). files: [{ name, bytes }], names in plain ASCII.
+		function zipOf(files) {
+			var parts = [], central = [], offset = 0, centralSize = 0, now = new Date();
+			var time = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+			var date = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+			files.forEach(function (file) {
+				var name = new Uint8Array(file.name.length), crc = crc32(file.bytes), size = file.bytes.length, i;
+				for (i = 0; i < file.name.length; i++) { name[i] = file.name.charCodeAt(i) & 127; }
+				var local = new DataView(new ArrayBuffer(30)), entry = new DataView(new ArrayBuffer(46));
+				local.setUint32(0, 0x04034b50, true); local.setUint16(4, 20, true); local.setUint16(10, time, true); local.setUint16(12, date, true);
+				local.setUint32(14, crc, true); local.setUint32(18, size, true); local.setUint32(22, size, true); local.setUint16(26, name.length, true);
+				entry.setUint32(0, 0x02014b50, true); entry.setUint16(4, 20, true); entry.setUint16(6, 20, true); entry.setUint16(12, time, true); entry.setUint16(14, date, true);
+				entry.setUint32(16, crc, true); entry.setUint32(20, size, true); entry.setUint32(24, size, true); entry.setUint16(28, name.length, true); entry.setUint32(42, offset, true);
+				parts.push(local.buffer, name, file.bytes);
+				central.push(entry.buffer, name);
+				offset += 30 + name.length + size;
+				centralSize += 46 + name.length;
+			});
+			var end = new DataView(new ArrayBuffer(22));
+			end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, centralSize, true); end.setUint32(16, offset, true);
+			return new Blob(parts.concat(central, [end.buffer]), { type: "application/zip" });
+		}
+		// cb([{ name, blob, bytes }]) with every picture at its real size, or cb(null) when they could not be made.
+		// It always answers, so a failure can never leave the download buttons switched off.
+		function stillFiles(settings, cb) {
+			var over = false, guard = setTimeout(function () { finish(null); }, 20000);
+			function finish(result) { if (!over) { over = true; clearTimeout(guard); cb(result); } }
+			try {
+				still.files(settings, function (pictures) {
+					var left = pictures ? pictures.length : 0, out = [];
+					if (!pictures) { finish(null); return; }
+					if (!left) { finish(out); return; }
+					pictures.forEach(function (picture, i) {
+						picture.canvas.toBlob(function (blob) {
+							if (!blob) { finish(null); return; }
+							var reader = new FileReader();
+							reader.onerror = function () { finish(null); };
+							reader.onload = function () {
+								out[i] = { name: picture.name, blob: blob, bytes: new Uint8Array(reader.result) };
+								if (!--left) { finish(out); }
+							};
+							reader.readAsArrayBuffer(blob);
+						}, "image/png");
+					});
+				});
+			} catch (e) {
+				finish(null);
+				throw e;
+			}
+		}
+		// name: which picture, or null for all of them (one zip when there are several). The settings are copied at the
+		// click, so typing while the pictures are being made cannot change what gets saved.
+		function download(name) {
+			if (stillBusy) { return; }
+			var settings = {}, key;
+			for (key in cfg) { settings[key] = cfg[key]; }
+			stillBusy = true;
+			toast("Making your pictures…");
+			stillFiles(settings, function (made) {
+				stillBusy = false;
+				if (!made) { toast("Sorry, the pictures could not be made. Please try again."); return; }
+				if (!made.length) { toast("There is nothing to download yet."); return; }
+				if (name === null && made.length > 1) {
+					saveBlob(zipOf(made), still.zip || "channel-art.zip");
+					toast(made.length + " pictures saved in " + (still.zip || "channel-art.zip") + ".");
+					return;
+				}
+				var one = name === null ? made[0] : made.filter(function (file) { return file.name === name; })[0];
+				if (!one) { toast("Sorry, that picture could not be made. Please try again."); return; }
+				saveBlob(one.blob, one.name);
+				toast("Saved " + one.name + ".");
+			});
+		}
+		function stillButton(label, primary, onClick) {
+			var b = document.createElement("button");
+			b.type = "button";
+			b.className = "btn" + (primary ? " primary" : "");
+			b.textContent = label;
+			b.addEventListener("click", onClick);
+			stillRow.appendChild(b);
+			return b;
+		}
+		// The download buttons follow the pictures: one each, plus everything in a zip when there are several.
+		function stillButtons() {
+			var list = still.list(cfg), key = list.map(function (item) { return item.name + "|" + item.label + "|" + (item.cut ? 1 : 0); }).join("\n");
+			if (key === stillKey) { return; }
+			stillKey = key;
+			stillRow.innerHTML = "";
+			// A picture can only be so tall. Past that the end of its text is left out, and that must never happen quietly.
+			var cut = list.filter(function (item) { return item.cut; }).map(function (item) { return item.label; });
+			stillWarn.innerHTML = "<b>Too much text.</b> <span></span>";
+			stillWarn.lastChild.textContent = cut.join(", ") + (cut.length === 1 ? " has" : " have") + " more text than fits in one picture, so the end is left out. Shorten it, or move some of it to another panel.";
+			stillWarn.style.display = cut.length ? "" : "none";
+			if (list.length > 1) {
+				stillButton("Download all (.zip)", true, function () { download(null); });
+				var each = document.createElement("span");
+				each.className = "still-each";
+				each.textContent = "or one picture:";
+				stillRow.appendChild(each);
+			}
+			list.forEach(function (item) { stillButton(item.label, list.length === 1, function () { download(list.length === 1 ? null : item.name); }); });
+			stillButton("Copy link to edit later", false, function () { copyLink(location.href, "Link copied. Open it any time to change your pictures."); }).className += " still-link";
+		}
+		if (still) {
+			document.body.className += " studio-still";
+			$("sizeGrp").style.display = "none";
+			$("replay").style.display = "none";
+			document.querySelector(".obs-test").style.display = "none";
+			$("url").parentNode.style.display = "none";
+			stillWarn = document.createElement("div");
+			stillWarn.className = "still-warn";
+			stillWarn.setAttribute("role", "status");
+			stillWarn.style.display = "none";
+			$("hint").parentNode.insertBefore(stillWarn, $("hint"));
+			stillRow = document.createElement("div");
+			stillRow.className = "row still";
+			$("hint").parentNode.insertBefore(stillRow, $("hint"));
+			document.querySelector(".studio-breadcrumb [aria-current]").textContent = "Customize pictures";
+		}
 		var toastTimer;
 		function toast(msg) {
 			clearTimeout(toastTimer);
