@@ -67,7 +67,7 @@ async function loadScriptsInOrder() {
         './shared/monetization/breaks-access.js',
         './shared/giveaway/core.js',
         './shared/versus.js',
-        './background.js?v=6',
+        './background.js?v=7',
         './shared/music-host.js',
         './shared/versus-host.js',
         './shared/audience-room/connector.js',

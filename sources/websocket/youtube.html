@@ -523,7 +523,7 @@ try {
         }
     }
     refreshClientOverrides();
-    var redirectURI = window.location.href.split("/youtube")[0]+"/youtube.html";
+    var redirectURI = new URL("youtube.html", window.location.href).href;
 	const YT_SHORTS_MODE_SESSION_KEY = "youtubeRedirectShorts";
 
 	function rememberYouTubeShortsMode(enabled) {

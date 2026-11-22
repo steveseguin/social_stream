@@ -1282,7 +1282,7 @@ function showImportedLinkStatus(targetId, loadedControlCount) {
 	status.classList.add("visible");
 }
 
-function openEditGeneratedLinkDialog(targetId) {
+function openEditGeneratedLinkDialog(targetId, forGoalCommand = false) {
 	var config = getEditableGeneratedLinkConfig(targetId);
 	if (!config) return;
 	var previousFocus = document.activeElement;
@@ -1301,6 +1301,7 @@ function openEditGeneratedLinkDialog(targetId) {
 	var note = document.createElement("span");
 	note.className = "edit-link-dialog-note";
 	note.textContent = "Paste the old " + config.path + " link. This replaces only the " + config.label + " link controls. Other overlays and your global stream ID stay unchanged; links already in OBS are not changed.";
+	if (forGoalCommand) note.textContent = "Paste the link from your open goal to load its settings here.";
 
 	var input = document.createElement("input");
 	input.type = "text";
@@ -1339,8 +1340,18 @@ function openEditGeneratedLinkDialog(targetId) {
 	loadButton.onclick = function() {
 		try {
 			var parsedUrl = normalizeEditableGeneratedLink(input.value, targetId);
+			if (forGoalCommand && (parsedUrl.searchParams.get("session") || parsedUrl.searchParams.get("room")) !== lastResponse?.streamID) {
+				throw new Error("That goal belongs to a different session. Load a goal from this session.");
+			}
 			var loadedControlCount = applyImportedGeneratedLink(targetId, parsedUrl);
 			closeDialog();
+			if (forGoalCommand) {
+				const feedback = document.getElementById("tipjar-command-feedback");
+				feedback.querySelector('[role="status"]').textContent = "Goal settings loaded. Choose Set or Reset.";
+				feedback.querySelector("button").hidden = true;
+				document.querySelector('[data-action="' + feedback.pendingCommand.cmd + '"]').focus();
+				return;
+			}
 			showImportedLinkStatus(targetId, loadedControlCount);
 			showPopupToast("success", config.label + " link loaded", "Customize it below, then copy the updated link.");
 		} catch (error) {
@@ -13263,7 +13274,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	document.querySelectorAll("[data-edit-link]").forEach(function(element) {
 		element.onclick = function(event) {
 			event.preventDefault();
-			openEditGeneratedLinkDialog(element.dataset.editLink);
+			openEditGeneratedLinkDialog(element.dataset.editLink, !!element.closest("#tipjar-command-feedback"));
 		};
 	});
 
@@ -15937,8 +15948,26 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				if (tipjarEventSelect && tipjarEventSelect.value) {
 					msg.tipjarevent = tipjarEventSelect.value;
 				}
+				const feedback = document.getElementById("tipjar-command-feedback");
+				const status = feedback.querySelector('[role="status"]');
+				const loadLink = feedback.querySelector("button");
+				feedback.hidden = false;
+				feedback.pendingCommand = msg;
+				loadLink.hidden = true;
+				status.textContent = "Waiting for the goal...";
 				chrome.runtime.sendMessage(msg, function (response) {
-					log("ignore callback for this action");
+					if (feedback.pendingCommand !== msg) return;
+					const failed = chrome.runtime.lastError;
+					if (response?.goalApplied) {
+						status.textContent = msg.cmd === "resettipjar" ? "Goal reset." : "Goal amount updated.";
+					} else if (failed || !response) {
+						status.textContent = "Could not reach Social Stream Ninja. Reopen the popup and try again.";
+					} else if (response.state === false) {
+						status.textContent = "Turn on Social Stream Ninja and open your goal, then try again.";
+					} else {
+						status.textContent = "No goal confirmed the change. Refresh the open goal or load its link to match its settings.";
+						loadLink.hidden = false;
+					}
 				});
 			} else {
 				//console.log(msg);

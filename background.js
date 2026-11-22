@@ -7537,19 +7537,22 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			sendTargetP2P({ cmd: "metastats", value: request.value }, "meta");
 			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd === "settipjaramount" || request.cmd === "resettipjar") {
-			sendTargetP2P(
-				{
-					cmd: request.cmd,
-					value: request.value,
-					selectedGoal: request.selectedGoal,
-					tipjarsource: request.tipjarsource || "",
-					tipjartype: request.tipjartype || "",
-					goalmetric: request.goalmetric || "",
-					tipjarevent: request.tipjarevent || ""
-				},
-				"tipjar"
-			);
-			sendResponse({ state: isExtensionOn });
+			const command = {
+				cmd: request.cmd,
+				value: request.value,
+				selectedGoal: request.selectedGoal,
+				tipjarsource: request.tipjarsource || "",
+				tipjartype: request.tipjartype || "",
+				goalmetric: request.goalmetric || "",
+				tipjarevent: request.tipjarevent || ""
+			};
+			if (command.selectedGoal) {
+				const goalApplied = await sendSelectedTipJarCommand(command);
+				sendResponse({ state: isExtensionOn, goalApplied });
+			} else {
+				sendTargetP2P(command, "tipjar");
+				sendResponse({ state: isExtensionOn });
+			}
 		} else if (request.cmd && request.cmd === "stopentries") {
 			toggleEntries(false);
 			sendResponse({ state: isExtensionOn });
@@ -13886,6 +13889,32 @@ function sendAiOverlayCommand(input = {}, defaults = {}) {
 }
 
 var overlayControlPending = new Map();
+var pendingTipJarUpdates = new Map();
+
+async function sendSelectedTipJarCommand(command) {
+	if (!isExtensionOn || settings.disablehost) return false;
+	const packet = prepareOverlayControl(command, "tipjar");
+	const id = packet.ssnControl.id;
+	let timer;
+	const confirmed = new Promise(resolve => {
+		pendingTipJarUpdates.set(id, { session: streamID, resolve });
+		timer = setTimeout(() => resolve(false), 3000);
+	});
+	try {
+		// Send once. A transport acknowledgement alone cannot confirm the goal matched.
+		sendTargetP2P(packet, "tipjar").catch(error => console.warn("[Tip Jar] Send failed", error));
+		return await confirmed;
+	} finally {
+		clearTimeout(timer);
+		pendingTipJarUpdates.delete(id);
+	}
+}
+
+function confirmTipJarUpdate(ack) {
+	if (ack.target !== "tipjar" || ack.goalApplied !== true) return;
+	const pending = pendingTipJarUpdates.get(ack.id);
+	if (pending && pending.session === streamID) pending.resolve(true);
+}
 var pollControlState = null;
 var mapControlState = null;
 var overlayStateEpoch = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
@@ -13964,6 +13993,7 @@ function handleOverlayControlRequest(data, socket, replyChannel, allowSnapshot) 
 		return true;
 	}
 	if (data.ssnControlAck) {
+		if (data.ssnControlAck.goalApplied === true) confirmTipJarUpdate(data.ssnControlAck);
 		var pending = overlayControlPending.get(data.ssnControlAck.id);
 		if (pending && pending.session === streamID && pending.target === data.ssnControlAck.target) pending.resolve(true);
 		return true;
@@ -15961,6 +15991,13 @@ async function processEventFlowBridgeEvent(value) {
 }
 
 async function processIncomingRequest(request, UUID = false) {
+	if (request?.ssnControlAck?.goalApplied === true && UUID) {
+		const peers = ninjaBridge && typeof ninjaBridge.getPeers === "function" ? ninjaBridge.getPeers() : null;
+		if (isExtensionOn && !settings.disablehost && (peers?.[UUID] === "tipjar" || connectedPeers?.[UUID] === "tipjar")) {
+			confirmTipJarUpdate(request.ssnControlAck);
+		}
+		return;
+	}
 	if (request && request.action === 'localAudioRead') {
 		const peers = ninjaBridge && typeof ninjaBridge.getPeers === 'function' ? ninjaBridge.getPeers() : connectedPeers;
 		if (UUID && peers && peers[UUID] === 'actions' && window.eventFlowSystem &&

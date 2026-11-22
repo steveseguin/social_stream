@@ -12,11 +12,12 @@
         if (recent.size > 4096) recent.delete(recent.keys().next().value);
         return true;
     }
-    function acknowledge(socket, data, target) {
+    function acknowledge(socket, data, target, goalApplied) {
         var control = data && data.ssnControl;
         if (!control || control.target !== target || !control.id || socket.readyState !== 1) return;
-        socket.send(JSON.stringify({ out: control.reply === 1 ? 1 : 3,
-            ssnControlAck: { id: control.id, target: target } }));
+        var ack = { id: control.id, target: target };
+        if (target === 'tipjar' && data.selectedGoal && goalApplied === true) ack.goalApplied = true;
+        socket.send(JSON.stringify({ out: control.reply === 1 ? 1 : 3, ssnControlAck: ack }));
     }
     // A separate subscription prevents settings/commands reaching ordinary chat
     // consumers. It uses the selected relay and existing receiver permissions.
@@ -57,8 +58,8 @@
                         socket.send(JSON.stringify({ action: 'requestViewerCount', value: { ttl: 70 * 60 * 1000 } }));
                         viewerCountRequestedAt = Date.now();
                     }
-                    receive(data);
-                    acknowledge(socket, data, target);
+                    var result = receive(data);
+                    acknowledge(socket, data, target, result);
                 } catch (error) { console.warn('[Overlay control] Message failed', error); }
             };
             socket.onerror = function () { socket.close(); };

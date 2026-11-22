@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="description" content="Tip Jar Overlay. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
     <meta name="robots" content="noindex">
-<script src="shared/overlay-control-transport.js"></script>
+<script src="shared/overlay-control-transport.js?v=2"></script>
 <script src="./shared/versus.js"></script>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
 
@@ -4970,8 +4970,9 @@ function processData(data, side) {
             }
 
             if (isTipJarResetCommand(data)) {
-                if (!data.selectedGoal || commandMatchesTipJarFilters(data)) resetTipJarAmount(true);
-                return;
+                if (data.selectedGoal && !commandMatchesTipJarFilters(data)) return;
+                resetTipJarAmount(true);
+                return true;
             }
 
             if (isTipJarSetAmountCommand(data)) {
@@ -4981,6 +4982,7 @@ function processData(data, side) {
                 const amount = getTipJarCommandAmount(data);
                 if (amount !== null) {
                     setTipJarAmount(amount, true);
+                    return true;
                 }
                 return;
             }
@@ -5385,7 +5387,12 @@ function processData(data, side) {
                 }
                 const received = message.dataReceived;
                 if (received && typeof received === "object" && "overlayNinja" in received) {
-                    processData(received.overlayNinja, side);
+                    const packet = received.overlayNinja;
+                    const applied = processData(packet, side);
+                    if (applied && packet.selectedGoal && packet.ssnControl && message.UUID) {
+                        const ack = { id: packet.ssnControl.id, target: "tipjar", goalApplied: true };
+                        frame.contentWindow.postMessage({ sendData: { overlayNinja: { ssnControlAck: ack } }, type: "rpcs", UUID: message.UUID }, "https://vdo.socialstream.ninja");
+                    }
                     if (versusMode && received.overlayNinja && received.overlayNinja.versusState && versus.host[side - 1]) clearInterval(retry);
                 }
             });
