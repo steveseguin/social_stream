@@ -1301,7 +1301,7 @@ function openEditGeneratedLinkDialog(targetId, forGoalCommand = false) {
 	var note = document.createElement("span");
 	note.className = "edit-link-dialog-note";
 	note.textContent = "Paste the old " + config.path + " link. This replaces only the " + config.label + " link controls. Other overlays and your global stream ID stay unchanged; links already in OBS are not changed.";
-	if (forGoalCommand) note.textContent = "Paste the link from your open goal to load its settings here.";
+	if (forGoalCommand) note.textContent = "Loading this link replaces the current Tip Jar settings in this popup.";
 
 	var input = document.createElement("input");
 	input.type = "text";
@@ -11996,7 +11996,8 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 window.kittenTtsInstance = new KittenTTS();
 
                 // Initialize with model, voices, and explicit WASM path using absolute URLs
-                const modelUrl = baseUrl + 'thirdparty/kitten-tts/kitten_tts_nano_v0_1.onnx';
+                const modelBase = location.origin === 'https://beta.socialstream.ninja' ? 'https://cache.socialstream.ninja/beta/' : baseUrl;
+                const modelUrl = modelBase + 'thirdparty/kitten-tts/kitten_tts_nano_v0_1.onnx';
                 const voicesUrl = baseUrl + 'thirdparty/kitten-tts/voices.json';
                 const wasmPaths = { wasm: baseUrl + 'thirdparty/kitten-tts/ort-wasm-simd-threaded.jsep.wasm' };
                 await window.kittenTtsInstance.init(modelUrl, voicesUrl, wasmPaths);
@@ -12607,7 +12608,15 @@ async function initKokoro(browserOnly = false) {
 			window.SSN_KOKORO_REMOTE_HOST = kokoroAssets.getRemoteHost();
 			console.log("Loading Kokoro dependencies...");
 			console.log("Using Kokoro asset host:", window.SSN_KOKORO_REMOTE_HOST);
-			const module = window.location.href.startsWith("chrome-extension://") ? await import('./thirdparty/kokoro-bundle.es.ext.js') : await import('./thirdparty/kokoro-bundle.es.js');
+			let module;
+			if (location.protocol === 'chrome-extension:') {
+				module = await import('./thirdparty/kokoro-bundle.es.ext.js');
+			} else if (location.origin === 'https://beta.socialstream.ninja') {
+				const bundle = 'https://cache.socialstream.ninja/beta/thirdparty/kokoro-bundle.es.js';
+				module = await import(bundle);
+			} else {
+				module = await import('./thirdparty/kokoro-bundle.es.js');
+			}
 			KokoroTTS = module.KokoroTTS;
 			TextSplitterStream = module.TextSplitterStream;
 			const detectWebGPU = module.detectWebGPU;
@@ -15965,7 +15974,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					} else if (response.state === false) {
 						status.textContent = "Turn on Social Stream Ninja and open your goal, then try again.";
 					} else {
-						status.textContent = "No goal confirmed the change. Refresh the open goal or load its link to match its settings.";
+						status.textContent = "Change unconfirmed. Check the amount before retrying. If needed, refresh the goal or load its link.";
 						loadLink.hidden = false;
 					}
 				});

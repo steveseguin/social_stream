@@ -2,7 +2,7 @@
 
 Logos, graphics, and a short promo for your videos, streams, and social posts. Link viewers to **[socialstream.ninja](https://socialstream.ninja/)**.
 
-**Quick start:** grab the [15-second promo](video/social-stream-ninja-15s-1080p.mp4), choose a [transparent logo](#logos), or copy a script from [AD-COPY.txt](AD-COPY.txt). For OBS setup and editing tips, see [START-HERE.txt](START-HERE.txt).
+**Quick start:** grab the [15-second promo](https://socialstream.ninja/media/creator-pack/video/social-stream-ninja-15s-1080p.mp4), choose a [transparent logo](#logos), or copy a script from [AD-COPY.txt](AD-COPY.txt). For OBS setup and editing tips, see [START-HERE.txt](START-HERE.txt).
 
 Click a preview to open its image. On GitHub, use **Download raw file** on the file page to save the original. These assets are excluded from the repository's source ZIP downloads; download the files individually here.
 
@@ -17,7 +17,7 @@ Use transparent PNGs over your own footage or backgrounds. Keep their proportion
 
 ## Video and full-screen cards
 
-The **[15-second promo video](video/social-stream-ninja-15s-1080p.mp4)** moves through the promo, feature, and end cards below. It is a silent 1920 × 1080, 30 fps H.264 MP4. Add it as an OBS Media Source or drop it into your video editor. The [15-second voiceover script](AD-COPY.txt) follows its timing; add your own voice or music if desired.
+The **[15-second promo video](video/social-stream-ninja-15s-1080p.mp4)** moves through the promo, feature, and end cards below. It is a silent 1920 × 1080, 30 fps H.264 MP4. Add it as an OBS Media Source or drop it into your video editor. [Download the beta video](https://cache.socialstream.ninja/beta/media/creator-pack/video/social-stream-ninja-15s-1080p.mp4). The [15-second voiceover script](AD-COPY.txt) follows its timing; add your own voice or music if desired.
 
 | Preview | What it is | Files |
 | --- | --- | --- |

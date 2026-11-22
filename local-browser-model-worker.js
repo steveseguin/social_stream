@@ -1,3 +1,4 @@
+import './shared/utils/hostedAssets.js';
 import {
     env,
     AutoProcessor,
@@ -118,7 +119,7 @@ function postStatus(state, message = '') {
 }
 
 function buildWasmPaths() {
-    const base = new URL('./thirdparty/transformersjs/ort/', import.meta.url).href;
+    const base = self.SSNHostedAssetURL('./thirdparty/transformersjs/ort/', import.meta.url);
     return {
         wasm: `${base}ort-wasm-simd-threaded.asyncify.wasm`,
         mjs: `${base}ort-wasm-simd-threaded.asyncify.mjs`

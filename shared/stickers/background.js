@@ -101,7 +101,7 @@
             points: async function () { await window.pointsSystemReady(); return window.pointsSystem; },
             hasReceiver: hasReceiver,
             assetUrl: function (image) {
-                return new URL('media/stickers/' + image, location.href).href;
+                return SSNStickers.builtInImage(image, location.href);
             },
             prepare: prepare,
             send: deliver,

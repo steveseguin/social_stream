@@ -1,6 +1,7 @@
 // Proper Piper TTS implementation using the actual phonemizer
 (function(window) {
   'use strict';
+  const scriptUrl = typeof document !== 'undefined' && document.currentScript && document.currentScript.src;
   
   const DEFAULT_REMOTE_PIPER_BASE = 'https://largefiles.socialstream.ninja/piper';
   const HUGGING_FACE_PIPER_BASE = 'https://huggingface.co/rhasspy/piper-voices/resolve/main';
@@ -38,8 +39,11 @@
       const extensionBase = typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.getURL === 'function'
         ? trimTrailingSlash(chrome.runtime.getURL(''))
         : null;
-      const locationBase = trimTrailingSlash(new URL('.', window.location.href).href);
-      this.baseUrl = locationBase;
+      const locationBase = trimTrailingSlash(scriptUrl
+        ? new URL('../../', scriptUrl).href
+        : new URL('.', window.location.href).href);
+      this.baseUrl = locationBase === 'https://beta.socialstream.ninja'
+        ? 'https://cache.socialstream.ninja/beta' : locationBase;
       this.extensionBaseUrl = extensionBase && extensionBase !== locationBase ? extensionBase : null;
       this.remoteBaseUrl = ProperPiperTTS.getRemoteBaseUrl();
       this.localPiperBase = this.baseUrl + '/thirdparty/piper';

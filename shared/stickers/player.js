@@ -44,7 +44,7 @@
         if (typeof item.redemptionId !== 'string' || seen.has(item.redemptionId)) return;
         if (!canDisplay() || !Number.isFinite(item.expiresAt) || item.expiresAt < Date.now() || busy || queue.length) { receipt(item, uuid, false); return; }
         var reward = catalog.rewards({ packs: catalog.packs.map(function (pack) { return pack.id; }) }).find(function (r) { return r.id === item.id; });
-        var url = reward ? new URL('media/stickers/' + reward.image, rootUrl).href : catalog.mediaUrl(payload.contentimg);
+        var url = reward ? catalog.builtInImage(reward.image, rootUrl) : catalog.mediaUrl(payload.contentimg);
         if (!url) { receipt(item, uuid, false); return; }
         seen.add(item.redemptionId);
         if (seen.size > 100) seen.delete(seen.values().next().value);
