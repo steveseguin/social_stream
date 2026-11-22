@@ -1,4 +1,112 @@
 (function () {
+	if (!/(^|\.)cam4\.com$/.test(location.hostname)) return;
+	function room() { return location.pathname.toLowerCase().replace(/\/$/, ""); }
+	function startModerationReader() {
+		if (window.__ssnCamModerationReader) return;
+		window.__ssnCamModerationReader = true;
+		var attached, waiting = [];
+		var cam4Require;
+		function publish(data) {
+			data.type = "cam4";
+			if (!data.room) data.room = room();
+			if (waiting) {
+				waiting.push(data);
+				if (waiting.length > 5000) waiting.shift();
+			} else document.dispatchEvent(new CustomEvent("ssn-cam-moderation", { detail: JSON.stringify(data) }));
+		}
+		document.addEventListener("ssn-cam4-moderation-ready", function () {
+			var early = waiting;
+			waiting = null;
+			if (early) early.forEach(publish);
+		});
+		function walk(row, visit) {
+			if (!row) return;
+			var key = Object.keys(row).find(function (key) { return key.indexOf("__reactFiber") === 0; });
+			var fiber = key && row[key];
+			for (var depth = 0; fiber && depth < 180; depth++, fiber = fiber.return) {
+				if (visit(fiber.memoizedProps || {})) return;
+			}
+		}
+		document.addEventListener("ssn-read-cam4-id", function (event) {
+			walk(event.target, function (props) {
+				var message = props.value && props.value.message;
+				if (!message || message.type !== 1 || !message.timestamp) return false;
+				event.target.setAttribute("data-ssn-cam4-id", String(message.timestamp));
+				return true;
+			});
+		});
+		function connectCam4() {
+			if (attached || !document.querySelector("[class*='ChatMessageTypes__msgPosition']")) return;
+			var chunks = window.webpackChunk;
+			var moduleId = "./javascripts/stores/ChatStore.js";
+			// A rendered chat row means this store is already initialized. Never load another bundle.
+			if (!Array.isArray(chunks) || !chunks.some(function (chunk) { return chunk && chunk[1] && chunk[1][moduleId]; })) return;
+			if (!cam4Require) chunks.push([["ssn-cam4-moderation-reader"], {}, function (require) { cam4Require = require; }]);
+			if (!cam4Require) return;
+			var store = cam4Require(moduleId).default;
+			if (!store || typeof store._handleMainChatLight !== "function") return;
+			var original = store._handleMainChatLight;
+			store._handleMainChatLight = function (event) {
+				try {
+					var value = event && event.snapshot && event.snapshot.val();
+					if (value && Object.prototype.hasOwnProperty.call(value, "delete") && value.tm && event.roomName) {
+						publish({ room: "/" + String(event.roomName).toLowerCase(), ids: [String(value.tm)] });
+					}
+				} catch (_) { }
+				return original.apply(this, arguments);
+			};
+			attached = store;
+		}
+		function attach() {
+			try { connectCam4(); } catch (_) {}
+		}
+		attach();
+		setInterval(attach, 2000);
+	}
+	if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.id) {
+		startModerationReader();
+		return;
+	}
+	if (window.__ssnCam4ChatSource) return;
+	window.__ssnCam4ChatSource = true;
+
+	var deleted = new Set(), rowIds = new WeakMap();
+	var serial = 0, instance = Date.now().toString(36) + Math.random().toString(36).slice(2);
+	function trim(collection) {
+		if (collection.size > 5000) collection.delete(collection.keys().next().value);
+	}
+	function removeMessage(id) {
+		if (deleted.has(id)) return;
+		deleted.add(id);
+		trim(deleted);
+		try { chrome.runtime.sendMessage(chrome.runtime.id, { delete: { type: "cam4", meta: { messageId: id } } }, function () {}); } catch (_) {}
+	}
+	function trackModeration(row, data) {
+		var element = row.querySelector("[class*='ChatMessageTypes__msgPosition']") || row;
+		element.dispatchEvent(new CustomEvent("ssn-read-cam4-id", { bubbles: true }));
+		var native = element.getAttribute("data-ssn-cam4-id");
+		var id = native ? room() + ":" + native : rowIds.get(row);
+		if (!id) {
+			id = room() + ":ssn:" + instance + ":" + (++serial);
+			rowIds.set(row, id);
+		}
+		if (deleted.has(id)) return false;
+		data.meta = data.meta || {};
+		data.meta.messageId = id;
+		return true;
+	}
+	document.addEventListener("ssn-cam-moderation", function (event) {
+		try {
+			var data = JSON.parse(event.detail);
+			if (!data || data.type !== "cam4" || data.room !== room()) return;
+			if (Array.isArray(data.ids)) data.ids.slice(0, 5000).forEach(function (id) {
+				if (/^\d+$/.test(String(id))) removeMessage(data.room + ":" + id);
+			});
+		} catch (_) {}
+	});
+	if (window.ninjafy) startModerationReader();
+	document.dispatchEvent(new Event("ssn-cam4-moderation-ready"));
+
 
 	var settings = {};
 	var isExtensionOn = true;
@@ -80,7 +188,7 @@
 				// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 				data.textonly = settings.textonlymode || false;
 				data.type = "cam4";
-				if (window.__ssnCamModeration && !window.__ssnCamModeration.track(ele, data)) return;
+				if (!trackModeration(ele, data)) return;
 				pushMessage(data);
 			}
 			return;
@@ -135,7 +243,7 @@
 		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "cam4";
-		if (window.__ssnCamModeration && !window.__ssnCamModeration.track(ele, data)) return;
+		if (!trackModeration(ele, data)) return;
 
 		pushMessage(data);
 	}

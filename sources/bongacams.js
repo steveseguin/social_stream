@@ -1,4 +1,105 @@
 (function () {
+	if (!/(^|\.)bongacams\.com$/.test(location.hostname)) return;
+	function room() { return location.pathname.toLowerCase().replace(/\/$/, ""); }
+	function startModerationReader() {
+		if (window.__ssnCamModerationReader) return;
+		window.__ssnCamModerationReader = true;
+		var attached, waiting = [];
+		var detach;
+		function publish(data) {
+			data.type = "bongacams";
+			if (!data.room) data.room = room();
+			if (waiting) {
+				waiting.push(data);
+				if (waiting.length > 5000) waiting.shift();
+			} else document.dispatchEvent(new CustomEvent("ssn-cam-moderation", { detail: JSON.stringify(data) }));
+		}
+		document.addEventListener("ssn-bongacams-moderation-ready", function () {
+			var early = waiting;
+			waiting = null;
+			if (early) early.forEach(publish);
+		});
+		function connectBonga() {
+			var chat = window.chat;
+			if (!chat || chat === attached || typeof chat.onDeleteMessages !== "function") return;
+			if (detach) detach();
+			var original = chat.onDeleteMessages;
+			var wrapper = function (event) {
+				try {
+					if (event && (!event.r || String(event.r).toLowerCase() === room().split("/")[1])) {
+						if (event.id) publish({ ids: [String(event.id)] });
+						else if (event.username) publish({ username: String(event.username) });
+					}
+				} catch (_) { }
+				return original.apply(this, arguments);
+			};
+			chat.onDeleteMessages = wrapper;
+			attached = chat;
+			detach = function () { if (chat.onDeleteMessages === wrapper) chat.onDeleteMessages = original; };
+		}
+		function attach() {
+			try { connectBonga(); } catch (_) {}
+		}
+		attach();
+		setInterval(attach, 2000);
+	}
+	if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.id) {
+		startModerationReader();
+		return;
+	}
+	if (window.__ssnBongacamsChatSource) return;
+	window.__ssnBongacamsChatSource = true;
+
+	var deleted = new Set(), rowIds = new WeakMap();
+	var serial = 0, instance = Date.now().toString(36) + Math.random().toString(36).slice(2);
+	var records = new Map(), deletedRows = new WeakSet();
+	function trim(collection) {
+		if (collection.size > 5000) collection.delete(collection.keys().next().value);
+	}
+	function removeMessage(id) {
+		if (deleted.has(id)) return;
+		deleted.add(id);
+		trim(deleted);
+		records.delete(id);
+		try { chrome.runtime.sendMessage(chrome.runtime.id, { delete: { type: "bongacams", meta: { messageId: id } } }, function () {}); } catch (_) {}
+	}
+	function trackModeration(row, data) {
+		if (deletedRows.has(row)) return false;
+		var element = row.matches(".msg_row") ? row : row.querySelector(".msg_row");
+		var match = element && element.className.match(/(?:^|\s)js-chat_msg_(\d+)(?:\s|$)/);
+		var native = match && match[1];
+		var id = native ? room() + ":" + native : rowIds.get(row);
+		if (!id) {
+			id = room() + ":ssn:" + instance + ":" + (++serial);
+			rowIds.set(row, id);
+		}
+		if (deleted.has(id)) return false;
+		data.meta = data.meta || {};
+		data.meta.messageId = id;
+		records.set(id, { room: room(), user: (row.getAttribute("data-author") || data.chatname || "").toLowerCase() });
+		trim(records);
+		return true;
+	}
+	document.addEventListener("ssn-cam-moderation", function (event) {
+		try {
+			var data = JSON.parse(event.detail);
+			if (!data || data.type !== "bongacams" || data.room !== room()) return;
+			if (Array.isArray(data.ids)) data.ids.slice(0, 5000).forEach(function (id) {
+				if (/^\d+$/.test(String(id))) removeMessage(data.room + ":" + id);
+			});
+			var username = typeof data.username === "string" && data.username.toLowerCase();
+			if (!username) return;
+			records.forEach(function (record, id) {
+				if (record.room === data.room && record.user === username) removeMessage(id);
+			});
+			document.querySelectorAll(".js-chat_msg").forEach(function (row) {
+				if ((row.getAttribute("data-author") || "").toLowerCase() === username) deletedRows.add(row);
+			});
+		} catch (_) {}
+	});
+	if (window.ninjafy) startModerationReader();
+	document.dispatchEvent(new Event("ssn-bongacams-moderation-ready"));
+
 
 	var settings = {};
 	var isExtensionOn = true;
@@ -124,7 +225,7 @@
 		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "bongacams";
-		if (window.__ssnCamModeration && !window.__ssnCamModeration.track(ele, data)) return;
+		if (!trackModeration(ele, data)) return;
 
 		pushMessage(data);
 	}

@@ -1,5 +1,24 @@
 (function () {
 	if (!/^(www\.)?altstream\.online$/.test(location.hostname) || window.__SSN_ALTSTREAM_ACTIVE__) return;
+	var tipSelector = "div.group.rounded-lg.border-emerald-500";
+	if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.id) {
+		if (window.__ssnAltstreamMessageReader) return;
+		window.__ssnAltstreamMessageReader = true;
+		document.addEventListener("ssn-read-altstream-message", function (event) {
+			var row = event.target;
+			if (!row || !row.matches || !row.matches('[id^="chat-message-"], ' + tipSelector)) return;
+			var message = rowMessage(row);
+			if (!message) return;
+			row.setAttribute("data-ssn-altstream-message", JSON.stringify({
+				id: String(message.id),
+				sentAt: Number.isFinite(message.sentAt) ? message.sentAt : null,
+				authorUsername: typeof message.authorUsername === "string" ? message.authorUsername : "",
+				authorImage: typeof message.authorImage === "string" ? message.authorImage : "",
+				text: typeof message.text === "string" && message.text.indexOf("[KOFI_TIP]:") === 0 ? message.text : ""
+			}));
+		});
+		return;
+	}
 	window.__SSN_ALTSTREAM_ACTIVE__ = true;
 
 	var settings = {};
@@ -12,7 +31,6 @@
 	var channel = location.pathname.split("/")[1] || "";
 	var seen = new Set();
 	var processedRows = new WeakSet();
-	var tipSelector = "div.group.rounded-lg.border-emerald-500";
 	var rowSelector = '[id^="chat-message-"], ' + tipSelector;
 	var viewerRequest = null;
 
@@ -97,15 +115,21 @@
 		return row.matches(tipSelector) && typeof message.text === "string" && message.text.indexOf("[KOFI_TIP]:") === 0;
 	}
 
+	function rowMessage(row) {
+		var key = Object.keys(row).find(function (key) { return key.indexOf("__reactFiber$") === 0; });
+		var fiber = key && row[key];
+		for (var depth = 0; fiber && depth < 6; depth++, fiber = fiber.return) {
+			var message = fiber.memoizedProps && fiber.memoizedProps.message;
+			if (matchesMessage(row, message)) return message;
+		}
+		return null;
+	}
+
 	function messageDetails(row) {
 		try {
-			// SSApp can read page properties directly; extensions use the packaged reader.
-			var key = Object.keys(row).find(function (key) { return key.indexOf("__reactFiber$") === 0; });
-			var fiber = key && row[key];
-			for (var depth = 0; fiber && depth < 6; depth++, fiber = fiber.return) {
-				var message = fiber.memoizedProps && fiber.memoizedProps.message;
-				if (matchesMessage(row, message)) return message;
-			}
+			// SSApp can read the row directly. Chrome requests it from the page.
+			var native = rowMessage(row);
+			if (native) return native;
 			row.removeAttribute("data-ssn-altstream-message");
 			row.dispatchEvent(new CustomEvent("ssn-read-altstream-message", { bubbles: true }));
 			var value = row.getAttribute("data-ssn-altstream-message");

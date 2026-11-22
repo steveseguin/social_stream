@@ -1,4 +1,121 @@
 (function () {
+	if (!/(^|\.)stripchat\.com$/.test(location.hostname)) return;
+	function room() { return location.pathname.toLowerCase().replace(/\/$/, ""); }
+	function startModerationReader() {
+		if (window.__ssnCamModerationReader) return;
+		window.__ssnCamModerationReader = true;
+		var attached, waiting = [];
+		var detach;
+		function publish(data) {
+			data.type = "stripchat";
+			if (!data.room) data.room = room();
+			if (waiting) {
+				waiting.push(data);
+				if (waiting.length > 5000) waiting.shift();
+			} else document.dispatchEvent(new CustomEvent("ssn-cam-moderation", { detail: JSON.stringify(data) }));
+		}
+		document.addEventListener("ssn-stripchat-moderation-ready", function () {
+			var early = waiting;
+			waiting = null;
+			if (early) early.forEach(publish);
+		});
+		function walk(row, visit) {
+			if (!row) return;
+			var key = Object.keys(row).find(function (key) { return key.indexOf("__reactFiber") === 0; });
+			var fiber = key && row[key];
+			for (var depth = 0; fiber && depth < 180; depth++, fiber = fiber.return) {
+				if (visit(fiber.memoizedProps || {})) return;
+			}
+		}
+		function connectStrip() {
+			var bus = null;
+			walk(document.querySelector(".message-base"), function (props) {
+				var value = props.value && props.value.eventEmitter;
+				if (!value || !value.handlers || !value.handlers.wsMessage || typeof value.on !== "function") return false;
+				bus = value;
+				return true;
+			});
+			if (!bus || bus === attached) return;
+			if (detach) detach();
+			attached = bus;
+			// Namespace listener observes existing subscriptions without requesting new ones.
+			detach = bus.on({ namespace: "wsMessage", handler: function (event) {
+				var data = event && event.data;
+				if (!data) return;
+				if (event.type === "clearChatMessages") {
+					var users = Array.isArray(data.senderIds) ? data.senderIds : [data.senderId];
+					publish({ userIds: users.filter(function (id) { return id != null; }).map(String) });
+				} else if (/^deleteChatMessages@\d+$/.test(event.type) && Array.isArray(data.messageIds)) {
+					publish({ ids: data.messageIds.map(String) });
+				}
+			} });
+		}
+		function attach() {
+			try { connectStrip(); } catch (_) {}
+		}
+		attach();
+		setInterval(attach, 2000);
+	}
+	if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.id) {
+		startModerationReader();
+		return;
+	}
+	if (window.__ssnStripchatChatSource) return;
+	window.__ssnStripchatChatSource = true;
+
+	var deleted = new Set(), rowIds = new WeakMap();
+	var serial = 0, instance = Date.now().toString(36) + Math.random().toString(36).slice(2);
+	var records = new Map(), deletedRows = new WeakSet();
+	function userId(row) {
+		var element = row.querySelector("[id^='user-levels-name-']");
+		var match = element && element.id.match(/^user-levels-name-(\d+)-/);
+		return match ? match[1] : "";
+	}
+	function trim(collection) {
+		if (collection.size > 5000) collection.delete(collection.keys().next().value);
+	}
+	function removeMessage(id) {
+		if (deleted.has(id)) return;
+		deleted.add(id);
+		trim(deleted);
+		records.delete(id);
+		try { chrome.runtime.sendMessage(chrome.runtime.id, { delete: { type: "stripchat", meta: { messageId: id } } }, function () {}); } catch (_) {}
+	}
+	function trackModeration(row, data) {
+		if (deletedRows.has(row)) return false;
+		var native = row.getAttribute("data-message-id");
+		var id = native ? native : rowIds.get(row);
+		if (!id) {
+			id = room() + ":ssn:" + instance + ":" + (++serial);
+			rowIds.set(row, id);
+		}
+		if (deleted.has(id)) return false;
+		data.meta = data.meta || {};
+		data.meta.messageId = id;
+		records.set(id, { room: room(), user: userId(row) });
+		trim(records);
+		return true;
+	}
+	document.addEventListener("ssn-cam-moderation", function (event) {
+		try {
+			var data = JSON.parse(event.detail);
+			if (!data || data.type !== "stripchat" || data.room !== room()) return;
+			if (Array.isArray(data.ids)) data.ids.slice(0, 5000).forEach(function (id) {
+				if (/^\d+$/.test(String(id))) removeMessage(String(id));
+			});
+			var users = new Set(Array.isArray(data.userIds) ? data.userIds.map(String) : []);
+			if (!users.size) return;
+			records.forEach(function (record, id) {
+				if (record.room === data.room && users.has(record.user)) removeMessage(id);
+			});
+			document.querySelectorAll(".message-base").forEach(function (row) {
+				if (users.has(userId(row))) deletedRows.add(row);
+			});
+		} catch (_) {}
+	});
+	if (window.ninjafy) startModerationReader();
+	document.dispatchEvent(new Event("ssn-stripchat-moderation-ready"));
+
 
 	var settings = {};
 	var isExtensionOn = true;
@@ -223,7 +340,7 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "stripchat";
 		if (ele.dataset && ele.dataset.messageId) data.meta = { messageId: ele.dataset.messageId };
-		if (window.__ssnCamModeration && !window.__ssnCamModeration.track(ele, data)) return;
+		if (!trackModeration(ele, data)) return;
 
 		pushMessage(data);
 	}
