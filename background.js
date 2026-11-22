@@ -17867,9 +17867,11 @@ async function dispatchRelayMessageToTab(tab, data, options = {}) {
 			}
 			return;
 		}
-		if (relayMessageToWebsocketSourceTab(tab.id, data.response, messageOrigin, data.youtubeReplyVideoId)) {
-			relayTabContext.storeMessage(data.response);
-			lastSentMessage = sanitizeMessageForTracking(data.response, false);
+		const youtubeBotReply = messageOrigin === "chatbot" && getWebsocketSourcePlatformFromUrl(url.split(/[?#]/, 1)[0]) === "youtube";
+		const message = youtubeBotReply ? limitMessageForPlatform(data.response, "youtube") : data.response;
+		if (relayMessageToWebsocketSourceTab(tab.id, message, messageOrigin, data.youtubeReplyVideoId)) {
+			relayTabContext.storeMessage(message);
+			lastSentMessage = sanitizeMessageForTracking(message, false);
 			lastSentTimestamp = now;
 			lastMessageCounter = 0;
 			messageTimeout[tab.id] = now;

@@ -36,9 +36,11 @@
 	var needsChoice = false; // SSN says the host has not yet chosen where their captions go.
 	var overlayOpen = false; // SSN says a captions overlay is open, so words in progress are worth sending.
 	var liveSent = "";
+	var liveLanguage = "";
+	var liveSentLanguage = "";
 	var liveTimer = null;
 	// What a pasted link carries besides the session: how to reach that session.
-	var CARRIED_PARAMS = ["password", "server3", "server2", "localserver", "localserverport"];
+	var CARRIED_PARAMS = ["password", "server", "server3", "server2", "localserver", "localserverport"];
 	var captionsHeard = 0;
 	// A name is only sent when the link asks for one. Otherwise chats use the host's account name,
 	// and dock-only captions use the host name set in the menu.
@@ -307,20 +309,22 @@
 
 	// Words in progress go to SSN only for a captions overlay to show, a few times a second at
 	// most. They are never posted and never shown in the dock.
-	function sendLive(words) {
-		if (!overlayOpen || needsChoice || words === liveSent || liveTimer) {
+	function sendLive(words, language) {
+		liveLanguage = language;
+		if (!overlayOpen || needsChoice || liveTimer || (words === liveSent && (!words || language === liveSentLanguage))) {
 			return;
 		}
 		liveTimer = setTimeout(function () {
 			liveTimer = null;
 			var latest = pendingInterim;
-			if (latest === liveSent || !connection || !connection.ready()) {
+			if ((latest === liveSent && (!latest || liveLanguage === liveSentLanguage)) || !connection || !connection.ready()) {
 				return;
 			}
 			liveSent = latest;
+			liveSentLanguage = liveLanguage;
 			requestCounter += 1;
 			try {
-				connection.send({ action: "caption", value: { interim: latest.slice(-400), lang: $("language").value }, protocol: 2, apiid: session, get: "captions-live-" + requestCounter, replyFormat: "commandResult" });
+				connection.send({ action: "caption", value: { interim: latest.slice(-400), lang: liveLanguage }, protocol: 2, apiid: session, get: "captions-live-" + requestCounter, replyFormat: "commandResult" });
 			} catch (e) {}
 		}, 250);
 	}
@@ -340,7 +344,7 @@
 		$("heard").textContent = text;
 	}
 
-	function send(text) {
+	function send(text, language) {
 		text = String(text || "").replace(/\s+/g, " ").trim();
 		if (!text) {
 			return;
@@ -351,7 +355,7 @@
 			if (cut < MAX_SEND_LENGTH / 2) {
 				cut = MAX_SEND_LENGTH;
 			}
-			send(text.slice(0, cut));
+			send(text.slice(0, cut), language);
 			text = text.slice(cut).trim();
 		}
 		remember(text);
@@ -368,7 +372,7 @@
 		try {
 			connection.send({
 				action: "caption",
-				value: nameOverride ? { text: text, name: nameOverride, lang: $("language").value } : { text: text, lang: $("language").value },
+				value: nameOverride ? { text: text, name: nameOverride, lang: language } : { text: text, lang: language },
 				protocol: 2,
 				apiid: session,
 				get: id,
@@ -420,14 +424,14 @@
 			for (var i = event.resultIndex; i < event.results.length; i++) {
 				var transcript = event.results[i][0].transcript;
 				if (event.results[i].isFinal) {
-					send(transcript);
+					send(transcript, instance.lang);
 				} else {
 					interim += transcript;
 				}
 			}
 			pendingInterim = interim.trim();
 			$("interim").textContent = pendingInterim;
-			sendLive(pendingInterim);
+			sendLive(pendingInterim, instance.lang);
 		};
 		instance.onerror = function (event) {
 			if (recognition !== instance) {
@@ -465,6 +469,7 @@
 			recognition = null;
 			// Words the browser never finished are only its guess, so they are not sent anywhere.
 			pendingInterim = "";
+			sendLive("", instance.lang);
 			$("interim").textContent = "";
 			if (listening) {
 				restartTimer = setTimeout(begin, restartDelay);
@@ -512,6 +517,7 @@
 		pendingInterim = "";
 		$("interim").textContent = "";
 		if (instance) {
+			sendLive("", instance.lang);
 			instance.onresult = instance.onerror = instance.onend = null;
 			try {
 				instance.abort();
@@ -602,7 +608,9 @@
 				$("copy").textContent = "Link copied";
 			};
 			try {
-				navigator.clipboard.writeText(location.href).then(done, function () {});
+				var link = new URL(location.href);
+				link.searchParams.set("lang", $("language").value);
+				navigator.clipboard.writeText(link.href).then(done, function () {});
 			} catch (e) {}
 		});
 		$("choosePost").addEventListener("click", function () {

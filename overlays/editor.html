@@ -11,7 +11,7 @@
 	<link rel="icon" href="../favicon.ico">
 	<link rel="stylesheet" href="../docs/css/site-shell.css">
 	<script src="../docs/js/site-shell.js"></script>
-	<link rel="stylesheet" href="studio.css?v=17">
+	<link rel="stylesheet" href="studio.css?v=18">
 </head>
 <body class="site-header-offset studio-editor">
 	<a class="studio-skip" href="#form">Skip to settings</a>
@@ -69,7 +69,7 @@
 	</div>
 	<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-	<script src="core.js?v=22"></script>
+	<script src="core.js?v=23"></script>
 	<script src="templates/countries.js?v=15"></script>
 	<script src="templates/engines.js?v=19"></script>
 	<script src="templates/socials.js?v=18"></script>
@@ -108,16 +108,33 @@
 	<script src="templates/moments.js?v=4"></script>
 	<script src="templates/random.js?v=3"></script>
 	<script src="templates/countscreen.js?v=3"></script>
-	<script src="templates/channelart.js?v=1"></script>
+	<script src="templates/channelart.js?v=2"></script>
 	<script src="templates/seasontags.js?v=1"></script>
 	<script>
 	(function () {
 		var $ = function (id) { return document.getElementById(id); };
 		var params = new URLSearchParams(location.search);
 		var def = SSO.get(params.get("t")) || SSO.list()[0];
-		var cfg = SSO.readConfig(def, location.search);
+		var cfg = SSO.readConfig(def);
+		// Settings can sit after the # in the link, so the skip link must not put "#form" in their place.
+		document.querySelector(".studio-skip").addEventListener("click", function (event) { event.preventDefault(); $("form").focus(); });
 		// A still picture (channel art) is downloaded as PNG files; it has no OBS link, size or events.
 		var still = def.still || null;
+		// strip: on a phone, panels are shown in one row at a size that can be read; the row is swiped sideways.
+		var strip = false, stillCount = 0;
+		function narrow() { return window.innerWidth <= 860; }
+		function wantStrip() { return !!(still && still.row && stillCount && narrow()); }
+		// mine: the text boxes the viewer has typed in. A new style never replaces those, even where the words happen to
+		// match a style's own sample. For a still picture the list rides in the link, so it is still known after a reload.
+		function readMine() {
+			var out = {};
+			if (!still) { return out; }
+			(new URLSearchParams(SSO.pageQuery()).get("mine") || "").split(",").forEach(function (key) {
+				if (def.fields.some(function (f) { return f.key === key; })) { out[key] = true; }
+			});
+			return out;
+		}
+		var mine = readMine();
 		var sizeTouched = !still && (params.has("w") || params.has("h"));
 		var extra = new URLSearchParams();
 		["css", "b64css", "cssb64", "scale"].forEach(function (key) { if (params.has(key)) { extra.set(key, params.get(key)); } });
@@ -144,6 +161,13 @@
 		$("desc").textContent = def.description || "";
 		document.title = def.name + " - Overlay Editor - Social Stream Ninja";
 
+		// Sample words come with the overlay: its defaults, and the words its styles bring. Anything else in a text box is
+		// the viewer's own.
+		function isSample(field, value) {
+			var own = String(value == null ? "" : value);
+			if (own === String(field.default == null ? "" : field.default)) { return true; }
+			return def.presets.some(function (preset) { return preset.values && field.key in preset.values && String(preset.values[field.key]) === own; });
+		}
 		def.presets.forEach(function (p) {
 			var b = document.createElement("button");
 			b.type = "button";
@@ -151,13 +175,19 @@
 			b.textContent = p.name;
 			b.addEventListener("click", function () {
 				// Presets restyle; the viewer's own text, messages and socials carry over.
+				// On an ordinary overlay a style still sets every text box it names, as it always has: a text box there can
+				// be a working setting (which list of drawn numbers to use), not only words.
+				// Channel art is all words. There a style's sample words replace other sample words, never something the
+				// viewer typed.
 				var keep = {};
 				def.fields.forEach(function (f) {
-					if ((f.type === "text" || f.type === "textarea" || f.type === "socials" || f.keep) && !(f.key in p.values)) { keep[f.key] = cfg[f.key]; }
+					var words = f.type === "text" || f.type === "textarea" || f.type === "socials";
+					if (!words && !f.keep) { return; }
+					if (!(f.key in p.values) || (still && words && (mine[f.key] || !isSample(f, cfg[f.key])))) { keep[f.key] = cfg[f.key]; }
 				});
 				cfg = SSO.readConfig(def, "");
-				Object.keys(keep).forEach(function (k) { cfg[k] = keep[k]; });
 				Object.keys(p.values).forEach(function (k) { cfg[k] = p.values[k]; });
+				Object.keys(keep).forEach(function (k) { cfg[k] = keep[k]; });
 				buildForm();
 				if (!sizeTouched) { size = [0, 0]; }
 				update(true);
@@ -181,7 +211,7 @@
 			var list = SSO.parseSocials(cfg[field.key]).map(function (s) { return { net: s.net, handle: s.handle }; });
 			var holder = document.createElement("div");
 			wrap.appendChild(holder);
-			function save() { cfg[field.key] = SSO.stringifySocials(list); update(); }
+			function save() { cfg[field.key] = SSO.stringifySocials(list); mine[field.key] = true; update(); }
 			function draw() {
 				holder.innerHTML = "";
 				list.forEach(function (item, idx) {
@@ -285,7 +315,7 @@
 						wrap.appendChild(up2);
 					}
 					ta.value = value;
-					ta.addEventListener("input", function () { cfg[field.key] = ta.value; update(); });
+					ta.addEventListener("input", function () { cfg[field.key] = ta.value; mine[field.key] = true; update(); });
 					wrap.appendChild(ta);
 				} else if (field.type === "range") {
 					var row = document.createElement("div");
@@ -362,6 +392,7 @@
 							cfg[field.key] = n;
 						} else {
 							cfg[field.key] = inp.value;
+							mine[field.key] = true;
 						}
 						update();
 						refreshVisibility();
@@ -415,13 +446,18 @@
 		$("box").className = "frame-box bg-" + bg;
 
 		function currentSize() {
-			var base = def.sizeFor ? def.sizeFor(cfg) : def.size;
+			var base = def.sizeFor ? def.sizeFor(cfg, false, strip) : def.size;
 			return [SSO.clamp(Math.round(size[0] || base[0]), 50, 7680), SSO.clamp(Math.round(size[1] || base[1]), 20, 4320)];
 		}
 		function fit() {
 			var s = currentSize();
 			var stage = $("stage");
-			var scale = Math.min((stage.clientWidth - 40) / s[0], (stage.clientHeight - 40) / s[1], 1);
+			stage.className = "stage" + (strip ? " strip" : "");
+			if (!strip) { stage.style.height = ""; }
+			// In a strip one picture fills the width, whatever its height: the rest are a swipe away, and a tall one
+			// scrolls down inside the preview.
+			var scale = strip ? Math.min((stage.clientWidth - 24) / 344, 1) : Math.min((stage.clientWidth - 40) / s[0], (stage.clientHeight - 40) / s[1], 1);
+			if (strip) { stage.style.height = SSO.clamp(Math.round(s[1] * scale) + 16, 200, Math.round(window.innerHeight * 0.62)) + "px"; }
 			var frame = $("preview");
 			frame.style.width = s[0] + "px";
 			frame.style.height = s[1] + "px";
@@ -454,10 +490,30 @@
 			$("open").href = link;
 			$("hint").innerHTML = still ? still.hint : "In OBS: <b>Sources → + → Browser</b>, paste the link, and set width <b>" + s[0] + "</b> and height <b>" + s[1] + "</b>. Bookmark this page to edit it later.";
 			if (still) { stillButtons(); }
-			try { history.replaceState(null, "", "editor.html?" + query + (sizeTouched ? "&w=" + s[0] + "&h=" + s[1] : "")); } catch (e) {}
+			var pageLink = "editor.html?" + query + (sizeTouched ? "&w=" + s[0] + "&h=" + s[1] : ""), frameLink = "view.html?" + query + "&preview";
+			if (still) {
+				// Channel art can hold a lot of text. Its settings ride after the #, which no server is sent, so the link can
+				// always be opened again however long it gets. What the preview page reads from the query itself (scale, css)
+				// stays in the query, and so does the overlay's name.
+				var own = SSO.buildQuery(def, cfg), split = own.indexOf("&"), head = (split < 0 ? own : own.slice(0, split)) + (extra.toString() ? "&" + extra.toString() : "");
+				var typed = Object.keys(mine).sort().join(","), tail = split < 0 ? "" : own.slice(split + 1);
+				if (typed) { tail += (tail ? "&" : "") + "mine=" + typed; }
+				if (tail) { tail = "#" + tail; }
+				pageLink = "editor.html?" + head + tail;
+				frameLink = "view.html?" + head + "&preview" + (strip ? "&row=1" : "") + tail;
+			}
+			try { history.replaceState(null, "", pageLink); } catch (e) {}
 			fit();
 			clearTimeout(timer);
-			timer = setTimeout(function () { $("preview").src = "view.html?" + query + "&preview"; }, now ? 0 : 300);
+			timer = setTimeout(function () {
+				var frame = $("preview");
+				// A still picture's preview is swapped in place. Setting src would add an entry to the browser's history on
+				// every change, and Back would then step the preview to an older design while the form stayed on this one.
+				if (still) {
+					try { frame.contentWindow.location.replace(new URL(frameLink, location.href).href); return; } catch (e) {}
+				}
+				frame.src = frameLink;
+			}, now ? 0 : 300);
 		}
 		$("replay").addEventListener("click", function () { update(true); });
 		// Scene changes step through a typical show, so every scene-aware reaction gets its turn.
@@ -497,7 +553,26 @@
 		$("copy").addEventListener("click", function () { copyLink($("url").value, "Link copied. Paste it into an OBS Browser Source."); });
 
 		// ---------- still pictures (channel art): downloads in place of an OBS link ----------
-		var stillRow = null, stillWarn = null, stillKey = null, stillBusy = false, crcTable = null;
+		var stillRow = null, stillWarn = null, stillKey = null, stillBusy = false, crcTable = null, checkSeq = 0, checkTimer = 0, lateChecks = 0;
+		function settingsNow() {
+			var copy = {}, key;
+			for (key in cfg) { copy[key] = cfg[key]; }
+			return copy;
+		}
+		// A picture can only be so tall. Past that the end of its text is left out, and that must never happen quietly.
+		function showCut(items) {
+			var cut = items.filter(function (item) { return item.cut; }).map(function (item) { return item.label; });
+			stillWarn.innerHTML = "<b>Too much text.</b> <span></span>";
+			stillWarn.lastChild.textContent = cut.join(", ") + (cut.length === 1 ? " has" : " have") + " more text than fits in one picture, so the end is left out. Shorten it, or move some of it to another panel.";
+			stillWarn.style.display = cut.length ? "" : "none";
+		}
+		// Asks the overlay which pictures are cut. It answers once its fonts are loaded on this page, so the answer is
+		// the one a download would give, not a guess made with a stand-in font.
+		function checkFit() {
+			var seq = ++checkSeq;
+			if (!still.check) { return; }
+			still.check(settingsNow(), function (items) { if (seq === checkSeq && items) { showCut(items); } });
+		}
 		function saveBlob(blob, name) {
 			var a = document.createElement("a"), href = URL.createObjectURL(blob);
 			a.href = href;
@@ -557,7 +632,7 @@
 							var reader = new FileReader();
 							reader.onerror = function () { finish(null); };
 							reader.onload = function () {
-								out[i] = { name: picture.name, blob: blob, bytes: new Uint8Array(reader.result) };
+								out[i] = { name: picture.name, label: picture.label, cut: !!picture.cut, blob: blob, bytes: new Uint8Array(reader.result) };
 								if (!--left) { finish(out); }
 							};
 							reader.readAsArrayBuffer(blob);
@@ -573,14 +648,15 @@
 		// click, so typing while the pictures are being made cannot change what gets saved.
 		function download(name) {
 			if (stillBusy) { return; }
-			var settings = {}, key;
-			for (key in cfg) { settings[key] = cfg[key]; }
 			stillBusy = true;
 			toast("Making your pictures…");
-			stillFiles(settings, function (made) {
+			stillFiles(settingsNow(), function (made) {
 				stillBusy = false;
 				if (!made) { toast("Sorry, the pictures could not be made. Please try again."); return; }
 				if (!made.length) { toast("There is nothing to download yet."); return; }
+				// What was just drawn is the last word on what fits.
+				checkSeq++;
+				showCut(made);
 				if (name === null && made.length > 1) {
 					saveBlob(zipOf(made), still.zip || "channel-art.zip");
 					toast(made.length + " pictures saved in " + (still.zip || "channel-art.zip") + ".");
@@ -589,7 +665,7 @@
 				var one = name === null ? made[0] : made.filter(function (file) { return file.name === name; })[0];
 				if (!one) { toast("Sorry, that picture could not be made. Please try again."); return; }
 				saveBlob(one.blob, one.name);
-				toast("Saved " + one.name + ".");
+				toast("Saved " + one.name + (one.cut ? ". Not all of its text fits." : "."));
 			});
 		}
 		function stillButton(label, primary, onClick) {
@@ -603,15 +679,15 @@
 		}
 		// The download buttons follow the pictures: one each, plus everything in a zip when there are several.
 		function stillButtons() {
-			var list = still.list(cfg), key = list.map(function (item) { return item.name + "|" + item.label + "|" + (item.cut ? 1 : 0); }).join("\n");
+			var list = still.list(cfg), key = list.map(function (item) { return item.name + "|" + item.label; }).join("\n");
+			stillCount = list.length;
+			strip = wantStrip();
+			lateChecks = 0;
+			clearTimeout(checkTimer);
+			checkTimer = setTimeout(checkFit, 200);
 			if (key === stillKey) { return; }
 			stillKey = key;
 			stillRow.innerHTML = "";
-			// A picture can only be so tall. Past that the end of its text is left out, and that must never happen quietly.
-			var cut = list.filter(function (item) { return item.cut; }).map(function (item) { return item.label; });
-			stillWarn.innerHTML = "<b>Too much text.</b> <span></span>";
-			stillWarn.lastChild.textContent = cut.join(", ") + (cut.length === 1 ? " has" : " have") + " more text than fits in one picture, so the end is left out. Shorten it, or move some of it to another panel.";
-			stillWarn.style.display = cut.length ? "" : "none";
 			if (list.length > 1) {
 				stillButton("Download all (.zip)", true, function () { download(null); });
 				var each = document.createElement("span");
@@ -637,6 +713,23 @@
 			stillRow.className = "row still";
 			$("hint").parentNode.insertBefore(stillRow, $("hint"));
 			document.querySelector(".studio-breadcrumb [aria-current]").textContent = "Customize pictures";
+			// Opening another saved design in this tab (a pasted link, Back, Forward) only changes what follows the #, and
+			// that does not load the page again. The form and the downloads must follow the address.
+			window.addEventListener("hashchange", function () {
+				cfg = SSO.readConfig(def);
+				mine = readMine();
+				stillKey = null;
+				buildForm();
+				update(true);
+			});
+			// A font that turns up late changes how much text fits, so the question is asked again when one lands.
+			if (document.fonts && document.fonts.addEventListener) {
+				document.fonts.addEventListener("loadingdone", function () {
+					if (lateChecks++ > 6) { return; }
+					clearTimeout(checkTimer);
+					checkTimer = setTimeout(checkFit, 250);
+				});
+			}
 		}
 		var toastTimer;
 		function toast(msg) {
@@ -647,7 +740,13 @@
 			toastTimer = setTimeout(function () { t.className = "toast"; }, 2200);
 		}
 		var rt;
-		window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(fit, 100); });
+		window.addEventListener("resize", function () {
+			clearTimeout(rt);
+			rt = setTimeout(function () {
+				// Crossing the phone width swaps the channel art preview between the board and the single row.
+				if (still && strip !== wantStrip()) { update(true); } else { fit(); }
+			}, 100);
+		});
 
 		buildForm();
 		update(true);

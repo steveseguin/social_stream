@@ -2909,7 +2909,7 @@ function setupViewerCountOrder() {
         });
 
         // The chip follows the pointer through the row as it is dragged.
-        container.addEventListener('dragover', function(event) {
+        list.addEventListener('dragover', function(event) {
             if (!viewerCountOrderDrag || viewerCountOrderDrag.list !== list) return;
             event.preventDefault();
             event.dataTransfer.dropEffect = 'move';
@@ -2923,14 +2923,21 @@ function setupViewerCountOrder() {
             }
         });
 
-        container.addEventListener('drop', function(event) {
-            if (viewerCountOrderDrag) event.preventDefault();
+        list.addEventListener('drop', function(event) {
+            if (!viewerCountOrderDrag || viewerCountOrderDrag.list !== list) return;
+            event.preventDefault();
+            viewerCountOrderDrag.dropped = true;
         });
 
         list.addEventListener('dragend', function() {
-            if (!viewerCountOrderDrag) return;
+            if (!viewerCountOrderDrag || viewerCountOrderDrag.list !== list) return;
             viewerCountOrderDrag.chip.classList.remove('is-dragging');
+            const dropped = viewerCountOrderDrag.dropped;
             viewerCountOrderDrag = null;
+            if (!dropped) {
+                renderViewerCountOrder();
+                return;
+            }
             const shown = Array.from(list.querySelectorAll('.viewer-count-order-chip')).map(chip => chip.dataset.sourceType);
             if (shown.join(',') === getViewerCountOrderChips().all.join(',')) {
                 renderViewerCountOrder(); // Nothing moved.

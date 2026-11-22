@@ -39,9 +39,50 @@
 	document.body.style.fontSize = fontSize + "px";
 	box.className = align;
 
+	function addLine(className) {
+		var line = document.createElement("div");
+		line.className = className;
+		var words = document.createElement("span");
+		words.className = "words";
+		line.appendChild(words);
+		box.appendChild(line);
+		return line;
+	}
+
 	function trim() {
-		while (box.children.length > maxLines) {
-			box.removeChild(box.firstChild);
+		var remaining = maxLines;
+		for (var line = box.lastElementChild; line;) {
+			var older = line.previousElementSibling;
+			if (!remaining) {
+				clearTimeout(line.pageTimer);
+				line.remove();
+			} else {
+				var words = line.firstChild;
+				var height = parseFloat(getComputedStyle(words).lineHeight);
+				words.style.maxHeight = remaining * height + "px";
+				var rows = Math.max(1, Math.round(words.clientHeight / height));
+				remaining -= Math.min(remaining, rows);
+				if (line === liveLine) {
+					words.scrollTop = words.scrollHeight;
+				} else if (!line.pageTimer && (showtime || words.scrollHeight > words.clientHeight)) {
+					line.pageTimer = setTimeout(nextPage, (showtime || 4) * 1000, line);
+				}
+			}
+			line = older;
+		}
+	}
+	window.addEventListener("resize", trim);
+
+	// Finished captions can arrive all at once. Page through long ones in reading order.
+	function nextPage(line) {
+		if (!line.parentNode) return;
+		var words = line.firstChild;
+		line.pageTimer = null;
+		if (words.scrollHeight - words.scrollTop > words.clientHeight + 1) {
+			words.scrollTop += words.clientHeight;
+			line.pageTimer = setTimeout(nextPage, (showtime || 4) * 1000, line);
+		} else if (showtime > 0) {
+			remove(line);
 		}
 	}
 
@@ -75,19 +116,9 @@
 			return;
 		}
 		if (!liveLine || !liveLine.parentNode) {
-			liveLine = document.createElement("div");
-			liveLine.className = "line live";
-			box.appendChild(liveLine);
+			liveLine = addLine("line live");
 		}
-		// A long sentence in progress shows its newest words, from the start of a word.
-		if (text.length > 160) {
-			text = text.slice(-160);
-			var space = text.indexOf(" ");
-			if (space !== -1 && space < 30) {
-				text = text.slice(space + 1);
-			}
-		}
-		liveLine.textContent = text;
+		liveLine.firstChild.textContent = text;
 		trim();
 	}
 
@@ -97,16 +128,10 @@
 		if (!text) {
 			return;
 		}
-		var line = document.createElement("div");
-		line.className = "line";
-		line.textContent = text;
-		box.appendChild(line);
+		var line = addLine("line");
+		var words = line.firstChild;
+		words.textContent = text;
 		trim();
-		if (showtime > 0) {
-			setTimeout(function () {
-				remove(line);
-			}, showtime * 1000);
-		}
 	}
 
 	function receive(data) {

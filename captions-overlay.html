@@ -42,11 +42,16 @@
 				text-align: right;
 			}
 			.line {
+				box-sizing: border-box;
 				max-width: 100%;
 				padding: 0.12em 0.5em;
 				border-radius: 0.25em;
 				background: rgba(0, 0, 0, 0.72);
 				overflow-wrap: anywhere;
+			}
+			.line .words {
+				display: block;
+				overflow: hidden;
 			}
 			/* Words still being spoken read a little lighter than a finished line. */
 			.line.live {
@@ -73,6 +78,6 @@
 	<body>
 		<div id="captions" aria-live="off"></div>
 		<p id="notice" hidden></p>
-		<script src="captions-overlay.js"></script>
+		<script src="captions-overlay.js?v=2"></script>
 	</body>
 </html>

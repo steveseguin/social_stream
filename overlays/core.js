@@ -128,8 +128,15 @@
 		}
 	}
 
+	// A still picture's settings: the query string, plus anything after the #. Channel art keeps its words after the #,
+	// which no server is sent, so a long text can never make a link too long to open. Where both name a setting, the
+	// query wins. Every other overlay reads the query string alone, as it always has.
+	SSO.pageQuery = function () {
+		var query = global.location.search || "", hash = String(global.location.hash || "").slice(1);
+		return hash.indexOf("=") === -1 ? query : (query ? query + "&" : "?") + hash;
+	};
 	SSO.readConfig = function (def, search) {
-		var params = new URLSearchParams(search == null ? global.location.search : search);
+		var params = new URLSearchParams(search == null ? (def.still ? SSO.pageQuery() : global.location.search) : search);
 		var cfg = {};
 		def.fields.forEach(function (field) {
 			var raw = params.get(field.key);

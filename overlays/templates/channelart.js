@@ -923,8 +923,9 @@
 		return cv;
 	}
 	// Panels sit in up to three columns, each new one under the shortest column so far.
-	function boardOf(panels) {
-		var cols = Math.min(3, Math.max(1, panels.length)), tops = [], i;
+	// row: every panel side by side instead (the editor's phone preview, one panel to a screen).
+	function boardOf(panels, row) {
+		var cols = row ? Math.max(1, panels.length) : Math.min(3, Math.max(1, panels.length)), tops = [], i;
 		for (i = 0; i < cols; i++) { tops.push(0); }
 		var places = panels.map(function (p) {
 			var best = 0, j;
@@ -944,7 +945,7 @@
 	// so there is something to look at meanwhile.
 	var fontsOut = {};
 	function whenFonts(c, done, early) {
-		var S = styleOf(c), sample = allText(c), wants = [], tries = 0, over = false, soon = 0, key;
+		var S = styleOf(c), sample = allText(c), wants = [], tries = 0, over = false, soon = 0, limit = 0, key;
 		if (S.tf) { wants.push(S.T.tweight + " 16px '" + S.tf + "'"); }
 		if (S.bf) { [400, 600, 700].forEach(function (w) { wants.push(w + " 16px '" + S.bf + "'"); }); }
 		if (S.lf) { wants.push("700 16px '" + S.lf + "'"); SSO.loadFont(S.lf); }
@@ -953,9 +954,12 @@
 		key = wants.join("|");
 		// Fonts that could not be reached a moment ago get one more quick look, not another long wait.
 		if (fontsOut[key]) { tries = 18; }
-		function finish(ok) { if (!over) { over = true; clearTimeout(soon); fontsOut[key] = !ok; done(ok); } }
+		function finish(ok) { if (!over) { over = true; clearTimeout(soon); clearTimeout(limit); fontsOut[key] = !ok; done(ok); } }
 		if (!wants.length || !document.fonts || !document.fonts.load || !window.Promise) { finish(false); return; }
 		if (early) { soon = setTimeout(function () { if (!over) { early(); } }, 900); }
+		// A font request that hangs must not hold up a download. After a few seconds the picture is drawn with the
+		// stand-in font, which is what the preview is showing by then anyway.
+		limit = setTimeout(function () { finish(false); }, fontsOut[key] ? 900 : 3500);
 		(function poll() {
 			Promise.all(wants.map(function (want) { return document.fonts.load(want, sample); })).then(function (found) {
 				if (over) { return; }
@@ -984,12 +988,18 @@
 		root.appendChild(host);
 		return host;
 	}
-	// Repaints with the fonts, and again whenever the frame is resized.
+	// Repaints with the fonts, again whenever the frame is resized, and again if a slow font turns up after all.
 	function keepPainted(root, c, paint) {
-		var alive = true, timer = 0;
+		var alive = true, timer = 0, faces = document.fonts && document.fonts.addEventListener ? document.fonts : null;
 		function later() { clearTimeout(timer); timer = setTimeout(function () { if (alive) { paint(); } }, 80); }
 		window.addEventListener("resize", later);
-		SSO.onCleanup(root, function () { alive = false; clearTimeout(timer); window.removeEventListener("resize", later); });
+		if (faces) { faces.addEventListener("loadingdone", later); }
+		SSO.onCleanup(root, function () {
+			alive = false;
+			clearTimeout(timer);
+			window.removeEventListener("resize", later);
+			if (faces) { faces.removeEventListener("loadingdone", later); }
+		});
 		whenFonts(c, function () { if (alive) { paint(); } }, function () { if (alive) { paint(); } });
 	}
 	// An empty colour means the theme's own; the editor shows that colour in the swatch.
@@ -1017,8 +1027,9 @@
 		category: "channelart",
 		description: "A matching set of pictures for the About section of your channel page: about you, rules, socials, schedule and support. Type your words, then download the images and add them as panels.",
 		size: [1060, 720],
-		sizeFor: function (c) {
-			var board = boardOf(makeSet(c).panels);
+		sizeFor: function (c, thumb, row) {
+			var board = boardOf(makeSet(c).panels, row);
+			if (row) { return [Math.max(344, board.w + 24), SSO.clamp(Math.round(board.h + 24), 134, 1500)]; }
 			return [Math.max(400, board.w + 56), SSO.clamp(Math.round(board.h + 56), 240, 1500)];
 		},
 		fields: lookFields("neon").concat([
@@ -1072,10 +1083,10 @@
 			{ name: "Title strips (text goes on the site)", tags: ["simple", "pro"], values: { theme: "pro", mode: "header" } }
 		],
 		css: BOARD_CSS,
-		render: function (root, c) {
-			var host = boardHost(root);
+		render: function (root, c, ctx) {
+			var host = boardHost(root), row = !!(ctx && ctx.params && ctx.params.has("row"));
 			keepPainted(root, c, function () {
-				var set = makeSet(c), board = boardOf(set.panels);
+				var set = makeSet(c), board = boardOf(set.panels, row);
 				host.innerHTML = "";
 				if (!set.panels.length) { host.innerHTML = '<div class="ca-empty">Give a panel a title to see it here.</div>'; return; }
 				var s = Math.min(1, (host.clientWidth - 24) / board.w, (host.clientHeight - 24) / board.h);
@@ -1091,13 +1102,22 @@
 		// Still pictures: the editor offers these as downloads instead of an OBS link.
 		still: {
 			zip: "channel-panels.zip",
+			// row: narrow pictures; on a phone the editor shows them side by side at full size (see sizeFor).
+			row: true,
 			hint: "On Twitch: open your channel, choose <b>About</b>, switch on <b>Edit Panels</b>, then add each picture with <b>Add a Text or Image Panel</b>. Bookmark this page to change them later.",
-			list: function (c) { return makeSet(c).panels.map(function (p) { return { name: p.name, label: p.label, cut: !!p.cut }; }); },
+			list: function (c) { return makeSet(c).panels.map(function (p) { return { name: p.name, label: p.label }; }); },
+			// Which panels have more text than fits (cut). Asked once the fonts are in, because a panel is measured with the
+			// fonts it is drawn in: a fallback font can fit where the real one does not.
+			check: function (c, done) {
+				whenFonts(c, function () {
+					done(attempt(function () { return makeSet(c).panels.map(function (p) { return { name: p.name, label: p.label, cut: !!p.cut }; }); }));
+				});
+			},
 			files: function (c, done) {
 				whenFonts(c, function () {
 					var scale = String(c.res) === "2" ? 2 : 1;
 					done(attempt(function () {
-						return makeSet(c).panels.map(function (p) { return { name: p.name, label: p.label, canvas: panelCanvas(p, scale) }; });
+						return makeSet(c).panels.map(function (p) { return { name: p.name, label: p.label, cut: !!p.cut, canvas: panelCanvas(p, scale) }; });
 					}));
 				});
 			}

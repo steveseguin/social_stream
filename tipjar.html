@@ -1879,8 +1879,8 @@
         const parsedGoal = readNumberParam('goal', hypeMode ? 100 : 250, countMode ? 1 : 0.01);
         const goal = noGoal ? 0 : (countMode ? Math.max(1, Math.round(parsedGoal)) : parsedGoal);
         const celebration = urlParams.get('celebration') || 'hearts'; // hearts, confetti, fireworks, none
-        const goalResetDaily = !previewMode && urlParams.get('goalreset') === 'daily';
-        const persistent = !previewMode && (urlParams.has('persistent') || goalResetDaily); // Keep amount between sessions
+        const goalResetDaily = !versusMode && !previewMode && urlParams.get('goalreset') === 'daily';
+        const persistent = !versusMode && !previewMode && (urlParams.has('persistent') || goalResetDaily); // Keep amount between sessions
         const sound = !previewMode && urlParams.has('sound'); // Play sound on donation
         const hasCustomTitle = urlParams.has('title');
         const unitLabel = urlParams.get('unit') || (subscriberGoalPreset ? 'subscribers' : (followerGoalPreset ? 'followers' : 'pts'));
@@ -1889,7 +1889,7 @@
         const baseGoalTitle = customTitle;
         const goalEndDate = parseGoalEndDate(urlParams.get('goalend'));
         const goalRewards = parseGoalRewards(urlParams.get('goalrewards'));
-        const showControls = urlParams.has('controls'); // Show control panel
+        const showControls = !versusMode && urlParams.has('controls'); // The Versus controls live in the host's menu.
         const customJarUrl = urlParams.get('jarimage'); // Custom jar image URL
         const alignRight = urlParams.has('alignright');
         const subPoints = readNumberParam('subpoints', subscriberGoalPreset ? 1 : (followerGoalPreset ? 0 : 2.5), 0);

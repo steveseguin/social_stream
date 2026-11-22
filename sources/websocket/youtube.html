@@ -36,14 +36,14 @@
                     <div class="auth-method-options yt-access-options">
                         <label class="auth-method-option yt-access-option">
                             <input type="radio" name="yt-access-level" value="admin" checked>
-                            <span class="yt-access-copy"><strong>Write</strong><small>Send chat · Moderate · Edit</small></span>
+                            <span class="yt-access-copy"><strong>Read and write</strong><small>Send chat · Moderate · Edit</small></span>
                         </label>
                         <label class="auth-method-option yt-access-option">
                             <input type="radio" name="yt-access-level" value="readonly">
                             <span class="yt-access-copy"><strong>Read only</strong><small>View chat</small></span>
                         </label>
                     </div>
-                    <div class="credentials-note yt-access-note"><strong>Write</strong> is recommended. Google's consent screen will show broad YouTube permissions, as no chat-only scope exists.</div>
+                    <div class="credentials-note yt-access-note"><strong>Read and write</strong> is recommended. Google's consent screen will show broad YouTube permissions, as no chat-only scope exists.</div>
                 </div>
                 <div id="auth-method-selector" class="auth-method-selector hidden">
                     <label class="auth-method-label">Sign-in method</label>
@@ -229,7 +229,7 @@
                         <input type="text" id="input-text" placeholder="Send Message">
                         <button id="sendmessage" class="auth-button">Send</button>
                     </div>
-                    <div id="write-access-note" class="credentials-note hidden">Sign out and sign in with Write access to send chat, moderate chat, or edit stream details.</div>
+                    <div id="write-access-note" class="credentials-note hidden">Sign in again and approve write access to send replies.</div>
                 </div>
             </div>
         </div>
@@ -380,6 +380,15 @@ try {
 		return getYouTubeAccessLevel() === 'admin' ? YT_ADMIN_SCOPES : YT_READONLY_SCOPES;
 	}
 
+	function getYouTubeGrantedAccessLevel(requestedLevel, scope) {
+		if (requestedLevel !== 'admin') return 'readonly';
+		// OAuth permits omitting scope when the full request was granted.
+		if (scope == null) return 'admin';
+		const scopes = String(scope).split(/\s+/);
+		return scopes.includes('https://www.googleapis.com/auth/youtube.force-ssl') ||
+			scopes.includes('https://www.googleapis.com/auth/youtube') ? 'admin' : 'readonly';
+	}
+
 	function getYouTubeTokenAccessLevel() {
 		const stored = localStorage.getItem(YT_TOKEN_ACCESS_LEVEL_KEY);
 		if (stored !== null) {
@@ -402,7 +411,7 @@ try {
 	}
 
 	function getWriteAccessRequiredMessage() {
-		return 'Write access required — sign in again to chat, moderate, or edit.';
+		return (liveChatId ? 'Chat is connected. ' : '') + 'Sign in again and approve write access to send replies.';
 	}
 
 	function setPendingYouTubeTokenAccessLevel(value) {
@@ -5405,17 +5414,15 @@ function enableBackgroundKeepAlive() {
 		}
 	}
 	function parseFragment(hash) {
-		const tokens = {};
-		hash.replace('#', '').split('&').forEach(param => {
-			const [key, value] = param.split('=');
-			tokens[key] = value;
-		});
-		if (tokens.access_token) {
-			const expiresIn = tokens.expires_in ? parseInt(tokens.expires_in) : 3600;
-			setStoredToken(tokens.access_token, expiresIn, null, null, consumePendingYouTubeTokenAccessLevel() || getYouTubeAccessLevel());
+		const params = new URLSearchParams(hash.slice(1));
+		const token = params.get('access_token');
+		if (token) {
+			const requested = consumePendingYouTubeTokenAccessLevel() || getYouTubeAccessLevel();
+			const granted = getYouTubeGrantedAccessLevel(requested, params.get('scope'));
+			setStoredToken(token, Number(params.get('expires_in')) || 3600, null, null, granted);
 			clearExpectedOAuthState();
             window.history.replaceState({}, document.title, getPostAuthRedirectUrl());
-			verifyAndUseToken(tokens.access_token);
+			verifyAndUseToken(token);
 		} else {
 			console.error('No access token found in URL fragment');
 			clearExpectedOAuthState();
@@ -5430,10 +5437,7 @@ function enableBackgroundKeepAlive() {
 			console.log('Attempting to refresh token or re-authenticate.');
 			const storedRefreshToken = localStorage.getItem('youtubeRefreshToken');
 			if (storedRefreshToken) {
-				const refreshed = await refreshAccessToken(storedRefreshToken);
-				if (refreshed) {
-					return true;
-				}
+				return refreshAccessToken(storedRefreshToken);
 			}
 			clearStoredToken();
 			showAuthButton();
@@ -5549,6 +5553,9 @@ function enableBackgroundKeepAlive() {
         }
 		refreshClientOverrides();
 		const authSource = getStoredAuthSource();
+		const originalToken = localStorage.getItem('youtubeOAuthToken');
+		const sameSession = () => localStorage.getItem('youtubeRefreshToken') === refreshTokenValue &&
+			localStorage.getItem('youtubeOAuthToken') === originalToken;
 		try {
 			let data = null;
 			if (authSource === YT_AUTH_SOURCE_CUSTOM) {
@@ -5571,20 +5578,27 @@ function enableBackgroundKeepAlive() {
 					client_id: DEFAULT_YT_CLIENT_ID
 				});
 			}
+			// Another window can sign out, sign in or refresh this account while the request is pending.
+			if (!sameSession()) return !!localStorage.getItem('youtubeOAuthToken');
 			if (!data || !data.access_token) {
 				throw new Error('Token refresh response did not include access_token.');
 			}
-			setStoredToken(data.access_token, data.expires_in, data.refresh_token || refreshTokenValue, authSource, localStorage.getItem(YT_TOKEN_ACCESS_LEVEL_KEY));
-			setTimeout(() => { verifyAndUseToken(data.access_token); }, 500);
+			const granted = data.scope == null ? getYouTubeTokenAccessLevel() : getYouTubeGrantedAccessLevel(getYouTubeAccessLevel(), data.scope);
+			setStoredToken(data.access_token, data.expires_in, data.refresh_token || refreshTokenValue, authSource, granted);
+			syncWriteAccessControls();
+			setTimeout(() => {
+				if (localStorage.getItem('youtubeOAuthToken') === data.access_token) verifyAndUseToken(data.access_token);
+			}, 500);
 			return true;
 		} catch (error) {
+			if (!sameSession()) return !!localStorage.getItem('youtubeOAuthToken');
 			console.error('Error refreshing token:', error);
 			clearStoredToken();
 			showAuthButton();
 			return false;
 		}
 	}
-	async function exchangeCodeForTokens(code, state, redirectOverride) {
+	async function exchangeCodeForTokens(code, state, redirectOverride, callbackScope) {
 		refreshClientOverrides();
 		const expectedState = getExpectedOAuthState();
 		if (!expectedState || state !== expectedState) {
@@ -5628,7 +5642,9 @@ function enableBackgroundKeepAlive() {
 			if (!data.access_token) {
 				throw new Error('Token exchange response did not include access_token.');
 			}
-			setStoredToken(data.access_token, data.expires_in, data.refresh_token, authSource, consumePendingYouTubeTokenAccessLevel() || getYouTubeAccessLevel());
+			const requested = consumePendingYouTubeTokenAccessLevel() || getYouTubeAccessLevel();
+			const granted = getYouTubeGrantedAccessLevel(requested, data.scope == null ? callbackScope : data.scope);
+			setStoredToken(data.access_token, data.expires_in, data.refresh_token, authSource, granted);
 			clearExpectedOAuthState();
 			window.history.replaceState({}, document.title, getPostAuthRedirectUrl());
 			verifyAndUseToken(data.access_token);
@@ -5643,7 +5659,7 @@ function enableBackgroundKeepAlive() {
 		const urlParams = new URLSearchParams(window.location.search);
 		const code = urlParams.get('code');
 		const state = urlParams.get('state');
-		await exchangeCodeForTokens(code, state, redirectURI);
+		await exchangeCodeForTokens(code, state, redirectURI, urlParams.get('scope'));
 	}
 	async function startExternalAuthFlow() {
 		const bridge = getYouTubeOAuthBridge();
@@ -5681,7 +5697,7 @@ function enableBackgroundKeepAlive() {
 				showAuthButton();
 				return;
 			}
-			await exchangeCodeForTokens(result.code, result.state || state, result.redirectUri);
+			await exchangeCodeForTokens(result.code, result.state || state, result.redirectUri, result.scope);
 		} catch (error) {
 			console.error('External YouTube OAuth failed:', error);
 			clearExpectedOAuthState();
@@ -6036,7 +6052,7 @@ function enableBackgroundKeepAlive() {
 				throw new Error(getWriteAccessRequiredMessage());
 			}
 			const baseUrl = 'https://www.googleapis.com/youtube/v3/liveChat/messages';
-			const url = `${baseUrl}?part=snippet,authorDetails`;
+			const url = `${baseUrl}?part=snippet`;
 			const response = await fetch(url, {
 				method: 'POST',
 				headers: {
@@ -6054,7 +6070,15 @@ function enableBackgroundKeepAlive() {
 			
 			if (!response.ok) {
 				const errorData = await response.json().catch(() => null);
-				throw new Error(errorData && errorData.error && errorData.error.message || ('YouTube rejected the message (HTTP ' + response.status + ').'));
+				const error = errorData && errorData.error;
+				if (response.status === 403 && localStorage.getItem('youtubeOAuthToken') === token &&
+					(error?.errors?.some(item => item.reason === 'insufficientPermissions') ||
+					 error?.details?.some(item => item.reason === 'ACCESS_TOKEN_SCOPE_INSUFFICIENT'))) {
+					localStorage.setItem(YT_TOKEN_ACCESS_LEVEL_KEY, 'readonly');
+					syncWriteAccessControls();
+					throw new Error(getWriteAccessRequiredMessage());
+				}
+				throw new Error(error && error.message || ('YouTube rejected the message (HTTP ' + response.status + ').'));
 			}
 			
 			const data = await response.json();
@@ -6177,7 +6201,7 @@ function enableBackgroundKeepAlive() {
 		const note = document.getElementById('stream-details-note');
 		if (note) {
 			note.textContent = !canWrite
-				? 'Sign out and sign in with Write access to edit stream details.'
+				? 'Sign in again and approve write access to edit stream details.'
 				: (currentVideoMetadataForeign ? 'This stream belongs to another channel. You can only edit streams on the channel you signed in with.' : '');
 		}
 		const visibility = document.getElementById('stream-visibility');

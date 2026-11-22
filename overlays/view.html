@@ -128,7 +128,7 @@
 		};
 	})();
 	</script>
-	<script src="core.js?v=22"></script>
+	<script src="core.js?v=23"></script>
 	<script src="templates/countries.js?v=15"></script>
 	<script src="templates/engines.js?v=19"></script>
 	<script src="templates/socials.js?v=18"></script>
@@ -167,7 +167,7 @@
 	<script src="templates/moments.js?v=4"></script>
 	<script src="templates/random.js?v=3"></script>
 	<script src="templates/countscreen.js?v=3"></script>
-	<script src="templates/channelart.js?v=1"></script>
+	<script src="templates/channelart.js?v=2"></script>
 	<script src="templates/seasontags.js?v=1"></script>
 	<script>
 	(function () {
@@ -257,6 +257,8 @@
 		});
 
 		SSO.loadScripts(def.libs || [], draw);
+		// A still picture keeps its settings after the #, so the editor can change them without loading the page again.
+		if (def.still) { window.addEventListener("hashchange", function () { cfg = SSO.readConfig(def); draw(); }); }
 	})();
 	</script>
 </body>

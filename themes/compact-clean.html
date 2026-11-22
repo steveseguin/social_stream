@@ -287,6 +287,9 @@ body.ultra .content-img {
     if (['art-cat', 'art-dog', 'art-halloween', 'art-christmas', 'art-music', 'art-forest', 'art-space', 'art-dragon'].indexOf(collectionStyle) !== -1) {
         document.body.classList.add('art-chat', 'style-' + collectionStyle);
     }
+    if (collectionStyle === 'art-halloween' && location.hostname === 'beta.socialstream.ninja') {
+        document.body.style.setProperty('--art-image', 'url("https://cache.socialstream.ninja/beta/themes/featured-styles/artwork/halloween.webp")');
+    }
     if (urlParams.has('staticart')) document.body.classList.add('static-art');
     if (['cute', 'cozy', 'cats', 'music', 'arcade', 'slate', 'paper', 'micro', 'spring', 'summer', 'hearts', 'lunar'].indexOf(collectionStyle) !== -1) {
         document.body.classList.add('collection', 'collection-chat', 'style-' + collectionStyle);
