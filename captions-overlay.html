@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="description" content="Captions overlay. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+		<meta name="robots" content="noindex">
+		<link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>Captions overlay | Social Stream Ninja</title>
+		<style>
+			/* A browser source for OBS: nothing but the captions, over a transparent page. */
+			html,
+			body {
+				margin: 0;
+				height: 100%;
+				background: transparent;
+				overflow: hidden;
+			}
+			body {
+				font-family: "Segoe UI", Tahoma, "Sora", Roboto, Arial, sans-serif;
+				font-size: 40px;
+				line-height: 1.25;
+				color: #fff;
+			}
+			#captions {
+				position: absolute;
+				left: 4%;
+				right: 4%;
+				bottom: 5%;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 0.2em;
+				text-align: center;
+			}
+			#captions.left {
+				align-items: flex-start;
+				text-align: left;
+			}
+			#captions.right {
+				align-items: flex-end;
+				text-align: right;
+			}
+			.line {
+				max-width: 100%;
+				padding: 0.12em 0.5em;
+				border-radius: 0.25em;
+				background: rgba(0, 0, 0, 0.72);
+				overflow-wrap: anywhere;
+			}
+			/* Words still being spoken read a little lighter than a finished line. */
+			.line.live {
+				color: #dfe6ee;
+			}
+			.line.leaving {
+				opacity: 0;
+				transition: opacity 0.4s;
+			}
+			#notice {
+				position: absolute;
+				left: 4%;
+				bottom: 5%;
+				padding: 0.3em 0.6em;
+				border-radius: 0.25em;
+				background: rgba(0, 0, 0, 0.72);
+				font-size: 18px;
+			}
+			[hidden] {
+				display: none !important;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="captions" aria-live="off"></div>
+		<p id="notice" hidden></p>
+		<script src="captions-overlay.js"></script>
+	</body>
+</html>

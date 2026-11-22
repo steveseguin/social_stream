@@ -1,0 +1,271 @@
+/* The Captions page. It follows the look of the SSN menu: the same colours, type and control
+   shapes, in light or dark to match the system. */
+:root {
+	color-scheme: light dark;
+	--page: #e7e7e7;
+	--panel: #f6f8fa;
+	--field: #ffffff;
+	--text: #362e26;
+	--muted: #57606a;
+	--line: #c9d1d9;
+	--accent: #0071b8;
+	--on-accent: #ffffff;
+	--good: #1a7f37;
+	--caution: #8a5a00;
+}
+@media (prefers-color-scheme: dark) {
+	:root {
+		--page: #0d1117;
+		--panel: #161b22;
+		--field: #0d1117;
+		--text: #c9d1d9;
+		--muted: #8b949e;
+		--line: #30363d;
+		--accent: #2ea3f2;
+		--on-accent: #04121f;
+		--good: #3fb950;
+		--caution: #d29922;
+	}
+}
+
+* {
+	box-sizing: border-box;
+}
+[hidden] {
+	display: none !important;
+}
+body {
+	margin: 0;
+	background: var(--page);
+	color: var(--text);
+	font: 14px/1.45 "Segoe UI", Tahoma, "Sora", Roboto, Arial, sans-serif;
+}
+main {
+	max-width: 560px;
+	margin: 0 auto;
+	padding: 16px;
+}
+
+header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+header img {
+	border-radius: 5px;
+}
+h1 {
+	flex: 1;
+	margin: 0;
+	font-size: 18px;
+	font-weight: 600;
+}
+h2 {
+	margin: 0 0 6px;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--muted);
+}
+
+/* Connected or not: a dot and two words, top right. */
+#mode {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 12px;
+	color: var(--good);
+}
+#mode::before {
+	content: "";
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: currentColor;
+}
+#mode.off {
+	color: var(--muted);
+}
+
+section {
+	margin: 0 0 12px;
+	padding: 14px;
+	background: var(--panel);
+	border: 1px solid var(--line);
+	border-radius: 6px;
+}
+p {
+	margin: 0;
+}
+label {
+	color: var(--muted);
+	font-size: 12px;
+}
+
+button,
+select,
+input {
+	font: inherit;
+	color: var(--text);
+	background: var(--field);
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	padding: 6px 10px;
+	max-width: 100%;
+}
+button {
+	cursor: pointer;
+}
+button:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+button.primary {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: var(--on-accent);
+	font-weight: 600;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+
+.row,
+.controls {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+.row {
+	margin-top: 4px;
+}
+.row input {
+	flex: 1;
+	min-width: 140px;
+}
+.hint {
+	margin-top: 8px;
+	color: var(--muted);
+	font-size: 12px;
+}
+
+/* Listening or stopped, beside the buttons. */
+.phase {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	color: var(--muted);
+}
+.phase::before {
+	content: "";
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: currentColor;
+	opacity: 0.6;
+}
+.phase.on {
+	color: var(--good);
+}
+.phase.on::before {
+	opacity: 1;
+	animation: listening 1.6s ease-in-out infinite;
+}
+@keyframes listening {
+	50% {
+		opacity: 0.35;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.phase.on::before {
+		animation: none;
+	}
+}
+.language {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	margin-left: auto;
+}
+.language select {
+	max-width: 210px;
+}
+
+.choose .row {
+	margin-top: 10px;
+}
+
+#message {
+	margin-top: 10px;
+	color: var(--caution);
+}
+.where {
+	margin-top: 10px;
+}
+.where.none {
+	color: var(--caution);
+}
+
+/* What was said: the part worth reading from across the desk. */
+.heard {
+	font-size: 20px;
+	line-height: 1.35;
+	overflow-wrap: anywhere;
+	min-height: 27px;
+}
+.interim {
+	margin-top: 4px;
+	color: var(--muted);
+	min-height: 20px;
+	overflow-wrap: anywhere;
+}
+.earlier {
+	margin: 8px 0 0;
+	padding: 8px 0 0;
+	list-style: none;
+	border-top: 1px solid var(--line);
+	color: var(--muted);
+}
+.earlier:empty {
+	display: none;
+}
+.earlier li {
+	padding: 2px 0;
+	overflow-wrap: anywhere;
+}
+
+footer {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+}
+.note {
+	flex: 1;
+	color: var(--muted);
+	font-size: 12px;
+}
+footer button {
+	flex: none;
+	font-size: 12px;
+}
+
+@media (max-width: 420px) {
+	main {
+		padding: 10px;
+	}
+	.language {
+		margin-left: 0;
+		width: 100%;
+	}
+	.language select {
+		flex: 1;
+		max-width: none;
+	}
+	footer {
+		flex-direction: column;
+	}
+}

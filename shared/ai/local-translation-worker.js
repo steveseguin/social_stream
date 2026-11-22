@@ -15,6 +15,13 @@ var Module;
 var modernEngine = false;
 var classifier;
 var classifierLoading;
+// Captions translate every sentence as it is spoken, so their language pairs are kept loaded
+// instead of being released after each request. To keep that from growing without limit, only
+// recently used pairs stay, within a memory budget.
+var warm = new Map(); // pair -> when it was last used for captions
+var WARM_BUDGET_BYTES = 160 * 1024 * 1024;
+var WARM_IDLE_MS = 15 * 60 * 1000;
+var sweepTimer = null;
 
 function loadLanguageClassifier() {
     if (!classifierLoading) {
@@ -140,12 +147,73 @@ async function loadModel(pair) {
 
 function releaseUnusedModels(pairs) {
     models.forEach(function (entry, pair) {
-        if (pairs.indexOf(pair) !== -1) return;
+        if (pairs.indexOf(pair) !== -1 || warm.has(pair)) return;
         entry.model.delete();
         entry.list.delete();
         entry.owned.forEach(function (memory) { memory.delete(); });
         models.delete(pair);
     });
+}
+
+// The model pairs one translation needs: one, or two through English.
+function pairsFor(from, to) {
+    return from === "en" || to === "en" ? [from + to] : [from + "en", "en" + to];
+}
+
+function pairBytes(pair) {
+    var entry = registry && registry[pair];
+    if (!entry) return 0;
+    return [entry.model, entry.lex, entry.vocab, entry.srcvocab, entry.trgvocab].reduce(function (total, asset) {
+        return total + (asset && asset.size ? asset.size : 0);
+    }, 0);
+}
+
+// Marks pairs as in use for captions, then lets go of warm pairs that have sat idle or that no
+// longer fit the budget, oldest first. The pairs being used right now are never let go.
+function keepWarm(pairs) {
+    var now = Date.now();
+    pairs.forEach(function (pair) { warm.set(pair, now); });
+    var total = 0;
+    Array.from(warm.entries()).sort(function (a, b) { return b[1] - a[1]; }).forEach(function (entry) {
+        var pair = entry[0];
+        var needed = pairs.indexOf(pair) !== -1;
+        total += pairBytes(pair);
+        if (!needed && (now - entry[1] > WARM_IDLE_MS || total > WARM_BUDGET_BYTES)) warm.delete(pair);
+    });
+    releaseUnusedModels(pairs);
+    scheduleSweep();
+}
+
+// Idle pairs are let go on a timer too, not only when the next request arrives: once the
+// microphone page is closed nothing more arrives, and the models would otherwise stay loaded for
+// as long as the extension runs.
+function scheduleSweep() {
+    if (sweepTimer || !warm.size) return;
+    sweepTimer = setTimeout(function () {
+        sweepTimer = null;
+        if (processing) scheduleSweep();
+        else keepWarm([]);
+    }, Math.round(WARM_IDLE_MS / 5));
+}
+
+// Fetches a pair's files into the browser's cache. This runs outside the queue: a first download
+// can take a while, and the pairs that are already loaded must keep translating meanwhile.
+async function prefetch(pair) {
+    var entry = registry[pair];
+    var assets = [entry.model, entry.lex, entry.vocab || entry.srcvocab, entry.trgvocab].filter(Boolean);
+    for (var i = 0; i < assets.length; i++) await download(pair, assets[i]);
+}
+
+// Makes a language pair ready for captions before anything is said: "ready", or "unsupported"
+// when this translator has no model for it. A failed download throws.
+async function warmUp(message) {
+    await initialize();
+    var pairs = pairsFor(message.from, message.to);
+    if (message.from === message.to) return "ready";
+    if (pairs.some(function (pair) { return !registry[pair]; })) return "unsupported";
+    keepWarm(pairs);
+    for (var k = 0; k < pairs.length; k++) await loadModel(pairs[k]);
+    return "ready";
 }
 
 function translateParts(pair, texts) {
@@ -219,9 +287,10 @@ async function processRequest(message) {
     for (var entry of groups) {
         var source = entry[0];
         var group = entry[1];
-        var pairs = source === "en" || to === "en" ? [source + to] : [source + "en", "en" + to];
+        var pairs = pairsFor(source, to);
         if (pairs.some(function (pair) { return !registry[pair]; })) return null;
-        releaseUnusedModels(pairs);
+        if (message.keep) keepWarm(pairs);
+        else releaseUnusedModels(pairs);
         try {
             for (var k = 0; k < pairs.length; k++) await loadModel(pairs[k]);
         } catch (error) {
@@ -247,6 +316,11 @@ async function drain() {
     try {
         while (queue.length) {
             var message = queue.shift();
+            if (message.action === "warm") {
+                try { self.postMessage({ id: message.id, warm: await warmUp(message) }); }
+                catch (error) { self.postMessage({ id: message.id, warm: "failed", error: String(error.message || error) }); }
+                continue;
+            }
             try { self.postMessage({ id: message.id, translations: await processRequest(message) }); }
             catch (error) { self.postMessage({ id: message.id, error: String(error.message || error) }); }
         }
@@ -255,6 +329,29 @@ async function drain() {
 
 self.onmessage = function (event) {
     var message = event.data || {};
+    if (message.action === "warm") {
+        // The download happens here, alongside whatever is being translated. Only loading the model
+        // from the files, which is quick once they are cached, takes a turn in the queue.
+        initialize().then(async function () {
+            if (message.from === message.to) return "ready";
+            var pairs = pairsFor(message.from, message.to);
+            if (pairs.some(function (pair) { return !registry[pair]; })) return "unsupported";
+            for (var k = 0; k < pairs.length; k++) {
+                if (!models.has(pairs[k])) await prefetch(pairs[k]);
+            }
+            return "";
+        }).then(function (state) {
+            if (state) {
+                self.postMessage({ id: message.id, warm: state });
+                return;
+            }
+            queue.push(message);
+            drain();
+        }, function (error) {
+            self.postMessage({ id: message.id, warm: "failed", error: String(error.message || error) });
+        });
+        return;
+    }
     if (message.action === "prepare") {
         Promise.all([initialize(), message.detect ? loadLanguageClassifier() : Promise.resolve()]).catch(function (error) {
             self.postMessage({ error: String(error.message || error) });

@@ -5773,11 +5773,12 @@ async function processIncomingMessage(message, sender = null) {
 			}
 		}
 
-		// A caption SSN posted to chat is already shown as a caption. When that chat sends it back and
-		// the sender is a known host, the copy is dropped here. Caption posts are tracked apart from the
-		// text match below, so they can never make it hide a viewer who typed the same words.
+		// A caption SSN posted to chat comes back from that chat like any other message, and that copy
+		// is how the dock shows it. It is dropped here only when the host's own settings hide their
+		// returning messages. Caption posts are tracked apart from the text match below, so they can
+		// never make it hide a viewer who typed the same words.
 		const captionReturn = window.ssnCaptions ? window.ssnCaptions.checkReturn(message) : "";
-		if (captionReturn === "own") {
+		if (captionReturn === "hide") {
 			return;
 		}
 
@@ -5794,9 +5795,10 @@ async function processIncomingMessage(message, sender = null) {
 			reflection = true;
 		}
 
-		// The same words as a caption post, from a sender who is not a known host: maybe the host's own
-		// copy, maybe a viewer. Keep it, but do not relay it, answer it or read it aloud.
-		if (captionReturn === "unknown") {
+		// The host's own caption coming back from chat, or the same words while that post is pending
+		// from a sender who cannot be identified. It is shown, but not relayed, answered or read aloud:
+		// the host has just said it, and it has already gone to every chat it should.
+		if (captionReturn === "own" || captionReturn === "unknown") {
 			reflection = true;
 			message.meta = Object.assign({}, message.meta && typeof message.meta === "object" ? message.meta : {}, { captionCopy: true });
 		}
@@ -6031,7 +6033,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			sendResponse({ state: isExtensionOn, viewerCountSources: Array.from(activeViewerCountTypes).filter(Boolean) });
 		} else if (request.cmd && request.cmd === "getCaptionStatus") {
 			// Connection state of the captions source, for the popup.
-			sendResponse({ state: isExtensionOn, captions: window.ssnCaptions ? window.ssnCaptions.getStatus() : null });
+			sendResponse({ state: isExtensionOn, captions: window.ssnCaptions ? window.ssnCaptions.getStatus() : null, targets: window.ssnCaptions ? await window.ssnCaptions.getTargets() : null });
 		} else if (request.cmd && request.cmd === "getSettings") {
 			ensureHandleStatusCache();
 			const cohostCapability = await getOpenAIRealtimeCohostCapability();
@@ -11601,16 +11603,60 @@ async function routeStreamDeckRemoteRequest(request, context) {
 			if (!window.ssnCaptions || !window.ssnCaptions.linkPublisher(caption.pub)) {
 				return { kind: "command", result: router.makeError(request, "INVALID_VALUE", "A publisher id is needed.") };
 			}
+			// The reply says where that page's captions would go now, the same way a caption's reply does,
+			// so the line it shows stays true between captions. With no chat to post to, a linked page's
+			// captions are shown from the room when the room is being read.
+			if (typeof caption.lang === "string") {
+				window.ssnCaptions.setSpoken(caption.lang);
+			}
+			const linkedTargets = await window.ssnCaptions.getTargets();
+			const roomState = window.ssnCaptions.getStatus().state;
+			const shownFromRoom = !linkedTargets.chats.length && (roomState === "connected" || roomState === "connecting");
+			return { kind: "command", result: router.makeResponse(request, { accepted: true, dock: linkedTargets.dockOnly === true || shownFromRoom, chats: linkedTargets.chats, choose: linkedTargets.choose === true && !shownFromRoom, languages: linkedTargets.languages }, "accepted") };
+		}
+		// The host's choice of where their captions go, made on the page: "post" to chat, or the
+		// "dock" only. Until one is made, captions are neither posted nor shown.
+		if (caption.choose === "post" || caption.choose === "dock") {
+			if (!window.ssnCaptions) {
+				return { kind: "command", result: router.makeError(request, "CONTROL_UNAVAILABLE", "Captions are not available.") };
+			}
+			if (caption.choose === "post") {
+				settings.captionsposting = { setting: true };
+				delete settings.captionsdockonly;
+			} else {
+				settings.captionsdockonly = { setting: true };
+			}
+			chrome.storage.local.set({ settings: settings });
+			const chosen = await window.ssnCaptions.getTargets();
+			return { kind: "command", result: router.makeResponse(request, { accepted: true, dock: chosen.dockOnly === true, chats: chosen.chats, failed: chosen.failed, choose: chosen.choose === true }, "accepted") };
+		}
+		// Words in progress, for captions overlays only. They are never shown in the dock or posted.
+		if (typeof caption.interim === "string") {
+			if (window.ssnCaptions && caption.interim.length <= 2000) {
+				window.ssnCaptions.liveFromHost(caption.interim, typeof caption.lang === "string" ? caption.lang : "");
+			}
 			return { kind: "command", result: router.makeResponse(request, { accepted: true }, "accepted") };
+		}
+		// The page asks where a caption said now would go, so it can show that before anything is said.
+		if (caption.where === true) {
+			// The page also says which language is being spoken, so tagged languages are made ready for it.
+			if (window.ssnCaptions && typeof caption.lang === "string") {
+				window.ssnCaptions.setSpoken(caption.lang);
+			}
+			const targets = window.ssnCaptions ? await window.ssnCaptions.getTargets() : null;
+			return { kind: "command", result: router.makeResponse(request, { accepted: true, dock: !!(targets && targets.dockOnly), chats: targets && Array.isArray(targets.chats) ? targets.chats : [], failed: targets ? targets.failed : 0, choose: !!(targets && targets.choose), languages: targets ? targets.languages : {}, overlay: !!(targets && targets.overlay) }, "accepted") };
 		}
 		if (typeof caption.text === "string" && caption.text.length > 2000) {
 			return { kind: "command", result: router.makeError(request, "PAYLOAD_TOO_LARGE", "A caption is limited to 2000 characters.") };
 		}
 		// This page reaches SSN over the session's own connection, so its captions count as the host's.
-		if (!window.ssnCaptions || typeof caption.text !== "string" || !window.ssnCaptions.addPrivateCopy(caption.text, typeof caption.name === "string" ? caption.name : "", window.ssnCaptions.pairKey(caption.pub, caption.id), window.ssnCaptions.partOf(caption.at, caption.of))) {
+		// `lang` is the language being spoken, which a chat tagged with another language is translated from.
+		const taken = window.ssnCaptions && typeof caption.text === "string" ? await window.ssnCaptions.addPrivateCopy(caption.text, typeof caption.name === "string" ? caption.name : "", window.ssnCaptions.pairKey(caption.pub, caption.id), window.ssnCaptions.partOf(caption.at, caption.of), typeof caption.lang === "string" ? caption.lang : "") : false;
+		if (!taken) {
 			return { kind: "command", result: router.makeError(request, "INVALID_VALUE", "A caption needs some text.") };
 		}
-		return { kind: "command", result: router.makeResponse(request, { accepted: true }, "accepted") };
+		// The page is told where the caption went, so it can say so, or say that no chat is connected.
+		return { kind: "command", result: router.makeResponse(request, { accepted: true, dock: taken.dock === true, chats: Array.isArray(taken.chats) ? taken.chats : [], failed: window.ssnCaptions.getStatus().failedPosts, choose: taken.choose === true, languages: (await window.ssnCaptions.getTargets()).languages }, "accepted") };
 	}
 	// These existing OBS buttons predate the versioned Stream Deck action list.
 	// Keep their ordinary host behavior, scoped to operator-page requests.
@@ -15945,6 +15991,15 @@ async function processIncomingRequest(request, UUID = false) {
 		await processEventFlowBridgeEvent(request.value);
 		return;
 	}
+	// A captions overlay (an OBS browser source) says it is open, and which language it shows. This
+	// is heard even with the host's controls switched off: it only tells SSN that a page is there to
+	// draw captions, and captions read from a Caption.Ninja room still need somewhere to go.
+	if (request && request.action === "registerCaptionsOverlay") {
+		if (window.ssnCaptions && UUID) {
+			window.ssnCaptions.overlayHello(UUID, request.value && typeof request.value.lang === "string" ? request.value.lang : "");
+		}
+		return;
+	}
 	if (settings.disablehost) {
 		return;
 	}
@@ -17477,6 +17532,61 @@ function getLegacySSAppRelaySourceType(tab) {
 	return false;
 }
 
+// Pages SSN captures that are not a stream's public chat: private messaging, meetings and
+// assistants. Captions are never sent to these by default; the host can still pick one by name.
+const CAPTION_DEFAULT_EXCLUDED_CHAT_TYPES = new Set(["whatsapp", "telegram", "telegramk", "discord", "slack", "teams", "zoom", "webex", "meet", "meets", "googlemeet", "chime", "messenger", "instagram", "linkedin", "openai", "chatgpt", "claude", "threads", "workplace", "nextcloud"]);
+
+// The chat types SSN could post to right now: one entry for each kind of connected chat page.
+// Captions use this, because by default they go to every connected chat. Given a list of picked
+// chats instead, the answer is which of those has a connected chat page, matched the same way a
+// post addressed to that chat is.
+async function getPostableChatTypes(only) {
+	if (!chrome.debugger || !isExtensionOn || settings.disablehost) {
+		return [];
+	}
+	const tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
+	const candidates = (tabs || []).filter(tab => tab && tab.url && isRelayAllowedTabUrl(tab.url));
+	const found = await Promise.all(
+		candidates.map(async tab => {
+			let sourceType = tab.id ? await getSourceType(tab.id) : false;
+			if (!sourceType) {
+				sourceType = getLegacySSAppRelaySourceType(tab);
+			}
+			sourceType = String(sourceType || "").toLowerCase();
+			// A YouTube chat is addressed as "youtube" or "youtubeshorts" by the page it is on, so it is
+			// listed the way a post to it has to be addressed.
+			if (sourceType === "youtube" || sourceType === "youtubeshorts") {
+				sourceType = getExactYouTubeRelaySourceType(tab, sourceType) || sourceType;
+			}
+			return { tab: tab, sourceType: sourceType };
+		})
+	);
+	const stageTen = !!(settings.s10apikey && settings.s10);
+	if (Array.isArray(only) && only.length) {
+		const connectedPicks = [];
+		for (const destination of only) {
+			let isConnected = stageTen && String(destination).toLowerCase() === "stageten";
+			for (let i = 0; i < found.length && !isConnected; i++) {
+				isConnected = !!found[i].sourceType && (await matchesRelayDestination(found[i].tab, destination, "sourceType", found[i].sourceType));
+			}
+			if (isConnected) {
+				connectedPicks.push(destination);
+			}
+		}
+		return connectedPicks;
+	}
+	const types = [];
+	found.forEach(entry => {
+		if (entry.sourceType && types.indexOf(entry.sourceType) === -1 && !CAPTION_DEFAULT_EXCLUDED_CHAT_TYPES.has(entry.sourceType)) {
+			types.push(entry.sourceType);
+		}
+	});
+	if (stageTen && types.indexOf("stageten") === -1) {
+		types.push("stageten");
+	}
+	return types;
+}
+
 function createRelayTabContext(tab, data, now, relayMode, messageOrigin, shouldCheckDynamicPerTab) {
 	const throttleProfile = getThrottleProfileForTab(tab, data);
 	const throttleOptions = {
@@ -17499,7 +17609,7 @@ function createRelayTabContext(tab, data, now, relayMode, messageOrigin, shouldC
 			}
 			const sanitized = checkExactDuplicateAlreadyRelayed(value, false, false, true);
 			if (sanitized) {
-				handleMessageStore(tab.id, sanitized, now, relayMode, messageOrigin);
+				handleMessageStore(tab.id, sanitized, now, relayMode, messageOrigin, data && data.captionIds);
 			}
 		},
 		markAutoIfNeeded() {
@@ -18027,10 +18137,11 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
 }
 
 // Helper function to handle message store
-function handleMessageStore(tabId, msg2Save, now, relayMode, origin = "relay") {
+function handleMessageStore(tabId, msg2Save, now, relayMode, origin = "relay", captionIds) {
 	// Caption posts are tracked by the captions module, apart from the text-only reflection check.
+	// Each is recorded with the captions that went into it, so its returning copy can be tied to them.
 	if (origin === "caption" && window.ssnCaptions) {
-		window.ssnCaptions.recordPost(tabId, msg2Save, now);
+		window.ssnCaptions.recordPost(tabId, msg2Save, now, captionIds);
 		return;
 	}
 	try {
@@ -19713,7 +19824,8 @@ async function applyBotActions(data, tab = false, userFiltersOnly = false) {
 			}
 		}
 
-		if (data.chatmessage && !data.chatbotReflection) {
+		// A caption coming back from chat is the host's own speech: auto-replies do not answer it.
+		if (data.chatmessage && !data.chatbotReflection && !(data.meta && data.meta.captionCopy === true)) {
 			const botReplyEvents = settings["botReply"] || [];
 			for (const id of botReplyEvents) {
 				const event = settings[`botReplyMessageEvent${id}`];

@@ -2511,22 +2511,66 @@ function setupSourceSelectTags(inputId) {
     updateSourceTypeList(inputId);
 }
 
-// Captions: says next to the room field whether SSN is connected to the Caption.Ninja room.
+// Captions: says where captions are going right now, and next to the room field whether SSN is
+// connected to the Caption.Ninja room.
 function refreshCaptionsStatus() {
     const status = document.getElementById('captionsStatus');
     const toggle = document.querySelector('input[data-setting="captionninja"]');
+    const where = document.getElementById('captionsTargetsStatus');
     if (!status || !toggle) return;
     if (!toggle.checked) {
         status.textContent = '';
-        return;
     }
     try {
         chrome.runtime.sendMessage({ cmd: 'getCaptionStatus' }, function(response) {
             chrome.runtime.lastError;
+            const targets = response && response.targets;
+            renderCaptionLanguageTags(targets && targets.languages);
+            const choice = document.getElementById('captionsChoice');
+            if (choice) {
+                choice.hidden = !(targets && targets.on && targets.choose);
+            }
+            if (where && targets) {
+                if (!targets.on) {
+                    where.textContent = 'Switch SSN on to post captions';
+                } else if (targets.choose) {
+                    // Posting is public, so it waits for the host to say so once.
+                    where.textContent = '⚠️ Choose where your captions go:';
+                } else if (targets.dockOnly) {
+                    const dockLanguage = targets.languages && targets.languages.dock;
+                    where.textContent = '🖥️ Captions go to your dock only' + (dockLanguage ? ', in ' + captionLanguageName(dockLanguage.to) : '') + captionLanguageNotes(targets.languages || {});
+                } else if (document.querySelector('input[data-setting="disablehost"]:checked')) {
+                    where.textContent = '⚠️ Host functions are disabled in Settings, so nothing can be posted';
+                } else if (targets.chats && targets.chats.length) {
+                    const languages = targets.languages || {};
+                    where.textContent = '✅ Posting to: ' + targets.chats.map(function(chat) {
+                        return languages[chat] ? chat + ' (' + captionLanguageName(languages[chat].to) + ')' : chat;
+                    }).join(', ') + (targets.failed > 0 ? ' (' + targets.failed + ' not sent)' : '') + captionLanguageNotes(languages);
+                } else {
+                    where.textContent = '⚠️ No chat is connected, so captions have nowhere to go';
+                }
+            }
+            // Which captions overlays are open now, so the host can tell their OBS source connected.
+            const overlayStatus = document.getElementById('captionsOverlayStatus');
+            if (overlayStatus && targets) {
+                const open = Array.isArray(targets.overlays) ? targets.overlays : [];
+                if (!targets.on) {
+                    overlayStatus.textContent = 'Switch SSN on to use the overlay';
+                } else if (!open.length) {
+                    overlayStatus.textContent = 'No overlay is open right now';
+                } else {
+                    const waiting = {};
+                    open.forEach(function(entry) { if (entry.to) waiting[entry.to] = entry; });
+                    overlayStatus.textContent = '✅ Open now: ' + open.map(function(entry) {
+                        return entry.to ? captionLanguageName(entry.to) : 'As spoken';
+                    }).join(', ') + (targets.choose ? ' · ⚠️ Choose where your captions go first' : captionLanguageNotes(waiting));
+                }
+            }
             const captions = response && response.captions;
             if (!captions || !toggle.checked) return;
             if (captions.state === 'connected') {
-                status.textContent = captions.received ? `✅ Connected · ${captions.received} received` : '✅ Connected';
+                const fromRoom = typeof captions.roomReceived === 'number' ? captions.roomReceived : captions.received;
+                status.textContent = fromRoom ? `✅ Connected · ${fromRoom} received` : '✅ Connected';
             } else if (captions.state === 'connecting') {
                 status.textContent = '⏳ Connecting…';
             } else if (captions.state === 'noroom') {
@@ -2542,8 +2586,167 @@ function refreshCaptionsStatus() {
     }
 }
 
+// Captions: a language for one destination, shown as tags such as "youtube → Spanish". The tags
+// are kept in a hidden text setting as "youtube:es, dock:fr".
+function captionLanguageName(code) {
+    try {
+        return new Intl.DisplayNames(['en'], { type: 'language' }).of(code) || code;
+    } catch (e) {
+        return code;
+    }
+}
+
+// What is not ready, for the status line: "Preparing Spanish · 2 captions skipped".
+function captionLanguageNotes(languages) {
+    const notes = [];
+    const seen = {};
+    Object.keys(languages || {}).forEach(function(where) {
+        const entry = languages[where];
+        if (!entry || entry.state === 'ready' || seen[entry.to]) return;
+        seen[entry.to] = true;
+        const name = captionLanguageName(entry.to);
+        let note = entry.state === 'preparing' ? 'Preparing ' + name : entry.state === 'unsupported' ? name + ' is not available with this translator' : name + ' could not be prepared; trying again';
+        if (entry.skipped > 0) note += ' · ' + entry.skipped + (entry.skipped === 1 ? ' caption skipped' : ' captions skipped');
+        notes.push(note);
+    });
+    return notes.length ? ' · ⏳ ' + notes.join('. ') : '';
+}
+
+function readCaptionLanguageTags() {
+    const input = document.getElementById('captionslanguages');
+    const tags = [];
+    String(input ? input.value : '').split(',').forEach(function(entry) {
+        const parts = entry.split(':');
+        const where = String(parts[0] || '').trim().toLowerCase();
+        const to = String(parts[1] || '').trim().toLowerCase();
+        if (where && /^[a-z]{2,3}$/.test(to) && !tags.some(function(tag) { return tag.where === where; })) tags.push({ where: where, to: to });
+    });
+    return tags;
+}
+
+function writeCaptionLanguageTags(tags) {
+    const input = document.getElementById('captionslanguages');
+    if (!input) return;
+    input.value = tags.map(function(tag) { return tag.where + ':' + tag.to; }).join(', ');
+    updateSettings(input);
+    renderCaptionLanguageTags();
+}
+
+let captionLanguageTagsShown = null;
+function renderCaptionLanguageTags(states) {
+    const input = document.getElementById('captionslanguages');
+    const list = document.getElementById('captionslanguagesList');
+    if (!input || !list) return;
+    const key = input.value + '|' + JSON.stringify(states || {});
+    if (key === captionLanguageTagsShown) return;
+    captionLanguageTagsShown = key;
+    list.textContent = '';
+    readCaptionLanguageTags().forEach(function(tag) {
+        const row = document.createElement('div');
+        row.className = 'username-tag';
+        const label = document.createElement('span');
+        const state = states && states[tag.where] ? states[tag.where].state : '';
+        label.textContent = (tag.where === 'dock' ? 'SSN dock' : tag.where) + ' → ' + captionLanguageName(tag.to) + (state === 'preparing' ? ' (preparing)' : state === 'unsupported' ? ' (not available)' : state === 'failed' ? ' (could not be prepared)' : '');
+        if (tag.where !== 'dock') {
+            const sourceType = document.createElement('span');
+            sourceType.className = 'source-type';
+            const icon = document.createElement('img');
+            icon.className = 'icon';
+            icon.alt = '';
+            icon.src = './sources/images/' + tag.where + '.png';
+            sourceType.appendChild(icon);
+            label.appendChild(sourceType);
+        }
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'remove-source';
+        remove.dataset.captionLanguage = tag.where;
+        remove.setAttribute('aria-label', 'Remove ' + tag.where);
+        remove.textContent = '×';
+        row.appendChild(label);
+        row.appendChild(remove);
+        list.appendChild(row);
+    });
+}
+
+function setupCaptionLanguageTags() {
+    const where = document.getElementById('captionsLanguageWhere');
+    const to = document.getElementById('captionsLanguageTo');
+    const add = document.getElementById('captionsLanguageAdd');
+    const list = document.getElementById('captionslanguagesList');
+    if (!where || !to || !add || !list) return;
+    setupLazySourceSelect(where);
+    ensureLazySourcesLoaded(function() {
+        appendSourceOptions(where);
+    });
+    // The languages the captions page can listen in, as plain language codes. The overlay's
+    // language picker offers the same ones.
+    const seen = {};
+    const overlayLanguage = document.getElementById('captionsOverlayLanguage');
+    (window.SSN_CAPTION_LANGUAGES || []).forEach(function(entry) {
+        let code = String(entry[0] || '').toLowerCase().split('-')[0];
+        if (code === 'cmn' || code === 'yue') code = 'zh';
+        if (!code || seen[code]) return;
+        seen[code] = true;
+        [to, overlayLanguage].forEach(function(select) {
+            if (!select) return;
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = captionLanguageName(code);
+            select.appendChild(option);
+        });
+    });
+    add.addEventListener('click', function() {
+        const chat = where.value.trim().toLowerCase();
+        if (!chat || !to.value) return;
+        const tags = readCaptionLanguageTags().filter(function(tag) { return tag.where !== chat; });
+        tags.push({ where: chat, to: to.value });
+        writeCaptionLanguageTags(tags);
+        where.value = '';
+        to.value = '';
+    });
+    list.addEventListener('click', function(event) {
+        const chat = event.target && event.target.dataset ? event.target.dataset.captionLanguage : '';
+        if (!chat) return;
+        writeCaptionLanguageTags(readCaptionLanguageTags().filter(function(tag) { return tag.where !== chat; }));
+    });
+    renderCaptionLanguageTags();
+}
+
+// Captions: fills the page-language picker from the list the captions page itself uses.
+function setupCaptionsLanguages() {
+    const select = document.getElementById('captionsLanguage');
+    if (!select || !Array.isArray(window.SSN_CAPTION_LANGUAGES)) return;
+    const chosen = select.value;
+    window.SSN_CAPTION_LANGUAGES.forEach(function(entry) {
+        if (Array.prototype.some.call(select.options, function(option) { return option.value === entry[0]; })) return;
+        const option = document.createElement('option');
+        option.value = entry[0];
+        option.textContent = entry[1];
+        select.appendChild(option);
+    });
+    select.value = chosen;
+}
+
 function setupCaptionsStatus() {
     if (!document.getElementById('captionsStatus')) return;
+    const choosePost = document.getElementById('captionsChoosePost');
+    if (choosePost) {
+        choosePost.addEventListener('click', function() {
+            chrome.runtime.sendMessage({ cmd: 'saveSetting', type: 'setting', setting: 'captionsposting', value: true }, function() {
+                chrome.runtime.lastError;
+                refreshCaptionsStatus();
+            });
+        });
+    }
+    const chooseDock = document.getElementById('captionsChooseDock');
+    if (chooseDock) {
+        chooseDock.addEventListener('click', function() {
+            const dockOnly = document.querySelector('input[data-setting="captionsdockonly"]');
+            if (dockOnly && !dockOnly.checked) dockOnly.click();
+            setTimeout(refreshCaptionsStatus, 300);
+        });
+    }
     refreshCaptionsStatus();
     setInterval(refreshCaptionsStatus, 2000);
 }
@@ -3873,6 +4076,7 @@ const SERVER_PARAM_SUPPORT_BY_TARGET = {
   waitlist: { server: true, server2: true, server3: false },
   wordcloud: { server: true, server2: true, server3: false },
   "custom-gif-commands": { server: true, server2: true, server3: false },
+  captions: { server: false, server2: true, server3: true },
   privatechatbot: NO_SERVER_LINK_SUPPORT
 };
 
@@ -4039,25 +4243,13 @@ function syncSupportedServerParamsForTarget(targetId, targetElement, sourceEleme
 		&& document.querySelector('input[data-setting="socketserver"]')?.checked) {
 		targetElement.raw = updateURL(getServerParamToken("server", sourceElement, sourceTokens), targetElement.raw);
 	}
+	// The captions page sends commands to SSN like the Dock does: peer-to-peer normally, or through
+	// the relay when the Dock's commands go that way (server3). server2 only picks which relay
+	// endpoint that uses, so on its own it means nothing to this page.
+	if (targetId === "captions" && !isBothParamChecked("server3")) {
+		targetElement.raw = removeQueryParamWithValue(targetElement.raw, "server2");
+	}
   targetElement.raw = cleanURL(targetElement.raw);
-}
-
-// The captions page sends commands to SSN like the Dock does, so its link follows the Dock's route:
-// peer-to-peer normally, or the relay when "Dock sends its commands to Extension via server" is on.
-// With both relay switches on, it uses the same endpoint the Dock would.
-function buildCaptionsMicUrl(url) {
-  if (!url) return url;
-  ["server2", "server3"].forEach(function(paramName) {
-    url = removeQueryParamWithValue(url, paramName);
-  });
-  if (isBothParamChecked("server3")) {
-    const dock = document.getElementById("dock");
-    url = updateURL(getServerParamToken("server3", dock), url);
-    if (isBothParamChecked("server2")) {
-      url = updateURL(getServerParamToken("server2", dock), url);
-    }
-  }
-  return cleanURL(url);
 }
 
 // Caption.Ninja's capture page links itself to this session with &ssn=, so the captions it sends
@@ -4378,6 +4570,8 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
 	{ id: "scoreboard", path: "scoreboard.html"},
 	{ id: "map", path: "map.html" },
 	{ id: "timer", path: "timer.html" },
+	{ id: "captions", path: "captions.html" },
+	{ id: "captionsoverlay", path: "captions-overlay.html" },
 	
   ];
   
@@ -4440,10 +4634,6 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     obsControlDockUrl.href = buildGeneratedUrl("obs-control-dock.html", `session=${encodeURIComponent(streamID)}${getLocalServerConnectionParams()}`, baseURL);
   }
 
-  const captionsMicUrl = document.getElementById("captions_mic_url");
-  if (captionsMicUrl) {
-    captionsMicUrl.href = buildCaptionsMicUrl(buildGeneratedUrl("captions.html", `session=${encodeURIComponent(streamID)}${password}`, baseURL));
-  }
   const captionsCnUrl = document.getElementById("captions_cn_url");
   if (captionsCnUrl) {
     captionsCnUrl.href = buildCaptionNinjaLinkedUrl(streamID, password);
@@ -5170,10 +5360,6 @@ function update(response, sync = true) {
             const obsControlDockUrl = document.getElementById("obs_control_dock_url");
             if (obsControlDockUrl) {
                 obsControlDockUrl.href = baseURL + "obs-control-dock.html?session=" + encodeURIComponent(response.streamID) + getLocalServerConnectionParams();
-            }
-            const captionsMicUrl = document.getElementById("captions_mic_url");
-            if (captionsMicUrl) {
-                captionsMicUrl.href = buildCaptionsMicUrl(baseURL + "captions.html?session=" + encodeURIComponent(response.streamID) + password);
             }
             const captionsCnUrl = document.getElementById("captions_cn_url");
             if (captionsCnUrl) {
@@ -7481,6 +7667,8 @@ function getTargetMap() {
         'aiprompt': 31,
         'aievent': 32,
         'stickeroverlay': 33,
+        'captions': 34,
+        'captionsoverlay': 35,
     };
 }
 
@@ -8316,7 +8504,7 @@ function refreshGeneratedConnectionLinks(paramName, value) {
         setGeneratedLink(element, replaceGeneratedConnectionParam(element.raw, paramName, value));
     });
 
-    ['sampleoverlay', 'remote_control_url', 'obs_control_dock_url', 'captions_mic_url', 'games_gallery_url', 'games_gallery_menu_url'].forEach(function(elementId) {
+    ['sampleoverlay', 'remote_control_url', 'obs_control_dock_url', 'games_gallery_url', 'games_gallery_menu_url'].forEach(function(elementId) {
         const link = document.getElementById(elementId);
         if (!link || !link.href) return;
         link.href = replaceGeneratedConnectionParam(link.href, paramName, value);
@@ -9884,10 +10072,6 @@ function refreshLinks(){
   ["dock", "overlay"].forEach(function(targetId) {
     syncSupportedServerParamsForTarget(targetId, document.getElementById(targetId), selectionSource, null, selectionTokens);
   });
-  const captionsMicLink = document.getElementById("captions_mic_url");
-  if (captionsMicLink && captionsMicLink.href) {
-    captionsMicLink.href = buildCaptionsMicUrl(captionsMicLink.href);
-  }
   const captionsCnLink = document.getElementById("captions_cn_url");
   if (captionsCnLink && lastResponse && lastResponse.streamID) {
     captionsCnLink.href = buildCaptionNinjaLinkedUrl(lastResponse.streamID, lastResponse.password ? "&password=" + encodeURIComponent(lastResponse.password) : "");
@@ -9940,7 +10124,9 @@ function refreshLinks(){
 	  'scoreboardlink': 'scoreboard',
 	  'spotifylink': 'spotify',
 	  'maplink': 'map',
-	  'timerlink': 'timer'
+	  'timerlink': 'timer',
+	  'captionslink': 'captions',
+	  'captionsoverlaylink': 'captionsoverlay'
     };
     const linkIdsToClean = Object.keys(linkIdToDivIdMap);
 
@@ -12764,6 +12950,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	setupBlockedWordsInput();
 	sourceSelectTagInputs.forEach(setupSourceSelectTags);
 	setupViewerCountOrder();
+	setupCaptionsLanguages();
+	setupCaptionLanguageTags();
 	setupCaptionsStatus();
 	commaTagInputs.forEach((inputId) => {
 		setupCommaTagInput(inputId);

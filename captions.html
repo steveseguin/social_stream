@@ -7,37 +7,55 @@
 		<link rel="icon" href="icons/favicon.ico" type="image/x-icon">
 		<meta name="viewport" content="width=device-width,initial-scale=1" />
 		<title>Captions | Social Stream Ninja</title>
-		<link rel="stylesheet" href="voice-control.css" />
-		<style>
-			#mode.off {
-				color: #afbdd0;
-			}
-		</style>
+		<link rel="stylesheet" href="captions.css" />
 		<script src="js/local-server-url.js"></script>
 	</head>
 	<body>
 		<main>
 			<header>
-				<small>SOCIAL STREAM NINJA</small>
+				<img src="sources/images/captions.png" alt="" width="26" height="26" />
 				<h1>Captions</h1>
-				<p>Say it. See it in chat.</p>
+				<span id="mode" class="off">Not connected</span>
 			</header>
-			<section>
-				<div class="status"><b id="phase">Stopped</b><span id="mode">NOT CONNECTED</span></div>
-				<p id="message" role="status"></p>
-				<label for="language">Language</label>
-				<div class="row"><select id="language"></select></div>
-				<label for="name">Name shown</label>
-				<div class="row"><input id="name" type="text" maxlength="60" placeholder="Captions" autocomplete="off" /></div>
-				<div class="buttons"><button id="start" class="primary">Start listening</button><button id="stop" disabled>Stop</button><button id="copy" hidden>Copy this page's link</button></div>
+
+			<section id="connect" hidden>
+				<form id="sessionForm">
+					<label for="sessionInput">Session ID</label>
+					<div class="row"><input id="sessionInput" type="text" autocomplete="off" spellcheck="false" placeholder="Session ID or any of your SSN links" /><button class="primary">Connect</button></div>
+				</form>
+				<p class="hint">In Social Stream Ninja, open the Chat tab and click Copy ID.</p>
 			</section>
-			<section>
+
+			<section id="mic">
+				<div id="choose" class="choose" hidden>
+					<p>Captions are posted to your chats, from your own account. Where should yours go?</p>
+					<div class="row"><button id="choosePost" class="primary">Post to my chats</button><button id="chooseDock">My dock only</button></div>
+				</div>
+				<div class="controls" id="controls">
+					<button id="start" class="primary">Start listening</button>
+					<button id="stop" disabled>Stop</button>
+					<span id="phase" class="phase">Stopped</span>
+					<label class="language" for="language">Language <select id="language"></select></label>
+				</div>
+				<p id="message" role="status"></p>
+				<p id="where" class="where" role="status" hidden></p>
+				<p id="languages" class="where none" role="status" hidden></p>
+			</section>
+
+			<section id="heardBox">
 				<h2>Last heard</h2>
 				<p id="heard" class="heard">Nothing yet.</p>
-				<p id="interim" class="hint" aria-hidden="true"></p>
+				<p id="interim" class="interim" aria-hidden="true"></p>
+				<ol id="earlier" class="earlier" aria-label="Earlier captions"></ol>
 			</section>
-			<p class="note">Uses this browser's speech recognition and your default microphone. Keep this tab open while you stream.</p>
+
+			<footer>
+				<p class="note" id="note">Uses this browser's speech recognition and your default microphone. Keep this tab open while you stream.</p>
+				<button id="copy" hidden>Copy this page's link</button>
+			</footer>
 		</main>
+		<script src="shared/captions/languages.js"></script>
+		<script src="shared/captions/desktop-recognition.js"></script>
 		<script src="shared/operator-connection.js"></script>
 		<script src="captions.js"></script>
 	</body>
