@@ -7526,9 +7526,6 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		} else if (request.cmd && request.cmd === "resetleaderboard") {
 			broadcastLeaderboardReset();
 			sendResponse({ state: isExtensionOn, success: true });
-		} else if (request.cmd && request.cmd === "resettipjar") {
-			sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
-			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "resetversus") {
 			sendResponse({ state: isExtensionOn, success: !!(window.versusService && window.versusService.reset()) });
 		} else if (request.cmd && request.cmd === "setversuscount") {
@@ -7539,11 +7536,12 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		} else if (request.cmd && request.cmd === "metastats") {
 			sendTargetP2P({ cmd: "metastats", value: request.value }, "meta");
 			sendResponse({ state: isExtensionOn });
-		} else if (request.cmd && request.cmd === "settipjaramount") {
+		} else if (request.cmd === "settipjaramount" || request.cmd === "resettipjar") {
 			sendTargetP2P(
 				{
-					cmd: "settipjaramount",
+					cmd: request.cmd,
 					value: request.value,
+					selectedGoal: request.selectedGoal,
 					tipjarsource: request.tipjarsource || "",
 					tipjartype: request.tipjartype || "",
 					goalmetric: request.goalmetric || "",
@@ -19491,7 +19489,7 @@ async function applyBotActions(data, tab = false, userFiltersOnly = false) {
 
 		if (getSettingFlag("firsttimers") && !getSettingFlag("disableDB") && data.chatname && data.chatmessage && data.type) {
 			try {
-				const checkResult = await messageStoreDB.checkUserTypeExists(data.userid || data.chatname, data.type, data.chatname);
+				const checkResult = await messageStoreDB.checkUserTypeExists(data.userid, data.type, data.chatname);
 				const exists = typeof checkResult === "object" ? checkResult.exists : !!checkResult;
 				const unavailable = typeof checkResult === "object" && checkResult.unavailable;
 				const lastActivityRaw = typeof checkResult === "object" ? checkResult.lastActivity : null;

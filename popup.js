@@ -15903,19 +15903,20 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				chrome.runtime.sendMessage(msg, function (response) {
 					log("ignore callback for this action");
 				});
-			} else if (msg.cmd == "resettipjar"){
-				var confirmResetTipJar = confirm("Reset the connected Tip Jar/Goal to 0?");
-				if (confirmResetTipJar){
-					chrome.runtime.sendMessage(msg, function (response) {
-						log("ignore callback for this action");
-					});
+			} else if (msg.cmd === "resettipjar" || msg.cmd === "settipjaramount") {
+				if (msg.cmd === "resettipjar") {
+					if (!confirm("Reset the connected Tip Jar/Goal to 0?")) return;
+				} else {
+					const amount = parseFloat(msg.value);
+					if (!Number.isFinite(amount) || amount < 0) {
+						alert("Enter a current amount first.");
+						return;
+					}
 				}
-			} else if (msg.cmd == "settipjaramount"){
-				var tipjarAmount = parseFloat(msg.value);
-				if (isNaN(tipjarAmount) || tipjarAmount < 0){
-					alert("Enter a current amount first.");
-					return;
-				}
+				msg.selectedGoal = {
+					hype: !!document.querySelector('[data-param12="hype"]')?.checked,
+					excludeGiftPurchase: !!document.querySelector('[data-param12="excludegiftpurchase"]')?.checked
+				};
 				var tipjarSourceSelect = document.querySelector('[data-optionparam12="tipjarsource"]');
 				var tipjarTypeSelect = document.querySelector('[data-optionparam12="tipjartype"]');
 				var tipjarMetricSelect = document.querySelector('[data-optionparam12="goalmetric"]');
@@ -15926,8 +15927,12 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				if (tipjarTypeSelect && tipjarTypeSelect.value) {
 					msg.tipjartype = tipjarTypeSelect.value;
 				}
-				if (tipjarMetricSelect && tipjarMetricSelect.value) {
-					msg.goalmetric = tipjarMetricSelect.value;
+				if (tipjarMetricSelect) {
+					const followerPreset = document.querySelector('[data-param12="followergoal"]');
+					msg.goalmetric = tipjarMetricSelect.value || "value";
+					if (followerPreset && followerPreset.checked && msg.goalmetric !== "subscribers") {
+						msg.goalmetric = "followers";
+					}
 				}
 				if (tipjarEventSelect && tipjarEventSelect.value) {
 					msg.tipjarevent = tipjarEventSelect.value;

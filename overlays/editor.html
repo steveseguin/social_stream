@@ -571,7 +571,12 @@
 		function checkFit() {
 			var seq = ++checkSeq;
 			if (!still.check) { return; }
-			still.check(settingsNow(), function (items) { if (seq === checkSeq && items) { showCut(items); } });
+			still.check(settingsNow(), function (items) {
+				if (seq !== checkSeq || !items) { return; }
+				showCut(items);
+				// The fonts are in on this page now, so the preview is sized from the same measurements it is drawn with.
+				fit();
+			});
 		}
 		function saveBlob(blob, name) {
 			var a = document.createElement("a"), href = URL.createObjectURL(blob);
@@ -648,15 +653,16 @@
 		// click, so typing while the pictures are being made cannot change what gets saved.
 		function download(name) {
 			if (stillBusy) { return; }
+			var settings = settingsNow(), drawnFor = SSO.buildQuery(def, settings);
 			stillBusy = true;
 			toast("Making your pictures…");
-			stillFiles(settingsNow(), function (made) {
+			stillFiles(settings, function (made) {
 				stillBusy = false;
 				if (!made) { toast("Sorry, the pictures could not be made. Please try again."); return; }
 				if (!made.length) { toast("There is nothing to download yet."); return; }
-				// What was just drawn is the last word on what fits.
-				checkSeq++;
-				showCut(made);
+				// What was just drawn is the last word on what fits, but only for the design it was drawn from. If the form
+				// has moved on since the click (another design opened, more typing), that design's own check stands.
+				if (SSO.buildQuery(def, cfg) === drawnFor) { checkSeq++; showCut(made); }
 				if (name === null && made.length > 1) {
 					saveBlob(zipOf(made), still.zip || "channel-art.zip");
 					toast(made.length + " pictures saved in " + (still.zip || "channel-art.zip") + ".");
@@ -722,9 +728,11 @@
 				buildForm();
 				update(true);
 			});
-			// A font that turns up late changes how much text fits, so the question is asked again when one lands.
+			// A font that turns up late changes how tall the pictures are and how much text fits. When one lands, the
+			// preview is sized again and the question of what fits is asked again.
 			if (document.fonts && document.fonts.addEventListener) {
 				document.fonts.addEventListener("loadingdone", function () {
+					fit();
 					if (lateChecks++ > 6) { return; }
 					clearTimeout(checkTimer);
 					checkTimer = setTimeout(checkFit, 250);

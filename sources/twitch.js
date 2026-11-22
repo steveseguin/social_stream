@@ -291,6 +291,54 @@
 		contentImage: "img[src].chat-line__message--emote-gigantified, [data-test-selector='chat-line-message-body'] img[src][class*='gifImage--'], [data-a-target='chat-line-message-body'] img[src][class*='gifImage--']",
 		messageContainer: ".chat-line__message, .seventv-message, .paid-pinned-chat-message-content-wrapper, .room-message"
 	};
+	// Exact Twitch logins only; custom bot accounts can still be assigned in settings.
+	const TWITCH_BOT_LOGINS = new Set([
+		"botrixoficial",
+		"fossabot",
+		"kofistreambot",
+		"moobot",
+		"nightbot",
+		"own3d",
+		"pokemoncommunitygame",
+		"pretzelrocks",
+		"sery_bot",
+		"soundalerts",
+		"streamelements",
+		"streamlabs",
+		"tangiabot",
+		"twitchmusicid",
+		"wizebot"
+	]);
+	const TWITCH_BOT_BADGE_IMAGE_ID = "3ffa9565-c35b-4cad-800b-041e60659cf2";
+
+	function isBotBadgeId(value) {
+		return typeof value === "string" && value.split("/")[0].trim().toLowerCase() === "bot-badge";
+	}
+
+	function isTwitchBotBadge(badge) {
+		if (!badge || !badge.getAttribute) return false;
+		var sources = [badge.src, badge.srcset, badge.getAttribute("data-src"), badge.style && badge.style.backgroundImage];
+		if (badge.classList && badge.classList.contains("ffz-badge")) {
+			try { sources.push(getComputedStyle(badge).backgroundImage); } catch (e) {}
+		}
+		if (sources.some(function (source) {
+			return String(source || "").toLowerCase().indexOf("/badges/v1/" + TWITCH_BOT_BADGE_IMAGE_ID + "/") !== -1;
+		})) return true;
+
+		var nodes = [badge, badge.parentElement];
+		var attributes = ["data-a-badge", "data-badge", "data-badge-id", "data-a-badge-id", "data-badge-set-id", "data-set-id"];
+		for (var i = 0; i < nodes.length; i++) {
+			if (!nodes[i] || !nodes[i].getAttribute) continue;
+			for (var j = 0; j < attributes.length; j++) {
+				if (isBotBadgeId(nodes[i].getAttribute(attributes[j]))) return true;
+			}
+		}
+		// Exact badge labels only, never message text or a username containing "bot".
+		return [badge.alt, badge.getAttribute("aria-label"), badge.getAttribute("title")].some(function (label) {
+			return /^(chat bot|bot)( badge)?$/i.test(String(label || "").trim());
+		});
+	}
+
 	const TWITCH_MODERATOR_BADGE_IMAGE_IDS = new Set([
 		"3267646d-33f0-4b17-b3df-f923a41db1d0"
 	]);
@@ -1107,11 +1155,9 @@
 		
 		var mod = false;
 		var vip = false;
-		var bot = false;
-		if (globalThis.SSNTwitchBots) {
-			var loginElement = displayNameEle && displayNameEle.closest("[data-a-user]");
-			bot = globalThis.SSNTwitchBots.isKnownBot(loginElement ? loginElement.getAttribute("data-a-user") : username);
-		}
+		var loginElement = displayNameEle && displayNameEle.closest("[data-a-user]");
+		var login = loginElement ? loginElement.getAttribute("data-a-user") : username;
+		var bot = TWITCH_BOT_LOGINS.has((login || "").trim().toLowerCase());
 		
 		try {
 			const badges = ele.querySelectorAll(SELECTORS.chatBadges);
@@ -1138,7 +1184,7 @@
 				if (!mod && isTwitchModeratorBadge(badge)) {
 					mod = true;
 				}
-				if (!bot && globalThis.SSNTwitchBots && globalThis.SSNTwitchBots.isBotBadgeElement(badge)) {
+				if (!bot && isTwitchBotBadge(badge)) {
 					bot = true;
 				}
 				if (!vip && loweredBadgeText === "vip") {

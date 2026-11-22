@@ -2073,9 +2073,13 @@
 
         // Tracking variables
         const storageSuffix = buildTipJarStorageSuffix();
-        const amountStorageKey = (hypeMode ? 'tipjar_hype_amount' : 'tipjar_amount') + storageSuffix;
-        const historyStorageKey = (hypeMode ? 'tipjar_hype_history' : 'tipjar_history') + storageSuffix;
-        const completionsStorageKey = 'tipjar_hype_completions' + storageSuffix;
+        let hypeStoragePrefix = 'tipjar_hype_';
+        if (hypeMode && !subscriberGoalPreset && !versusMode) {
+            hypeStoragePrefix = followerGoalPreset ? 'tipjar_followers_' : 'tipjar_points_';
+        }
+        const amountStorageKey = (hypeMode ? hypeStoragePrefix : 'tipjar_') + 'amount' + storageSuffix;
+        const historyStorageKey = (hypeMode ? hypeStoragePrefix : 'tipjar_') + 'history' + storageSuffix;
+        const completionsStorageKey = hypeStoragePrefix + 'completions' + storageSuffix;
         let currentAmount = getInitialAmount();
         let completionCount = persistent ? (parseInt(readStoredValue(completionsStorageKey) || '0', 10) || 0) : 0;
         let completionResetTimer = null;
@@ -3212,7 +3216,15 @@
 
         // Browser storage can be unavailable or full; keep the live overlay running in memory.
         function readStoredValue(key) {
-            try { return localStorage.getItem(key); } catch (e) { return null; }
+            try {
+                const saved = localStorage.getItem(key);
+                // Older Hype and follower goals shared these records. Both can resume from the old
+                // balance, then save independently without changing the other goal's starting point.
+                if (saved === null && hypeStoragePrefix !== 'tipjar_hype_' && key.startsWith(hypeStoragePrefix)) {
+                    return localStorage.getItem('tipjar_hype_' + key.slice(hypeStoragePrefix.length));
+                }
+                return saved;
+            } catch (e) { return null; }
         }
 
         function writeStoredValue(key, value) {
@@ -3267,10 +3279,20 @@
             } else if (normalizeFilterValue(data.goalmetric) === 'followers') {
                 if (!followerGoalPreset) return false;
             } else if (data.goalmetric || data.countdonations) {
-                if ((commandMetric === 'count') !== countMode) return false;
+                if (supporterGoalPreset || (commandMetric === 'count') !== countMode) return false;
             }
 
             const commandEvents = normalizeEventFilterList(data.tipjarevent || data.tipjarevents || '');
+            const commandType = normalizeDonationTypeFilter(data.tipjartype || data.tipjarunit || data.donationtype || '');
+            const commandSources = normalizeFilterList(data.tipjarsource || data.donationsource || data.source || '');
+            // The popup targets the configured goal, including when its filter is "All sources".
+            if (data.selectedGoal) {
+                if (!supporterGoalPreset && !countMode && data.selectedGoal.hype !== hypeMode) return false;
+                return data.selectedGoal.excludeGiftPurchase === excludeYoutubeGiftMemberships &&
+                    commandType === donationTypeFilter &&
+                    hasExactFilters(eventTypeFilter, commandEvents) &&
+                    hasExactFilters(sourceTypeFilter, commandSources);
+            }
             if (commandEvents.length) {
                 if (!eventTypeFilter.length) return false;
                 for (let i = 0; i < commandEvents.length; i++) {
@@ -3278,12 +3300,10 @@
                 }
             }
 
-            const commandType = normalizeDonationTypeFilter(data.tipjartype || data.tipjarunit || data.donationtype || '');
             if (commandType) {
                 if (!donationTypeFilter || commandType !== donationTypeFilter) return false;
             }
 
-            const commandSources = normalizeFilterList(data.tipjarsource || data.donationsource || data.source || '');
             if (commandSources.length) {
                 if (!sourceTypeFilter.length) return false;
                 for (let i = 0; i < commandSources.length; i++) {
@@ -3718,7 +3738,7 @@
             });
         }
 
-        function hasExactEventFilters(filters, expected) {
+        function hasExactFilters(filters, expected) {
             if (filters.length !== expected.length) return false;
             for (let i = 0; i < expected.length; i++) {
                 if (filters.indexOf(expected[i]) === -1) return false;
@@ -3727,9 +3747,9 @@
         }
 
         function getDefaultCountLabel(filters) {
-            if (hasExactEventFilters(filters, ['superchat'])) return 'Super Chats';
-            if (hasExactEventFilters(filters, ['supersticker'])) return 'Super Stickers';
-            if (hasExactEventFilters(filters, ['superchat', 'supersticker'])) return 'paid messages';
+            if (hasExactFilters(filters, ['superchat'])) return 'Super Chats';
+            if (hasExactFilters(filters, ['supersticker'])) return 'Super Stickers';
+            if (hasExactFilters(filters, ['superchat', 'supersticker'])) return 'paid messages';
             return filters.length ? 'events' : 'donations';
         }
 
@@ -3740,18 +3760,18 @@
                 if (/s$/i.test(label) && !/ss$/i.test(label)) return label.slice(0, -1);
                 return label;
             }
-            if (hasExactEventFilters(filters, ['superchat'])) return 'Super Chat';
-            if (hasExactEventFilters(filters, ['supersticker'])) return 'Super Sticker';
-            if (hasExactEventFilters(filters, ['superchat', 'supersticker'])) return 'paid message';
+            if (hasExactFilters(filters, ['superchat'])) return 'Super Chat';
+            if (hasExactFilters(filters, ['supersticker'])) return 'Super Sticker';
+            if (hasExactFilters(filters, ['superchat', 'supersticker'])) return 'paid message';
             if (/ies$/i.test(label)) return label.slice(0, -3) + 'y';
             if (/s$/i.test(label) && !/ss$/i.test(label)) return label.slice(0, -1);
             return label || 'donation';
         }
 
         function getDefaultCountTitle(filters) {
-            if (hasExactEventFilters(filters, ['superchat'])) return 'Super Chat Goal';
-            if (hasExactEventFilters(filters, ['supersticker'])) return 'Super Sticker Goal';
-            if (hasExactEventFilters(filters, ['superchat', 'supersticker'])) return 'YouTube Paid Message Goal';
+            if (hasExactFilters(filters, ['superchat'])) return 'Super Chat Goal';
+            if (hasExactFilters(filters, ['supersticker'])) return 'Super Sticker Goal';
+            if (hasExactFilters(filters, ['superchat', 'supersticker'])) return 'YouTube Paid Message Goal';
             return 'Donation Count Goal';
         }
 
@@ -4950,7 +4970,7 @@ function processData(data, side) {
             }
 
             if (isTipJarResetCommand(data)) {
-                resetTipJarAmount(true);
+                if (!data.selectedGoal || commandMatchesTipJarFilters(data)) resetTipJarAmount(true);
                 return;
             }
 

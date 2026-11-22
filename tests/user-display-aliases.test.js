@@ -59,6 +59,8 @@ ${extractFunction(backgroundSource, "findUserDisplayAlias")}
 ${extractFunction(backgroundSource, "applyUserDisplayAlias")}
 ${extractFunction(backgroundSource, "getOverlayDisplayMessage")}
 ${extractFunction(backgroundSource, "getOverlayDisplayPayload")}
+${extractFunction(backgroundSource, "normalizeEventName")}
+${extractFunction(backgroundSource, "isIndividualLikeEvent")}
 ${extractFunction(backgroundSource, "prepareOverlayControl")}
 ${extractFunction(backgroundSource, "sendOverlayControlRelay")}
 ${extractFunction(backgroundSource, "sendDataToStreamDeckPeersP2P")}
@@ -140,7 +142,7 @@ assert.ok(extractFunction(backgroundSource, "sendTargetP2P").includes("getOverla
 assert.ok(!extractFunction(backgroundSource, "sendToDestinations").includes("applyUserDisplayAlias"), "non-overlay destinations must retain the canonical message");
 assert.strictEqual((backgroundSource.match(/applyUserDisplayAlias\(/g) || []).length, 2, "aliases should only be defined and applied to an overlay copy");
 assert.ok(backgroundSource.includes("data.userid || data.username || data.chatname"), "user actions should prefer stable identities");
-assert.ok(backgroundSource.includes("checkUserTypeExists(data.userid || data.chatname, data.type, data.chatname)"), "first-timer checks should retain their original identity behavior");
+assert.ok(backgroundSource.includes("checkUserTypeExists(data.userid, data.type, data.chatname)"), "first-timer checks should use the canonical account ID and display name");
 assert.ok(backgroundSource.includes("message.idx = await addMessageDB(message);"), "database writes should receive the canonical message unchanged");
 assert.ok(backgroundSource.includes("const userToBlock = { username: data.userid || data.username || data.chatname, type: altSourceType };"), "block actions should use the stable source identity");
 assert.ok(backgroundSource.includes("chatname: data.username || data.chatname"), "source-side block actions should keep the original username");

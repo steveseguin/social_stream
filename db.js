@@ -135,17 +135,13 @@ class MessageStoreDB {
         }
     }
 
-    getExistenceCacheKeys(userIdentifier, type, fallbackChatname = null) {
+    getExistenceCacheKeys(userid, type, chatname) {
         const keys = [];
-        [userIdentifier, fallbackChatname].forEach(value => {
-            if (value === undefined || value === null || !type) return;
-            const normalized = String(value).trim();
-            if (!normalized) return;
-            const key = `${normalized}:${type}`;
-            if (!keys.includes(key)) {
-                keys.push(key);
-            }
-        });
+        if (!type) return keys;
+        const id = String(userid ?? "").trim();
+        const name = String(chatname ?? "").trim();
+        if (id) keys.push(`id:${type}:${id}`);
+        if (name) keys.push(`name:${type}:${name}`);
         return keys;
     }
 
@@ -298,7 +294,7 @@ class MessageStoreDB {
                 this.updateCache(messageData);
                 
                 // Cache that this user now exists
-                const cacheKeys = this.getExistenceCacheKeys(messageData.userid || messageData.chatname, messageData.type, messageData.chatname);
+                const cacheKeys = this.getExistenceCacheKeys(messageData.userid, messageData.type, messageData.chatname);
                 cacheKeys.forEach(cacheKey => {
                     this.setExistenceCache(cacheKey, {
                         exists: true,
@@ -397,19 +393,13 @@ class MessageStoreDB {
         });
     }
 	
-    cachedUserActivity(cacheKeys, now) {
-        for (const cacheKey of cacheKeys) {
-            if (!this.existenceCache.entries.has(cacheKey)) continue;
-            const entry = this.existenceCache.entries.get(cacheKey);
-            if (now - entry.timestamp < this.existenceCache.ttl) {
-                return {
-                    exists: entry.exists,
-                    lastActivity: entry.lastActivity ?? null
-                };
-            }
-            // Expired entry, remove from cache
-            this.existenceCache.entries.delete(cacheKey);
+    cachedUserActivity(key, now) {
+        const entry = this.existenceCache.entries.get(key);
+        if (!entry) return null;
+        if (now - entry.timestamp < this.existenceCache.ttl) {
+            return { exists: entry.exists, lastActivity: entry.lastActivity ?? null };
         }
+        this.existenceCache.entries.delete(key);
         return null;
     }
 
@@ -417,9 +407,9 @@ class MessageStoreDB {
     // stored or filtered. Different chatters can look up history together.
     async beginFirstTimerCapture(message) {
         this.syncRetentionCacheMode();
-        const keys = this.getExistenceCacheKeys(message.userid || message.chatname, message.type, message.chatname);
+        const keys = this.getExistenceCacheKeys(message.userid, message.type, message.chatname);
         if (!this.pendingFirstTimers) this.pendingFirstTimers = new Map();
-        while (!this.cachedUserActivity(keys, Date.now())) {
+        while (!this.cachedUserActivity(keys[0], Date.now())) {
             const pending = keys.map(key => this.pendingFirstTimers.get(key)).filter(Boolean);
             if (pending.length) {
                 await Promise.all(pending);
@@ -439,8 +429,9 @@ class MessageStoreDB {
     async checkUserTypeExists(userIdentifier, type, fallbackChatname = null) {
         const now = Date.now();
         this.syncRetentionCacheMode();
-        const cacheKeys = this.getExistenceCacheKeys(userIdentifier, type, fallbackChatname);
-        const cached = this.cachedUserActivity(cacheKeys, now);
+        // With an account ID, a display-name cache hit can belong to someone else.
+        const [cacheKey] = this.getExistenceCacheKeys(userIdentifier, type, fallbackChatname);
+        const cached = this.cachedUserActivity(cacheKey, now);
         if (cached) return cached;
 
         // If database is disabled, do not mark users first-time.
@@ -454,24 +445,35 @@ class MessageStoreDB {
         const normalizedUserIdentifier = userIdentifier === undefined || userIdentifier === null ? "" : String(userIdentifier).trim();
         const normalizedFallbackChatname = fallbackChatname === undefined || fallbackChatname === null ? "" : String(fallbackChatname).trim();
         const lookups = [];
-        const addLookup = (indexName, name) => {
+        const addLookup = (indexName, name, accountId = "") => {
             const lower = [name, type, 0];
             const upper = [name, type, now];
-            lookups.push({ indexName, now, range: IDBKeyRange.bound(lower, upper) });
+            lookups.push({ indexName, now, accountId, range: IDBKeyRange.bound(lower, upper) });
         };
         if (normalizedUserIdentifier) {
             addLookup('user_id_type_timestamp', normalizedUserIdentifier);
-            addLookup('user_type_timestamp', normalizedUserIdentifier);
+            // IndexedDB treats numeric and string keys as different accounts unless we check both.
+            const numeric = Number(normalizedUserIdentifier);
+            if (Number.isSafeInteger(numeric) && String(numeric) === normalizedUserIdentifier) {
+                addLookup('user_id_type_timestamp', numeric);
+            }
+            addLookup('user_type_timestamp', normalizedUserIdentifier, normalizedUserIdentifier);
         }
         if (normalizedFallbackChatname && normalizedFallbackChatname !== normalizedUserIdentifier) {
-            addLookup('user_type_timestamp', normalizedFallbackChatname);
+            addLookup('user_type_timestamp', normalizedFallbackChatname, normalizedUserIdentifier);
         }
 
         await this.readFirstTimerHistory(db, lookups);
         // Prefer stable user ID, then the legacy username and display name.
-        const result = lookups.find(lookup => lookup.match)?.match || { exists: false, lastActivity: null };
+        let best;
+        for (const lookup of lookups) {
+            if (lookup.match?.exists && (!best || (lookup.indexName === best.indexName && lookup.match.lastActivity > best.match.lastActivity))) {
+                best = lookup;
+            }
+        }
+        const result = best?.match || lookups.find(lookup => lookup.match)?.match || { exists: false, lastActivity: null };
         if (result.exists) {
-            cacheKeys.forEach(key => this.setExistenceCache(key, { ...result, cachedAt: now }));
+            this.setExistenceCache(cacheKey, { ...result, cachedAt: now });
         }
         return result;
     }
@@ -533,7 +535,8 @@ class MessageStoreDB {
             request.onsuccess = () => {
                 const cursor = request.result;
                 if (!cursor) return;
-                if (this.isMessageExpired(cursor.value, lookup.now)) {
+                const storedId = String(cursor.value.userid ?? "").trim();
+                if (this.isMessageExpired(cursor.value, lookup.now) || (lookup.accountId && storedId && storedId !== lookup.accountId)) {
                     cursor.continue();
                 } else {
                     lookup.match = { exists: true, lastActivity: cursor.value.timestamp ?? null };

@@ -495,6 +495,26 @@ function updateChatConnectionStatus(status) {
 try{
 	window.websocket = websocketProxy;
 	var isExtensionOn = true;
+
+	// Exact Twitch logins only; custom bot accounts can still be assigned in settings.
+	const TWITCH_BOT_LOGINS = new Set([
+		"botrixoficial",
+		"fossabot",
+		"kofistreambot",
+		"moobot",
+		"nightbot",
+		"own3d",
+		"pokemoncommunitygame",
+		"pretzelrocks",
+		"sery_bot",
+		"soundalerts",
+		"streamelements",
+		"streamlabs",
+		"tangiabot",
+		"twitchmusicid",
+		"wizebot"
+	]);
+
 	var clientId = 'sjjsgy1sgzxmy346tdkghbyz4gtx0k'; 
 	var hostedClientId = 'ysbszgkt7uh5kn7qjed822dd89722n';
 	var redirectURI = window.location.href.split("/twitch")[0]+"/twitch.html"; //  'https://socialstream.ninja/sources/websocket/twitch.html';
@@ -3883,11 +3903,9 @@ async function ensureChatClientInstance() {
 		data.membership = markSubscriberAsMembership ? subscriber : "";
 		data.subtitle = subtitle;
 		data.mod = mod;
-		if (normalizedPayload?.bot === true || (globalThis.SSNTwitchBots && (
-			globalThis.SSNTwitchBots.isKnownBot(user)
-			|| globalThis.SSNTwitchBots.hasBotBadge(parsedMessage.tags?.badges)
-			|| globalThis.SSNTwitchBots.hasBotBadge(parsedMessage.tags?.['source-badges'])
-		))) {
+		if (normalizedPayload?.bot === true || TWITCH_BOT_LOGINS.has(user.trim().toLowerCase())
+			|| hasTwitchBotBadge(parsedMessage.tags?.badges)
+			|| hasTwitchBotBadge(parsedMessage.tags?.['source-badges'])) {
 			data.bot = true;
 		}
 
@@ -4133,6 +4151,22 @@ async function ensureChatClientInstance() {
 		});
 	}
 	
+	function isBotBadgeId(value) {
+		return typeof value === "string" && value.split("/")[0].trim().toLowerCase() === "bot-badge";
+	}
+
+	function hasTwitchBotBadge(badges) {
+		if (typeof badges === "string") {
+			return badges.split(",").some(isBotBadgeId);
+		}
+		if (Array.isArray(badges)) {
+			return badges.some(function (badge) {
+				return badge && isBotBadgeId(badge.set_id);
+			});
+		}
+		return !!badges && typeof badges === "object" && Object.prototype.hasOwnProperty.call(badges, "bot-badge");
+	}
+
 	function parseBadges(parsedMessage) {
 		// Early return if no valid badges data
 		if (!parsedMessage?.tags?.badges || typeof parsedMessage.tags.badges !== 'string') {
