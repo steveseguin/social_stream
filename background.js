@@ -4167,6 +4167,46 @@ function getYoutubeAvatarImage(url, skip = false) {
 	return false;
 }
 
+function extractYouTubePageData(html, variable) {
+	const markers = [variable + '"] = ', variable + "'] = ", "var " + variable + " = "];
+	let jsonStart = -1;
+	for (const m of markers) {
+		const idx = html.indexOf(m);
+		if (idx !== -1) {
+			jsonStart = idx + m.length;
+			break;
+		}
+	}
+	if (jsonStart === -1) return null;
+	let depth = 0,
+		inStr = false,
+		esc = false,
+		end = -1;
+	for (let scanIndex = jsonStart; scanIndex < html.length; scanIndex++) {
+		const c = html[scanIndex];
+		if (esc) {
+			esc = false;
+			continue;
+		}
+		if (c === "\\" && inStr) {
+			esc = true;
+			continue;
+		}
+		if (c === '"') {
+			inStr = !inStr;
+			continue;
+		}
+		if (inStr) continue;
+		if (c === "{") depth++;
+		else if (c === "}" && --depth === 0) {
+			end = scanIndex + 1;
+			break;
+		}
+	}
+	if (end === -1) return null;
+	return JSON.parse(html.slice(jsonStart, end));
+}
+
 function YouTubeGetID(url) {
 	var ID = "";
 	url = url.replace(/(>|<)/gi, "").split(/(vi\/|v=|\/v\/|youtu\.be\/|\/embed\/)/);
@@ -5784,6 +5824,7 @@ async function processIncomingMessage(message, sender = null) {
 		}
 
 		let reflection = false;
+		if (getSettingFlag("showdocksentmessages") && isDisplayedDockReply(message)) return;
 
 		// checkExactDuplicateAlreadyReceived only does work if there was a message responsein the last 10 seconds.
 		// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
@@ -6887,45 +6928,6 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 						chrome.runtime.lastError;
 					});
 				};
-				const extractInitialData = function (html) {
-					const markers = ['ytInitialData"] = ', "ytInitialData'] = ", "var ytInitialData = "];
-					let jsonStart = -1;
-					for (const m of markers) {
-						const idx = html.indexOf(m);
-						if (idx !== -1) {
-							jsonStart = idx + m.length;
-							break;
-						}
-					}
-					if (jsonStart === -1) return null;
-					let depth = 0,
-						inStr = false,
-						esc = false,
-						end = -1;
-					for (let scanIndex = jsonStart; scanIndex < html.length; scanIndex++) {
-						const c = html[scanIndex];
-						if (esc) {
-							esc = false;
-							continue;
-						}
-						if (c === "\\" && inStr) {
-							esc = true;
-							continue;
-						}
-						if (c === '"') {
-							inStr = !inStr;
-							continue;
-						}
-						if (inStr) continue;
-						if (c === "{") depth++;
-						else if (c === "}" && --depth === 0) {
-							end = scanIndex + 1;
-							break;
-						}
-					}
-					if (end === -1) return null;
-					return JSON.parse(html.slice(jsonStart, end));
-				};
 				const extractApiKey = function (html) {
 					const match = html.match(/"INNERTUBE_API_KEY"\s*:\s*"([^"]+)"/) || html.match(/'INNERTUBE_API_KEY'\s*:\s*'([^']+)'/);
 					return match && match[1] ? match[1] : "";
@@ -7041,7 +7043,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 							return;
 						}
 						const html = await resp.text();
-						sendRichChatResult(slimInitialData(extractInitialData(html), html) || (await fetchPublicInitialData(videoId)));
+						sendRichChatResult(slimInitialData(extractYouTubePageData(html, "ytInitialData"), html) || (await fetchPublicInitialData(videoId)));
 					} catch (e) {
 						console.log("Background YouTube rich chat fetch failed:", e);
 						sendRichChatResult(null);
@@ -9112,6 +9114,19 @@ function normalizeMessageForTracking(msg, textonly = false) {
 }
 
 const messageStore = {};
+const displayedDockReply = Symbol("displayedDockReply");
+
+function isDisplayedDockReply(message) {
+	const entries = messageStore[message.tid];
+	if (!entries || !message.chatmessage || message.event || message.hasDonation) return false;
+	const text = normalizeMessageForTracking(message.chatmessage, message.textonly);
+	const now = Date.now();
+	const entry = entries.find(item => item.dockText && item.dockText === text && now - item.timestamp <= 10000);
+	if (!entry || !window.ssnCaptions || window.ssnCaptions.whoSent(message) !== "own") return false;
+	delete entry.dockText;
+	return true;
+}
+
 function checkExactDuplicateAlreadyRelayed(msg, sanitized = true, tabid = false, save = true) {
 	// FOR RELAY PURPOSES ONLY.
 
@@ -13212,37 +13227,34 @@ async function openchat(target = null, force = false) {
 	}
 
 	async function openYouTubeLiveChats(chatSettings) {
-		// Ensure username starts with @
-		if (!chatSettings.youtube_username.textsetting.startsWith("@")) {
-			chatSettings.youtube_username.textsetting = "@" + chatSettings.youtube_username.textsetting;
-		}
+		const name = (chatSettings.youtube_username.textsetting || "").trim();
+		if (!name) return;
+		const channelId = /^UC[\w-]{22}$/.test(name);
+		const handle = channelId || name.startsWith("@") ? name : "@" + name;
+		const exactHandle = name.startsWith("@");
 
 		try {
 			// Try our API first
-			const response = await fetch(`https://api.socialstream.ninja/youtube/streams?username=${encodeURIComponent(chatSettings.youtube_username.textsetting)}`);
+			const response = await fetch(`https://api.socialstream.ninja/youtube/streams?username=${encodeURIComponent(handle)}&liveonly=1${exactHandle ? "&usernameonly" : ""}`);
 			const data = await response.json();
-
-			if (response.ok && Array.isArray(data) && data.length > 0) {
-				// We found live streams, open chat for each one
-				data.forEach(stream => {
-					if (stream.videoId) {
-						let url = "https://www.youtube.com/live_chat?is_popout=1&v=" + stream.videoId;
-						if (stream.isShort) {
-							url += "&shorts";
-						}
+			const legacy = Array.isArray(data);
+			const streams = legacy ? data : data && data.success && data.data;
+			if (response.ok && Array.isArray(streams)) {
+				const live = streams.filter(stream => stream && /^[\w-]{11}$/.test(stream.videoId || "") && !stream.actualEndTime
+					&& (stream.status === "live" || (legacy && !stream.status)));
+				if (live.length) {
+					for (const stream of live) {
+						let url = "https://www.youtube.com/live_chat?is_popout=1&v=" + encodeURIComponent(stream.videoId);
+						if (stream.isShort) url += "&shorts";
 						openURL(url, true);
 					}
-				});
-				return; // Successfully handled via API
+					return;
+				}
 			}
-
-			// If API returns error or no streams, fall back to old method
-			await fallbackYouTubeLiveChat(chatSettings);
 		} catch (error) {
 			console.error("API Error:", error);
-			// API failed, fall back to old method
-			await fallbackYouTubeLiveChat(chatSettings);
 		}
+		await fallbackYouTubeLiveChat(handle, channelId);
 	}
 
 	async function openRumbleLiveChat(chatSettings) {
@@ -13273,33 +13285,28 @@ async function openchat(target = null, force = false) {
 		return false;
 	}
 
-	async function fallbackYouTubeLiveChat(chatSettings) {
+	async function fallbackYouTubeLiveChat(identifier, byChannelId) {
 		try {
-			// Try first URL format
-			const response1 = await fetch("https://www.youtube.com/c/" + chatSettings.youtube_username.textsetting + "/live");
-			const data1 = await response1.text();
-			const videoID = data1.split('{"videoId":"')[1].split('"')[0];
-
-			if (videoID) {
-				let url = "https://www.youtube.com/live_chat?is_popout=1&v=" + videoID;
-				openURL(url, true);
-				return;
+			const channelPath = byChannelId ? "channel/" + identifier : "@" + encodeURIComponent(identifier.slice(1));
+			const response = await fetch("https://www.youtube.com/" + channelPath + "/live");
+			if (!response.ok) return;
+			const player = extractYouTubePageData(await response.text(), "ytInitialPlayerResponse");
+			const video = player?.videoDetails;
+			const info = player?.microformat?.playerMicroformatRenderer;
+			const broadcast = info?.liveBroadcastDetails;
+			if (player?.playabilityStatus?.status !== "OK" || !/^[\w-]{11}$/.test(video?.videoId || "")
+				|| !video.channelId || video.isUpcoming || broadcast?.endTimestamp
+				|| !(broadcast?.isLiveNow === true || video.isLive === true)) return;
+			if (byChannelId) {
+				if (video.channelId !== identifier) return;
+			} else {
+				const owner = new URL(info.ownerProfileUrl, "https://www.youtube.com");
+				if (!["youtube.com", "www.youtube.com"].includes(owner.hostname)
+					|| decodeURIComponent(owner.pathname).toLowerCase() !== "/" + identifier.toLowerCase()) return;
 			}
-		} catch (e) {
-			try {
-				// Try second URL format
-				const response2 = await fetch("https://www.youtube.com/" + chatSettings.youtube_username.textsetting + "/live");
-				const data2 = await response2.text();
-				const videoID = data2.split('{"videoId":"')[1].split('"')[0];
-
-				if (videoID) {
-					let url = "https://www.youtube.com/live_chat?is_popout=1&v=" + videoID;
-					openURL(url, true);
-					return;
-				}
-			} catch (fallbackError) {
-				console.log("No live streams found");
-			}
+			openURL("https://www.youtube.com/live_chat?is_popout=1&v=" + video.videoId, true);
+		} catch (error) {
+			console.log("Could not verify a live YouTube chat", error.message);
 		}
 	}
 
@@ -16086,6 +16093,13 @@ async function processIncomingRequest(request, UUID = false) {
 		if (!request.outgoingOrigin && !request.bot) {
 			request.outgoingOrigin = "host";
 		}
+		if (request.dockInput === true && request.outgoingOrigin === "host" && !request.bot && isExtensionOn &&
+			getSettingFlag("showdocksentmessages") && typeof request.response === "string" && request.response.trim()) {
+			const firstHost = getCachedCommaList(getSettingTextValue("hostnamesext"))[0] || "";
+			const name = firstHost.split(":")[0].trim() || "Host";
+			sendDataP2P({ id: ++messageCounter, type: "socialstream", host: true, chatname: filterXSS(name), chatmessage: request.response, textonly: true });
+			request[displayedDockReply] = true;
+		}
 		sendMessageToTabs(request, false, null, false, false, false);
 	} else if ("action" in request) {
 		if (request.action === "phraseGuessResponse") {
@@ -17655,8 +17669,9 @@ function createRelayTabContext(tab, data, now, relayMode, messageOrigin, shouldC
 				return;
 			}
 			const sanitized = checkExactDuplicateAlreadyRelayed(value, false, false, true);
-			if (sanitized) {
-				handleMessageStore(tab.id, sanitized, now, relayMode, messageOrigin, data && data.captionIds);
+			if (sanitized || data[displayedDockReply]) {
+				const entry = handleMessageStore(tab.id, sanitized, now, relayMode, messageOrigin, data && data.captionIds);
+				if (entry && data[displayedDockReply]) entry.dockText = normalizeMessageForTracking(value, true);
 			}
 		},
 		markAutoIfNeeded() {
@@ -18201,12 +18216,14 @@ function handleMessageStore(tabId, msg2Save, now, relayMode, origin = "relay", c
 				messageStore[tabId].shift();
 			}
 		}
-		messageStore[tabId].push({
+		const entry = {
 			message: msg2Save,
 			timestamp: now,
 			relayMode: relayMode,
 			origin: origin
-		});
+		};
+		messageStore[tabId].push(entry);
+		return entry;
 	} catch (e) {
 		errorlog(e);
 	}

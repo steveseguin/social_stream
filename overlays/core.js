@@ -13,10 +13,12 @@
 		{ id: "gaming", label: "Gaming" },
 		{ id: "time", label: "Clocks & timers" },
 		{ id: "scenes", label: "Scenes & frames" },
+		{ id: "worlds", label: "Backgrounds & worlds" },
 		{ id: "vertical", label: "Vertical 9:16" },
 		{ id: "3d", label: "3D scenes" },
 		{ id: "random", label: "Dice, wheels & draws" },
 		{ id: "celebrate", label: "Winners, raids & giveaways" },
+		{ id: "rewards", label: "Follows, subs & tips" },
 		{ id: "maps", label: "Maps" },
 		{ id: "pets", label: "Pets" },
 		{ id: "obs", label: "Reacts to OBS" },
@@ -41,6 +43,8 @@
 		def.size = def.size || [800, 200];
 		// A still picture (def.still, channel art) is downloaded, never loaded in OBS, so the OBS extras do not apply.
 		if (!def.still) { def.fields = def.fields.concat(SSO.GLOBAL_FIELDS); }
+		// An id is in people's saved links, so a second template must never take over one that is already there.
+		if (templateMap[def.id]) { if (global.console && console.error) { console.error("Overlay template id used twice, second one ignored: " + def.id); } return; }
 		templates.push(def);
 		templateMap[def.id] = def;
 	};
@@ -76,7 +80,8 @@
 	SSO.color = function (value, fallback) {
 		var v = String(value == null ? "" : value).trim();
 		if (!v) { return fallback || "transparent"; }
-		if (/^[0-9a-f]{3}([0-9a-f]{3})?([0-9a-f]{2})?$/i.test(v)) { return "#" + v; }
+		// 3, 6 or 8 hex digits. (Five used to slip through and made a colour no browser accepts.)
+		if (/^([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(v)) { return "#" + v; }
 		// Colours are also used in generated HTML attributes. Validate the CSS value
 		// and reject markup delimiters before allowing it into those attributes.
 		if (/[<>"']/.test(v)) { return fallback || "transparent"; }

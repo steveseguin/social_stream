@@ -5807,7 +5807,7 @@
 				var receipt = data.ssnCloudDelivery;
 				var payload = data.ssnCloudMessage;
 				var remoteType = remoteCloudReceipts && payload && (["twitch", "youtube", "chaturbate"].indexOf(payload.delete ? payload.delete.type : payload.type) !== -1 ||
-					receipt.v === 2 && ["kick", "tiktok", "cam4", "stripchat", "rumble", "whatnot", "chzzk", "sooplive", "bongacams", "camsoda", "bilibili", "picarto", "piczel", "goodgame"].indexOf(payload.delete ? payload.delete.type : payload.type) !== -1);
+					receipt.v === 2 && ["kick", "tiktok", "cam4", "stripchat", "rumble", "whatnot", "chzzk", "sooplive", "bongacams", "camsoda", "bilibili", "picarto", "piczel", "goodgame", "mixcloud", "nicovideo"].indexOf(payload.delete ? payload.delete.type : payload.type) !== -1);
 				var remoteReceipt = receipt.v === 2 && remoteType;
 				if (remoteReceipt && (!remoteCloudReceiver || receipt.receiver !== remoteCloudReceiver.id)) return true;
 				if ((!remoteReceipt && (receipt.v !== 1 || remoteType)) || !/^[a-f0-9]{32}$/.test(receipt.stream || "") ||
@@ -13935,6 +13935,7 @@
 				msg.overlayNinja = {};
 				msg.overlayNinja.tid = tid; // specific or array
 				msg.overlayNinja.response = data;
+				msg.overlayNinja.dockInput = true;
 
 				console.log('[DOCK MSG] Sending at:', Date.now(), 'to tid:', tid);
 				send2Extension(msg.overlayNinja);

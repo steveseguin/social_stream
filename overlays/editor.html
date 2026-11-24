@@ -69,7 +69,7 @@
 	</div>
 	<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-	<script src="core.js?v=23"></script>
+	<script src="core.js?v=24"></script>
 	<script src="templates/countries.js?v=15"></script>
 	<script src="templates/engines.js?v=19"></script>
 	<script src="templates/socials.js?v=18"></script>
@@ -102,13 +102,24 @@
 	<script src="templates/seasons.js?v=1"></script>
 	<script src="templates/seasondecor.js?v=1"></script>
 	<script src="templates/splat.js?v=3"></script>
-	<script src="templates/three3d.js?v=2"></script>
+	<script src="templates/three3d.js?v=3"></script>
 	<script src="templates/portrait.js?v=3"></script>
-	<script src="templates/celebrate.js?v=3"></script>
-	<script src="templates/moments.js?v=4"></script>
+	<script src="templates/celebrate.js?v=4"></script>
+	<script src="templates/moments.js?v=5"></script>
 	<script src="templates/random.js?v=3"></script>
 	<script src="templates/countscreen.js?v=3"></script>
 	<script src="templates/channelart.js?v=2"></script>
+	<script src="templates/fxkit.js?v=1"></script>
+	<script src="templates/rewards.js?v=1"></script>
+	<script src="templates/thanks.js?v=1"></script>
+	<script src="templates/megafx.js?v=1"></script>
+	<script src="templates/cityscapes.js?v=1"></script>
+	<script src="templates/wilds.js?v=1"></script>
+	<script src="templates/habitats.js?v=1"></script>
+	<script src="templates/stackworld.js?v=1"></script>
+	<script src="templates/tinyworlds.js?v=1"></script>
+	<script src="templates/retro8.js?v=1"></script>
+	<script src="templates/retro3d.js?v=1"></script>
 	<script src="templates/seasontags.js?v=1"></script>
 	<script>
 	(function () {
@@ -488,7 +499,9 @@
 			var link = SSO.viewerBase() + "?" + query;
 			$("url").value = link;
 			$("open").href = link;
-			$("hint").innerHTML = still ? still.hint : "In OBS: <b>Sources → + → Browser</b>, paste the link, and set width <b>" + s[0] + "</b> and height <b>" + s[1] + "</b>. Bookmark this page to edit it later.";
+			$("hint").innerHTML = still ? still.hint : "In OBS: <b>Sources → + → Browser</b>, paste the link, and set width <b>" + s[0] + "</b> and height <b>" + s[1] + "</b>. Bookmark this page to edit it later." +
+				// A moment with a name or amount in it can be played by the alert box for real events.
+				(def.fields.some(function (f) { return f.live; }) ? " To play it for real follows, subs and tips with the viewer's name filled in, paste the link into the <b>Media</b> box of an alert under <b>Multi-Stream Alert Box → Event animations &amp; sound effects</b> in Social Stream Ninja." : "");
 			if (still) { stillButtons(); }
 			var pageLink = "editor.html?" + query + (sizeTouched ? "&w=" + s[0] + "&h=" + s[1] : ""), frameLink = "view.html?" + query + "&preview";
 			if (still) {

@@ -1450,17 +1450,49 @@
 		g.computeVertexNormals();
 		return g;
 	}
+	// A cut five-pointed star lying in the XY plane: each face rises to a point in the middle, so its ten facets flash one
+	// after another as it turns, and a narrow chamfer and a thin side band give the edge a polished line.
+	function starGeometry(T) {
+		var R = 1, r = 0.44, h = 0.32, e = 0.055, zc = e + 0.045, cw = 0.05, out = [], ring = [], v = [], i, j, s;
+		for (i = 0; i < 10; i++) { var a = i / 10 * TAU + Math.PI / 2, rad = i % 2 ? r : R; out.push([Math.cos(a) * rad, Math.sin(a) * rad]); }
+		// the chamfer's inner edge: the outline moved in by cw, with mitred corners
+		for (i = 0; i < 10; i++) {
+			var p0 = out[(i + 9) % 10], p1 = out[i], p2 = out[(i + 1) % 10], l1 = Math.sqrt(Math.pow(p1[0] - p0[0], 2) + Math.pow(p1[1] - p0[1], 2)), l2 = Math.sqrt(Math.pow(p2[0] - p1[0], 2) + Math.pow(p2[1] - p1[1], 2));
+			var n1x = (p0[1] - p1[1]) / l1, n1y = (p1[0] - p0[0]) / l1, n2x = (p1[1] - p2[1]) / l2, n2y = (p2[0] - p1[0]) / l2, m = cw / (1 + n1x * n2x + n1y * n2y);
+			ring.push([p1[0] + (n1x + n2x) * m, p1[1] + (n1y + n2y) * m]);
+		}
+		// every face is wound to point away from the middle (all of the star can be seen from its centre, so this test holds)
+		function tri(a, b, c) {
+			var ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], wx = c[0] - a[0], wy = c[1] - a[1], wz = c[2] - a[2];
+			var nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx;
+			if (nx * (a[0] + b[0] + c[0]) + ny * (a[1] + b[1] + c[1]) + nz * (a[2] + b[2] + c[2]) < 0) { v.push(a[0], a[1], a[2], c[0], c[1], c[2], b[0], b[1], b[2]); }
+			else { v.push(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]); }
+		}
+		function at(p, z) { return [p[0], p[1], z]; }
+		for (i = 0; i < 10; i++) {
+			j = (i + 1) % 10;
+			for (s = -1; s <= 1; s += 2) {
+				tri(at(ring[i], s * zc), at(ring[j], s * zc), [0, 0, s * h]);
+				tri(at(out[i], s * e), at(out[j], s * e), at(ring[j], s * zc)); tri(at(out[i], s * e), at(ring[j], s * zc), at(ring[i], s * zc));
+			}
+			tri(at(out[i], e), at(out[j], e), at(out[j], -e)); tri(at(out[i], e), at(out[j], -e), at(out[i], -e));
+		}
+		var g = new T.BufferGeometry();
+		g.setAttribute("position", new T.Float32BufferAttribute(v, 3));
+		g.computeVertexNormals();
+		return g;
+	}
 
 	SSO.register({
 		id: "coins3d",
 		name: "Raining coins & cash (3D)",
 		category: "3d",
-		description: "Real 3D gold coins, banknotes and cut gems tumbling down the screen (or shooting up like a jackpot fountain), catching the light as they spin. Runs all the time, or as a shower when you show the source in OBS: made for giveaway winners, big tips and hype moments. Transparent.",
+		description: "Real 3D gold coins, banknotes, cut gems or shiny stars tumbling down the screen (or shooting up like a jackpot fountain), catching the light as they spin. Runs all the time, or as a shower when you show the source in OBS: made for giveaway winners, big tips and hype moments. Transparent.",
 		size: [1280, 720],
 		sizeFor: function (c, thumb) { return thumb ? [960, 540] : [1920, 1080]; },
 		libs: LIBS,
 		fields: [
-			{ key: "kind", label: "What falls", type: "select", group: "Shower", default: "coins", options: [["coins", "Coins"], ["bills", "Banknotes"], ["gems", "Gems"], ["cash", "Coins and banknotes"], ["jackpot", "Coins, banknotes and gems"]] },
+			{ key: "kind", label: "What falls", type: "select", group: "Shower", default: "coins", options: [["coins", "Coins"], ["bills", "Banknotes"], ["gems", "Gems"], ["cash", "Coins and banknotes"], ["jackpot", "Coins, banknotes and gems"], ["stars", "Stars"], ["starcoins", "Stars and coins"]] },
 			{ key: "mode", label: "Direction", type: "select", group: "Shower", default: "rain", options: [["rain", "Raining down"], ["fountain", "Fountain from the bottom"]] },
 			{ key: "amount", label: "How many", type: "range", group: "Shower", default: 110, min: 10, max: 300, step: 5 },
 			{ key: "size", label: "Size", type: "range", group: "Shower", default: 1, min: 0.4, max: 3, step: 0.1 },
@@ -1469,10 +1501,12 @@
 			{ key: "every", label: "A shower every (seconds)", type: "number", group: "Shower", default: 30, min: 4, max: 3600, step: 1, show: { when: "burst" } },
 			{ key: "length", label: "Each shower lasts (seconds)", type: "number", group: "Shower", default: 6, min: 1, max: 120, step: 1, show: { when: "burst" } },
 			{ key: "onshow", label: "Start a shower when the OBS source is shown", type: "bool", group: "Shower", default: true, show: { when: "burst" } },
-			{ key: "metal", label: "Coin metal", type: "select", group: "Look", default: "gold", options: [["gold", "Gold"], ["silver", "Silver"], ["bronze", "Bronze"], ["mixed", "Gold and silver"], ["custom", "Your colour"]], show: { kind: ["coins", "cash", "jackpot"] } },
+			{ key: "metal", label: "Coin metal", type: "select", group: "Look", default: "gold", options: [["gold", "Gold"], ["silver", "Silver"], ["bronze", "Bronze"], ["mixed", "Gold and silver"], ["custom", "Your colour"]], show: { kind: ["coins", "cash", "jackpot", "starcoins"] } },
 			{ key: "color", label: "Coin colour", type: "color", group: "Look", default: "7dd3fc", show: { metal: "custom" } },
-			{ key: "symbol", label: "Stamped on the coins", type: "select", group: "Look", default: "$", options: [["$", "$ dollar"], ["€", "€ euro"], ["£", "£ pound"], ["¥", "¥ yen"], ["₿", "₿ bitcoin"], ["★", "★ star"], ["♥", "♥ heart"], ["♛", "♛ crown"], ["", "Plain star"]], show: { kind: ["coins", "cash", "jackpot"] } },
+			{ key: "symbol", label: "Stamped on the coins", type: "select", group: "Look", default: "$", options: [["$", "$ dollar"], ["€", "€ euro"], ["£", "£ pound"], ["¥", "¥ yen"], ["₿", "₿ bitcoin"], ["★", "★ star"], ["♥", "♥ heart"], ["♛", "♛ crown"], ["", "Plain star"]], show: { kind: ["coins", "cash", "jackpot", "starcoins"] } },
 			{ key: "bill", label: "Banknote colour", type: "color", group: "Look", default: "5fa870", show: { kind: ["bills", "cash", "jackpot"] } },
+			{ key: "star", label: "Star colour", type: "select", group: "Look", default: "gold", options: [["gold", "Gold"], ["silver", "Silver"], ["rainbow", "Rainbow colours"], ["custom", "Your colour"]], show: { kind: ["stars", "starcoins"] } },
+			{ key: "starcolor", label: "Your star colour", type: "color", group: "Look", default: "ff7ad9", show: { kind: ["stars", "starcoins"], star: "custom" } },
 			{ key: "glints", label: "Sparkles", type: "bool", group: "Look", default: true }
 		],
 		presets: [
@@ -1484,7 +1518,10 @@
 			{ name: "Gold and silver", tags: ["3d", "celebrate", "elegant"], values: { metal: "mixed", symbol: "★", amount: 70, speed: 0.7, size: 1.3 } },
 			{ name: "Bitcoin rain", tags: ["3d", "celebrate", "cyber"], values: { symbol: "₿", metal: "custom", color: "f7931a", amount: 80 } },
 			{ name: "Coin fountain", tags: ["3d", "celebrate", "retro"], values: { mode: "fountain", amount: 120 } },
-			{ name: "Heart tokens", tags: ["3d", "cute", "holiday"], values: { symbol: "♥", metal: "custom", color: "ff6b9a", amount: 60, speed: 0.6, size: 1.2 } }
+			{ name: "Heart tokens", tags: ["3d", "cute", "holiday"], values: { symbol: "♥", metal: "custom", color: "ff6b9a", amount: 60, speed: 0.6, size: 1.2 } },
+			{ name: "Star fountain", tags: ["3d", "celebrate", "gaming"], values: { kind: "stars", mode: "fountain", amount: 140 } },
+			{ name: "Star shower", tags: ["3d", "celebrate", "elegant"], values: { kind: "stars", amount: 90, speed: 0.8 } },
+			{ name: "Rainbow star fountain", tags: ["3d", "celebrate", "cute"], values: { kind: "stars", star: "rainbow", mode: "fountain", amount: 140 } }
 		],
 		render: function (root, c, ctx) {
 			var st = stage(root, { fov: 40, preview: ctx && ctx.preview });
@@ -1497,9 +1534,9 @@
 			var key = new T.DirectionalLight(0xffffff, 1.2); key.position.set(3, 8, 10); st.scene.add(key);
 			st.camera.position.set(0, 0, camZ);
 
-			var total = Math.round(c.amount * (st.preview ? 0.7 : 1)), share = { coins: [1, 0, 0], bills: [0, 1, 0], gems: [0, 0, 1], cash: [0.66, 0.34, 0], jackpot: [0.56, 0.24, 0.2] }[c.kind] || [1, 0, 0];
-			var nCoin = Math.round(total * share[0]), nBill = Math.round(total * share[1]), nGem = Math.round(total * share[2]);
-			var coinMesh = null, billMesh = null, gemMesh = null;
+			var total = Math.round(c.amount * (st.preview ? 0.7 : 1)), share = { coins: [1, 0, 0], bills: [0, 1, 0], gems: [0, 0, 1], cash: [0.66, 0.34, 0], jackpot: [0.56, 0.24, 0.2], stars: [0, 0, 0, 1], starcoins: [0.5, 0, 0, 0.5] }[c.kind] || [1, 0, 0];
+			var nCoin = Math.round(total * share[0]), nBill = Math.round(total * share[1]), nGem = Math.round(total * share[2]), nStar = Math.round(total * (share[3] || 0));
+			var coinMesh = null, billMesh = null, gemMesh = null, starMesh = null;
 			if (nCoin) {
 				var stamp = coinStamp(T, c.symbol);
 				coinMesh = new T.InstancedMesh(coinGeometry(T), new T.MeshStandardMaterial({ metalness: 1, roughness: 0.2, envMapIntensity: 1.15, map: stamp.tint, bumpMap: stamp.bump, bumpScale: 0.05 }), nCoin);
@@ -1515,10 +1552,16 @@
 				var gemCols = ["#ff3355", "#35d07f", "#3d8bff", "#b266ff", "#e8f7ff", "#ffcf3d", "#ff7ad9"];
 				for (i = 0; i < nGem; i++) { gemMesh.setColorAt(i, lin(gemCols[i % gemCols.length])); items.push({ mesh: gemMesh, idx: i, type: 2, r: 0.52 }); }
 			}
-			[coinMesh, billMesh, gemMesh].forEach(function (m) { if (m) { m.frustumCulled = false; st.scene.add(m); } });
+			if (nStar) {
+				starMesh = new T.InstancedMesh(starGeometry(T), new T.MeshStandardMaterial({ metalness: c.star === "rainbow" ? 0.8 : c.star === "silver" ? 0.93 : 1, roughness: 0.2, envMapIntensity: 1.05 }), nStar);
+				var starCols = c.star === "rainbow" ? ["#ff3b5c", "#ff9f1c", "#ffe23d", "#3ddc84", "#33b5ff", "#9d6bff", "#ff5cc8"].map(function (h) { return lin(h); }) : [c.star === "custom" ? lin(c.starcolor, "#ff7ad9") : new T.Color().fromArray(METALS[c.star === "silver" ? "silver" : "gold"].c)];
+				for (i = 0; i < nStar; i++) { starMesh.setColorAt(i, starCols[i % starCols.length]); items.push({ mesh: starMesh, idx: i, type: 3, r: 0.74 }); }
+			}
+			[coinMesh, billMesh, gemMesh, starMesh].forEach(function (m) { if (m) { m.frustumCulled = false; st.scene.add(m); } });
 
 			var fountain = c.mode === "fountain", bursting = c.when !== "burst", burstEnd = Infinity, nextBurst = c.when === "burst" ? 0.6 : Infinity;
 			var d = new T.Object3D(), q = new T.Quaternion();
+			var se = new T.Euler();
 			function halfH(z) { return K * (camZ - z); }
 			function spawn(p, first) {
 				p.z = -8 + Math.random() * 13;
@@ -1529,6 +1572,12 @@
 				p.q.setFromEuler(new T.Euler(Math.random() * TAU, Math.random() * TAU, Math.random() * TAU));
 				p.ax.set(Math.random() - 0.5, Math.random() - 0.5, (Math.random() - 0.5) * 0.4).normalize();
 				p.w = (p.type === 2 ? 2 : 4) + Math.random() * 5;
+				// stars mostly face the camera and turn like a pinwheel with a wobble: they always read as stars and the facets still flash
+				if (p.type === 3) {
+					se.set((Math.random() - 0.5) * 1.0, (Math.random() - 0.5) * 1.0, Math.random() * TAU); p.q.setFromEuler(se);
+					p.ax.set((Math.random() - 0.5) * 0.9, (Math.random() - 0.5) * 0.9, Math.random() < 0.5 ? -1 : 1).normalize();
+					p.w = 1.8 + Math.random() * 2.6;
+				}
 				if (fountain) {
 					p.z = -3 + Math.random() * 6; hh = halfH(p.z);
 					p.x = (Math.random() - 0.5) * 1.6; p.y = -hh - 1.2;
@@ -1592,6 +1641,7 @@
 				if (coinMesh) { coinMesh.instanceMatrix.needsUpdate = true; }
 				if (billMesh) { billMesh.instanceMatrix.needsUpdate = true; }
 				if (gemMesh) { gemMesh.instanceMatrix.needsUpdate = true; }
+				if (starMesh) { starMesh.instanceMatrix.needsUpdate = true; }
 				if (spark) { spark.update(dt, white, 1); }
 			};
 			st.start();

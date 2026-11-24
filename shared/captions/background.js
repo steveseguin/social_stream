@@ -1387,6 +1387,7 @@
 		recordPost: recordPost,
 		forgetPost: forgetPost,
 		setAccount: setAccount,
+		whoSent: whoSent,
 		checkReturn: checkReturn,
 		getStatus: getStatus,
 		getTargets: getTargets,

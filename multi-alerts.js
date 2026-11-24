@@ -302,6 +302,15 @@ const recentPayloads = [];
 const hypeTrainLevels = {};
 let lastAuctionWinSignature = '';
 const recentLikeViewers = new Map();
+// Overlay Studio moments this alert box plays full-screen: one parked frame per configured link.
+const screenEffects = { layer: null, frames: new Map(), sequence: 0 };
+// A rule's media can be a full-screen moment from Overlay Studio instead of a picture. Only Overlay Studio's own viewer
+// page is accepted (the copy beside this alert box, or the public one), so the alert box never frames another page.
+const SCREEN_EFFECT_PAGES = [
+  'https://socialstream.ninja/overlays/view.html',
+  'https://socialstream.ninja/beta/overlays/view.html',
+  'https://beta.socialstream.ninja/overlays/view.html'
+];
 
 const state = {
   iframe: null,
@@ -357,13 +366,13 @@ if (settings.stack) {
       }
     },
     command: function (command) { controlAlertPlayback(command); },
-    cleared: function () { stopActiveAlertSound(); if (typeof TTS !== 'undefined' && TTS.clearQueue) TTS.clearQueue(); },
+    cleared: function () { stopActiveAlertSound(); stopScreenEffects(); if (typeof TTS !== 'undefined' && TTS.clearQueue) TTS.clearQueue(); },
     changed: function (rows) { elements.stage.classList.toggle('has-alert', rows.length > 0); }
   });
   alertBoard.restore();
 }
 if (urlParams.has('demo')) {
-  SSNEventBoard.samples().forEach(function (payload) { handlePreviewMessage({ __multiAlertsPreviewEnvelope: true, payload: payload, silent: true }); });
+  SSNEventBoard.samples().forEach(function (payload) { handlePreviewMessage({ __multiAlertsPreviewEnvelope: true, payload: payload, silent: true, quiet: true }); });
 }
 attachWindowListeners();
 attachAudioUnlockListeners();
@@ -1142,6 +1151,205 @@ function detectMediaType(url) {
   return 'image';
 }
 
+// A rule's media can be a full-screen moment from Overlay Studio instead of a picture. Only Overlay Studio's own viewer
+function parseScreenEffectUrl(url) {
+  const text = normalizeText(url);
+  if (!/overlays\/view\.html\?/i.test(text)) return '';
+  let parsed;
+  let beside;
+  try {
+    parsed = new URL(text, window.location.href);
+    beside = new URL('overlays/view.html', window.location.href);
+  } catch (error) { return ''; }
+  if (!parsed.searchParams.get('t') || parsed.username || parsed.password) return '';
+  const local = parsed.protocol === beside.protocol && parsed.host === beside.host && parsed.pathname === beside.pathname;
+  if (!local && SCREEN_EFFECT_PAGES.indexOf(parsed.origin + parsed.pathname) === -1) return '';
+  parsed.searchParams.delete('preview');
+  parsed.searchParams.set('hosted', '1');
+  parsed.hash = '';
+  return parsed.href;
+}
+
+function onScreenEffectMessage(event) {
+  const data = event.data;
+  if (!data || typeof data !== 'object') return;
+  screenEffects.frames.forEach(function (entry) {
+    if (entry.frame.contentWindow !== event.source) return;
+    if (entry.origin !== '*' && event.origin !== entry.origin) return;
+    if (data.ssoReady) {
+      // Also arrives if the frame reloaded: whatever it was playing is gone.
+      window.clearTimeout(entry.readyTimer);
+      entry.ready = true;
+      entry.seconds = Math.min(600, Math.max(0, Number(data.ssoLength) || 0));
+      finishScreenEffect(entry);
+    } else if (entry.current && data.ssoId === entry.current.id) {
+      if (data.ssoDone) finishScreenEffect(entry);
+      // It reported how long it runs: allow that and a margin before giving up on hearing that it finished.
+      else if (data.ssoPlaying) armScreenEffectTimer(entry, (Math.min(600, Math.max(3, Number(data.ssoPlaying) || 12)) * 2 + 30) * 1000);
+    }
+  });
+}
+
+function postScreenEffect(entry, message) {
+  try { entry.frame.contentWindow.postMessage(message, entry.origin); } catch (error) {}
+}
+
+function armScreenEffectTimer(entry, delay) {
+  window.clearTimeout(entry.timer);
+  entry.timer = window.setTimeout(function () { stopScreenEffect(entry); pumpScreenEffect(entry); }, delay);
+}
+
+// A play is over (finished, stopped, dropped or never started). Whoever is waiting for it is told once, after the
+// current work has finished, so the alert queue is never re-entered from inside these functions.
+function endScreenPlay(play) {
+  if (!play || play.ended) return;
+  play.ended = true;
+  const done = play.onend;
+  play.onend = null;
+  if (done) window.setTimeout(done, 0);
+}
+
+// Stops what the frame is playing and puts it away. A parked frame is not rendered, so it costs nothing while idle.
+function stopScreenEffect(entry) {
+  const play = entry.current;
+  if (play) postScreenEffect(entry, { ssoStop: true });
+  window.clearTimeout(entry.timer);
+  entry.timer = null;
+  entry.current = null;
+  entry.frame.style.display = 'none';
+  endScreenPlay(play);
+}
+
+// The moment ended by itself (or its frame reloaded): put it away and play the next one waiting, if any.
+function finishScreenEffect(entry) {
+  const play = entry.current;
+  window.clearTimeout(entry.timer);
+  entry.timer = null;
+  entry.current = null;
+  entry.frame.style.display = 'none';
+  endScreenPlay(play);
+  pumpScreenEffect(entry);
+}
+
+function pumpScreenEffect(entry) {
+  if (!entry.ready || entry.current || !entry.queue.length) return;
+  entry.current = entry.queue.shift();
+  entry.frame.style.display = '';
+  armScreenEffectTimer(entry, 90000);
+  postScreenEffect(entry, { ssoPlay: entry.current.values, ssoId: entry.current.id });
+}
+
+// A frame that never loads (the site was unreachable when the alert box started) is thrown away, with anything
+// waiting on it, so the next matching alert starts a fresh one.
+function discardScreenEffectFrame(src, entry) {
+  if (screenEffects.frames.get(src) !== entry) return;
+  screenEffects.frames.delete(src);
+  window.clearTimeout(entry.timer);
+  window.clearTimeout(entry.readyTimer);
+  const waiting = entry.queue.splice(0);
+  const play = entry.current;
+  entry.current = null;
+  entry.frame.remove();
+  endScreenPlay(play);
+  waiting.forEach(endScreenPlay);
+}
+
+function screenEffectFrame(src) {
+  let entry = screenEffects.frames.get(src);
+  if (entry) return entry;
+  if (!screenEffects.layer) {
+    const layer = document.createElement('div');
+    layer.id = 'alert-screen-effects';
+    layer.setAttribute('aria-hidden', 'true');
+    layer.style.cssText = 'position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;overflow:hidden;';
+    document.body.insertBefore(layer, document.body.firstChild);
+    screenEffects.layer = layer;
+    window.addEventListener('message', onScreenEffectMessage);
+  }
+  const frame = document.createElement('iframe');
+  frame.setAttribute('tabindex', '-1');
+  frame.setAttribute('aria-hidden', 'true');
+  frame.setAttribute('allowtransparency', 'true');
+  frame.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;border:0;background:transparent;display:none;';
+  const address = new URL(src);
+  entry = {
+    frame: frame,
+    // Messages go to, and are accepted from, the viewer page's own site (a page opened from disk has no site to name).
+    origin: /^https?:$/.test(address.protocol) ? address.origin : '*',
+    ready: false,
+    seconds: 0,
+    current: null,
+    queue: [],
+    timer: null,
+    readyTimer: null
+  };
+  frame.src = src;
+  screenEffects.layer.appendChild(frame);
+  screenEffects.frames.set(src, entry);
+  entry.readyTimer = window.setTimeout(function () { if (!entry.ready) discardScreenEffectFrame(src, entry); }, 20000);
+  return entry;
+}
+
+// The one number a moment can show: raiders for a raid, how many gifts, or months for a returning subscriber.
+// 0 when the event has none, so a moment hides its counter instead of showing a made-up figure.
+function pickScreenEffectCount(model) {
+  const payload = model.payload || {};
+  const meta = payload.meta || {};
+  if (model.category === ALERT_CATEGORIES.RAID) return Number(model.viewerCount) || 0;
+  const giftEvent = /gift/i.test(model.eventKey || '') || /gift/i.test(meta.eventType || '');
+  const gifts = Math.max(pickGiftCount(payload), giftEvent ? Number(meta.total) || Number(meta.totalGifted) || 0 : 0);
+  if (gifts > 1) return Math.floor(gifts);
+  if (model.category === ALERT_CATEGORIES.SUBSCRIPTION && !giftEvent) {
+    const months = Number(meta.cumulativeMonths || meta.months || meta.streakMonths || meta.duration);
+    if (Number.isFinite(months) && months > 1) return Math.floor(months);
+  }
+  return 0;
+}
+
+// Queues the alert's moment and returns its play (null when the alert has none). owner is the alert's card.
+function playScreenEffect(model, owner) {
+  if (!model || !model.screenEffect) return null;
+  const entry = screenEffectFrame(model.screenEffect);
+  const play = {
+    id: ++screenEffects.sequence,
+    owner: owner || null,
+    ended: false,
+    onend: null,
+    values: {
+      name: normalizeText(model.actor),
+      amount: normalizeText(model.amount),
+      count: pickScreenEffectCount(model)
+    }
+  };
+  entry.queue.push(play);
+  // A burst of alerts must not leave moments playing long after their cards have gone.
+  while (entry.queue.length > 2) endScreenPlay(entry.queue.shift());
+  pumpScreenEffect(entry);
+  return play;
+}
+
+// Stops every moment, or only the one belonging to one card (a skipped row in a stack).
+function stopScreenEffects(owner) {
+  screenEffects.frames.forEach(function (entry) {
+    const dropped = owner ? entry.queue.filter(function (play) { return play.owner === owner; }) : entry.queue.splice(0);
+    if (owner) entry.queue = entry.queue.filter(function (play) { return play.owner !== owner; });
+    dropped.forEach(endScreenPlay);
+    if (!owner || (entry.current && entry.current.owner === owner)) {
+      stopScreenEffect(entry);
+      if (owner) pumpScreenEffect(entry);
+    }
+  });
+}
+
+// How long this alert's moment runs, in milliseconds (0 when it has none, or its page has not loaded yet).
+function screenEffectDuration(model) {
+  const entry = model && model.screenEffect ? screenEffects.frames.get(model.screenEffect) : null;
+  return entry && entry.ready ? entry.seconds * 1000 : 0;
+}
+
+// Load the configured moments up front, so the first alert is not left waiting for a page load.
+settings.alertEffects.forEach(function (effect) { const src = settings.hideMedia ? '' : parseScreenEffectUrl(effect.media); if (src) screenEffectFrame(src); });
+
 function isSourceAllowed(sourceKey) {
   const normalized = normalizeSourceKey(sourceKey);
   if (settings.includeSources.size) {
@@ -1500,7 +1708,8 @@ function buildAlertViewModel(payload = {}, displayOnly = false) {
   const bodyFormat = {};
   const bodyText = buildBodyText(category, payload, viewerCount, bodyFormat);
   const effect = matchAlertEffect(category, payload, amount, sourceKey);
-  if (effect && effect.media) mediaUrl = effect.media;
+  const screenEffect = effect && !settings.hideMedia ? parseScreenEffectUrl(effect.media) : '';
+  if (effect && effect.media && !parseScreenEffectUrl(effect.media)) mediaUrl = effect.media;
 
   return {
     category,
@@ -1513,6 +1722,7 @@ function buildAlertViewModel(payload = {}, displayOnly = false) {
     amount,
     cashValue,
     effectSound: effect ? effect.sound : '',
+    screenEffect,
     subtitle,
     bodyText,
     bodyIsHTML: bodyFormat.isHTML,
@@ -2032,8 +2242,8 @@ function handlePreviewMessage(previewMessage) {
     previewMessage.__multiAlertsPreviewEnvelope === true;
 
   const previewOptions = isEnvelope
-    ? { silent: Boolean(previewMessage.silent) }
-    : { silent: false };
+    ? { silent: Boolean(previewMessage.silent), moment: previewMessage.quiet !== true }
+    : { silent: false, moment: true };
 
   const previewDescriptor = isEnvelope ? previewMessage.payload : previewMessage;
 
@@ -2133,7 +2343,7 @@ function playModelSound(model, card) {
   if (state.muted) return;
   // Likes stay silent unless a like-specific sound is chosen; do not read them aloud.
   if (model.category === ALERT_CATEGORIES.LIKE) {
-    if (settings.categorySounds[ALERT_CATEGORIES.LIKE]) playAlertSound(model);
+    if (settings.categorySounds[ALERT_CATEGORIES.LIKE] || model.effectSound) playAlertSound(model);
     return;
   }
   const playback = playAlertSound(model);
@@ -2151,8 +2361,8 @@ function controlAlertPlayback(command) {
   if (command === 'resume') { state.paused = false; processQueue(); }
   if (command === 'clear') clearAlert({ clearQueue: true });
   if (command === 'skip') {
-    if (alertBoard) { var rows = alertBoard.rows(); alertBoard.remove(rows[rows.length - 1]); stopActiveAlertSound(); }
-    else { stopActiveAlertSound(); finalizeAlert(state.currentAlertNode, state.alertSequence); }
+    if (alertBoard) { var rows = alertBoard.rows(), last = rows[rows.length - 1]; alertBoard.remove(last); stopActiveAlertSound(); if (last) stopScreenEffects(last.node); }
+    else { stopActiveAlertSound(); stopScreenEffects(); finalizeAlert(state.currentAlertNode, state.alertSequence); }
   }
   if (command === 'replay' && state.lastAlert && !state.paused) displayAlert(state.lastAlert);
 }
@@ -2174,6 +2384,8 @@ function displayStackAlert(model, options) {
   if (!card.isConnected) return;
   state.lastAlert = model;
   if (!options.silent && !alertBoard.isRestoring()) playModelSound(model, card);
+  // options.silent mutes a repeat (a gift streak, a restored row); a muted preview still shows its moment.
+  if ((!options.silent || options.moment === true) && !alertBoard.isRestoring()) playScreenEffect(model, card);
   if (settings.keep) {
     card.classList.add('persistent-alert');
     // Leave the event text visible after its media presentation finishes.
@@ -2280,6 +2492,12 @@ function displayAlert(model, options = {}) {
   if (!options.silent && !state.muted) {
     playModelSound(model, card);
   }
+  // One alert at a time: a different card takes over from whatever moment was still playing. (options.silent is a
+  // repeat of the same alert, such as a growing gift streak; a muted preview still shows its moment.) A long queue
+  // skips moments to catch up.
+  const takesOver = !options.silent || options.moment === true;
+  if (takesOver) stopScreenEffects();
+  const play = takesOver && state.queue.length <= 3 ? playScreenEffect(model, card) : null;
   updateStatus(model.title);
 
   const queueLen = state.queue.length;
@@ -2288,6 +2506,9 @@ function displayAlert(model, options = {}) {
     const ratio = Math.max(0, 1 - (queueLen - 3) / 10);
     effectiveShowTime = Math.round(settings.minShowTime + ratio * (settings.showTime - settings.minShowTime));
   }
+  // The card stays up for its moment (which needs a little over its own length to clear), so the next alert never
+  // starts over it.
+  if (play) effectiveShowTime = Math.max(effectiveShowTime, screenEffectDuration(model) + 1800);
   card.style.setProperty('--progress-duration', `${effectiveShowTime}ms`);
 
   const hideLead = Math.min(550, Math.max(280, Math.round(effectiveShowTime * 0.16)));
@@ -2301,11 +2522,14 @@ function displayAlert(model, options = {}) {
 
   state.cleanupTimer = window.setTimeout(() => {
     state.cleanupTimer = null;
+    // A moment whose length was not known in time (its page was still loading) is waited for; it has its own time limit.
+    if (play && !play.ended) { play.onend = function () { if (state.currentAlertNode === card) finalizeAlert(card, alertToken); }; return; }
     finalizeAlert(card, alertToken);
   }, effectiveShowTime);
 
   state.watchdogTimer = window.setTimeout(() => {
     state.watchdogTimer = null;
+    if (play && !play.ended) return;
     finalizeAlert(card, alertToken);
   }, effectiveShowTime + Math.max(1500, settings.cooldown + 1000));
 }
@@ -2359,6 +2583,7 @@ function clearAlert({ clearQueue = false, preserveCooldown = false } = {}) {
     state.queue = [];
   }
   stopActiveAlertSound();
+  stopScreenEffects();
   if (typeof TTS !== 'undefined' && TTS.clearQueue) {
     TTS.clearQueue();
   }
