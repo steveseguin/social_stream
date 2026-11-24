@@ -116,11 +116,11 @@
 	<script src="templates/random.js?v=3"></script>
 	<script src="templates/countscreen.js?v=3"></script>
 	<script src="templates/channelart.js?v=2"></script>
-	<script src="templates/fxkit.js?v=1"></script>
+	<script src="templates/fxkit.js?v=2"></script>
 	<script src="templates/rewards.js?v=1"></script>
 	<script src="templates/thanks.js?v=1"></script>
 	<script src="templates/megafx.js?v=1"></script>
-	<script src="templates/cityscapes.js?v=1"></script>
+	<script src="templates/cityscapes.js?v=2"></script>
 	<script src="templates/wilds.js?v=1"></script>
 	<script src="templates/habitats.js?v=1"></script>
 	<script src="templates/stackworld.js?v=1"></script>
@@ -235,10 +235,22 @@
 
 		// ---- preview loading queue ----
 		var queue = [], loading = 0;
+		var previewObserver = window.IntersectionObserver && new IntersectionObserver(function (entries) {
+			entries.forEach(function (entry) {
+				var box = entry.target;
+				box._near = entry.isIntersecting;
+				if (box._near) {
+					queue.push({ box: box, card: box._card });
+				} else if (box.firstChild) {
+					box.removeChild(box.firstChild);
+				}
+			});
+			pump();
+		}, { rootMargin: "120px" });
 		function pump() {
 			while (loading < MAX_LOADING && queue.length) {
 				var item = queue.shift();
-				if (!item.box.isConnected) { continue; }
+				if (!item.box.isConnected || item.box.firstChild || (previewObserver && !item.box._near)) { continue; }
 				loading++;
 				(function (item) {
 					var frame = document.createElement("iframe");
@@ -325,6 +337,7 @@
 			pager($("pagerBottom"), pages);
 
 			queue = [];
+			if (previewObserver) { previewObserver.disconnect(); }
 			var grid = $("grid");
 			grid.innerHTML = "";
 			if (!slice.length) {
@@ -342,7 +355,10 @@
 				if (OBS_TEMPLATES.indexOf(card.def.id) !== -1) { sub.insertAdjacentHTML("beforeend", ' <span class="obs-chip" title="Reacts to OBS scene changes / going live">OBS</span>'); }
 				if (card.def.still) { sub.insertAdjacentHTML("beforeend", ' <span class="obs-chip" title="A picture you download, not an OBS link">PNG</span>'); }
 				grid.appendChild(a);
-				queue.push({ box: a.querySelector(".thumb"), card: card });
+				var box = a.querySelector(".thumb");
+				box._card = card;
+				if (previewObserver) { previewObserver.observe(box); }
+				else { queue.push({ box: box, card: card }); }
 			});
 			pump();
 			try { history.replaceState(null, "", "#" + Object.keys(state).filter(function (k) { return state[k] && !(k === "cat" && state[k] === "all") && !(k === "page" && state[k] === 1) && !(k === "sort" && state[k] === "mix"); }).map(function (k) { return k + "=" + encodeURIComponent(state[k]); }).join("&")); } catch (e) {}
@@ -361,7 +377,7 @@
 			bg = $("bgpick").value;
 			SSO.store.set("gallery-bg", bg);
 			var thumbs = document.querySelectorAll(".thumb");
-			for (var i = 0; i < thumbs.length; i++) { var shown = thumbs[i].querySelector("iframe"); thumbs[i].className = "thumb bg-" + (shown && shown._card ? thumbBg(shown._card) : bg); }
+			for (var i = 0; i < thumbs.length; i++) { thumbs[i].className = "thumb bg-" + thumbBg(thumbs[i]._card); }
 		});
 		var segs = document.querySelectorAll(".seg button");
 		for (var k = 0; k < segs.length; k++) {

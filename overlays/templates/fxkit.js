@@ -405,6 +405,7 @@
 		cv.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;display:block;" + (o.pixelated ? "image-rendering:pixelated;" : "");
 		host.appendChild(cv);
 		var GOV = window.SSO_FRAMES || null, alive = true, last = null, frameId, minGap = 1000 / (o.fps || 30) - 3, layers = {}, refit = false;
+		var sourceVisible = true;
 		var sc = { host: host, cv: cv, g: g, W: 1920, H: 1080, k: 1, top: 0, time: 0, frame: null, onresize: null, hostW: 0, hostH: 0, quality: o.quality || 1 };
 		function fit(force) {
 			var w = host.clientWidth || window.innerWidth, h = host.clientHeight || window.innerHeight;
@@ -467,13 +468,27 @@
 				catch (err) { sc.frame = null; if (window.console && console.error) { console.error("overlay scene stopped after an error", err); } }
 			}
 		}
+		function syncVisibility() {
+			if (frameId != null) { cancelAnimationFrame(frameId); frameId = null; }
+			last = null;
+			if (alive && sourceVisible && !document.hidden) { frameId = requestAnimationFrame(frame); }
+		}
+		var stopVisibility = SSO.obs.on("obsSourceVisibleChanged", function (event) {
+			if (event && typeof event.visible === "boolean" && event.visible !== sourceVisible) {
+				sourceVisible = event.visible;
+				syncVisibility();
+			}
+		});
+		document.addEventListener("visibilitychange", syncVisibility);
 		fit(true);
-		frameId = requestAnimationFrame(frame);
+		syncVisibility();
 		// As in K.stage: the resize is done at the start of the next drawn frame, never between frames.
 		var unhook = GOV && GOV.onScale ? GOV.onScale(function () { refit = true; }) : null;
 		sc.stop = function () {
 			if (!alive) { return; }
 			alive = false; cancelAnimationFrame(frameId);
+			stopVisibility();
+			document.removeEventListener("visibilitychange", syncVisibility);
 			if (unhook) { unhook(); }
 			if (cv.parentNode) { cv.parentNode.removeChild(cv); }
 			layers = {};

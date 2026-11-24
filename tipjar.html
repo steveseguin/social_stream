@@ -1807,6 +1807,19 @@
     <script>
         // URL Parameters
         const urlParams = new URLSearchParams(window.location.search);
+        const customCss = urlParams.get('cssb64') || urlParams.get('base64css') || urlParams.get('b64css') || urlParams.get('cssbase64');
+        if (customCss) {
+            try {
+                let css = atob(customCss.replace(/ /g, '+'));
+                // The popup URL-encodes the CSS before converting it to base64.
+                try { css = decodeURIComponent(css); } catch (e) {}
+                const style = document.createElement('style');
+                style.textContent = css;
+                document.head.appendChild(style);
+            } catch (e) {
+                console.warn('Invalid base64 in the Tip Jar custom CSS link.');
+            }
+        }
         const SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
         // Transport migration guard: only pages with full server parity may skip the legacy bridge.
         var TRANSPORT_CAPABILITIES = {

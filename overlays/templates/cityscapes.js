@@ -72,6 +72,8 @@
 	}
 	// A soft band of drifting fog or thin cloud as a small texture; stretch it and slide it. Tiles sideways.
 	function fogTex(seed, col, w, h, cx, cy, lo, hi) {
+		// Soft haze is stretched across the sky. It needs fewer samples than the skyline.
+		w = Math.ceil(w / 2); h = Math.ceil(h / 2);
 		return K.bake(w, h, function (g) {
 			var img = g.createImageData(w, h), d = img.data, c = typeof col === "string" ? rgb(col) : col, x, y, i = 0, n, v;
 			for (y = 0; y < h; y++) {
@@ -133,6 +135,15 @@
 		var sc = K.scene(host, o), base = sc.layer;
 		sc.own = {}; sc.shift = 0;
 		sc.onresize = function () { sc.own = {}; };
+		// Build the skyline layers over several frames on startup and after a resize.
+		sc.prepare = function (layers) {
+			var index = sc.own.prepared || 0;
+			if (index === layers.length) { return true; }
+			var deadline = performance.now() + 6;
+			do { layers[index++](); } while (index < layers.length && performance.now() < deadline);
+			sc.own.prepared = index;
+			return index === layers.length;
+		};
 		sc.layer = function (name, paint, wu, hu) {
 			var L = base(name, paint, wu, hu);
 			if (!L.wu) { L.wu = wu || sc.W; L.hu = hu || sc.H; }
@@ -724,12 +735,15 @@
 			g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
 		}
 		steam.step = function (p, dt) { p.vx += (18 - p.vx) * dt * 0.3; };
+		var skylineLayers = STRIPS.map(function (row) { return function () { strip(row); }; });
+		skylineLayers.push(function () { if (lay !== "split" && sc.W >= 420) { edgeTower(); } }, roof);
 
 		sc.frame = function (g, dt) {
 			var W = sc.W, k = sc.k, sway, j, L, P, F, ox, a, bx, p, slow = !!(window.SSO_FRAMES && window.SSO_FRAMES.level() > 0);
 			T += dt * S.speed;
 			sway = SWAY * (Math.sin(T * 0.045) + 0.55 * Math.sin(T * 0.019 + 1.7));
 			sc.put(backdrop());
+			if (!sc.prepare(skylineLayers)) { return; }
 			// thin lit cloud drifting high up
 			g.globalAlpha = 0.5; drift(sc, g, "d0", smog, T * 3.2, 330, 2500, 300); g.globalAlpha = 1;
 			g.globalCompositeOperation = "lighter";
@@ -819,6 +833,7 @@
 	// A bank of cloud as a texture that tiles sideways, lit from below by a low sun: glowing undersides and edges, shaded
 	// bodies. cover 0..1 = how much of the strip it fills.
 	function cloudTex(seed, w, h, cx, cy, cover, softness, lit, shade, rim, maxA) {
+		w = Math.ceil(w / 2); h = Math.ceil(h / 2);
 		return K.bake(w, h, function (g) {
 			var img = g.createImageData(w, h), d = img.data, den = new Float32Array(w * h), x, y, i, o, v, e, a, l, below, thick, r;
 			var th = 0.64 - cover * 0.3, step = Math.max(1, Math.round(h * 0.07));
@@ -1275,12 +1290,14 @@
 			cityCtx.fillRect(w.x, w.y, w.w, w.h);
 		}
 
+		var bayLayers = [water, city, refl, postsRefl, posts];
 		sc.frame = function (g, dt) {
 			var W = sc.W, k = sc.k, j, L, C, x, y, a, sx = sunU * W, ks, px, py;
 			T += dt * S.speed;
 			slide(sc, g, 50);
 			if (flip) { g.translate(W, 0); g.scale(-1, 1); }
 			put(g, sky(), k, 0, 0);
+			if (!sc.prepare(bayLayers)) { return; }
 			for (j = 0; j < 3; j++) { C = clouds[j]; drift(sc, g, "cl" + j, C.tex, T * C.sp, C.y, C.bw, C.h); }
 			plane(g, W, dt * S.speed, 60, 300);
 			birds(g, W, dt * S.speed);

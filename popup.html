@@ -4979,9 +4979,9 @@ details.wrapper[open] > .collapsible-text {
                                     <span data-translate="messages-overlap-on-another">⤵️ Messages overlap on another </span>
                                 </div>
 
-								<div class="textInputContainer" style="width: 95%;margin-top:10px;">
+								<div class="textInputContainer popup-css-field">
 									<textarea id="customCSS" class="textInput" rows="4" data-textparam1="cssb64" placeholder="Enter your custom CSS here"></textarea>
-									<label for="customCSS"><span class="popup-control-icon" aria-hidden="true">💻</span>Custom CSS</label>
+									<label for="customCSS"><span class="popup-control-icon" aria-hidden="true">💻</span><span data-translate="popup-custom-css">Custom CSS</span></label>
 								</div>
 
 								<div class="textInputContainer" style="width: 95%;margin-top:10px;">
@@ -6861,9 +6861,9 @@ details.wrapper[open] > .collapsible-text {
 									<input type="color" aria-labelledby="name_background_label" data-color="name_background" id="name_background_palette" class="colorPicker" />
                                 </div>
 
-								<div class="textInputContainer" style="width: 95%;margin-top:10px;">
+								<div class="textInputContainer popup-css-field">
 									<textarea id="customCSS2" class="textInput" rows="4" data-textparam2="cssb64" placeholder="Enter your custom CSS here"></textarea>
-									<label for="customCSS2"><span class="popup-control-icon" aria-hidden="true">💻</span>Custom CSS</label>
+									<label for="customCSS2"><span class="popup-control-icon" aria-hidden="true">💻</span><span data-translate="popup-custom-css">Custom CSS</span></label>
 								</div>
 
                                 <div>
@@ -9684,12 +9684,12 @@ details.wrapper[open] > .collapsible-text {
 								<h3><span class="popup-control-icon" aria-hidden="true">💬</span><span data-translate="message-echos">Message doubling / echos / duplicates / relayed</span></h3>
 								<p>If you're using the RELAY ALL function, you might find the following options helpful in controlling for duplicate responses. (I like to call relayed message echos "reflections")</p><br />
 
-								<div title="Show messages typed in the dock even when no chat source is connected. Identified copies from the sending account are hidden.">
+								<div title="Include messages typed in the dock in the shared overlay feed, even without a connected chat source.">
                                     <label class="switch">
                                         <input type="checkbox" id="showdocksentmessages" data-setting="showdocksentmessages" aria-labelledby="showdocksentmessages-label" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <label for="showdocksentmessages" id="showdocksentmessages-label">Show my sent messages in the dock</label>
+                                    <label for="showdocksentmessages" id="showdocksentmessages-label" data-translate="popup-show-dock-sent">Show my sent messages in the dock</label>
                                 </div>
 								<div title="Do not capture your responses that you make to chat. They will be filtered out, so will not appear in the dock">
                                     <label class="switch">
@@ -13571,15 +13571,15 @@ details.wrapper[open] > .collapsible-text {
                                     <button type="button" class="edit-link rounded_area" data-edit-link="tipjar" hidden>Load goal link</button>
                                 </div>
                                 <div>
-                                    <label for="versus-set-count"><span class="popup-control-icon" aria-hidden="true">🏁</span>Versus board, my count:</label>
+                                    <label for="versus-set-count"><span class="popup-control-icon" aria-hidden="true">🏁</span><span data-translate="popup-versus-my-count">My Versus count</span></label>
                                     <input type="number" id="versus-set-count" class="textInput" placeholder="0" min="0" step="1" />
                                     <button class="glowingButton" style="width: 220px; border: 1px solid #000; padding: 2px;" data-action="setversuscount" data-target="tipjar" data-value-source="versus-set-count">
-                                        <span style="font-size: 0.8em;">Set my Versus count</span>
+                                        <span style="font-size: 0.8em;" data-translate="popup-versus-set-count">Set my Versus count</span>
                                     </button>
                                 </div>
                                 <div>
                                     <button class="glowingButton" style="width: 220px; border: 1px solid #000; padding: 2px;" data-action="resetversus" data-target="tipjar">
-                                        <span style="font-size: 0.8em;">Reset my Versus count</span>
+                                        <span style="font-size: 0.8em;" data-translate="popup-versus-reset-count">Reset my Versus count</span>
                                     </button>
                                 </div>
 
@@ -13695,7 +13695,7 @@ details.wrapper[open] > .collapsible-text {
             <div class="wrapper" data-panel-section="tipjar">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-tipjar-style-options" />
-                    <label class="collapsible-label" for="wrapper-tipjar-style-options"><span>🎨 Style, Goal, and Filters</span></label>
+                    <label class="collapsible-label" for="wrapper-tipjar-style-options"><span>🎨 <span data-translate="popup-tipjar-style-goal-filters">Style, Goal, and Filters</span></span></label>
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group tipjar">
@@ -13758,6 +13758,10 @@ details.wrapper[open] > .collapsible-text {
                                 <div>
                                     <a id="tipjar-style-preview" href="https://socialstream.ninja/tipjar-preview.html" target="_blank" rel="noopener">🖼️ Preview styles</a>
                                     <small style="display:block;opacity:0.8">Uses sample totals without sending donations to your overlays.</small>
+                                </div>
+                                <div class="textInputContainer popup-css-field">
+                                    <textarea id="tipjar-custom-css" class="textInput" rows="4" data-textparam12="cssb64" placeholder="Enter your custom CSS here"></textarea>
+                                    <label for="tipjar-custom-css"><span class="popup-control-icon" aria-hidden="true">💻</span><span data-translate="popup-custom-css">Custom CSS</span></label>
                                 </div>
                                 <div>
                                     <label class="switch"><input type="checkbox" data-param12="refresh" aria-label="Refresh classic styles" /><span class="slider round"></span></label>
@@ -18421,9 +18425,9 @@ details.wrapper[open] > .collapsible-text {
 
 					<a href="https://socialstream.ninja/overlays/#cat=scenes" target="_blank">🎬 Starting soon, BRB &amp; ending screens</a>
 
-					<a href="https://socialstream.ninja/overlays/#cat=worlds" target="_blank">🌆 Animated backgrounds &amp; little worlds</a>
+					<a href="https://socialstream.ninja/overlays/#cat=worlds" target="_blank">🌆 <span data-translate="popup-animated-worlds">Animated backgrounds and little worlds</span></a>
 
-					<a href="https://socialstream.ninja/overlays/#cat=rewards" target="_blank">🎁 Follow, sub &amp; tip celebrations</a>
+					<a href="https://socialstream.ninja/overlays/#cat=rewards" target="_blank">🎁 <span data-translate="popup-stream-celebrations">Follow, sub and tip celebrations</span></a>
 
 					<a href="https://socialstream.ninja/overlays/#cat=time" target="_blank">⏰ Clocks &amp; timers</a>
 

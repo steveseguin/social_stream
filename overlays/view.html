@@ -129,8 +129,9 @@
 	})();
 	</script>
 	<script src="core.js?v=24"></script>
+	<template id="overlay-packs">
 	<script src="templates/countries.js?v=15"></script>
-	<script src="templates/engines.js?v=19"></script>
+	<script data-types="*" src="templates/engines.js?v=19"></script>
 	<script src="templates/socials.js?v=18"></script>
 	<script src="templates/time.js?v=17"></script>
 	<script src="templates/scenes.js?v=21"></script>
@@ -168,23 +169,45 @@
 	<script src="templates/random.js?v=3"></script>
 	<script src="templates/countscreen.js?v=3"></script>
 	<script src="templates/channelart.js?v=2"></script>
-	<script src="templates/fxkit.js?v=1"></script>
-	<script src="templates/rewards.js?v=1"></script>
-	<script src="templates/thanks.js?v=1"></script>
-	<script src="templates/megafx.js?v=1"></script>
-	<script src="templates/cityscapes.js?v=1"></script>
-	<script src="templates/wilds.js?v=1"></script>
-	<script src="templates/habitats.js?v=1"></script>
-	<script src="templates/stackworld.js?v=1"></script>
-	<script src="templates/tinyworlds.js?v=1"></script>
-	<script src="templates/retro8.js?v=1"></script>
-	<script src="templates/retro3d.js?v=1"></script>
+	<script data-types="*" src="templates/fxkit.js?v=2"></script>
+	<script data-types="followburst subforge giftdrop tipchest cheergems" src="templates/rewards.js?v=1"></script>
+	<script data-types="stickerpop neonthanks raidfleet levelup clink" src="templates/thanks.js?v=1"></script>
+	<script data-types="meteor dragon vault launch storm supernova" src="templates/megafx.js?v=1"></script>
+	<script data-types="city" src="templates/cityscapes.js?v=2"></script>
+	<script data-types="wilds" src="templates/wilds.js?v=1"></script>
+	<script data-types="habitats" src="templates/habitats.js?v=1"></script>
+	<script data-types="diorama" src="templates/stackworld.js?v=1"></script>
+	<script data-types="tinyworld" src="templates/tinyworlds.js?v=1"></script>
+	<script data-types="retro8" src="templates/retro8.js?v=1"></script>
+	<script data-types="retro3d" src="templates/retro3d.js?v=1"></script>
 	<script src="templates/seasontags.js?v=1"></script>
+	</template>
 	<script>
-	(function () {
+	(function (showOverlay) {
 		var params = new URLSearchParams(location.search);
 		var root = document.getElementById("sso-root");
-		var def = SSO.get(params.get("t") || "");
+		var type = params.get("t") || "";
+		var packs = Array.prototype.slice.call(document.getElementById("overlay-packs").content.querySelectorAll("script"));
+		var selected = type && type !== "*" && packs.find(function (pack) {
+			return (pack.dataset.types || "").split(" ").indexOf(type) !== -1;
+		});
+		// Standalone worlds and celebrations need only their pack and the two shared engines.
+		// Composable templates can use backgrounds from any pack.
+		if (selected) {
+			packs = packs.filter(function (pack) { return pack === selected || pack.dataset.types === "*"; });
+		}
+		var remaining = packs.length;
+		packs.forEach(function (pack) {
+			var script = document.createElement("script");
+			script.async = false;
+			script.src = pack.getAttribute("src");
+			script.onload = script.onerror = function () {
+				if (--remaining === 0) { showOverlay(params, root, type); }
+			};
+			document.head.appendChild(script);
+		});
+	})(function (params, root, type) {
+		var def = SSO.get(type);
 
 		if (params.has("scale")) {
 			var scale = parseFloat(params.get("scale"));
@@ -338,7 +361,7 @@
 		}
 		// A still picture keeps its settings after the #, so the editor can change them without loading the page again.
 		if (def.still) { window.addEventListener("hashchange", function () { cfg = SSO.readConfig(def); draw(); }); }
-	})();
+	});
 	</script>
 </body>
 </html>

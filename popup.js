@@ -10235,14 +10235,16 @@ function refreshLinks(){
   syncAllOverlayPreviews();
 }
 
+const customCssSelector = "textarea[data-textparam1='cssb64'], textarea[data-textparam2='cssb64'], textarea[data-textparam12='cssb64']";
+
 function flushDeferredCustomCssSettings() {
-	const cssTextareas = document.querySelectorAll("textarea[data-textparam1='cssb64'], textarea[data-textparam2='cssb64']");
+	const cssTextareas = document.querySelectorAll(customCssSelector);
 	for (var i = 0; i < cssTextareas.length; i++) {
 		const ele = cssTextareas[i];
 		if (ele.dataset.pendingSave !== "1") {
 			continue;
 		}
-		const paramType = ele.dataset.textparam1 ? "textparam1" : (ele.dataset.textparam2 ? "textparam2" : null);
+		const paramType = Object.keys(ele.dataset).find(key => /^textparam\d+$/.test(key) && ele.dataset[key] === "cssb64");
 		const setting = paramType ? ele.dataset[paramType] : null;
 		if (!paramType || !setting) {
 			continue;
@@ -10264,7 +10266,7 @@ function flushDeferredCustomCssSettings() {
 }
 
 function setupDeferredCustomCssFlush() {
-	const cssTextareas = document.querySelectorAll("textarea[data-textparam1='cssb64'], textarea[data-textparam2='cssb64']");
+	const cssTextareas = document.querySelectorAll(customCssSelector);
 	for (var i = 0; i < cssTextareas.length; i++) {
 		const ele = cssTextareas[i];
 		ele.addEventListener("input", function () {
