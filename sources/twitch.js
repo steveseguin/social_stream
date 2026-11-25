@@ -451,7 +451,8 @@
 	const trackedTwitchMessageIds = new Map();
 	const MAX_TRACKED_TWITCH_MESSAGE_IDS = 500;
 	const nativeTwitchMids = new Map();
-	const deletedTwitchIds = new Set();
+	// A zero means the native delete went out before the row's SSN ID was known.
+	const deletedTwitchIds = new Map();
 	const twitchMessageIdPattern = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
 
 	function readNativeTwitchId(row) {
@@ -464,15 +465,29 @@
 		return row.ssnTwitchId;
 	}
 
-	function deleteNativeTwitchMessage(id) {
-		if (typeof id !== "string" || !twitchMessageIdPattern.test(id) || deletedTwitchIds.has(id)) return;
-		deletedTwitchIds.add(id);
-		if (deletedTwitchIds.size > 2000) deletedTwitchIds.delete(deletedTwitchIds.values().next().value);
-		// Older docks only understand id. Supply the known SSN MID when available,
-		// and always identify the single native message for current docks.
-		chrome.runtime.sendMessage(chrome.runtime.id, { delete: {
-			type: "twitch", id: nativeTwitchMids.get(id) || id, meta: { messageId: id }
-		} }, function () {});
+	function deleteNativeTwitchMessage(id, row) {
+		if (typeof id !== "string" || !twitchMessageIdPattern.test(id)) return;
+		var mid = nativeTwitchMids.get(id);
+		if (!row && !mid) {
+			if (deletedTwitchIds.get(id)) return;
+			// A Brief-mode notice can be the only delete signal. The row may still
+			// be on screen after cache eviction, or Twitch may only now expose its ID.
+			for (const candidate of document.querySelectorAll(".chat-line__message")) {
+				if ((candidate.dataset.mid || candidate.ssnMidPending) && readNativeTwitchId(candidate) === id) {
+					row = candidate;
+					break;
+				}
+			}
+		}
+		mid = Number(row && row.dataset.mid) || mid || 0;
+		if (deletedTwitchIds.has(id) && (!mid || deletedTwitchIds.get(id) === mid)) return;
+		deletedTwitchIds.set(id, mid);
+		if (deletedTwitchIds.size > 2000) deletedTwitchIds.delete(deletedTwitchIds.keys().next().value);
+		var deletion = { type: "twitch", id: mid || id };
+		// Docks prefer meta.messageId when present. Use it only if the original
+		// capture included it, or if the native ID is all we have.
+		if (!mid || !row || row.ssnSentTwitchId === id) deletion.meta = { messageId: id };
+		chrome.runtime.sendMessage(chrome.runtime.id, { delete: deletion }, function () {});
 	}
 	document.addEventListener("ssn-twitch-deleted-id", function (event) {
 		if (isExtensionOn && !isEmbeddedPopout()) deleteNativeTwitchMessage(event.detail);
@@ -556,11 +571,14 @@
 			return;
 		}
 		ele.dataset.mid = id;
-		if (ele.ssnTwitchId) {
-			nativeTwitchMids.set(ele.ssnTwitchId, id);
+		if (ele.ssnSentTwitchId) {
+			nativeTwitchMids.set(ele.ssnSentTwitchId, id);
 			if (nativeTwitchMids.size > MAX_TRACKED_TWITCH_MESSAGE_IDS) nativeTwitchMids.delete(nativeTwitchMids.keys().next().value);
 		}
 		ele.ssnMidPending = false;
+		if (deletedTwitchIds.size && deletedTwitchIds.has(readNativeTwitchId(ele))) {
+			deleteNativeTwitchMessage(ele.ssnTwitchId, ele);
+		}
 		if (ele.ssnDeletePending) {
 			ele.ssnDeletePending = false;
 			deleteThis(ele);
@@ -1647,9 +1665,10 @@
 			data.title = getTranslation("cheers", "CHEERS");
 		}
 
-		if (ele.ssnTwitchId) {
-			if (deletedTwitchIds.has(ele.ssnTwitchId) || ele.deleted) return;
-			data.meta = { messageId: ele.ssnTwitchId };
+		if (ele.deleted || deletedTwitchIds.has(ele.ssnTwitchId)) return;
+		ele.ssnSentTwitchId = ele.ssnTwitchId;
+		if (ele.ssnSentTwitchId) {
+			data.meta = { messageId: ele.ssnSentTwitchId };
 		}
 		ele.ssnMidPending = true;
 		try {
@@ -1961,10 +1980,10 @@
 			}
 			if (readNativeTwitchId(messageEle)) {
 				messageEle.deleted = true;
-				deleteNativeTwitchMessage(messageEle.ssnTwitchId);
+				deleteNativeTwitchMessage(messageEle.ssnTwitchId, messageEle);
 				return;
 			}
-			if (messageEle.ssnMidPending && getTrackedMessageId(messageEle) === null) {
+			if (messageEle.ssnMidPending && !messageEle.dataset.mid) {
 				messageEle.ssnDeletePending = true;
 				return;
 			}
