@@ -778,6 +778,7 @@
                     <h3>Twitch – Standard DOM Capture</h3>
                     <p class="source-note">Implementation: <code>sources/twitch.js</code></p>
                     <ul class="requirements">
+                        <li>Standard pop-outs put Twitch's message ID in <code>meta.messageId</code> when available. The dock uses it to remove individual messages in both Brief and Detailed mode.</li>
                         <li>Keep Twitch chat open. Membership and user notices are captured when Twitch renders them; they are not restricted to broadcaster or moderator accounts. Authentication may be needed for account-specific features.</li>
                         <li>Viewer count requests hit <code>https://api.socialstream.ninja/twitch/viewers</code> every 30 seconds.</li>
                         <li><strong>For follower alerts, raids, and full event support</strong>, enable WebSocket mode in extension settings.</li>

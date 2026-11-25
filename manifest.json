@@ -725,6 +725,12 @@
 			"run_at": "document_start"
 		},
 		{
+			"js": ["./sources/twitch.js"],
+			"matches": ["https://*.twitch.tv/popout/*/chat*"],
+			"run_at": "document_end",
+			"world": "MAIN"
+		},
+		{
 			"js": ["./sources/inject/twitch-ad-player.js"],
 			"matches": ["https://*.twitch.tv/*"],
 			"run_at": "document_start",

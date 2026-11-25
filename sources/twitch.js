@@ -1,4 +1,47 @@
 (function () {
+	// Twitch's chat row and moderation feed are in the page world. SSApp already
+	// runs there. The extension requests the row ID across its isolated world.
+	function installTwitchModerationReader() {
+		if (window.__ssnTwitchModerationReader || window.self !== window.top ||
+			!/(^|\.)twitch\.tv$/.test(location.hostname) || !/^\/popout\/[^/]+\/chat\/?$/.test(location.pathname)) return;
+		window.__ssnTwitchModerationReader = true;
+		var subscribed = null;
+		function onModeration(message) {
+			if (!message) return;
+			var id;
+			// Twitch delivers CLEARMSG to readers and also delivers a moderator action to mods.
+			if (message.moderationType === 2) id = message.targetMessageID;
+			else if (message.level === "User" && message.moderationActionType === "delete") id = message.messageID;
+			if (typeof id === "string" && id) document.dispatchEvent(new CustomEvent("ssn-twitch-deleted-id", { detail: id }));
+		}
+		document.addEventListener("ssn-twitch-read-id", function (event) {
+			var row = event.target;
+			if (!row.matches || !row.matches(".chat-line__message")) return;
+			var key = Object.keys(row).find(function (name) { return name.indexOf("__reactFiber$") === 0; });
+			var id, api;
+			for (var fiber = key && row[key], depth = 0; fiber && depth < 100; fiber = fiber.return, depth++) {
+				var props = (fiber.stateNode && fiber.stateNode.props) || fiber.memoizedProps;
+				if (!props) continue;
+				if (!id && typeof props.isDeleted === "boolean" && props.message) id = props.message.id;
+				if (!api && props.messageHandlerAPI && typeof props.messageHandlerAPI.addMessageHandler === "function" &&
+					typeof props.messageHandlerAPI.removeMessageHandler === "function") api = props.messageHandlerAPI;
+				if (id && api) break;
+			}
+			if (typeof id === "string" && id) row.setAttribute("data-ssn-twitch-id", id);
+			if (api && api !== subscribed) {
+				if (subscribed) subscribed.removeMessageHandler(onModeration);
+				api.addMessageHandler(onModeration);
+				subscribed = api;
+			}
+		});
+	}
+	if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.id) {
+		installTwitchModerationReader();
+		return;
+	}
+	if (window.ninjafy) installTwitchModerationReader();
+	if (window.__ssnTwitchChatCapture) return;
+	window.__ssnTwitchChatCapture = true;
 	var isExtensionOn = true;
 
 	async function fetchWithTimeout(URL, timeout = 8000) {
@@ -407,6 +450,33 @@
 	}
 	const trackedTwitchMessageIds = new Map();
 	const MAX_TRACKED_TWITCH_MESSAGE_IDS = 500;
+	const nativeTwitchMids = new Map();
+	const deletedTwitchIds = new Set();
+	const twitchMessageIdPattern = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
+
+	function readNativeTwitchId(row) {
+		if (!row.ssnTwitchId && row.isConnected && row.matches(".chat-line__message")) {
+			row.dispatchEvent(new Event("ssn-twitch-read-id", { bubbles: true }));
+			var id = row.getAttribute("data-ssn-twitch-id");
+			if (id && twitchMessageIdPattern.test(id)) row.ssnTwitchId = id;
+			row.removeAttribute("data-ssn-twitch-id");
+		}
+		return row.ssnTwitchId;
+	}
+
+	function deleteNativeTwitchMessage(id) {
+		if (typeof id !== "string" || !twitchMessageIdPattern.test(id) || deletedTwitchIds.has(id)) return;
+		deletedTwitchIds.add(id);
+		if (deletedTwitchIds.size > 2000) deletedTwitchIds.delete(deletedTwitchIds.values().next().value);
+		// Older docks only understand id. Supply the known SSN MID when available,
+		// and always identify the single native message for current docks.
+		chrome.runtime.sendMessage(chrome.runtime.id, { delete: {
+			type: "twitch", id: nativeTwitchMids.get(id) || id, meta: { messageId: id }
+		} }, function () {});
+	}
+	document.addEventListener("ssn-twitch-deleted-id", function (event) {
+		if (isExtensionOn && !isEmbeddedPopout()) deleteNativeTwitchMessage(event.detail);
+	});
 
 	function getMessageContainer(ele) {
 		if (!ele || ele.nodeType !== 1) {
@@ -486,6 +556,10 @@
 			return;
 		}
 		ele.dataset.mid = id;
+		if (ele.ssnTwitchId) {
+			nativeTwitchMids.set(ele.ssnTwitchId, id);
+			if (nativeTwitchMids.size > MAX_TRACKED_TWITCH_MESSAGE_IDS) nativeTwitchMids.delete(nativeTwitchMids.keys().next().value);
+		}
 		ele.ssnMidPending = false;
 		if (ele.ssnDeletePending) {
 			ele.ssnDeletePending = false;
@@ -543,15 +617,12 @@
 		return usernameEle.innerText.replace(/^\s*\(@?/, "").replace(/\)\s*$/, "").trim();
 	}
 
-	function isDeletedMessageNode(node) {
-		if (!node || node.nodeType !== 1) {
-			return false;
-		}
-		const dataTarget = node.dataset?.aTarget || node.getAttribute?.("data-a-target") || "";
-		if (dataTarget === "chat-deleted-message-placeholder" || node.classList?.contains("chat-line__message--deleted-notice")) {
-			return true;
-		}
-		return !!node.querySelector?.("[data-a-target='chat-deleted-message-placeholder'], .chat-line__message--deleted-notice");
+	function getTwitchDeleteMarker(node) {
+		if (!node || node.nodeType !== 1) return null;
+		const selector = "[data-a-target='chat-deleted-message-placeholder'], .chat-line__message--deleted-notice";
+		const marker = node.matches(selector) ? node : node.querySelector(selector);
+		// Brief summaries carry a count and can be inserted beside unrelated rows.
+		return marker && !marker.closest(".chat-line__status") ? marker : null;
 	}
 
 	const KNOCK_PRIMARY_PATTERNS = [/wants to collaborate/i];
@@ -1112,13 +1183,14 @@
 	    }
 	  
 	    if (!ele){return;}
-	    if (isDeletedMessageNode(ele) || ele.querySelector(".deleted, [data-a-target='chat-deleted-message-placeholder'], .chat-line__message--deleted-notice")) {
+	    if (getTwitchDeleteMarker(ele) || ele.querySelector(".deleted")) {
 		  // already deleted.
 		  return;
 	    }
 	  
 	    if (!ele.isConnected){
 			return;}
+		readNativeTwitchId(ele);
 		
 		if (ele.classList.contains("chat-line__unpublished-message-body") || ele.querySelector(".chat-line__unpublished-message-body")){
 			return;
@@ -1575,6 +1647,10 @@
 			data.title = getTranslation("cheers", "CHEERS");
 		}
 
+		if (ele.ssnTwitchId) {
+			if (deletedTwitchIds.has(ele.ssnTwitchId) || ele.deleted) return;
+			data.meta = { messageId: ele.ssnTwitchId };
+		}
 		ele.ssnMidPending = true;
 		try {
 			chrome.runtime.sendMessage(
@@ -1883,6 +1959,11 @@
 			if (messageEle.deleted) {
 				return;
 			}
+			if (readNativeTwitchId(messageEle)) {
+				messageEle.deleted = true;
+				deleteNativeTwitchMessage(messageEle.ssnTwitchId);
+				return;
+			}
 			if (messageEle.ssnMidPending && getTrackedMessageId(messageEle) === null) {
 				messageEle.ssnDeletePending = true;
 				return;
@@ -1946,6 +2027,9 @@
 	var twitchChatObserverWatchdog = null;
 
 	function onElementInsertedTwitch(target) {
+		// A reopened pop-out can receive a deletion before its next new chat row.
+		const existingRow = target.querySelector(".chat-line__message");
+		if (existingRow) readNativeTwitchId(existingRow);
 		var onMutationsObserved = function(mutations) {
 			if (!isExtensionOn || isEmbeddedPopout()) {
 				return;
@@ -1958,11 +2042,8 @@
 				if (mutation.target === target) continue;
 				
 				if (mutation.type === "attributes") {
-					if (mutation.attributeName === "class" && (mutation.target.classList.contains("deleted") || isDeletedMessageNode(mutation.target))) {
-						deleteThis(mutation.target);
-					} else if (mutation.attributeName === "data-a-target" && isDeletedMessageNode(mutation.target)) {
-						deleteThis(mutation.target);
-					}
+					const marker = mutation.target.classList.contains("deleted") ? mutation.target : getTwitchDeleteMarker(mutation.target);
+					if (marker) deleteThis(marker);
 					continue;
 				}
 				
@@ -1978,8 +2059,9 @@
 					try {
 						sendHypeTrainFromDom(node);
 
-						if (isDeletedMessageNode(node)) {
-							deleteThis(node);
+						const marker = getTwitchDeleteMarker(node);
+						if (marker) {
+							deleteThis(marker);
 							continue;
 						}
 
