@@ -782,13 +782,11 @@ if (typeof(chrome.runtime)=='undefined'){
 	// Add chrome.tabs API for Electron
 	chrome.tabs = {
 		create: function(options) {
-			// In Electron, open in default browser or new window
 			if (options && options.url) {
-				if (typeof require !== "undefined" && window.shell) {
-					// Use Electron's shell to open external links
+				if (typeof require !== "undefined" && window.shell && !/^file:/i.test(options.url)) {
 					window.shell.openExternal(options.url);
 				} else {
-					// Fallback to window.open
+					// Open local pages in SSApp so the OS file association is never used.
 					window.open(options.url, '_blank');
 				}
 			}
@@ -14757,7 +14755,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				const leaderboardLink = document.getElementById('leaderboardlink');
 				const leaderboardContainer = document.getElementById('leaderboard');
 				const fallbackUrl = chrome.runtime.getURL('leaderboard.html');
-				const baseHref = leaderboardLink?.href || leaderboardContainer?.raw || fallbackUrl;
+				const baseHref = leaderboardLink?.getAttribute('href') || leaderboardContainer?.raw || fallbackUrl;
 				let resolvedUrl;
 
 				try {
