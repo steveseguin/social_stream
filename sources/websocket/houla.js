@@ -31,6 +31,12 @@
 	var connected = false;
 	var settingsTimer = null;
 	var settingsAttempts = 0;
+	// Automatic retry after Hou.la closes the socket itself. Socket.IO never
+	// reconnects after "io server disconnect", and a temporary refusal used to
+	// leave the source off until someone clicked Connect, usually only noticed
+	// at the next live. Only an unknown or revoked key (INVALID_KEY) stops for good.
+	var retryTimer = null;
+	var retryAttempt = 0;
 
 	function $(id) { return document.getElementById(id); }
 	function flag(name) {
@@ -79,7 +85,8 @@
 	}
 	function buttons() {
 		if ($('connect')) $('connect').disabled = !!socket || !settingsReady || !configReady;
-		if ($('disconnect')) $('disconnect').disabled = !socket;
+		// Stays clickable while a retry is pending, so it can be cancelled.
+		if ($('disconnect')) $('disconnect').disabled = !socket && !retryTimer;
 	}
 	function remember(type, payload) {
 		var id = type === 'comment' ? payload.comment && payload.comment.id :
@@ -260,6 +267,35 @@
 		syncViewerHeartbeat();
 		buttons();
 	}
+	// Delay before the next attempt, or null to stop. Slow on purpose: every
+	// attempt uses the key's connection budget (10 per minute on Hou.la's side).
+	function retryDelay(reason, attempt) {
+		if (reason === 'INVALID_KEY') return null;
+		var base = reason === 'RATE_LIMITED' ? 65000 : 15000;
+		var delay = Math.min(300000, base * Math.pow(2, Math.max(0, Math.min(attempt || 0, 5))));
+		// Up to +30% jitter, so sources refused together do not all come back in the same second.
+		return Math.round(delay * (1 + Math.random() * 0.3));
+	}
+	function clearRetry() {
+		clearTimeout(retryTimer);
+		retryTimer = null;
+		buttons();
+	}
+	function scheduleRetry(reason, message) {
+		var delay = retryDelay(reason, retryAttempt);
+		disconnect();
+		if (delay === null) { sourceStatus('error', message); return; }
+		retryAttempt++;
+		clearRetry();
+		sourceStatus('connecting', message + ' Retrying in ' + Math.round(delay / 1000) + ' s.');
+		retryTimer = setTimeout(function () {
+			retryTimer = null;
+			// Retry with the key that was connected, not whatever is being typed in the field.
+			if (savedConfig.key) $('key').value = savedConfig.key;
+			connect();
+		}, delay);
+		buttons();
+	}
 	function connect() {
 		if (!settingsReady || !configReady || socket) return;
 		var key = $('key').value.trim();
@@ -288,6 +324,7 @@
 		current.on('ready', function (info) {
 			if (socket !== current) return;
 			connected = true;
+			retryAttempt = 0;
 			if (latestViewers !== null) viewerUpdate(latestViewers, true);
 			var events = info && Array.isArray(info.events) ? info.events : [];
 			sourceStatus('connected', events.indexOf('comment') === -1 ? 'Connected. Enable Comments on this event key to capture chat.' : 'Connected.');
@@ -303,8 +340,7 @@
 			lastViewers = null;
 			syncViewerHeartbeat();
 			if (reason === 'io server disconnect') {
-				disconnect();
-				sourceStatus('disconnected', 'Disconnected by Hou.la. Click Connect to retry.');
+				scheduleRetry('SERVER_DISCONNECT', 'Disconnected by Hou.la.');
 			} else sourceStatus('connecting', 'Disconnected. Reconnecting...');
 		});
 		current.on('connect_error', function () {
@@ -312,22 +348,27 @@
 		});
 		current.on('error', function (reason) {
 			if (socket !== current) return;
-			disconnect();
 			var message = reason === 'INVALID_KEY' ? 'Event key refused. Create a new key in Hou.la Studio.' :
-				reason === 'RATE_LIMITED' ? 'Too many attempts. Wait a minute before reconnecting.' :
-				reason === 'TOO_MANY_CONNECTIONS' ? 'This key has too many connections. Close another source using it.' : 'Hou.la disconnected this source. Check your event key.';
-			sourceStatus('error', message);
+				reason === 'RATE_LIMITED' ? 'Too many attempts.' :
+				reason === 'TOO_MANY_CONNECTIONS' ? 'This key has too many connections. Close another source using it.' : 'Hou.la disconnected this source.';
+			scheduleRetry(String(reason), message);
 		});
 	}
 	function boot() {
-		$('connect').addEventListener('click', connect);
+		$('connect').addEventListener('click', function () {
+			clearRetry();
+			retryAttempt = 0;
+			connect();
+		});
 		$('disconnect').addEventListener('click', function () {
 			autoConnectHandled = true;
+			clearRetry();
 			disconnect();
 			sourceStatus('disconnected', 'Disconnected.');
 		});
 		$('forget').addEventListener('click', function () {
 			autoConnectHandled = true;
+			clearRetry();
 			disconnect();
 			savedConfig = {};
 			$('key').value = '';
@@ -345,5 +386,5 @@
 	}
 	if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
 	else boot();
-	window.addEventListener('pagehide', function () { clearTimeout(settingsTimer); disconnect(); });
+	window.addEventListener('pagehide', function () { clearTimeout(settingsTimer); clearRetry(); disconnect(); });
 })();
