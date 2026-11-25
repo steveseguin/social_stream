@@ -144,6 +144,17 @@ jobs:
             exit 1
           fi
 
+          # GitHub rejects regular Git blobs larger than 100 MiB.
+          # Keep the signed artifact above available even when branch publication fails.
+          # https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github
+          XPI_BYTES=$(stat -c %s "$XPI_PATH")
+          MAX_GIT_BLOB_BYTES=$((100 * 1024 * 1024))
+          if (( XPI_BYTES > MAX_GIT_BLOB_BYTES )); then
+            echo "ERROR: Signed XPI is ${XPI_BYTES} bytes; GitHub's branch limit is ${MAX_GIT_BLOB_BYTES} bytes (100 MiB)." >&2
+            echo "Download the signed XPI from this run's firefox-addon artifact. Reduce the package before retrying branch publication." >&2
+            exit 1
+          fi
+
           TMP_DIR=$(mktemp -d)
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
