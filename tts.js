@@ -532,6 +532,8 @@ TTS.hosttts = false;
 TTS.admintts = false;
 TTS.viptts = false;
 TTS.membertts = false;
+TTS.followertts = false;
+TTS.anyroletts = false;
 TTS.allowbottts = false;
 TTS.norelfectionstts = false;
 TTS.allowhosttts = false;
@@ -1269,6 +1271,9 @@ TTS.configure = function(urlParams) {
         TTS.admintts = true;
     }
 
+    TTS.anyroletts = urlParams.has("anyroletts");
+    TTS.followertts = urlParams.has("followertts");
+
     if (urlParams.has("viptts")) {
         TTS.viptts = true;
     }
@@ -1919,32 +1924,19 @@ TTS.speechMeta = function(data, allow = false) {
         }
     }
 	
-    if (!data.bot && TTS.bottts) {
-        //console.log("Filter: Only bot messages allowed and this is not a bot message");
-        return;
-    } 
-    else if (!data.host && TTS.hosttts) {
-        //console.log("Filter: Only host messages allowed and this is not a host message");
-        return;
-    } 
-    else if (!data.mod && TTS.modtts) {
-        //console.log("Filter: Only mod messages allowed and this is not a mod message");
-        return;
+    if (TTS.bottts || TTS.hosttts || TTS.modtts || TTS.viptts || TTS.membertts || TTS.admintts || TTS.followertts) {
+        const matches = [];
+        if (TTS.bottts) matches.push(data.bot);
+        if (TTS.hosttts) matches.push(data.host);
+        if (TTS.modtts) matches.push(data.mod);
+        if (TTS.viptts) matches.push(data.vip);
+        if (TTS.membertts) matches.push(data.membership || data.hasMembership);
+        if (TTS.admintts) matches.push(data.admin);
+        if (TTS.followertts) matches.push(meta.follower === true);
+        if (!(TTS.anyroletts ? matches.some(Boolean) : matches.every(Boolean))) return;
     }
-    else if (!data.vip && TTS.viptts) {
-        //console.log("Filter: Only VIP messages allowed and this is not a VIP message");
-        return;
-    } 
-	else if (!(data.membership || data.hasMembership) && TTS.membertts) {
-        //console.log("Filter: Only Member messages allowed and this is not a member message");
-        return;
-    } 
-    else if (!data.admin && TTS.admintts) {
-        //console.log("Filter: Only admin messages allowed and this is not an admin message");
-        return;
-    }
-    
-    else if (data.bot && !(TTS.allowbottts || TTS.bottts)) {
+
+    if (data.bot && !(TTS.allowbottts || TTS.bottts)) {
         //console.log("Filter: Bot messages not allowed");
         return;
     } 

@@ -215,7 +215,12 @@
 	function plainText(value, limit) {
 		value = value === undefined || value === null ? "" : String(value);
 		try {
-			value = new DOMParser().parseFromString(value, "text/html").body.textContent || "";
+			// Parse as a document body in a template's inert document so caption markup cannot load resources.
+			var inertDocument = document.createElement("template").content.ownerDocument;
+			var html = inertDocument.createElement("html");
+			html.innerHTML = value;
+			var body = html.querySelector("body, frameset");
+			value = body ? body.textContent : "";
 		} catch (e) {}
 		return value.replace(/\s+/g, " ").trim().slice(0, limit);
 	}

@@ -577,6 +577,7 @@ try{
 	var lastBotSendAuthorizationError = '';
 	let currentChannelId = null;
 	let currentAuthUser = null;
+	let followerChecks = null;
 
 	function createTransientTokenValidationError(status, message) {
 		return {
@@ -2810,6 +2811,7 @@ async function ensureChatClientInstance() {
 				}
 				if ("settings" in request) {
 					settings = request.settings;
+					if (!followerChecksEnabled()) followerChecks = null;
 					sendResponse(true);
 					syncThirdPartyEmotesForChannel(false);
 					return;
@@ -3682,6 +3684,7 @@ async function ensureChatClientInstance() {
 		try {
 		//console.log("Processing message:", parsedMessage);
 		const normalizedPayload = parsedMessage.__normalizedPayload || null;
+		const messageChannelId = currentChannelId;
 		const normalizedEventType = normalizedPayload?.event;
 		const normalizedEventTypeLower =
 			typeof normalizedEventType === 'string' ? normalizedEventType.toLowerCase() : '';
@@ -3900,6 +3903,16 @@ async function ensureChatClientInstance() {
 			}
 		}
 		
+		if (followerChecksEnabled() && !data.event && data.chatmessage && messageChannelId === currentChannelId) {
+			const tags = parsedMessage.tags || {};
+			const roomId = tags['source-room-id'] || tags['room-id'] || messageChannelId;
+			const userId = String(tags['user-id'] || normalizedPayload?.userId || userInfo?.id || '');
+			if (String(roomId) === String(messageChannelId) && await checkChatFollower(messageChannelId, userId)
+				&& followerChecksEnabled() && messageChannelId === currentChannelId) {
+				data.meta = data.meta || {};
+				data.meta.follower = true;
+			}
+		}
 		data.membership = markSubscriberAsMembership ? subscriber : "";
 		data.subtitle = subtitle;
 		data.mod = mod;
@@ -4345,6 +4358,56 @@ async function ensureChatClientInstance() {
 		});
 	}
 
+	function followerChecksEnabled() {
+		return settings.twitchcheckfollowers === true || settings.twitchcheckfollowers?.setting === true;
+	}
+
+	async function checkChatFollower(channelId, userId) {
+		if (!channelId || !userId || !hasTwitchScope(currentAuthUser, 'moderator:read:followers')) return false;
+		const account = currentAuthUser.user_id;
+		const token = getStoredToken();
+		if (!account || !token) return false;
+		if (!followerChecks || followerChecks.channel !== channelId || followerChecks.account !== account) {
+			followerChecks = { channel: channelId, account, results: new Map(), pending: new Map(), retryAfter: 0 };
+		}
+		const checks = followerChecks;
+		const now = Date.now();
+		const cached = checks.results.get(userId);
+		if (cached && cached.expires > now) return cached.follows;
+		if (checks.pending.has(userId)) return checks.pending.get(userId);
+		if (checks.retryAfter > now || checks.pending.size >= 6) return false;
+
+		const controller = new AbortController();
+		const timeout = setTimeout(() => controller.abort(), 1500);
+		const url = 'https://api.twitch.tv/helix/channels/followers?broadcaster_id=' + encodeURIComponent(channelId)
+			+ '&user_id=' + encodeURIComponent(userId);
+		const lookup = fetch(url, {
+			headers: { 'Client-ID': getTwitchApiClientId(), Authorization: 'Bearer ' + token },
+			signal: controller.signal
+		}).then(async response => {
+			if (!response.ok) {
+				const reset = Number(response.headers.get('Ratelimit-Reset')) * 1000;
+				checks.retryAfter = Math.max(Date.now() + 30000, response.status === 429 ? reset || 0 : 0);
+				return false;
+			}
+			const body = await response.json();
+			if (!Array.isArray(body.data)) return false;
+			const follows = body.data.some(row => row && String(row.user_id) === userId);
+			checks.results.delete(userId);
+			if (checks.results.size >= 2000) checks.results.delete(checks.results.keys().next().value);
+			checks.results.set(userId, { follows, expires: Date.now() + 60000 });
+			return follows && followerChecks === checks;
+		}).catch(() => {
+			checks.retryAfter = Date.now() + 5000;
+			return false;
+		}).finally(() => {
+			clearTimeout(timeout);
+			checks.pending.delete(userId);
+		});
+		checks.pending.set(userId, lookup);
+		return lookup;
+	}
+
 	// Function to fetch followers
 	async function getFollowers(broadcasterId) {
 		const token = getStoredToken();
@@ -4535,6 +4598,7 @@ async function cleanupCurrentConnection() {
 		activeSubscriptions.clear();
 		currentChannelId = null;
 		currentAuthUser = null;
+		followerChecks = null;
 		lastKnownViewers = null;
 		lastKnownFollowers = null;
 		lastKnownSubscribers = null;

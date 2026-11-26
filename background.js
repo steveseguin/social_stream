@@ -13287,8 +13287,10 @@ async function openchat(target = null, force = false) {
 
 	async function fallbackYouTubeLiveChat(identifier, byChannelId) {
 		try {
-			const channelPath = byChannelId ? "channel/" + identifier : "@" + encodeURIComponent(identifier.slice(1));
-			const response = await fetch("https://www.youtube.com/" + channelPath + "/live");
+			const url = new URL("https://www.youtube.com/");
+			const channelPath = byChannelId ? "channel/" + encodeURIComponent(identifier) : "@" + encodeURIComponent(identifier.slice(1));
+			url.pathname = "/" + channelPath + "/live";
+			const response = await fetch(url.href);
 			if (!response.ok) return;
 			const player = extractYouTubePageData(await response.text(), "ytInitialPlayerResponse");
 			const video = player?.videoDetails;

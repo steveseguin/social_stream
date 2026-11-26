@@ -3446,6 +3446,13 @@ details.wrapper[open] > .collapsible-text {
 							</div>
 							<div class="options_group tts-behavior-options">
 								<h4><span class="popup-control-icon" aria-hidden="true">🔎</span><span data-translate="tts-read-specific">Read out only specific user/messages</span></h4>
+                                <div title="Read a message once if the sender has any of the roles selected below. When off, all selected roles are required.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="anyroletts" aria-label="Match any selected role" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="anyroletts">Match any selected role</span>
+                                </div>
 								<div title="Only 'bot' marked users will have messages read out." data-keywords="bot only automation commands stream elements nightbot restrict">
 									<label class="switch">
 										<input type="checkbox" data-param1="bottts" />
@@ -3467,6 +3474,13 @@ details.wrapper[open] > .collapsible-text {
 									</label>
 									<span data-translate="membertts">🤴 Only members can have messages read</span>
 								</div>
+                                <div title="Read messages from viewers whose source confirms they follow this channel. See the chat voice guide for supported sources.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="followertts" aria-label="Only confirmed followers" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="followertts">Only confirmed followers</span>
+                                </div>
 								<div title="Only 'vip' marked users will have messages read out." data-keywords="vip priority star featured badge elite">
 									<label class="switch">
 										<input type="checkbox" data-param1="viptts" />
@@ -3495,6 +3509,7 @@ details.wrapper[open] > .collapsible-text {
 									</label>
 									<span data-translate="filter-text-to-speech-for-donations-only">🗣️💰 Only donations can have messages read out</span>
 								</div>
+                                <a class="popup-guide-link" href="docs/chat-voices.html" target="_blank" rel="noopener">Chat roles and voices guide</a>
 							</div>
 							<div class="options_group tts-behavior-options">
 								<h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-exclude-bots">Bots, hosts and events are excluded from TTS</span></h4>
@@ -8900,6 +8915,13 @@ details.wrapper[open] > .collapsible-text {
                                         <span class="slider round"></span>
                                     </label>
                                     <img src="./sources/images/youtube.png" class="icon" /><span data-translate="no-all-youtube-member-chat-included"> Only monthly featured messages from a YouTube are marked as a membership </span>
+                                </div>
+                                <div title="Twitch WebSocket only. Checks whether a chatter follows this channel using your broadcaster or moderator account. Results are cached briefly.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="twitchcheckfollowers" aria-label="Check Twitch chatters for follower status" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="twitchcheckfollowers">Check Twitch chatters for follower status</span>
                                 </div>
                                 <div title="Mark a message as memberchat only when it is a Twitch subscription or resubscription notification">
                                     <label class="switch">

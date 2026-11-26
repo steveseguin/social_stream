@@ -138,8 +138,8 @@
 		localStorage.setItem(STORAGE_KEYS.accessLevel, accessLevel);
 		var tokenAccessLevel = accessLevel;
 		if (accessLevel === "admin" && payload.scope != null) {
-			var scopes = String(payload.scope).split(/\s+/);
-			if (!scopes.includes("https://www.googleapis.com/auth/youtube.force-ssl") && !scopes.includes("https://www.googleapis.com/auth/youtube")) {
+			var scopes = new Set(String(payload.scope).split(/\s+/));
+			if (!scopes.has("https://www.googleapis.com/auth/youtube.force-ssl") && !scopes.has("https://www.googleapis.com/auth/youtube")) {
 				tokenAccessLevel = "readonly";
 			}
 		}

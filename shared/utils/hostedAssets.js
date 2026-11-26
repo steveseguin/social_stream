@@ -21,7 +21,13 @@
     if (script.hasAttribute('data-doc-media')) {
         function updateMedia() {
             document.querySelectorAll('img[data-hosted-src]').forEach(function (image) {
-                image.src = root.SSNHostedAssetURL(image.getAttribute('data-hosted-src'), document.baseURI);
+                // These are bundled guide images. Only the beta mirror may change their host.
+                var url;
+                try {
+                    url = new URL(image.getAttribute('data-hosted-src'), document.baseURI);
+                } catch (e) { return; }
+                if (url.protocol !== root.location.protocol || url.host !== root.location.host) return;
+                image.src = root.SSNHostedAssetURL(url);
                 image.hidden = false;
             });
             if (root.location.origin !== beta) return;

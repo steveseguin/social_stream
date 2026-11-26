@@ -384,9 +384,9 @@ try {
 		if (requestedLevel !== 'admin') return 'readonly';
 		// OAuth permits omitting scope when the full request was granted.
 		if (scope == null) return 'admin';
-		const scopes = String(scope).split(/\s+/);
-		return scopes.includes('https://www.googleapis.com/auth/youtube.force-ssl') ||
-			scopes.includes('https://www.googleapis.com/auth/youtube') ? 'admin' : 'readonly';
+		const scopes = new Set(String(scope).split(/\s+/));
+		return scopes.has('https://www.googleapis.com/auth/youtube.force-ssl') ||
+			scopes.has('https://www.googleapis.com/auth/youtube') ? 'admin' : 'readonly';
 	}
 
 	function getYouTubeTokenAccessLevel() {
