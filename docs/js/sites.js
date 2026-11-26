@@ -332,11 +332,11 @@ document.addEventListener('DOMContentLoaded', function() {
             type: 'standard',
             instructions: `
                 <ul>
-                    <li>Standard capture: open https://hou.la/a/live and select a live stream, or open https://hou.la/studio/live/comments for your own chat. In the desktop app, choose Hou.la, select Standard and paste that page's URL.</li>
-                    <li>For gifts, followers and viewer counts in the desktop app, choose Hou.la and select WebSocket. Add and activate the source, then enter your event key from Hou.la Studio in its window. Extension users can open https://socialstream.ninja/sources/websocket/houla.html to enter their key.</li>
+                    <li>Recommended for your own lives: WebSocket. It brings comments, gifts, followers and viewer counts, and it keeps working from one live to the next with no reconnecting. In the desktop app, choose Hou.la and select WebSocket, add and activate the source, then enter your event key from Hou.la Studio in its window once. Extension users can open https://socialstream.ninja/sources/websocket/houla.html and enter their key once.</li>
+                    <li>Standard capture of your own chat: open https://hou.la/studio/live/comments while signed in. That page follows your current live, so it keeps working from one live to the next. Avoid pasting a live's own address (https://hou.la/live/...): it changes with every live. In the desktop app, choose Hou.la, select Standard and paste https://hou.la/studio/live/comments. To read someone else's live, open https://hou.la/a/live and select it.</li>
                 </ul>
             `,
-            notes: 'Use one capture mode per live to avoid duplicate chat. Event keys start with hle_; do not use your stream key.'
+            notes: 'Use one capture mode per live to avoid duplicate chat. Event keys start with hle_; do not use your stream key. An event key belongs to your Hou.la workspace, not to one live: it stays valid until you revoke it in Hou.la Studio.'
         },
         {
             name: 'Kick.com',
