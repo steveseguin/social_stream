@@ -272,9 +272,9 @@
 	function retryDelay(reason, attempt) {
 		if (reason === 'INVALID_KEY') return null;
 		var base = reason === 'RATE_LIMITED' ? 65000 : 15000;
-		var delay = Math.min(300000, base * Math.pow(2, Math.max(0, Math.min(attempt || 0, 5))));
+		var delay = base * Math.pow(2, Math.min(attempt, 5));
 		// Up to +30% jitter, so sources refused together do not all come back in the same second.
-		return Math.round(delay * (1 + Math.random() * 0.3));
+		return Math.min(300000, Math.round(delay * (1 + Math.random() * 0.3)));
 	}
 	function clearRetry() {
 		clearTimeout(retryTimer);
@@ -290,15 +290,13 @@
 		sourceStatus('connecting', message + ' Retrying in ' + Math.round(delay / 1000) + ' s.');
 		retryTimer = setTimeout(function () {
 			retryTimer = null;
-			// Retry with the key that was connected, not whatever is being typed in the field.
-			if (savedConfig.key) $('key').value = savedConfig.key;
-			connect();
+			connect(savedConfig.key);
 		}, delay);
 		buttons();
 	}
-	function connect() {
+	function connect(retryKey) {
 		if (!settingsReady || !configReady || socket) return;
-		var key = $('key').value.trim();
+		var key = retryKey || $('key').value.trim();
 		if (!/^hle_[A-Za-z0-9_-]+$/.test(key)) {
 			setStatus('Enter a Hou.la event key starting with hle_. Do not use your stream key.', 'error');
 			return;
@@ -343,15 +341,21 @@
 				scheduleRetry('SERVER_DISCONNECT', 'Disconnected by Hou.la.');
 			} else sourceStatus('connecting', 'Disconnected. Reconnecting...');
 		});
-		current.on('connect_error', function () {
-			if (socket === current) sourceStatus('error', 'Unable to connect to Hou.la. Check your connection and event key.');
-		});
-		current.on('error', function (reason) {
+		function handleRefusal(reason) {
 			if (socket !== current) return;
 			var message = reason === 'INVALID_KEY' ? 'Event key refused. Create a new key in Hou.la Studio.' :
 				reason === 'RATE_LIMITED' ? 'Too many attempts.' :
 				reason === 'TOO_MANY_CONNECTIONS' ? 'This key has too many connections. Close another source using it.' : 'Hou.la disconnected this source.';
-			scheduleRetry(String(reason), message);
+			scheduleRetry(reason, message);
+		}
+		current.on('error', handleRefusal);
+		current.on('connect_error', function (error) {
+			if (socket !== current) return;
+			if (current.active) {
+				sourceStatus('connecting', 'Unable to reach Hou.la. Reconnecting...');
+				return;
+			}
+			handleRefusal((error.data && error.data.code) || error.message);
 		});
 	}
 	function boot() {

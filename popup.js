@@ -7638,8 +7638,8 @@ if (sourcemode){
     }
 } else if (location.hostname === "cache.socialstream.ninja") {
     baseURL = Beta ? "https://beta.socialstream.ninja/" : "https://socialstream.ninja/";
-} else if (location.protocol !== "chrome-extension:" && !Beta) {
-    // Only set baseURL from location if we're not already in beta mode
+} else if (location.protocol !== "chrome-extension:" && location.protocol !== "moz-extension:" && !Beta) {
+    // Installed extensions share hosted overlay URLs.
     baseURL = `${location.protocol}//${location.host}/`;
 }
 

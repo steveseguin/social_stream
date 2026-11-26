@@ -298,6 +298,26 @@ const SOURCE_ICON_MAP = {
 };
 
 const settings = readSettings();
+let cloudReceipts = null;
+if (urlParams.get("cloudack") === "remote" && urlParams.has("server2") && !settings.previewOnly) {
+    var receiptRetryMs = 1000;
+    var loadReceiptScript = function () {
+        var receiptScript = document.createElement("script");
+        receiptScript.src = "./shared/utils/cloudReceipts.js";
+        receiptScript.onload = function () {
+            cloudReceipts = window.createSSNCloudReceipts(settings.roomID, urlParams, function (payload, receipt, moderated) {
+                if (!moderated && !payload.delete && !payload.action) handleIncomingPayload(payload);
+            }, "Alerts");
+        };
+        receiptScript.onerror = function () {
+            receiptScript.remove();
+            setTimeout(loadReceiptScript, receiptRetryMs);
+            receiptRetryMs = Math.min(60000, receiptRetryMs * 2);
+        };
+        document.head.appendChild(receiptScript);
+    };
+    loadReceiptScript();
+}
 const recentPayloads = [];
 const hypeTrainLevels = {};
 let lastAuctionWinSignature = '';
@@ -2188,6 +2208,10 @@ function setupSocket() {
   state.socket.onmessage = (event) => {
     try {
       const parsed = JSON.parse(event.data);
+      if (parsed && (parsed.ssnCloudHello || parsed.ssnCloudDelivery)) {
+        if (cloudReceipts && (parsed.ssnCloudHello || parsed.ssnCloudDelivery.v === 2)) cloudReceipts.receive(parsed, event.currentTarget);
+        return;
+      }
       if (parsed?.overlayNinja !== undefined) {
         handleIncomingPayload(parsed.overlayNinja);
       } else {
