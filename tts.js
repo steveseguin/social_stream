@@ -358,6 +358,18 @@ TTS.isOfficialOpenAIEndpoint = function(endpoint) {
     })());
 };
 
+// Only hosted OpenAI Speech is affected; compatible servers may keep these model names.
+TTS.isRetiringOpenAISpeech = function(endpoint, model) {
+    try {
+        var url = new URL(endpoint);
+        return url.origin === "https://api.openai.com" &&
+            url.pathname.replace(/\/$/, "") === "/v1/audio/speech" &&
+            /^(tts-1(?:-hd)?|gpt-4o-mini-tts(?:-2025-03-20|-2025-12-15)?)$/.test(model);
+    } catch (e) {
+        return false;
+    }
+};
+
 TTS.geminiSettings = {
     model: "gemini-2.5-flash-preview-tts",
     voice: "Kore",
@@ -1194,6 +1206,11 @@ TTS.configure = function(urlParams) {
     }
     TTS.openAISettings.responseFormat = urlParams.get("openaiformat") || urlParams.get("customttsformat") || urlParams.get("localttsformat") || "mp3";
     TTS.openAISettings.speed = urlParams.has("openaispeed") ? TTS.parseMinFloatParam(urlParams, "openaispeed", 1.0, 0.25) : (urlParams.has("customttsspeed") ? TTS.parseMinFloatParam(urlParams, "customttsspeed", 1.0, 0.25) : (urlParams.has("localttsspeed") ? TTS.parseMinFloatParam(urlParams, "localttsspeed", 1.0, 0.25) : TTS.rate));
+
+    if (TTS.TTSProvider === "openai" && TTS.isRetiringOpenAISpeech(TTS.openAISettings.endpoint, TTS.openAISettings.model)) {
+        TTS.configurationWarning = "OpenAI cloud TTS shuts down January 6, 2027. Choose another TTS provider in Social Stream Ninja, test it, and update this Dock link.";
+        console.warn(TTS.configurationWarning);
+    }
 
     // Enable speech if specified
     if (TTS.readDonos || TTS.newmembertts || TTS.ttsclicked || urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")) {
