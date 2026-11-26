@@ -60,6 +60,19 @@ jobs:
       - name: Validate Firefox build
         run: web-ext lint --source-dir "$FIREFOX_BUILD_DIR" --self-hosted
 
+      - name: Check download size before signing
+        if: github.event.inputs.channel != 'listed'
+        run: |
+          set -euo pipefail
+          web-ext build --source-dir "$FIREFOX_BUILD_DIR" --artifacts-dir "$RUNNER_TEMP/firefox-package"
+          archive=("$RUNNER_TEMP/firefox-package"/*.zip)
+          bytes=$(stat -c %s "${archive[0]}")
+          echo "Unsigned Firefox download is $bytes bytes."
+          if (( bytes > 100 * 1024 * 1024 )); then
+            echo "::error::Firefox download exceeds GitHub's 100 MiB file limit. Reduce the package before signing."
+            exit 1
+          fi
+
       - name: Submit to Firefox Add-ons Store
         id: submit
         env:
@@ -138,21 +151,18 @@ jobs:
         run: |
           set -euo pipefail
 
-          XPI_PATH=$(ls "$GITHUB_WORKSPACE/${ARTIFACTS_DIR}"/*.xpi | head -n 1)
-          if [[ -z "${XPI_PATH:-}" ]]; then
-            echo "Signed XPI not found" >&2
+          xpi=("$GITHUB_WORKSPACE/$ARTIFACTS_DIR"/*.xpi)
+          if [[ ${#xpi[@]} -ne 1 || ! -f "${xpi[0]}" ]]; then
+            echo "Expected one signed Firefox add-on." >&2
             exit 1
           fi
 
-          TMP_DIR=$(mktemp -d)
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git clone --depth 1 "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$TMP_DIR"
-
-          cd "$TMP_DIR"
-          git checkout --orphan "$FIREFOX_BRANCH"
-          find . -mindepth 1 -not -path './.git' -not -path './.git/*' -exec rm -rf {} + || true
-          cp "$XPI_PATH" "$FIREFOX_FILE_NAME"
+          cd "$(mktemp -d)"
+          git init --quiet --initial-branch="$FIREFOX_BRANCH"
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          cp "${xpi[0]}" "$FIREFOX_FILE_NAME"
           git add "$FIREFOX_FILE_NAME"
           git commit -m "Firefox Add-on v${{ steps.manifest.outputs.version }}"
           git push -f origin "$FIREFOX_BRANCH"
