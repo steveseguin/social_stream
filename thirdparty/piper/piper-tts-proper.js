@@ -217,11 +217,6 @@
         throw new Error('Phonemizer not loaded');
       }
       
-      // Initialize phonemizer module if needed
-      if (!this.phonemizerModule) {
-        await this.initPhonemizer();
-      }
-      
       // Wait if phonemizer is busy
       while (this.phonemizerBusy) {
         await new Promise(resolve => setTimeout(resolve, 50));
@@ -232,53 +227,67 @@
       try {
         const input = JSON.stringify([{ text: text.trim() }]);
         
-        return await new Promise((resolve, reject) => {
-          let resolved = false;
-          
-          // Set up callbacks
-          this.phonemizerCallback = (data) => {
-            if (!resolved) {
-              try {
-                const result = JSON.parse(data);
-                if (result.phoneme_ids) {
-                  const value = returnPhonemes ? result.phonemes.join('') : this.encodePhonemes(result);
-                  resolved = true;
-                  resolve(value);
-                }
-              } catch (e) {
-                console.error('Failed to parse phonemizer output:', e);
-              }
-            }
-          };
-          
-          this.phonemizerErrorCallback = (message) => {
-            if (!resolved) {
-              resolved = true;
-              reject(new Error(message));
-            }
-          };
-          
-          // Call the phonemizer
-          const espeakVoice = this.voiceConfig?.espeak?.voice || 'en-us';
-          this.phonemizerModule.callMain([
-            "-l", espeakVoice,
-            "--input", input,
-            "--espeak_data", "/espeak-ng-data"
-          ]);
-          
-          // Timeout after 5 seconds
-          setTimeout(() => {
-            if (!resolved) {
-              resolved = true;
-              reject(new Error('Phonemizer timeout'));
-            }
-          }, 5000);
-        });
+        for (let attempt = 0; ; attempt++) {
+          if (!this.phonemizerModule) await this.initPhonemizer();
+          try {
+            return await this.convertPhonemes(input, returnPhonemes);
+          } catch (error) {
+            // An aborted WASM instance cannot process subsequent chat messages.
+            if (!(error instanceof WebAssembly.RuntimeError) && !/^Aborted\(/.test(error.message)) throw error;
+            this.phonemizerModule = null;
+            if (attempt > 0) throw error;
+          }
+        }
       } finally {
         this.phonemizerBusy = false;
         this.phonemizerCallback = null;
         this.phonemizerErrorCallback = null;
       }
+    }
+
+    convertPhonemes(input, returnPhonemes) {
+      return new Promise((resolve, reject) => {
+        let resolved = false;
+
+        // Set up callbacks
+        this.phonemizerCallback = (data) => {
+          if (!resolved) {
+            try {
+              const result = JSON.parse(data);
+              if (result.phoneme_ids) {
+                const value = returnPhonemes ? result.phonemes.join('') : this.encodePhonemes(result);
+                resolved = true;
+                resolve(value);
+              }
+            } catch (e) {
+              console.error('Failed to parse phonemizer output:', e);
+            }
+          }
+        };
+
+        this.phonemizerErrorCallback = (message) => {
+          if (!resolved) {
+            resolved = true;
+            reject(new Error(message));
+          }
+        };
+
+        // Call the phonemizer
+        const espeakVoice = this.voiceConfig?.espeak?.voice || 'en-us';
+        this.phonemizerModule.callMain([
+          "-l", espeakVoice,
+          "--input", input,
+          "--espeak_data", "/espeak-ng-data"
+        ]);
+
+        // Timeout after 5 seconds
+        setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            reject(new Error('Phonemizer timeout'));
+          }
+        }, 5000);
+      });
     }
 
     // Older/low-quality models can use different IDs from the phonemizer default.
