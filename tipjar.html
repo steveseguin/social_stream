@@ -3461,13 +3461,23 @@
             document.getElementById('summary-progress').setAttribute('aria-label', `${customTitle}: ${text}`);
         }
 
-        function safeAvatarUrl(value) {
+        function safeAvatarUrl(value, hostArtwork = false) {
             const raw = String(value || '').trim();
             if (!raw) return '';
             if (/^data:image\/(png|jpe?g|gif|webp);base64,/i.test(raw)) return raw;
             try {
                 const parsed = new URL(raw, window.location.href);
-                return /^(https?:|file:|chrome-extension:)$/.test(parsed.protocol) ? parsed.href : '';
+                if (parsed.protocol === 'https:' || parsed.protocol === 'http:') return parsed.href;
+                if (hostArtwork && parsed.protocol === 'file:') return parsed.href;
+                if (parsed.protocol !== location.protocol || parsed.host !== location.host) return '';
+                const extension = parsed.protocol === 'chrome-extension:' || parsed.protocol === 'moz-extension:';
+                if (hostArtwork && extension) return parsed.href;
+                // Some sources send bundled platform icons as their avatar, including in local installs.
+                if (extension || parsed.protocol === 'file:') {
+                    const icons = new URL('sources/images/', location.href).href;
+                    if (parsed.href.startsWith(icons) && /^[\w-]+\.png$/i.test(parsed.href.slice(icons.length))) return parsed.href;
+                }
+                return '';
             } catch (e) {
                 return '';
             }
@@ -4704,7 +4714,7 @@
                 setElText('versus-name-' + n, name);
                 setElText('versus-initial-' + n, Array.from(name)[0] || '');
                 const face = document.getElementById('versus-face-img-' + n);
-                const src = safeAvatarUrl(faces[i]);
+                const src = safeAvatarUrl(faces[i], true);
                 face.onerror = function() { face.classList.add('missing'); };
                 face.referrerPolicy = 'no-referrer';
                 if (src) {

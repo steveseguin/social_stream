@@ -578,6 +578,7 @@ try{
 	let currentChannelId = null;
 	let currentAuthUser = null;
 	let followerChecks = null;
+	let followerDeliveryTail = null;
 
 	function createTransientTokenValidationError(status, message) {
 		return {
@@ -3680,7 +3681,7 @@ async function ensureChatClientInstance() {
 
 
 	async function processMessage(parsedMessage) {
-		const pendingMessage = {};
+		const pendingMessage = { followerCheck: followerChecksEnabled() };
 		try {
 		//console.log("Processing message:", parsedMessage);
 		const normalizedPayload = parsedMessage.__normalizedPayload || null;
@@ -3903,12 +3904,21 @@ async function ensureChatClientInstance() {
 			}
 		}
 		
-		if (followerChecksEnabled() && !data.event && data.chatmessage && messageChannelId === currentChannelId) {
+		if (pendingMessage.followerCheck || followerDeliveryTail) {
 			const tags = parsedMessage.tags || {};
 			const roomId = tags['source-room-id'] || tags['room-id'] || messageChannelId;
 			const userId = String(tags['user-id'] || normalizedPayload?.userId || userInfo?.id || '');
-			if (String(roomId) === String(messageChannelId) && await checkChatFollower(messageChannelId, userId)
-				&& followerChecksEnabled() && messageChannelId === currentChannelId) {
+			const eligible = pendingMessage.followerCheck && followerChecksEnabled() && !data.event && data.chatmessage
+				&& messageChannelId === currentChannelId && String(roomId) === String(messageChannelId);
+			// Lookups run concurrently. Release prepared chat rows in order, even on a cache hit.
+			pendingMessage.followerCheck = true;
+			const lookup = eligible ? checkChatFollower(messageChannelId, userId).catch(() => false) : false;
+			const turn = Promise.all([followerDeliveryTail, lookup]).then(results => results[1]);
+			followerDeliveryTail = turn;
+			const follows = await turn;
+			if (followerDeliveryTail === turn) followerDeliveryTail = null;
+			if (pendingMessage.deleted || messageChannelId !== currentChannelId) return;
+			if (follows && followerChecksEnabled()) {
 				data.meta = data.meta || {};
 				data.meta.follower = true;
 			}
@@ -4543,6 +4553,10 @@ async function ensureChatClientInstance() {
 
 async function cleanupCurrentConnection() {
 	isDisconnecting = true;
+		pendingTwitchMessages.forEach(message => {
+			if (message.followerCheck) message.deleted = true;
+		});
+		followerDeliveryTail = null;
 		
 		// Clear any existing timeouts
 		if (reconnectTimeout) {

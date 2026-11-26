@@ -6304,7 +6304,7 @@ class EventFlowEditor {
 			// TTS Actions
 			case 'ttsSpeak':
 				if (Array.isArray(node.config.chatVoiceRules)) {
-					html += this.renderChatVoiceRules(node.config.chatVoiceRules);
+					html += this.renderChatVoiceRules(node.config.chatVoiceRules, node.config.requireChatVoiceRole);
 					break;
 				}
 				html += `
@@ -6678,10 +6678,16 @@ class EventFlowEditor {
         }
     }
 
-    renderChatVoiceRules(rules) {
+    renderChatVoiceRules(rules, requireRole) {
         const roles = { person: 'People by name', vip: 'VIPs', member: 'Members', follower: 'Confirmed followers' };
         const guide = this.escapeHtml(this.resolveGuideTarget('chat-voices'));
-        let html = `<p class="property-help">A person takes priority, then the first matching group. Leave a voice blank to use the Flow Actions voice. <a href="${guide}" target="_blank" rel="noopener">Voice setup guide</a></p>`;
+        let html = `<div class="property-group">
+            <label class="property-label" title="Everyone, including people listed by name, must have one of the roles listed below. Add at least one role to hear any messages.">
+                <input type="checkbox" class="property-input" id="prop-requireChatVoiceRole" ${requireRole === true ? 'checked' : ''}>
+                Require a listed role
+            </label>
+        </div>
+        <p class="property-help">A person's voice takes priority, then the first matching role. Leave a voice blank to use the Flow Actions voice. <a href="${guide}" target="_blank" rel="noopener">Voice setup guide</a></p>`;
         rules.forEach((rule, index) => {
             if (!rule) return;
             const options = Object.keys(roles).map(key =>

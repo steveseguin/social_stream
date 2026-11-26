@@ -30,6 +30,12 @@ rsync -a \
     --include='docs/css/' \
     --include='docs/js/' \
     --include='docs/images/' \
+    --include='docs/images/chat-voices/' \
+    --include='docs/images/chat-voices/*.png' \
+    --include='docs/chat-voices.html' \
+    --include='docs/css/site-shell.css' \
+    --include='docs/css/visual-guides.css' \
+    --include='docs/js/site-shell.js' \
     --include='docs/images/guides/' \
     --include='docs/images/kick-channel-points-event-flow/' \
     --include='docs/event-reference.html' \
