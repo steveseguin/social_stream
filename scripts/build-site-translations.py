@@ -323,7 +323,7 @@ def render(source_page, document, catalog, language=LANGUAGE, pages=PAGES, expan
             value = html.unescape(next(v for v in match.groups()[1:] if v is not None))
             if translatable_attribute(tag, attrs, name) and value:
                 value = strings[normalized(value)]
-            elif name in {"href", "src", "poster", "action"}:
+            elif name in {"href", "src", "poster", "action"} or (tag, name) in {("img", "data-hosted-src"), ("option", "data-image")}:
                 value = relative_url(value, source_page, localized_page, tag == "a" and name == "href", pages, language)
             elif tag == "html" and name == "lang":
                 value = language

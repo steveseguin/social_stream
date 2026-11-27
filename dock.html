@@ -6412,6 +6412,10 @@
 			}
 
 			var hideAlertEvents = urlParams.has("hidealertevents");
+			var hideEventsFrom = urlParams.get("hideeventsfrom");
+			if (hideEventsFrom) {
+				hideEventsFrom = new Set(hideEventsFrom.toLowerCase().split(",").map(source => source.trim()).filter(Boolean));
+			}
 			var alertEventNames = new Set([
 				'new_follower','follow','followed',
 				'new_subscriber','subscription_gift','resub','sponsorship','giftpurchase','giftredemption','membermilestone',
@@ -12330,6 +12334,9 @@
 					}
 
 					if (hideAllEvents && data.event) {
+						return;
+					}
+					if (hideEventsFrom && data.event && data.type && hideEventsFrom.has(String(data.type).toLowerCase())) {
 						return;
 					}
 

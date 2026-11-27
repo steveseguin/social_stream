@@ -2,7 +2,7 @@
 
 Recommended resolution on OBS:  
 > [stream.html](https://socialstream.ninja/themes/Neutron/stream.html): 1920x1080  
-> [chatOnly.html]https://socialstream.ninja/themes/Neutron/chatOnly.html): 430x650
+> [chatOnly.html](https://socialstream.ninja/themes/Neutron/chatOnly.html): 430x650
 
 Why is it called Neutron?  
 > The background image is from [here](https://github.com/xcruxiex/themes),  

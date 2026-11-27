@@ -400,6 +400,7 @@ In Dock settings → Message Mechanics, enable **Louder built-in beep** and use 
 | `trivialevents` | boolean | Allows background shading for minor events |
 | `showonlyevents` | boolean | Shows only stream events |
 | `hideallevents` | boolean | Hides all stream events |
+| `hideeventsfrom` | comma-separated sources | Hides event rows from the listed platforms in this dock, e.g. `tiktok,kick`. |
 | `dissolve` | boolean | Stream events fade away after 3s |
 
 ### Privacy & Security Parameters

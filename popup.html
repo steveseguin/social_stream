@@ -3448,10 +3448,10 @@ details.wrapper[open] > .collapsible-text {
 								<h4><span class="popup-control-icon" aria-hidden="true">🔎</span><span data-translate="tts-read-specific">Read out only specific user/messages</span></h4>
                                 <div title="Read a message once if the sender has any of the roles selected below. When off, all selected roles are required.">
                                     <label class="switch">
-                                        <input type="checkbox" data-param1="anyroletts" aria-label="Match any selected role" />
+                                        <input type="checkbox" data-param1="anyroletts" aria-labelledby="anyroletts-label" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="anyroletts">Match any selected role</span>
+                                    <span id="anyroletts-label" data-translate="anyroletts">Match any selected role</span>
                                 </div>
 								<div title="Only 'bot' marked users will have messages read out." data-keywords="bot only automation commands stream elements nightbot restrict">
 									<label class="switch">
@@ -3476,10 +3476,10 @@ details.wrapper[open] > .collapsible-text {
 								</div>
                                 <div title="Read messages from viewers whose source confirms they follow this channel. See the chat voice guide for supported sources.">
                                     <label class="switch">
-                                        <input type="checkbox" data-param1="followertts" aria-label="Only confirmed followers" />
+                                        <input type="checkbox" data-param1="followertts" aria-labelledby="followertts-label" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="followertts">Only confirmed followers</span>
+                                    <span id="followertts-label" data-translate="followertts">Only confirmed followers</span>
                                 </div>
 								<div title="Only 'vip' marked users will have messages read out." data-keywords="vip priority star featured badge elite">
 									<label class="switch">
@@ -4464,6 +4464,12 @@ details.wrapper[open] > .collapsible-text {
                                     <input type="text" id="dockfilterevents" class="textInput" autocomplete="off" placeholder="Event name or text..." data-textparam1="filterevents" data-tag-presets="events" />
                                     <label for="dockfilterevents" style="display: inline-block; margin: 0 0 6px 0;"><span class="popup-control-icon" aria-hidden="true">👁️</span><span data-translate="hide-specific-events">Hide specific events</span></label>
                                     <div style="display: inline-block; margin: 0 0 6px 6px; font-size: 0.9em;"><a href="https://socialstream.ninja/docs/event-reference.html" class="lightblue" target="_blank" rel="noopener">See the full list of event names</a></div>
+                                </div>
+                                <div data-keywords="hide mute platform events notifications">
+                                    <div class="textInputContainer" title="Hide event rows from the selected platforms in this dock. Regular chat stays visible.">
+                                        <input type="text" id="hideeventsfrom" class="textInput instant" autocomplete="off" data-textparam1="hideeventsfrom" />
+                                        <label for="newhideeventsfromType"><span class="popup-control-icon" aria-hidden="true">👁️</span><span data-translate="hide-events-from">Hide events from</span></label>
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -8918,10 +8924,10 @@ details.wrapper[open] > .collapsible-text {
                                 </div>
                                 <div title="Twitch WebSocket only. Checks whether a chatter follows this channel using your broadcaster or moderator account. Results are cached briefly.">
                                     <label class="switch">
-                                        <input type="checkbox" data-setting="twitchcheckfollowers" aria-label="Check Twitch chatters for follower status" />
+                                        <input type="checkbox" data-setting="twitchcheckfollowers" aria-labelledby="twitchcheckfollowers-label" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="twitchcheckfollowers">Check Twitch chatters for follower status</span>
+                                    <span id="twitchcheckfollowers-label" data-translate="twitchcheckfollowers">Check Twitch chatters for follower status</span>
                                 </div>
                                 <div title="Mark a message as memberchat only when it is a Twitch subscription or resubscription notification">
                                     <label class="switch">
