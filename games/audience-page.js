@@ -93,6 +93,8 @@
         var batch = Array.isArray(payload) ? payload.slice(0, 100) : [payload];
         batch.forEach(function (message) {
             if (message && message.content) message = message.content;
+            // Captions are the host's own speech shown as text. They are not chat to take part with.
+            if (message && message.type === 'captions') return;
             // &membersonly: only members and subscribers (and paid messages) take part.
             if (membersOnly && message && !message.membership && !message.hasDonation && message.type !== 'demo') return;
             if (!message || typeof message.chatmessage !== 'string' || message.chatmessage.length > 2000) return;

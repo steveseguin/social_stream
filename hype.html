@@ -1141,22 +1141,7 @@ function renderAggregatedViewerSnapshot() {
         return;
     }
 
-    const normalizedViewers = {};
-    Object.keys(aggregatedViewers).forEach(function(platform) {
-        const type = getSourceImage(platform);
-        const numeric = parseInt(aggregatedViewers[platform], 10);
-        if (!normalizedViewers[type]) {
-            normalizedViewers[type] = 0;
-        }
-        if (!isNaN(numeric)) {
-            normalizedViewers[type] += numeric;
-        }
-    });
-
-    const types = sortSourceTypes(Object.keys(normalizedViewers));
-    if (!types.length) {
-        return;
-    }
+    const types = sortSourceTypes(Object.keys(aggregatedViewers));
     const visibleTypes = new Set(types);
 
     types.forEach(function(type) {
@@ -1191,27 +1176,29 @@ function renderAggregatedViewerSnapshot() {
 
         const viewerSpan = holder.querySelector("span[data-viewers][data-type='" + type + "']");
         if (viewerSpan) {
-            viewerSpan.textContent = String(normalizedViewers[type] || 0);
+            viewerSpan.textContent = String(aggregatedViewers[type]);
         }
 
         hypeEl.appendChild(holder);
     });
 
-    if (!showChatters) {
-        hypeEl.querySelectorAll(".sourceStatHolder").forEach(function(node) {
-            if (!visibleTypes.has(node.dataset.type)) {
-                node.remove();
-            }
-        });
-    }
+    hypeEl.querySelectorAll(".sourceStatHolder").forEach(function(node) {
+        if (visibleTypes.has(node.dataset.type)) return;
+        const chatters = node.querySelector("span[data-chatters]");
+        if (showChatters && chatters && Number(chatters.textContent) > 0) {
+            node.querySelector("span[data-viewers]").textContent = "0";
+        } else {
+            node.remove();
+        }
+    });
     applyViewerCountOrder(hypeEl);
-
-    parentEl.classList.remove("hidden");
+    parentEl.classList.toggle("hidden", !hypeEl.querySelector(".sourceStatHolder"));
 }
 
 function handleClearAction(clearAction) {
     if (!clearAction || !clearAction.action) return;
     if (clearAction.action === "refreshSources") {
+        aggregatedViewers = {};
         activeChatters = {};
         hasViewerCount = {};
         lastUpdated = {};
@@ -1227,6 +1214,19 @@ function handleClearAction(clearAction) {
 function processInput(data) {
     if (!SSNOverlayControl.accept(data, "hype")) return;
 
+    if (data && data.event === "viewer_updates" && data.meta && typeof data.meta === "object") {
+        if (!showViewers) return;
+        viewerCountOrder.setAppOrder(data.order);
+        aggregatedViewers = {};
+        Object.keys(data.meta).forEach(function(platform) {
+            let type = getSourceImage(platform);
+            if (combineAll) type = "global";
+            else if (combineYouTube && type === "youtubeshorts") type = "youtube";
+            aggregatedViewers[type] = (aggregatedViewers[type] || 0) + (parseInt(data.meta[platform], 10) || 0);
+        });
+        renderAggregatedViewerSnapshot();
+        return;
+    }
     if (!data || !("hype" in data)) {
         return;
     }
@@ -1345,6 +1345,14 @@ function processInput(data) {
         combinedData = normalizedCombined;
     }
     
+    // The viewer feed can know about a platform before the chatter report includes it.
+    if (showViewers) {
+        Object.keys(aggregatedViewers).forEach(function(type) {
+            if (!Object.prototype.hasOwnProperty.call(combinedData, type)) {
+                combinedData[type] = { viewers: aggregatedViewers[type], chatters: 0 };
+            }
+        });
+    }
     const sourceKeys = sortSourceTypes(Object.keys(combinedData));
     let hasContentToDisplay = false;
     const now = Date.now();
@@ -1435,58 +1443,6 @@ function processInput(data) {
             hypeContainer.appendChild(holder);
         }
     }
-    // Also reflect any aggregated viewer updates (ensures 0s still display like dock.html)
-    if (showViewers && aggregatedViewers && typeof aggregatedViewers === 'object') {
-        const aggKeys = sortSourceTypes(Object.keys(aggregatedViewers));
-        for (let i = 0; i < aggKeys.length; i++) {
-            const type = aggKeys[i];
-            // Skip if normalized base already represented by any existing holder (eg: kick-123 present)
-            if (presentTypes.has(type)) continue; // already handled via combinedData
-            if (hypeContainer.querySelector(".sourceStatHolder[data-type='" + type + "'], .sourceStatHolder[data-type^='" + type + "-']")) {
-                continue;
-            }
-
-            hasContentToDisplay = true;
-            const sourceImgName = getSourceImage(type);
-            const sourceImgSrc = "./sources/images/" + sourceImgName + ".png";
-
-            let holder = hypeContainer.querySelector(".sourceStatHolder[data-type='" + type + "']");
-            if (!holder) {
-                holder = document.createElement("div");
-                holder.className = "sourceStatHolder";
-                holder.dataset.type = type;
-
-                const img = document.createElement("img");
-                img.className = "sourceicons";
-                img.src = sourceImgSrc;
-                img.decoding = "async";
-                img.loading = "eager";
-                holder.appendChild(img);
-
-                if (showViewers) {
-                    const v = document.createElement("span");
-                    v.dataset.viewers = "true";
-                    v.dataset.type = type;
-                    holder.appendChild(v);
-                }
-                if (showChatters) {
-                    const c = document.createElement("span");
-                    c.dataset.chatters = "true";
-                    c.dataset.type = type;
-                    holder.appendChild(c);
-                }
-            }
-
-            // Update values (chatters unknown here; default 0 if present)
-            const v = holder.querySelector("span[data-viewers][data-type='" + type + "']");
-            if (v) v.textContent = String(aggregatedViewers[type] || 0);
-            const c = holder.querySelector("span[data-chatters][data-type='" + type + "']");
-            if (c && !c.textContent) c.textContent = "0";
-
-            hypeContainer.appendChild(holder);
-            presentTypes.add(type);
-        }
-    }
     // Optional cleanup: remove holders for sources not in the current payload
     hypeContainer.querySelectorAll('.sourceStatHolder').forEach(function(node){
         const t = node.dataset.type;
@@ -1567,63 +1523,6 @@ if (!useServerOnlyTransport()) {
                     return;
                 }
             
-            // Handle new viewer_updates format by caching aggregated counts (incl. zeros)
-            if (data.event === "viewer_updates" && data.meta && typeof data.meta === "object") {
-                const meta = data.meta || {};
-                const now = Date.now();
-                viewerCountOrder.setAppOrder(data.order);
-
-                // Build aggregated viewers map honoring combine flags
-                let nextAgg = {};
-                if (combineAll) {
-                    let total = 0;
-                    Object.keys(meta).forEach(k => { total += parseInt(meta[k]) || 0; });
-                    nextAgg = { global: total };
-                } else if (combineYouTube) {
-                    let yt = 0;
-                    Object.keys(meta).forEach(k => {
-                        const val = parseInt(meta[k]) || 0;
-                        if (k === 'youtube' || k === 'youtubeshorts') {
-                            yt += val;
-                        } else {
-                            nextAgg[k] = val;
-                        }
-                    });
-                    nextAgg.youtube = yt;
-                } else {
-                    Object.keys(meta).forEach(k => { nextAgg[k] = parseInt(meta[k]) || 0; });
-                }
-                aggregatedViewers = nextAgg;
-
-                // Update tracking info (kept for potential staleness logic)
-                Object.keys(aggregatedViewers).forEach(function(platform) {
-                    if (aggregatedViewers[platform] >= 0) {
-                        lastUpdated[platform] = now;
-                        hasViewerCount[platform] = aggregatedViewers[platform] > 0;
-                    }
-                });
-
-                if (showViewers) {
-                    const hypeContainer = document.getElementById("hype");
-                    if (hypeContainer) {
-                        Object.keys(aggregatedViewers).forEach(function(platform) {
-                            const holder = hypeContainer.querySelector(".sourceStatHolder[data-type='" + platform + "']");
-                            if (!holder) return;
-                            const viewerSpan = holder.querySelector("span[data-viewers][data-type='" + platform + "']");
-                            if (viewerSpan) {
-                                const value = aggregatedViewers[platform];
-                                viewerSpan.textContent = isNaN(value) ? "0" : String(value);
-                            }
-                        });
-                    }
-                }
-                renderAggregatedViewerSnapshot();
-
-                // Do not short-circuit; allow subsequent hype updates to render.
-                return;
-            }
-            
-            // Process regular hype data
             processInput(data);
         }
     }

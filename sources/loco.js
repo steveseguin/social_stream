@@ -1,4 +1,61 @@
 (function () {
+	function watchChatResponses() {
+		if (!/(^|\.)loco\.(com|gg)$/.test(location.hostname)) return;
+		if (window.__ssnLocoHistory || !window.Response) return;
+		window.__ssnLocoHistory = true;
+		var endpoint = /^https:\/\/api\.loco\.com\/chat\/v2\/streams\/([^/?]+)\/(history|chat|replaychat)\/?(?:\?|$)/;
+		var streams = new Map();
+		var injectedAt = performance.now();
+		function streamState(id) {
+			if (!streams.has(id)) {
+				streams.set(id, { history: null, live: new Set(), late: false });
+				if (streams.size > 8) streams.delete(streams.keys().next().value);
+			}
+			return streams.get(id);
+		}
+		function missedHistory(id, state) {
+			if (!window.ninjafy || state.history || state.late) return state.late;
+			// A history request can start before desktop injection and finish just
+			// before its rows render. Check the completed request at that point.
+			state.late = performance.getEntriesByType("resource").some(function (entry) {
+				if (entry.startTime > injectedAt) return false;
+				var match = endpoint.exec(entry.name);
+				return match && match[1] === id && match[2] === "history";
+			});
+			return state.late;
+		}
+		var json = Response.prototype.json;
+		Response.prototype.json = function () {
+			var result = json.apply(this, arguments);
+			var match = endpoint.exec(this.url);
+			if (!match || (match[2] !== "history" && !window.ninjafy)) return result;
+			var state = streamState(match[1]);
+			return result.then(function (data) {
+				if (!data || !Array.isArray(data.chats)) return data;
+				if (match[2] === "history") {
+					state.history = new Set();
+					data.chats.forEach(function (chat) { if (chat && chat.id) state.history.add(String(chat.id)); });
+				} else if (data.chats.length && (!state.history || state.late)) {
+					data.chats.forEach(function (chat) { if (chat && chat.id) state.live.add(String(chat.id)); });
+					while (state.live.size > 5000) state.live.delete(state.live.values().next().value);
+					if (missedHistory(match[1], state)) document.dispatchEvent(new Event("ssn-loco-live-batch"));
+				}
+				return data;
+			});
+		};
+		document.addEventListener("ssn-loco-history-check", function (event) {
+			var row = event.target, list = row.closest && row.closest(".chat-elements-list");
+			if (!list) return;
+			var stream = list.id.replace(/^chat-(?:container|popup)-/, "");
+			var id = row.getAttribute("data-chat-message-id"), state = streamState(stream);
+			if ((state.history && state.history.has(id)) || (!state.live.has(id) && missedHistory(stream, state))) event.preventDefault();
+		});
+	}
+	if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.id) {
+		watchChatResponses();
+		return;
+	}
+	if (window.ninjafy) watchChatResponses();
 	if (window.__ssnLocoCapture) return;
 	window.__ssnLocoCapture = true;
 
@@ -49,10 +106,11 @@
 			return;
 		}
 		if (seen.has(id)) return;
-		if (initial || !row.dispatchEvent(new Event("ssn-loco-history-check", { bubbles: true, cancelable: true }))) {
+		if (initial) {
 			remember(id, "history");
 			return;
 		}
+		if (!row.dispatchEvent(new Event("ssn-loco-history-check", { bubbles: true, cancelable: true }))) return;
 		var name = row.querySelector(".loco-chat-message-user-name");
 		if (!name || !name.textContent.trim()) return;
 		var body = row.querySelector(".loco-chat-message-text");
@@ -167,6 +225,9 @@
 		if (!chrome.runtime.lastError && response && response.settings) settings = response.settings;
 	});
 
+	document.addEventListener("ssn-loco-live-batch", function () {
+		if (list) list.querySelectorAll("[data-chat-message-id]").forEach(function (row) { capture(row, false); });
+	});
 	attach();
 	setInterval(attach, 500);
 

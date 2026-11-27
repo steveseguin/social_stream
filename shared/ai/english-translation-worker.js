@@ -2,6 +2,7 @@
 
 // The model remains a separate, unchanged CC BY-SA 3.0 asset.
 // Runtime and model attribution: ../../thirdparty/fasttext/NOTICE.txt.
+importScripts('../utils/hostedAssets.js');
 var classifier = null;
 var loading = null;
 
@@ -13,7 +14,7 @@ function loadLanguageClassifier() {
             var runtime = await FastTextModule({
                 locateFile: function (file) { return base + file; }
             });
-            var response = await fetch(base + 'lid.176.ftz');
+            var response = await fetch(self.SSNHostedAssetURL('lid.176.ftz', base));
             if (!response.ok) throw new Error('Language model could not be loaded.');
             runtime.FS.writeFile('/lid.176.ftz', new Uint8Array(await response.arrayBuffer()));
             classifier = new runtime.FastText();

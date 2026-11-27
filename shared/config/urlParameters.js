@@ -2910,8 +2910,8 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "aliases": [
               "style"
             ],
-            "values": "jar, meter, bar, compact, vertical, minimal, text, card, ring, lowerthird, segmented, glassjar, jar3d, beermug, coffeemug, potion, piggybank, chest, thermometer, battery, xpbar, healthbar, pixelbar, neonbar, terminal, milestones, gauge",
-            "description": "Selects the tip jar display style. bar is the fluid goal bar; compact/vertical are simple square-edged bars for corners; text is a one-line readout; card/ring/lowerthird/segmented are panel layouts; glassjar, jar3d, beermug, coffeemug, potion, piggybank, chest and thermometer are physical containers that fill as the goal rises; battery, xpbar, healthbar, pixelbar, neonbar, terminal, milestones and gauge are goal bars"
+            "values": "jar, meter, bar, compact, vertical, minimal, text, card, ring, lowerthird, segmented, counter, versus, glassjar, jar3d, beermug, coffeemug, potion, piggybank, chest, thermometer, battery, xpbar, healthbar, pixelbar, neonbar, terminal, milestones, gauge",
+            "description": "Selects the tip jar display style. bar is the fluid goal bar; compact/vertical are simple square-edged bars for corners; text is a one-line readout; card/ring/lowerthird/segmented are panel layouts; counter is a panel with a running total, no target, and the latest supporter; versus puts two sessions on one board, each with its own running count of new followers, kept by that session's host; glassjar, jar3d, beermug, coffeemug, potion, piggybank, chest and thermometer are physical containers that fill as the goal rises; battery, xpbar, healthbar, pixelbar, neonbar, terminal, milestones and gauge are goal bars"
           },
           {
             "key": "goal",
@@ -2920,7 +2920,7 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
               "goal"
             ],
             "values": "number",
-            "description": "Sets the target amount for the bar or jar"
+            "description": "Sets the target amount for the bar or jar. Not used by counter"
           },
           {
             "key": "title",
@@ -2937,8 +2937,8 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "aliases": [
               "goalmetric"
             ],
-            "values": "value, count",
-            "description": "Uses donation value by default. count adds one per qualifying donation event regardless of its monetary value and takes priority over Hype scoring"
+            "values": "value, count, followers, subscribers",
+            "description": "Uses donation value by default. count adds one per qualifying donation event regardless of its monetary value and takes priority over Hype scoring. followers adds one per new follower (Twitch/Kick follows, public YouTube subscribers via the API source). subscribers adds one per new paid sub or YouTube member and per gifted sub; renewals are left out. Both ignore donations unless donationpoints is set"
           },
           {
             "key": "countdonations",
@@ -2948,6 +2948,33 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "boolean",
             "description": "Alias for goalmetric=count"
+          },
+          {
+            "key": "followergoal",
+            "displayName": "followergoal",
+            "aliases": [
+              "followergoal"
+            ],
+            "values": "boolean",
+            "description": "Alias for goalmetric=followers"
+          },
+          {
+            "key": "subscribergoal",
+            "displayName": "subscribergoal",
+            "aliases": [
+              "subscribergoal"
+            ],
+            "values": "boolean",
+            "description": "Alias for goalmetric=subscribers"
+          },
+          {
+            "key": "countresubs",
+            "displayName": "countresubs",
+            "aliases": [
+              "countresubs"
+            ],
+            "values": "boolean",
+            "description": "With goalmetric=subscribers, also counts renewals and resubscriptions"
           },
           {
             "key": "tipjarevent",
@@ -3219,7 +3246,100 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
               "hidetitle"
             ],
             "values": "boolean",
-            "description": "Hides the goal title above the physical jar styles"
+            "description": "Hides the goal title above the physical jar styles and the caption on counter and versus"
+          },
+          {
+            "key": "hidelatest",
+            "displayName": "hidelatest",
+            "aliases": [
+              "hidelatest"
+            ],
+            "values": "boolean",
+            "description": "Hides the latest supporter's picture and name on counter and versus"
+          },
+          {
+            "key": "session2",
+            "displayName": "session2",
+            "aliases": [
+              "session2",
+              "room2"
+            ],
+            "values": "session ID",
+            "description": "With style=versus, the session counted on the second side; session is the first side"
+          },
+          {
+            "key": "password2",
+            "displayName": "password2",
+            "aliases": [
+              "password2"
+            ],
+            "values": "string",
+            "description": "Password for session2 when it is not the same as password"
+          },
+          {
+            "key": "name",
+            "displayName": "name",
+            "aliases": [
+              "name",
+              "name1"
+            ],
+            "values": "string",
+            "description": "With style=versus, the name shown on the first side (default Player 1)"
+          },
+          {
+            "key": "name2",
+            "displayName": "name2",
+            "aliases": [
+              "name2"
+            ],
+            "values": "string",
+            "description": "With style=versus, the name shown on the second side (default Player 2)"
+          },
+          {
+            "key": "avatar",
+            "displayName": "avatar",
+            "aliases": [
+              "avatar",
+              "avatar1"
+            ],
+            "values": "image URL",
+            "description": "With style=versus, a picture for the first side in place of its initial"
+          },
+          {
+            "key": "avatar2",
+            "displayName": "avatar2",
+            "aliases": [
+              "avatar2"
+            ],
+            "values": "image URL",
+            "description": "With style=versus, a picture for the second side in place of its initial"
+          },
+          {
+            "key": "accent2",
+            "displayName": "accent2",
+            "aliases": [
+              "accent2"
+            ],
+            "values": "six-digit hex color",
+            "description": "With style=versus, the second side's color; accent sets the first"
+          },
+          {
+            "key": "every",
+            "displayName": "every",
+            "aliases": [
+              "every"
+            ],
+            "values": "number",
+            "description": "With style=versus, every this many on one side lands one reward on the other side, shown as dots filling up and a tally. Without it the board only counts"
+          },
+          {
+            "key": "everyicon",
+            "displayName": "everyicon",
+            "aliases": [
+              "everyicon"
+            ],
+            "values": "star, pie, or an emoji",
+            "description": "Picture used for the every reward (default star). pie also splats on the side it lands on"
           },
           {
             "key": "hidepercent",

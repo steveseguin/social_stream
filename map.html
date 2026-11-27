@@ -2247,6 +2247,8 @@
         }
 
         function handleChatMessage(data) {
+            // Captions are the host's own speech shown as text; they never place a pin.
+            if (!data || data.type === 'captions') return;
             const voterKey = buildVoterKey(data.chatname, data.type, data.userid || data.userId || data.uid || data.username);
             const country = resolveCountry(data.chatmessage);
             if (!country) {

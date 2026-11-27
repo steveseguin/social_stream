@@ -10,6 +10,7 @@
         if (!local) return value;
         try {
             var url = new URL(value, document.baseURI);
+            if (url.href.split(/[?#]/)[0] === docsRoot + 'chat-voices.html') return value;
             if (url.href.indexOf(docsRoot) === 0 && /\.(html|md)$/.test(url.pathname)) {
                 return 'https://socialstream.ninja/docs/' + url.href.slice(docsRoot.length);
             }

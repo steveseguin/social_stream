@@ -30,6 +30,12 @@ rsync -a \
     --include='docs/css/' \
     --include='docs/js/' \
     --include='docs/images/' \
+    --include='docs/images/chat-voices/' \
+    --include='docs/images/chat-voices/*.png' \
+    --include='docs/chat-voices.html' \
+    --include='docs/css/site-shell.css' \
+    --include='docs/css/visual-guides.css' \
+    --include='docs/js/site-shell.js' \
     --include='docs/images/guides/' \
     --include='docs/images/kick-channel-points-event-flow/' \
     --include='docs/event-reference.html' \
@@ -45,6 +51,7 @@ rsync -a \
     --exclude='docs/***' \
     --exclude='lite/' \
     --exclude='/cloud/' \
+    --exclude='/media/creator-pack/' \
     --exclude='tests/' \
     --exclude='scripts/' \
     --exclude='node_modules/' \
@@ -127,6 +134,16 @@ import re
 import sys
 
 root = Path(sys.argv[1])
+# Firefox extension pages load packaged scripts from files.
+tipjar = root / 'tipjar.html'
+page = tipjar.read_text(encoding='utf-8')
+scripts = re.findall(r'<script>(.*?)</script>', page, flags=re.DOTALL)
+if len(scripts) != 1:
+    raise SystemExit('Expected one inline script in tipjar.html')
+(root / 'tipjar.js').write_bytes(scripts[0].encode('utf-8'))
+tipjar.write_bytes(page.replace('<script>' + scripts[0] + '</script>',
+                                '<script src="./tipjar.js"></script>').encode('utf-8'))
+
 # The legacy eSpeak loader evaluates a constant expression to create Module.
 # Initialize it directly in Firefox staging without relaxing extension CSP.
 worker_path = root / 'thirdparty/espeakng.worker.js'

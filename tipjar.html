@@ -6,7 +6,8 @@
     <meta charset="UTF-8">
     <meta name="description" content="Tip Jar Overlay. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
     <meta name="robots" content="noindex">
-<script src="shared/overlay-control-transport.js"></script>
+<script src="shared/overlay-control-transport.js?v=2"></script>
+<script src="./shared/versus.js"></script>
   <script type="text/javascript" src="./js/local-server-url.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -853,6 +854,111 @@
         mask-image: repeating-linear-gradient(90deg, #000 0, #000 calc(5% - 3px), transparent calc(5% - 3px), transparent 5%);
     }
     .layout-segmented .summary-fill { border-radius: 0; }
+    /* Counter: a running total with no target, plus whoever was counted last. */
+    .summary-latest { display: none; }
+    #summary-style.layout-counter { max-width: 380px; }
+    .layout-counter .summary-panel { text-align: center; padding: 22px 28px 24px; }
+    .layout-counter .summary-ring, .layout-counter .summary-goal, .layout-counter .summary-track, .layout-counter .summary-footer { display: none; }
+    .layout-counter .summary-title { font-size: 15px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; }
+    .layout-counter.hide-title .summary-title { display: none; }
+    .layout-counter.hide-title .summary-amount { margin-top: 0; }
+    .layout-counter .summary-amount { color: var(--goal-accent); font-size: 88px; font-weight: 800; line-height: 1; letter-spacing: -2px; margin: 10px 0 0; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35); transform-origin: 50% 60%; }
+    .layout-counter .summary-amount.long { font-size: 60px; letter-spacing: -1px; }
+    .layout-counter .summary-amount.bump { animation: counterBump 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3); }
+    .layout-counter .summary-latest.show { display: flex; align-items: center; justify-content: center; min-width: 0; margin-top: 16px; font-size: 17px; line-height: 1.3; }
+    .layout-counter .summary-latest.enter { animation: counterLatestIn 0.4s ease-out; }
+    .summary-latest-avatar { flex: 0 0 auto; width: 30px; height: 30px; margin-right: 10px; border-radius: 50%; object-fit: cover; background: var(--goal-track); }
+    .summary-latest-avatar.missing { display: none; }
+    .summary-latest-name { min-width: 0; font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .summary-latest-name img { height: 1.2em; width: auto; vertical-align: middle; }
+    .summary-latest-detail { flex: 0 0 auto; margin-left: 8px; color: var(--goal-muted); font-weight: 600; }
+    .summary-latest-detail:empty { display: none; }
+    @keyframes counterBump {
+        0% { transform: scale(1); }
+        35% { transform: scale(1.16); }
+        100% { transform: scale(1); }
+    }
+    @keyframes counterLatestIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    /* Versus: one side per session, counting the same thing. Every full set on one side lands a reward on the other. */
+    #versus-style { width: 100%; max-width: 640px; padding: 16px; min-width: 0; font-variant-numeric: tabular-nums; --side-a: var(--goal-accent); --side-b: #ff9d6c; }
+    body.gold #versus-style { --side-b: #8fb8ff; }
+    .versus-panel { position: relative; color: #f7f9fc; background: var(--goal-panel); border: 1px solid var(--goal-border); border-radius: 16px; padding: 18px 20px 20px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22); overflow: hidden; }
+    .versus-title { margin-bottom: 14px; text-align: center; color: var(--goal-muted); font-size: 14px; font-weight: 700; letter-spacing: 1.6px; line-height: 1.4; text-transform: uppercase; overflow-wrap: anywhere; }
+    #versus-style.hide-title .versus-title { display: none; }
+    .versus-sides { display: flex; align-items: flex-start; }
+    .versus-side { flex: 1 1 0; min-width: 0; text-align: center; --side: var(--side-a); }
+    .versus-side.side-b { --side: var(--side-b); }
+    .versus-mid { flex: 0 0 auto; align-self: center; margin: 0 6px; padding: 5px 9px; border: 1px solid var(--goal-border); border-radius: 999px; color: var(--goal-muted); font-size: 12px; font-weight: 800; letter-spacing: 1px; }
+    .versus-face { position: relative; width: 64px; height: 64px; margin: 0 auto 8px; }
+    .versus-face-img, .versus-initial { display: block; width: 100%; height: 100%; border-radius: 50%; }
+    .versus-face-img { object-fit: cover; border: 1px solid var(--goal-border); background: var(--goal-track); }
+    .versus-face-img.missing { display: none; }
+    .versus-initial { background: var(--side); color: #10151d; font-size: 30px; font-weight: 800; line-height: 64px; text-transform: uppercase; }
+    .versus-face-img:not(.missing) + .versus-initial { display: none; }
+    .versus-splat { position: absolute; left: -16%; top: -16%; width: 132%; height: 132%; opacity: 0; pointer-events: none; }
+    .versus-splat svg { display: block; width: 100%; height: 100%; }
+    .versus-side.hit .versus-face { animation: versusShake 0.5s ease-out; }
+    .versus-side.hit .versus-splat { animation: versusSplat 5s ease-out; }
+    .versus-name { font-size: 17px; font-weight: 700; line-height: 1.3; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .versus-count { margin-top: 6px; color: var(--side); font-size: 72px; font-weight: 800; line-height: 1; letter-spacing: -2px; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35); transform-origin: 50% 60%; }
+    .versus-count.long { font-size: 50px; letter-spacing: -1px; }
+    .versus-count.bump, .versus-tally.bump { animation: counterBump 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3); }
+    .versus-pips { display: flex; align-items: center; justify-content: center; height: 12px; margin-top: 12px; }
+    .versus-pip { flex: 0 0 auto; width: 12px; height: 12px; margin: 0 3px; border-radius: 50%; background: var(--goal-track); }
+    .versus-pip.on { background: var(--side); }
+    .versus-pips.burst .versus-pip { animation: versusPipBurst 0.6s ease-out; }
+    .versus-pipbar { width: 70%; height: 8px; border-radius: 4px; background: var(--goal-track); overflow: hidden; }
+    .versus-pipbar-fill { width: 0; height: 100%; background: var(--side); transition: width 0.4s ease; }
+    .versus-tally { display: inline-flex; align-items: center; margin-top: 12px; padding: 4px 14px 4px 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); font-size: 26px; font-weight: 800; line-height: 1; }
+    .versus-tally.empty { color: var(--goal-muted); }
+    .versus-tally.empty .versus-icon { opacity: 0.45; }
+    .versus-icon { flex: 0 0 auto; width: 32px; height: 32px; margin-right: 8px; color: #ffd166; font-size: 24px; line-height: 32px; text-align: center; }
+    .versus-icon svg, .versus-fly svg { display: block; width: 100%; height: 100%; }
+    #versus-style.no-reward .versus-pips, #versus-style.no-reward .versus-tally { display: none; }
+    .versus-latest { display: flex; visibility: hidden; align-items: center; justify-content: center; min-width: 0; height: 26px; margin-top: 12px; color: var(--goal-muted); font-size: 14px; line-height: 1.3; }
+    .versus-latest.show { visibility: visible; }
+    .versus-latest.enter { animation: counterLatestIn 0.4s ease-out; }
+    #versus-style.hide-latest .versus-latest { display: none; }
+    .versus-latest-avatar { flex: 0 0 auto; width: 24px; height: 24px; margin-right: 8px; border-radius: 50%; object-fit: cover; background: var(--goal-track); }
+    .versus-latest-avatar.missing { display: none; }
+    .versus-latest-name { min-width: 0; font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .versus-latest-name img { height: 1.2em; width: auto; vertical-align: middle; }
+    .versus-share { display: flex; height: 8px; margin-top: 16px; border-radius: 4px; background: var(--goal-track); overflow: hidden; }
+    .versus-share-a { flex: 0 0 auto; width: 50%; margin-right: 2px; background: var(--side-a); transition: width 0.7s ease; }
+    .versus-share-b { flex: 1 1 auto; background: var(--side-b); }
+    .versus-fly { position: absolute; left: 0; top: 0; z-index: 3; width: 46px; height: 46px; margin: -23px 0 0 -23px; color: #ffd166; font-size: 36px; line-height: 46px; text-align: center; pointer-events: none; }
+    @keyframes versusPipBurst {
+        0% { background: var(--side); transform: scale(1); }
+        40% { background: #fff; transform: scale(1.5); }
+        100% { transform: scale(1); }
+    }
+    @keyframes versusShake {
+        0% { transform: translateX(0) rotate(0deg); }
+        20% { transform: translateX(-6px) rotate(-6deg); }
+        45% { transform: translateX(5px) rotate(4deg); }
+        70% { transform: translateX(-3px) rotate(-2deg); }
+        100% { transform: translateX(0) rotate(0deg); }
+    }
+    @keyframes versusSplat {
+        0% { opacity: 0; transform: scale(0.2); }
+        4% { opacity: 1; transform: scale(1.18); }
+        9% { opacity: 1; transform: scale(1); }
+        70% { opacity: 1; transform: translateY(0) scale(1); }
+        100% { opacity: 0; transform: translateY(24%) scale(0.96); }
+    }
+    @media (max-width: 420px) {
+        .versus-panel { padding: 14px 12px 16px; }
+        .versus-face { width: 48px; height: 48px; }
+        .versus-initial { font-size: 22px; line-height: 48px; }
+        .versus-name { font-size: 14px; }
+        .versus-count { font-size: 52px; }
+        .versus-count.long { font-size: 36px; }
+        .versus-pip { width: 9px; height: 9px; margin: 0 2px; }
+        .versus-mid { margin: 0 2px; padding: 4px 6px; font-size: 10px; }
+    }
     @media (max-width: 420px) {
         body.tipjar-refresh #meter-style, body.tipjar-refresh #bar-style { padding: 12px; }
         body.tipjar-refresh .goal-meter-container { padding: 16px; }
@@ -1612,11 +1718,43 @@
                 <h2 class="summary-title" id="summary-title">Stream Goal</h2>
                 <div class="summary-amount" id="summary-amount">$0</div>
                 <div class="summary-goal" id="summary-goal">of $250 goal</div>
+                <div class="summary-latest" id="summary-latest">
+                    <img class="summary-latest-avatar" id="summary-latest-avatar" alt="">
+                    <span class="summary-latest-name" id="summary-latest-name"></span>
+                    <span class="summary-latest-detail" id="summary-latest-detail"></span>
+                </div>
             </div>
             <div class="summary-track">
                 <div class="summary-fill" id="summary-fill"></div>
             </div>
             <div class="summary-footer"><span id="summary-status">Goal progress</span><span class="summary-percent" id="summary-percent">0%</span></div>
+        </div>
+    </div>
+
+    <!-- Versus: two sessions side by side, with a reward tally for every full set -->
+    <div id="versus-style" class="style-container">
+        <div class="versus-panel" id="versus-panel" role="status" aria-label="Versus">
+            <h2 class="versus-title" id="versus-title"></h2>
+            <div class="versus-sides">
+                <div class="versus-side side-a" id="versus-side-1">
+                    <div class="versus-face" id="versus-face-1"><img class="versus-face-img missing" id="versus-face-img-1" alt=""><span class="versus-initial" id="versus-initial-1"></span><span class="versus-splat" aria-hidden="true"></span></div>
+                    <div class="versus-name" id="versus-name-1"></div>
+                    <div class="versus-count" id="versus-count-1">0</div>
+                    <div class="versus-pips" id="versus-pips-1" aria-hidden="true"></div>
+                    <div class="versus-tally empty" id="versus-tally-1"><span class="versus-icon" aria-hidden="true"></span><span id="versus-tally-num-1">0</span></div>
+                    <div class="versus-latest" id="versus-latest-1"><img class="versus-latest-avatar missing" id="versus-latest-avatar-1" alt=""><span class="versus-latest-name" id="versus-latest-name-1"></span></div>
+                </div>
+                <div class="versus-mid" aria-hidden="true">VS</div>
+                <div class="versus-side side-b" id="versus-side-2">
+                    <div class="versus-face" id="versus-face-2"><img class="versus-face-img missing" id="versus-face-img-2" alt=""><span class="versus-initial" id="versus-initial-2"></span><span class="versus-splat" aria-hidden="true"></span></div>
+                    <div class="versus-name" id="versus-name-2"></div>
+                    <div class="versus-count" id="versus-count-2">0</div>
+                    <div class="versus-pips" id="versus-pips-2" aria-hidden="true"></div>
+                    <div class="versus-tally empty" id="versus-tally-2"><span class="versus-icon" aria-hidden="true"></span><span id="versus-tally-num-2">0</span></div>
+                    <div class="versus-latest" id="versus-latest-2"><img class="versus-latest-avatar missing" id="versus-latest-avatar-2" alt=""><span class="versus-latest-name" id="versus-latest-name-2"></span></div>
+                </div>
+            </div>
+            <div class="versus-share" aria-hidden="true"><div class="versus-share-a" id="versus-share-a"></div><div class="versus-share-b"></div></div>
         </div>
     </div>
 
@@ -1669,6 +1807,19 @@
     <script>
         // URL Parameters
         const urlParams = new URLSearchParams(window.location.search);
+        const customCss = urlParams.get('cssb64') || urlParams.get('base64css') || urlParams.get('b64css') || urlParams.get('cssbase64');
+        if (customCss) {
+            try {
+                let css = atob(customCss.replace(/ /g, '+'));
+                // The popup URL-encodes the CSS before converting it to base64.
+                try { css = decodeURIComponent(css); } catch (e) {}
+                const style = document.createElement('style');
+                style.textContent = css;
+                document.head.appendChild(style);
+            } catch (e) {
+                console.warn('Invalid base64 in the Tip Jar custom CSS link.');
+            }
+        }
         const SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
         // Transport migration guard: only pages with full server parity may skip the legacy bridge.
         var TRANSPORT_CAPABILITIES = {
@@ -1709,19 +1860,29 @@
         }
         const previewMode = urlParams.has('preview');
         const refreshedAppearance = urlParams.has('refresh');
-        const summaryStyles = ['card', 'ring', 'lowerthird', 'segmented'];
+        // counter is the panel with no target: a running total and the latest supporter.
+        const summaryStyles = ['card', 'ring', 'lowerthird', 'segmented', 'counter'];
         // Physical jars share one container and one renderer; see VESSEL_PRESETS.
         const vesselStyles = ['glassjar', 'beermug', 'coffeemug', 'potion', 'piggybank', 'chest', 'thermometer', 'jar3d'];
         // Goal bars share a second container and renderer; see METER_PRESETS.
         const meterStyles = ['battery', 'xpbar', 'healthbar', 'pixelbar', 'neonbar', 'terminal', 'milestones', 'gauge'];
         const requestedStyle = urlParams.get('style') || 'jar';
-        const style = ['jar', 'meter', 'minimal', 'bar', 'banner', 'compact', 'vertical', 'text'].concat(summaryStyles).concat(vesselStyles).concat(meterStyles).indexOf(requestedStyle) !== -1 ? requestedStyle : 'jar';
+        const style = ['jar', 'meter', 'minimal', 'bar', 'banner', 'compact', 'vertical', 'text', 'versus'].concat(summaryStyles).concat(vesselStyles).concat(meterStyles).indexOf(requestedStyle) !== -1 ? requestedStyle : 'jar';
         const theme = urlParams.get('theme') || 'default'; // default, neon, gold
         const hideCurrency = urlParams.has('hidecurrency');
-        // Follower goal preset: hype-mode points where each follow/subscribe is worth 1 and paid events are off unless asked for.
-        const followerGoalPreset = urlParams.has('followergoal') || String(urlParams.get('goalmetric') || '').toLowerCase() === 'followers';
-        const requestedHypeMode = urlParams.has('hype') || urlParams.get('mode') === 'hype' || followerGoalPreset;
-        const goalMetric = followerGoalPreset ? 'value' : normalizeGoalMetric(urlParams.get('goalmetric') || (urlParams.has('countdonations') ? 'count' : 'value'));
+        // The counter style has no target, so nothing fills, completes or levels up.
+        const noGoal = style === 'counter';
+        // Versus puts two sessions on one board, each with its own running count and no target.
+        const versusMode = style === 'versus';
+        // Supporter presets: hype-mode points where each new supporter is worth 1 and paid events are off unless asked for.
+        // Followers = Twitch/Kick follows and public YouTube subscribers. Subscribers = paid subs and YouTube members.
+        const requestedGoalMetric = String(urlParams.get('goalmetric') || '').trim().toLowerCase();
+        // A versus board is a race for new followers, whatever else the link asks for.
+        const subscriberGoalPreset = !versusMode && (isSubscriberGoalMetric(requestedGoalMetric) || (urlParams.has('subscribergoal') && requestedGoalMetric !== 'followers'));
+        const followerGoalPreset = !subscriberGoalPreset && (urlParams.has('followergoal') || requestedGoalMetric === 'followers' || versusMode);
+        const supporterGoalPreset = followerGoalPreset || subscriberGoalPreset;
+        const requestedHypeMode = urlParams.has('hype') || urlParams.get('mode') === 'hype' || supporterGoalPreset;
+        const goalMetric = supporterGoalPreset ? 'value' : normalizeGoalMetric(urlParams.get('goalmetric') || (urlParams.has('countdonations') ? 'count' : 'value'));
         const countMode = goalMetric === 'count';
         const hypeMode = requestedHypeMode && !countMode;
         const eventTypeFilter = normalizeEventFilterList(urlParams.get('tipjarevent') || urlParams.get('tipjarevents') || '');
@@ -1729,30 +1890,32 @@
         const countLabel = String(urlParams.get('countlabel') || getDefaultCountLabel(eventTypeFilter)).trim() || 'donations';
         const countSingularLabel = String(urlParams.get('countsingular') || getDefaultCountSingularLabel(eventTypeFilter, countLabel)).trim() || 'donation';
         const parsedGoal = readNumberParam('goal', hypeMode ? 100 : 250, countMode ? 1 : 0.01);
-        const goal = countMode ? Math.max(1, Math.round(parsedGoal)) : parsedGoal;
+        const goal = noGoal ? 0 : (countMode ? Math.max(1, Math.round(parsedGoal)) : parsedGoal);
         const celebration = urlParams.get('celebration') || 'hearts'; // hearts, confetti, fireworks, none
-        const goalResetDaily = !previewMode && urlParams.get('goalreset') === 'daily';
-        const persistent = !previewMode && (urlParams.has('persistent') || goalResetDaily); // Keep amount between sessions
+        const goalResetDaily = !versusMode && !previewMode && urlParams.get('goalreset') === 'daily';
+        const persistent = !versusMode && !previewMode && (urlParams.has('persistent') || goalResetDaily); // Keep amount between sessions
         const sound = !previewMode && urlParams.has('sound'); // Play sound on donation
         const hasCustomTitle = urlParams.has('title');
-        let customTitle = urlParams.get('title') || (followerGoalPreset ? 'Follower Goal' : hypeMode ? 'Hype Goal' : (countMode ? getDefaultCountTitle(eventTypeFilter) : 'Stream Goal'));
+        const unitLabel = urlParams.get('unit') || (subscriberGoalPreset ? 'subscribers' : (followerGoalPreset ? 'followers' : 'pts'));
+        const unitSingularLabel = urlParams.get('unit') ? unitLabel : (subscriberGoalPreset ? 'subscriber' : (followerGoalPreset ? 'follower' : unitLabel));
+        let customTitle = urlParams.get('title') || ((noGoal || versusMode) ? getDefaultCounterTitle() : (subscriberGoalPreset ? 'Subscriber Goal' : followerGoalPreset ? 'Follower Goal' : hypeMode ? 'Hype Goal' : (countMode ? getDefaultCountTitle(eventTypeFilter) : 'Stream Goal')));
         const baseGoalTitle = customTitle;
         const goalEndDate = parseGoalEndDate(urlParams.get('goalend'));
         const goalRewards = parseGoalRewards(urlParams.get('goalrewards'));
-        const showControls = urlParams.has('controls'); // Show control panel
+        const showControls = !versusMode && urlParams.has('controls'); // The Versus controls live in the host's menu.
         const customJarUrl = urlParams.get('jarimage'); // Custom jar image URL
         const alignRight = urlParams.has('alignright');
-        const unitLabel = urlParams.get('unit') || (followerGoalPreset ? 'followers' : 'pts');
-        const subPoints = readNumberParam('subpoints', followerGoalPreset ? 0 : 2.5, 0);
+        const subPoints = readNumberParam('subpoints', subscriberGoalPreset ? 1 : (followerGoalPreset ? 0 : 2.5), 0);
         const giftPoints = readNumberParam('giftpoints', subPoints, 0);
         const donationPointRate = readNumberParam('donationpoints', 1, 0);
         const followPoints = readNumberParam('followpoints', followerGoalPreset ? 1 : 0, 0);
-        const countTips = !urlParams.has('notips') && (!followerGoalPreset || urlParams.has('donationpoints'));
+        const countTips = !urlParams.has('notips') && (!supporterGoalPreset || urlParams.has('donationpoints'));
         const countSubs = !urlParams.has('nosubs');
         const countGifts = !urlParams.has('nogifts');
-        const countResubs = !urlParams.has('noresubs');
+        // A subscriber count is about new subs, so renewals only count when asked for.
+        const countResubs = subscriberGoalPreset ? urlParams.has('countresubs') : !urlParams.has('noresubs');
         const countGiftRedemptions = urlParams.has('countgiftredemptions');
-        const resetOnComplete = hypeMode && !followerGoalPreset ? !urlParams.has('noresetoncomplete') : urlParams.has('resetoncomplete');
+        const resetOnComplete = hypeMode && !supporterGoalPreset ? !urlParams.has('noresetoncomplete') : urlParams.has('resetoncomplete');
         const carryOverGoal = urlParams.has('carryover');
         const showCompletions = hypeMode && !urlParams.has('hidecompletions');
         const completionDelayMs = readNumberParam('completiondelay', 3000, 0);
@@ -1775,8 +1938,8 @@
         const barRadius = urlParams.get('barradius'); // "0" for square edges, "12" for rounded, etc.
         const barOnly = urlParams.has('baronly');
         const parsedLevelSize = readNumberParam('levelsize', readNumberParam('increment', 0, 0.0001), 0.0001);
-        const levelSize = countMode && parsedLevelSize > 0 ? Math.max(1, Math.round(parsedLevelSize)) : parsedLevelSize;
-        const rollingGoal = urlParams.has('rollinggoal') || urlParams.has('cumulativegoal') || urlParams.has('goalladder');
+        const levelSize = noGoal ? 0 : (countMode && parsedLevelSize > 0 ? Math.max(1, Math.round(parsedLevelSize)) : parsedLevelSize);
+        const rollingGoal = !noGoal && (urlParams.has('rollinggoal') || urlParams.has('cumulativegoal') || urlParams.has('goalladder'));
         const parsedRollingGoalSize = readOptionalNumberParam(['rollinggoal', 'cumulativegoal', 'goalladder', 'goalstep', 'goalincrement'], 0.01) || goal;
         const rollingGoalSize = countMode ? Math.max(1, Math.round(parsedRollingGoalSize)) : parsedRollingGoalSize;
         const parsedStartAmount = readOptionalNumberParam(['startamount', 'initialamount', 'currentamount'], 0);
@@ -1791,6 +1954,9 @@
         const useLocalServer = urlParams.has('localserver');
         const roomID = urlParams.get('session') || urlParams.get('room') || 'tipjar';
         const password = urlParams.get('password') || false;
+        // The other side of a versus board comes from a second session.
+        const roomID2 = versusMode ? String(urlParams.get('session2') || urlParams.get('room2') || '').trim() : '';
+        const password2 = urlParams.get('password2') || password;
         
         // Apply theme
         if (theme !== 'default') {
@@ -1834,6 +2000,26 @@
             const amountSize = readOptionalNumberParam(['amountsize'], 12);
             if (amountSize !== null) document.getElementById('summary-amount').style.fontSize = Math.min(96, amountSize) + 'px';
             if (urlParams.has('hidepercent')) activeStyle.classList.add('hide-percentage');
+            if (noGoal) {
+                if (urlParams.has('hidetitle')) activeStyle.classList.add('hide-title');
+                // Nothing is filling up, so this panel is a live readout instead of a progress bar.
+                panel.setAttribute('role', 'status');
+                panel.removeAttribute('aria-valuemin');
+                panel.removeAttribute('aria-valuemax');
+                panel.removeAttribute('aria-valuenow');
+            }
+        }
+        if (versusMode) {
+            const versusOpacity = readNumberParam('panelopacity', theme === 'gold' ? 0.95 : 0.94, 0);
+            document.getElementById('versus-panel').style.backgroundColor = `rgba(${theme === 'gold' ? '30, 26, 20' : '18, 24, 34'}, ${Math.min(1, versusOpacity)})`;
+            [['accent', '--side-a'], ['accent2', '--side-b']].forEach(function(pair) {
+                const color = urlParams.get(pair[0]);
+                if (color && /^#[0-9a-f]{6}$/i.test(color)) activeStyle.style.setProperty(pair[1], color);
+            });
+            if (urlParams.has('hidetitle')) activeStyle.classList.add('hide-title');
+            if (urlParams.has('hidelatest')) activeStyle.classList.add('hide-latest');
+            // The board shows who was counted last on each side, so the pop-up line would only repeat it.
+            document.body.classList.add('no-toast');
         }
 
         // Optional corner-friendly square (or custom) edges for any bar-based style.
@@ -1900,14 +2086,25 @@
 
         // Tracking variables
         const storageSuffix = buildTipJarStorageSuffix();
-        const amountStorageKey = (hypeMode ? 'tipjar_hype_amount' : 'tipjar_amount') + storageSuffix;
-        const historyStorageKey = (hypeMode ? 'tipjar_hype_history' : 'tipjar_history') + storageSuffix;
-        const completionsStorageKey = 'tipjar_hype_completions' + storageSuffix;
+        let hypeStoragePrefix = 'tipjar_hype_';
+        if (hypeMode && !subscriberGoalPreset && !versusMode) {
+            hypeStoragePrefix = followerGoalPreset ? 'tipjar_followers_' : 'tipjar_points_';
+        }
+        const amountStorageKey = (hypeMode ? hypeStoragePrefix : 'tipjar_') + 'amount' + storageSuffix;
+        const historyStorageKey = (hypeMode ? hypeStoragePrefix : 'tipjar_') + 'history' + storageSuffix;
+        const completionsStorageKey = hypeStoragePrefix + 'completions' + storageSuffix;
         let currentAmount = getInitialAmount();
         let completionCount = persistent ? (parseInt(readStoredValue(completionsStorageKey) || '0', 10) || 0) : 0;
         let completionResetTimer = null;
         let levelRolloverTimer = null;
         let levelCompletionState = null;
+        let counterShownTotal = null;
+        const showLatestSupporter = noGoal && !urlParams.has('hidelatest');
+        // Versus leaves the single-total goal logic idle. Each side's score is kept by that channel's host, so every
+        // copy of the board agrees; this page only counts for itself while a host has not sent one.
+        const versusEvery = versusMode ? Math.floor(readNumberParam('every', 0, 1)) : 0;
+        const versusIconName = String(urlParams.get('everyicon') || 'star').trim() || 'star';
+        const versus = { names: ['', ''], host: [null, null], local: [0, 0], localStart: Date.now(), twitchFollows: [new Set(), new Set()], latest: [null, null], inFlight: [0, 0], queue: [], timer: null, generation: 0 };
         const recentTips = [];
         const maxRecentTips = 4; // .recent-tips (max-height 200px) fits four rows
         const donationHistory = persistent ? readStoredHistory() : [];
@@ -1989,7 +2186,7 @@
         }
 
         const dropItem = normalizeDropItem(urlParams.get('dropitem'));
-        const jarLabel = urlParams.has('jarlabel') ? String(urlParams.get('jarlabel')).slice(0, 12) : (followerGoalPreset ? 'FOLLOWS' : (hypeMode ? 'HYPE' : 'TIPS'));
+        const jarLabel = urlParams.has('jarlabel') ? String(urlParams.get('jarlabel')).slice(0, 12) : (subscriberGoalPreset ? 'SUBS' : (followerGoalPreset ? 'FOLLOWS' : (hypeMode ? 'HYPE' : 'TIPS')));
         const hidePercent = urlParams.has('hidepercent');
         const hideTitle = urlParams.has('hidetitle');
 
@@ -2955,6 +3152,8 @@
         }
 
         function resetTipJarAmount(showNotice) {
+            // A versus board's score belongs to the hosts and is reset from there.
+            if (versusMode) return;
             if (completionResetTimer) {
                 clearTimeout(completionResetTimer);
                 completionResetTimer = null;
@@ -2969,6 +3168,7 @@
             }
             renderAmount();
             clearJarContents();
+            clearLatestSupporter();
             if (showNotice) {
                 showNotification(hypeMode ? 'Hype goal reset.' : (countMode ? 'Donation count reset.' : 'Tip jar amount reset.'));
             }
@@ -3029,7 +3229,15 @@
 
         // Browser storage can be unavailable or full; keep the live overlay running in memory.
         function readStoredValue(key) {
-            try { return localStorage.getItem(key); } catch (e) { return null; }
+            try {
+                const saved = localStorage.getItem(key);
+                // Older Hype and follower goals shared these records. Both can resume from the old
+                // balance, then save independently without changing the other goal's starting point.
+                if (saved === null && hypeStoragePrefix !== 'tipjar_hype_' && key.startsWith(hypeStoragePrefix)) {
+                    return localStorage.getItem('tipjar_hype_' + key.slice(hypeStoragePrefix.length));
+                }
+                return saved;
+            } catch (e) { return null; }
         }
 
         function writeStoredValue(key, value) {
@@ -3079,11 +3287,25 @@
 
         function commandMatchesTipJarFilters(data) {
             const commandMetric = normalizeGoalMetric(data.goalmetric || (data.countdonations ? 'count' : ''));
-            if (data.goalmetric || data.countdonations) {
-                if ((commandMetric === 'count') !== countMode) return false;
+            if (isSubscriberGoalMetric(data.goalmetric)) {
+                if (!subscriberGoalPreset) return false;
+            } else if (normalizeFilterValue(data.goalmetric) === 'followers') {
+                if (!followerGoalPreset) return false;
+            } else if (data.goalmetric || data.countdonations) {
+                if (supporterGoalPreset || (commandMetric === 'count') !== countMode) return false;
             }
 
             const commandEvents = normalizeEventFilterList(data.tipjarevent || data.tipjarevents || '');
+            const commandType = normalizeDonationTypeFilter(data.tipjartype || data.tipjarunit || data.donationtype || '');
+            const commandSources = normalizeFilterList(data.tipjarsource || data.donationsource || data.source || '');
+            // The popup targets the configured goal, including when its filter is "All sources".
+            if (data.selectedGoal) {
+                if (!supporterGoalPreset && !countMode && data.selectedGoal.hype !== hypeMode) return false;
+                return data.selectedGoal.excludeGiftPurchase === excludeYoutubeGiftMemberships &&
+                    commandType === donationTypeFilter &&
+                    hasExactFilters(eventTypeFilter, commandEvents) &&
+                    hasExactFilters(sourceTypeFilter, commandSources);
+            }
             if (commandEvents.length) {
                 if (!eventTypeFilter.length) return false;
                 for (let i = 0; i < commandEvents.length; i++) {
@@ -3091,12 +3313,10 @@
                 }
             }
 
-            const commandType = normalizeDonationTypeFilter(data.tipjartype || data.tipjarunit || data.donationtype || '');
             if (commandType) {
                 if (!donationTypeFilter || commandType !== donationTypeFilter) return false;
             }
 
-            const commandSources = normalizeFilterList(data.tipjarsource || data.donationsource || data.source || '');
             if (commandSources.length) {
                 if (!sourceTypeFilter.length) return false;
                 for (let i = 0; i < commandSources.length; i++) {
@@ -3160,6 +3380,10 @@
         }
 
         function renderAmount() {
+            if (versusMode) {
+                renderVersus();
+                return;
+            }
             saveAmount();
             const state = getProgressState();
             const percentage = state.percentage;
@@ -3213,7 +3437,89 @@
             updateCompletionDisplay();
         }
 
+        // Bare number for things being counted (the caption names them); money keeps its currency.
+        function formatCounterValue(value) {
+            if (countMode) return formatNumber(Math.max(0, Math.ceil(Number(value) || 0)));
+            if (hypeMode) return formatNumber(value);
+            return formatGoalValue(value, true);
+        }
+
+        function renderCounter(state) {
+            const text = formatCounterValue(state.total);
+            const amount = document.getElementById('summary-amount');
+            const gained = counterShownTotal !== null && state.total > counterShownTotal;
+            counterShownTotal = state.total;
+            setElText('summary-title', customTitle);
+            amount.textContent = text;
+            amount.classList.toggle('long', text.length > 5);
+            if (gained) {
+                // Restart the pop even when gains arrive back to back.
+                amount.classList.remove('bump');
+                void amount.offsetWidth;
+                amount.classList.add('bump');
+            }
+            document.getElementById('summary-progress').setAttribute('aria-label', `${customTitle}: ${text}`);
+        }
+
+        function safeAvatarUrl(value, hostArtwork = false) {
+            const raw = String(value || '').trim();
+            if (!raw) return '';
+            if (/^data:image\/(png|jpe?g|gif|webp);base64,/i.test(raw)) return raw;
+            try {
+                const parsed = new URL(raw, window.location.href);
+                if (parsed.protocol === 'https:' || parsed.protocol === 'http:') return parsed.href;
+                if (hostArtwork && parsed.protocol === 'file:') return parsed.href;
+                if (parsed.protocol !== location.protocol || parsed.host !== location.host) return '';
+                const extension = parsed.protocol === 'chrome-extension:' || parsed.protocol === 'moz-extension:';
+                if (hostArtwork && extension) return parsed.href;
+                // Some sources send bundled platform icons as their avatar, including in local installs.
+                if (extension || parsed.protocol === 'file:') {
+                    const icons = new URL('sources/images/', location.href).href;
+                    if (parsed.href.startsWith(icons) && /^[\w-]+\.png$/i.test(parsed.href.slice(icons.length))) return parsed.href;
+                }
+                return '';
+            } catch (e) {
+                return '';
+            }
+        }
+
+        // Face and name of one supporter. Only web or packaged image addresses reach the picture.
+        function paintSupporter(image, nameEl, name, avatar) {
+            const src = safeAvatarUrl(avatar);
+            image.onerror = function() { image.classList.add('missing'); };
+            image.classList.toggle('missing', !src);
+            image.referrerPolicy = 'no-referrer';
+            if (src) image.src = src;
+            else image.removeAttribute('src');
+            // Names can carry entities or emotes, so they go through the same display filter as the recent tips list.
+            const label = String(name || 'Anonymous');
+            nameEl.innerHTML = window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(label) : fallbackEscapeHtml(label);
+        }
+
+        // The counter names whoever was counted last: face, name, and what they added when it is more than one.
+        function setLatestSupporter(name, avatar, detail) {
+            if (!showLatestSupporter) return;
+            const row = document.getElementById('summary-latest');
+            const image = document.getElementById('summary-latest-avatar');
+            if (!row || !image) return;
+            paintSupporter(image, document.getElementById('summary-latest-name'), name, avatar);
+            setElText('summary-latest-detail', detail || '');
+            row.classList.add('show');
+            row.classList.remove('enter');
+            void row.offsetWidth;
+            row.classList.add('enter');
+        }
+
+        function clearLatestSupporter() {
+            const row = document.getElementById('summary-latest');
+            if (row) row.classList.remove('show', 'enter');
+        }
+
         function renderSummary(state) {
+            if (noGoal) {
+                renderCounter(state);
+                return;
+            }
             const percentage = Math.max(0, Math.min(100, state.percentage));
             const title = state.isLevel ? `${customTitle} (Lvl ${state.level})` : customTitle;
             setElText('summary-title', title);
@@ -3455,7 +3761,7 @@
             });
         }
 
-        function hasExactEventFilters(filters, expected) {
+        function hasExactFilters(filters, expected) {
             if (filters.length !== expected.length) return false;
             for (let i = 0; i < expected.length; i++) {
                 if (filters.indexOf(expected[i]) === -1) return false;
@@ -3464,9 +3770,9 @@
         }
 
         function getDefaultCountLabel(filters) {
-            if (hasExactEventFilters(filters, ['superchat'])) return 'Super Chats';
-            if (hasExactEventFilters(filters, ['supersticker'])) return 'Super Stickers';
-            if (hasExactEventFilters(filters, ['superchat', 'supersticker'])) return 'paid messages';
+            if (hasExactFilters(filters, ['superchat'])) return 'Super Chats';
+            if (hasExactFilters(filters, ['supersticker'])) return 'Super Stickers';
+            if (hasExactFilters(filters, ['superchat', 'supersticker'])) return 'paid messages';
             return filters.length ? 'events' : 'donations';
         }
 
@@ -3477,19 +3783,38 @@
                 if (/s$/i.test(label) && !/ss$/i.test(label)) return label.slice(0, -1);
                 return label;
             }
-            if (hasExactEventFilters(filters, ['superchat'])) return 'Super Chat';
-            if (hasExactEventFilters(filters, ['supersticker'])) return 'Super Sticker';
-            if (hasExactEventFilters(filters, ['superchat', 'supersticker'])) return 'paid message';
+            if (hasExactFilters(filters, ['superchat'])) return 'Super Chat';
+            if (hasExactFilters(filters, ['supersticker'])) return 'Super Sticker';
+            if (hasExactFilters(filters, ['superchat', 'supersticker'])) return 'paid message';
             if (/ies$/i.test(label)) return label.slice(0, -3) + 'y';
             if (/s$/i.test(label) && !/ss$/i.test(label)) return label.slice(0, -1);
             return label || 'donation';
         }
 
         function getDefaultCountTitle(filters) {
-            if (hasExactEventFilters(filters, ['superchat'])) return 'Super Chat Goal';
-            if (hasExactEventFilters(filters, ['supersticker'])) return 'Super Sticker Goal';
-            if (hasExactEventFilters(filters, ['superchat', 'supersticker'])) return 'YouTube Paid Message Goal';
+            if (hasExactFilters(filters, ['superchat'])) return 'Super Chat Goal';
+            if (hasExactFilters(filters, ['supersticker'])) return 'Super Sticker Goal';
+            if (hasExactFilters(filters, ['superchat', 'supersticker'])) return 'YouTube Paid Message Goal';
             return 'Donation Count Goal';
+        }
+
+        function isSubscriberGoalMetric(value) {
+            return ['subscribers', 'subs', 'members', 'subscriptions', 'memberships'].indexOf(normalizeFilterValue(value)) !== -1;
+        }
+
+        function capitalizeWords(value) {
+            return String(value || '').replace(/(^|\s)([a-z])/g, function(match, space, letter) {
+                return space + letter.toUpperCase();
+            });
+        }
+
+        // The counter shows one caption above the number, so the caption names what is being counted.
+        function getDefaultCounterTitle() {
+            if (subscriberGoalPreset) return 'New Subscribers';
+            if (followerGoalPreset) return 'New Followers';
+            if (countMode) return capitalizeWords(countLabel);
+            if (hypeMode) return unitLabel === 'pts' ? 'Hype Points' : capitalizeWords(unitLabel);
+            return 'Total Raised';
         }
 
         function normalizeTipJarSourceValue(value) {
@@ -3512,6 +3837,9 @@
             const parts = [];
             if (countMode) {
                 parts.push('metric_count');
+            }
+            if (subscriberGoalPreset) {
+                parts.push('metric_subscribers');
             }
             if (eventTypeFilter.length) {
                 parts.push('events_' + eventTypeFilter.join('_').replace(/[^a-z0-9_-]/g, ''));
@@ -3703,7 +4031,7 @@
                 return formatCountGoalValue(value);
             }
             if (hypeMode) {
-                return `${formatNumber(value)} ${unitLabel}`;
+                return `${formatNumber(value)} ${Number(value) === 1 ? unitSingularLabel : unitLabel}`;
             }
             if (nativeUnitMode) {
                 return `${formatNumber(value)} ${nativeUnitLabel}`;
@@ -4124,15 +4452,18 @@
 
             if (eventName === 'new_follower' || eventName === 'follow' || eventName === 'followed') {
                 if (!followPoints) return null;
+                // YouTube sends a burst of new subscribers as one grouped event; count every person in it.
+                const followMeta = getMeta(data);
+                const followCount = followMeta.grouped === true ? Math.max(1, Math.floor(Number(followMeta.count) || 1)) : 1;
                 return {
                     kind: 'follow',
                     donator: name,
                     recipient: '',
                     source,
                     event: eventName,
-                    count: 1,
-                    points: followPoints,
-                    label: `+${formatGoalValue(followPoints)} follow`,
+                    count: followCount,
+                    points: followCount * followPoints,
+                    label: `+${formatGoalValue(followCount * followPoints)} ${followCount === 1 ? 'follow' : 'follows'}`,
                     raw: data.chatmessage || ''
                 };
             }
@@ -4157,7 +4488,7 @@
             return null;
         }
 
-        function isDuplicateContribution(data, contribution, requireExplicitId) {
+        function isDuplicateContribution(data, contribution, requireExplicitId, side) {
             if (!dedupeWindowMs) return false;
             const now = Date.now();
             Object.keys(processedContributions).forEach(function(key) {
@@ -4170,7 +4501,7 @@
             const webhookId = meta.webhookId || '';
             const explicitId = webhookId || data.id || meta.messageId || meta.id || meta.eventId || '';
             if (requireExplicitId && !explicitId) return false;
-			const key = explicitId
+			const baseKey = explicitId
 				? (webhookId ? `webhook:${contribution.source}:${webhookId}` : `id:${contribution.source}:${explicitId}`)
                 : [
                     'sig',
@@ -4182,6 +4513,8 @@
                     contribution.count,
                     contribution.raw
                 ].join('|').toLowerCase();
+            // The two sides of a versus board are separate sessions, so the same id can turn up on both.
+            const key = side === 2 ? 'side2|' + baseKey : baseKey;
 
             if (processedContributions[key]) return true;
             processedContributions[key] = now;
@@ -4207,6 +4540,8 @@
 
             updateAmount(contribution.points);
             addRecentTip(contribution.donator, contribution.label);
+            // A grouped follow already reads "Name +5", so it needs no extra tally.
+            setLatestSupporter(contribution.donator, contribution.avatar, contribution.kind !== 'follow' && contribution.points > 1 ? `+${formatNumber(contribution.points)}` : '');
             playDonationSound();
 
             if (isVesselStyle || isMeterStyle) {
@@ -4227,12 +4562,30 @@
                 triggerFireworks();
             }
 
-            showNotification(contribution.kind === 'follow' ? `${contribution.donator} just followed!` : `${contribution.donator} added ${formatGoalValue(contribution.points)}!`);
+            showNotification(describeHypeContribution(contribution));
+        }
+
+        // Each platform has its own word for the same thing: a free YouTube follow is a subscribe, a paid one is a membership.
+        function describeHypeContribution(contribution) {
+            const youtube = contribution.source === 'youtube';
+            if (contribution.kind === 'follow') {
+                return `${contribution.donator} just ${youtube ? 'subscribed' : 'followed'}!`;
+            }
+            if (subscriberGoalPreset && contribution.kind === 'sub') {
+                return `${contribution.donator} just ${youtube ? 'became a member' : 'subscribed'}!`;
+            }
+            if (subscriberGoalPreset && contribution.kind === 'gift') {
+                const gifts = contribution.count || 1;
+                const noun = youtube ? (gifts === 1 ? 'membership' : 'memberships') : (gifts === 1 ? 'sub' : 'subs');
+                return `${contribution.donator} gifted ${formatNumber(gifts)} ${noun}!`;
+            }
+            return `${contribution.donator} added ${formatGoalValue(contribution.points)}!`;
         }
 
         function processHypeContribution(data) {
             const contribution = buildHypeContribution(data);
             if (!contribution) return;
+            contribution.avatar = data.chatimg || '';
             if (contribution.kind === 'gift' && contribution.count === 0) return;
             if (donationTypeFilter && contribution.kind !== 'donation') return;
             if (isDuplicateContribution(data, contribution)) return;
@@ -4242,7 +4595,7 @@
                 return;
             }
 
-            if (followerGoalPreset && !contribution.points) return;
+            if (supporterGoalPreset && !contribution.points) return;
 
             recordHypeContribution(contribution);
         }
@@ -4300,6 +4653,7 @@
                 ? `+1 ${countSingularLabel} (${displayLabel})`
                 : (hypeMode ? `+${formatGoalValue(goalValue)} (${displayLabel})` : displayLabel);
             addRecentTip(donator, recentLabel);
+            setLatestSupporter(donator, contribution ? (contribution.avatar || contribution.chatimg) : '', countMode ? '' : displayLabel);
             playDonationSound();
 
             if (isVesselStyle || isMeterStyle) {
@@ -4325,8 +4679,306 @@
                 : (hypeMode ? `${donator} added ${formatGoalValue(goalValue)}!` : `${donator} tipped ${displayLabel}!`));
         }
 
-        if (!previewMode) SSNOverlayControl.connect(urlParams, roomID, "tipjar", processData);
-function processData(data) {
+        // ---- Versus: two sessions on one board ----
+        const VERSUS_ICONS = {
+            star: '<svg viewBox="0 0 48 48"><path fill="currentColor" d="M24 4l6.2 12.6 13.8 2-10 9.8 2.4 13.8L24 35.6 11.6 42.2 14 28.4 4 18.6l13.8-2z"/></svg>',
+            pie: '<svg viewBox="0 -3 48 48"><path fill="#b9c2cf" d="M3.5 27h41l-5 9.6a3 3 0 0 1-2.7 1.6H11.2a3 3 0 0 1-2.7-1.6z"/><path fill="none" stroke="#8793a3" stroke-width="1.4" stroke-linecap="round" d="M12 31.5l1.6 4M18 31.5l1 4M24 31.5v4M30 31.5l-1 4M36 31.5l-1.6 4"/><path fill="#fffaf0" d="M5 25C3 20 7 16.5 11.5 18 12 13 18.5 11.5 21.5 15 23.5 11 30 11 32 15.5 35.5 12.5 41 15 40 19.5 44 19.5 45.5 23 43 25z"/><path fill="none" stroke="#e6d8bf" stroke-width="1.3" stroke-linecap="round" d="M13 21.5c1.6-1.6 4-1.6 5.5 0M24 19c1.8-1.5 4.2-1.2 5.4.6M33.5 21.5c1.2-1 2.8-1 4 0"/><rect x="1.5" y="23.5" width="45" height="5" rx="2.5" fill="#e8b06a"/><circle cx="26.5" cy="10.5" r="3.6" fill="#e5484d"/><circle cx="25.3" cy="9.3" r="1" fill="#ff9aa0"/><path fill="none" stroke="#6b8f3a" stroke-width="1.3" stroke-linecap="round" d="M27 7.2c.4-2 1.6-3.2 3.4-3.8"/></svg>'
+        };
+        const VERSUS_SPLAT = '<svg viewBox="0 0 64 64"><path fill="#fffaf0" d="M32 7c4.5 0 5.5 6.5 9.5 7.5s8.5-4.5 11.5-.5-3 8-1.5 12 8 3.5 7.5 8.5-7.5 4-9 8 3.5 8.5-.5 11.5-8-2.5-12-1.5-5.5 8-10.5 7-3-8.5-7-10-9.5 2.5-12-2 4.5-7.5 3.5-11.5S4 28.5 6 24s9-1.5 12-4.5 1.5-9 6-11 4.5-1.5 8-1.5z"/><path fill="none" stroke="#e6d8bf" stroke-width="2" stroke-linecap="round" d="M24 31c3-4.5 9-5.5 13-2.5s4 8 1 11"/><circle cx="8" cy="51" r="3" fill="#fffaf0"/><circle cx="57" cy="11" r="2.5" fill="#fffaf0"/><circle cx="55" cy="55" r="2" fill="#fffaf0"/></svg>';
+
+        function hasVersusSecondSession() {
+            return versusMode && !!roomID2 && roomID2 !== roomID;
+        }
+
+        function processVersusSide2(data) {
+            processData(data, 2);
+        }
+
+        // star and pie are drawn here; anything else is shown as typed, which is how an emoji gets used.
+        function fillVersusIcon(el) {
+            const known = VERSUS_ICONS[versusIconName.toLowerCase()];
+            if (known) el.innerHTML = known;
+            else el.textContent = Array.from(versusIconName).slice(0, 8).join('');
+        }
+
+        function setupVersus() {
+            const names = [urlParams.get('name') || urlParams.get('name1'), urlParams.get('name2')];
+            const faces = [urlParams.get('avatar') || urlParams.get('avatar1'), urlParams.get('avatar2')];
+            const pieIcon = versusIconName.toLowerCase() === 'pie';
+            activeStyle.classList.toggle('no-reward', !versusEvery);
+            setElText('versus-title', customTitle);
+            for (let i = 0; i < 2; i++) {
+                const n = i + 1;
+                const name = String(names[i] || '').trim().slice(0, 40) || ('Player ' + n);
+                versus.names[i] = name;
+                setElText('versus-name-' + n, name);
+                setElText('versus-initial-' + n, Array.from(name)[0] || '');
+                const face = document.getElementById('versus-face-img-' + n);
+                const src = safeAvatarUrl(faces[i], true);
+                face.onerror = function() { face.classList.add('missing'); };
+                face.referrerPolicy = 'no-referrer';
+                if (src) {
+                    face.src = src;
+                    face.classList.remove('missing');
+                }
+                const side = document.getElementById('versus-side-' + n);
+                fillVersusIcon(side.querySelector('.versus-icon'));
+                if (pieIcon) side.querySelector('.versus-splat').innerHTML = VERSUS_SPLAT;
+                // Up to ten dots show the way to the next reward; a longer run becomes a thin bar.
+                const pips = document.getElementById('versus-pips-' + n);
+                if (versusEvery > 10) {
+                    pips.innerHTML = '<div class="versus-pipbar"><div class="versus-pipbar-fill"></div></div>';
+                } else {
+                    for (let p = 0; p < versusEvery; p++) {
+                        const pip = document.createElement('span');
+                        pip.className = 'versus-pip';
+                        pips.appendChild(pip);
+                    }
+                }
+            }
+        }
+
+        // A side's score: what its host says, or this page's own count while no host has sent one.
+        function versusCount(index) {
+            return versus.host[index] ? SSNVersus.total(versus.host[index], sourceTypeFilter) : versus.local[index];
+        }
+
+        // Rewards one side has earned for the other: one for every full set.
+        function versusEarned(index) {
+            return versusEvery ? Math.floor(versusCount(index) / versusEvery) : 0;
+        }
+
+        function renderVersus() {
+            for (let i = 0; i < 2; i++) {
+                const n = i + 1;
+                const text = formatNumber(versusCount(i));
+                const count = document.getElementById('versus-count-' + n);
+                count.textContent = text;
+                count.classList.toggle('long', text.length > 3);
+                if (!versusEvery) continue;
+                const filled = Math.floor(versusCount(i) % versusEvery);
+                const pips = document.getElementById('versus-pips-' + n);
+                const bar = pips.querySelector('.versus-pipbar-fill');
+                if (bar) {
+                    bar.style.width = (filled / versusEvery * 100) + '%';
+                } else {
+                    for (let p = 0; p < pips.children.length; p++) {
+                        pips.children[p].classList.toggle('on', p < filled);
+                    }
+                }
+                // A reward still in the air has not landed on this side yet.
+                const landed = Math.max(0, versusEarned(1 - i) - versus.inFlight[i]);
+                setElText('versus-tally-num-' + n, formatNumber(landed));
+                document.getElementById('versus-tally-' + n).classList.toggle('empty', landed === 0);
+            }
+            // Both colours stay visible even when one side has everything.
+            const total = versusCount(0) + versusCount(1);
+            const share = total > 0 ? Math.max(6, Math.min(94, versusCount(0) / total * 100)) : 50;
+            document.getElementById('versus-share-a').style.width = share + '%';
+            document.getElementById('versus-panel').setAttribute('aria-label',
+                `${customTitle}: ${versus.names[0]} ${formatNumber(versusCount(0))}, ${versus.names[1]} ${formatNumber(versusCount(1))}`);
+        }
+
+        function showVersusLatest(index, animate) {
+            const n = index + 1;
+            const who = versus.latest[index];
+            const row = document.getElementById('versus-latest-' + n);
+            row.classList.remove('enter');
+            if (!who) {
+                row.classList.remove('show');
+                return;
+            }
+            paintSupporter(document.getElementById('versus-latest-avatar-' + n), document.getElementById('versus-latest-name-' + n), who.name, who.avatar);
+            row.classList.add('show');
+            if (animate) {
+                void row.offsetWidth;
+                row.classList.add('enter');
+            }
+        }
+
+        // Restart the pop even when gains arrive back to back.
+        function bumpVersus(el) {
+            el.classList.remove('bump');
+            void el.offsetWidth;
+            el.classList.add('bump');
+        }
+
+        // Everything a session sends arrives here, with the side it belongs to.
+        function processVersusData(data, index) {
+            if (data.versusState) {
+                applyVersusHostState(index, data.versusState);
+                return;
+            }
+            // Once a host keeps this side's score, its updates are the only thing that moves it.
+            if (versus.host[index] || !passesTipJarSourceFilter(data)) return;
+            const people = SSNVersus.countFollowers(data, versus.localStart);
+            if (!people) return;
+            const follow = { kind: 'follow', source: SSNVersus.sourceOf(data), event: getEventName(data), donator: data.chatname || 'Anonymous', recipient: '', count: people, raw: data.chatmessage || '' };
+            const key = SSNVersus.twitchFollowKey(data);
+            if (key) {
+                if (versus.twitchFollows[index].has(key)) return;
+                versus.twitchFollows[index].add(key);
+            } else if (isDuplicateContribution(data, follow, false, index + 1)) return;
+            const earnedBefore = versusEarned(index);
+            versus.local[index] += people;
+            versus.latest[index] = { name: String(follow.donator), avatar: String(data.chatimg || '') };
+            showVersusGain(index, earnedBefore);
+        }
+
+        // The host for this side sent its score.
+        function applyVersusHostState(index, raw) {
+            const next = SSNVersus.normalizeState(raw);
+            const previous = versus.host[index];
+            if (!next || !SSNVersus.isNewer(next, previous)) return;
+            const countBefore = versusCount(index);
+            const earnedBefore = versusEarned(index);
+            versus.host[index] = next;
+            const recent = next.latestBySource || (next.latest ? [next.latest] : []);
+            versus.latest[index] = sourceTypeFilter.length
+                ? recent.find(person => sourceTypeFilter.indexOf(person.source) !== -1) || null
+                : next.latest;
+            // Only a gain in a race this page was already following is news. A first score, a new race and a
+            // corrected count are drawn as they stand.
+            if (previous && previous.start === next.start && previous.base === next.base && versusCount(index) > countBefore) {
+                showVersusGain(index, earnedBefore);
+                return;
+            }
+            clearVersusRewards();
+            renderVersus();
+            showVersusLatest(index, false);
+        }
+
+        // One side gained: the count pops, the newest follower slides in, and any reward it earned takes off.
+        function showVersusGain(index, earnedBefore) {
+            const earned = versusEarned(index) - earnedBefore;
+            // Mark rewards as in the air before drawing, so the tally only moves when each one lands.
+            if (earned > 0) queueVersusRewards(index, earned);
+            renderVersus();
+            bumpVersus(document.getElementById('versus-count-' + (index + 1)));
+            showVersusLatest(index, true);
+            playDonationSound();
+        }
+
+        function queueVersusRewards(giver, howMany) {
+            for (let i = 0; i < Math.min(howMany, 3); i++) {
+                versus.inFlight[1 - giver] += 1;
+                versus.queue.push(giver);
+            }
+            // A rush can earn many at once; three fly across and the older ones are simply added.
+            while (versus.queue.length > 3) {
+                versus.inFlight[1 - versus.queue.shift()] -= 1;
+            }
+            if (!versus.timer) launchVersusReward();
+        }
+
+        function launchVersusReward() {
+            versus.timer = null;
+            if (!versus.queue.length) return;
+            flyVersusReward(versus.queue.shift());
+            versus.timer = setTimeout(launchVersusReward, 450);
+        }
+
+        function flyVersusReward(giver) {
+            const receiver = 1 - giver;
+            const generation = versus.generation;
+            const panel = document.getElementById('versus-panel');
+            const pips = document.getElementById('versus-pips-' + (giver + 1));
+            pips.classList.remove('burst');
+            void pips.offsetWidth;
+            pips.classList.add('burst');
+            const box = panel.getBoundingClientRect();
+            const from = pips.getBoundingClientRect();
+            const to = document.getElementById('versus-face-' + (receiver + 1)).getBoundingClientRect();
+            const startX = from.left + from.width / 2 - box.left;
+            const startY = from.top + from.height / 2 - box.top;
+            const endX = to.left + to.width / 2 - box.left;
+            const endY = to.top + to.height / 2 - box.top;
+            const turn = giver === 0 ? 1 : -1;
+            const fly = document.createElement('div');
+            fly.className = 'versus-fly';
+            fillVersusIcon(fly);
+            panel.appendChild(fly);
+            let done = false;
+            const land = function() {
+                if (done) return;
+                done = true;
+                if (fly.parentNode) fly.parentNode.removeChild(fly);
+                if (generation === versus.generation) landVersusReward(receiver);
+            };
+            fly.style.transform = `translate(${endX}px, ${endY}px)`;
+            if (typeof fly.animate === 'function') {
+                fly.animate([
+                    { transform: `translate(${startX}px, ${startY}px) scale(0.3) rotate(0deg)`, opacity: 0 },
+                    { transform: `translate(${startX + (endX - startX) * 0.12}px, ${startY - 26}px) scale(0.9) rotate(${turn * 50}deg)`, opacity: 1, offset: 0.16 },
+                    { transform: `translate(${(startX + endX) / 2}px, ${Math.min(startY, endY) - 34}px) scale(1.3) rotate(${turn * 200}deg)`, opacity: 1, offset: 0.58 },
+                    { transform: `translate(${endX}px, ${endY}px) scale(1.05) rotate(${turn * 360}deg)`, opacity: 1 }
+                ], { duration: 700, easing: 'cubic-bezier(0.35, 0, 0.65, 1)' }).onfinish = land;
+            }
+            // Timers still run when the source is hidden and animations do not.
+            setTimeout(land, 780);
+        }
+
+        function landVersusReward(receiver) {
+            versus.inFlight[receiver] = Math.max(0, versus.inFlight[receiver] - 1);
+            renderVersus();
+            const side = document.getElementById('versus-side-' + (receiver + 1));
+            side.classList.remove('hit');
+            void side.offsetWidth;
+            side.classList.add('hit');
+            bumpVersus(document.getElementById('versus-tally-' + (receiver + 1)));
+            playDonationSound();
+        }
+
+        // Anything still in the air belongs to the old score.
+        function clearVersusRewards() {
+            versus.generation += 1;
+            versus.queue.length = 0;
+            versus.inFlight[0] = 0;
+            versus.inFlight[1] = 0;
+            if (versus.timer) {
+                clearTimeout(versus.timer);
+                versus.timer = null;
+            }
+            document.querySelectorAll('.versus-fly').forEach(function(el) {
+                el.parentNode.removeChild(el);
+            });
+            document.querySelectorAll('.versus-side.hit').forEach(function(el) {
+                el.classList.remove('hit');
+            });
+        }
+
+        // Server mode needs its own connection for the second session.
+        function connectVersusSocket() {
+            let attempts = 1;
+            const open = function() {
+                const socket = new WebSocket(useLocalServer ? SocialStreamLocalServer.getWebSocketUrl() : (serverURL || "wss://io.socialstream.ninja"));
+                socket.onopen = function() {
+                    attempts = 1;
+                    socket.send(JSON.stringify({ "join": roomID2, "out": 3, "in": 4 }));
+                };
+                socket.onerror = function() {
+                    socket.close();
+                };
+                socket.onclose = function() {
+                    attempts += 1;
+                    setTimeout(open, Math.min(10000, 100 * attempts));
+                };
+                socket.onmessage = function(event) {
+                    if (!event.data) return;
+                    try {
+                        const data = JSON.parse(event.data);
+                        processData(data.overlayNinja || data.content || data, 2);
+                    } catch (e) {
+                        console.error("Error parsing socket message:", e);
+                    }
+                };
+            };
+            open();
+        }
+
+        if (!previewMode) SSNOverlayControl.connect(urlParams, roomID, "tipjar", processData, { versus: versusMode });
+        if (!previewMode && hasVersusSecondSession()) SSNOverlayControl.connect(urlParams, roomID2, "tipjar", processVersusSide2, { versus: true });
+function processData(data, side) {
     if (!SSNOverlayControl.accept(data, "tipjar")) return;
             console.log(data);
             
@@ -4334,9 +4986,16 @@ function processData(data) {
                 data = data.content;
             }
 
-            if (isTipJarResetCommand(data)) {
-                resetTipJarAmount(true);
+            // A versus board takes its score from the hosts, so the Tip Jar reset and set commands are not for it.
+            if (versusMode) {
+                processVersusData(data, side === 2 ? 1 : 0);
                 return;
+            }
+
+            if (isTipJarResetCommand(data)) {
+                if (data.selectedGoal && !commandMatchesTipJarFilters(data)) return;
+                resetTipJarAmount(true);
+                return true;
             }
 
             if (isTipJarSetAmountCommand(data)) {
@@ -4346,6 +5005,7 @@ function processData(data) {
                 const amount = getTipJarCommandAmount(data);
                 if (amount !== null) {
                     setTipJarAmount(amount, true);
+                    return true;
                 }
                 return;
             }
@@ -4430,7 +5090,10 @@ function processData(data) {
             setupSocket();
         }
 
+        if (!previewMode && (serverURL || useLocalServer) && hasVersusSecondSession()) connectVersusSocket();
+
         // Initialize display
+        if (versusMode) setupVersus();
         renderAmount();
         if (urlParams.has('notoast') || style === 'banner') document.body.classList.add('no-toast');
         if (goalEndDate || goalRewards.length) document.body.classList.add(style === 'banner' ? 'banner-long-title' : 'goal-long-title');
@@ -4729,6 +5392,35 @@ function processData(data) {
             document.getElementById('leaderboard-panel').style.display = 'block';
         }
 
+        function listenToTipJarBridge(frame, side) {
+            let retry, peer;
+            function requestScore() {
+                frame.contentWindow.postMessage({ sendData: { overlayNinja: { action: "requestVersusScore" } }, type: "rpcs", UUID: peer }, "https://vdo.socialstream.ninja");
+            }
+            window.addEventListener("message", function(e) {
+                if (e.source !== frame.contentWindow || !e.data) return;
+                const message = e.data;
+                if (versusMode && message.UUID && message.value && message.value.label === "SocialStream" &&
+                    (message.action === "view-connection-info" || message.action === "push-connection-info")) {
+                    peer = message.UUID;
+                    clearInterval(retry);
+                    requestScore();
+                    // Connection info can arrive before the data channel is ready.
+                    retry = setInterval(requestScore, 5000);
+                }
+                const received = message.dataReceived;
+                if (received && typeof received === "object" && "overlayNinja" in received) {
+                    const packet = received.overlayNinja;
+                    const applied = processData(packet, side);
+                    if (applied && packet.selectedGoal && packet.ssnControl && message.UUID) {
+                        const ack = { id: packet.ssnControl.id, target: "tipjar", goalApplied: true };
+                        frame.contentWindow.postMessage({ sendData: { overlayNinja: { ssnControlAck: ack } }, type: "rpcs", UUID: message.UUID }, "https://vdo.socialstream.ninja");
+                    }
+                    if (versusMode && received.overlayNinja && received.overlayNinja.versusState && versus.host[side - 1]) clearInterval(retry);
+                }
+            });
+        }
+
         // IFRAME setup for Social Stream Ninja
         if (!previewMode && !useServerOnlyTransport()) {
             const iframe = document.createElement("iframe");
@@ -4744,17 +5436,24 @@ function processData(data) {
             iframe.id = "frame1";
             document.body.appendChild(iframe);
 
-            const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
-            const eventer = window[eventMethod];
-            const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
-            eventer(messageEvent, function (e) {
-                if (e.source != iframe.contentWindow) return;
-                if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
-                    if ("overlayNinja" in e.data.dataReceived) {
-                        processData(e.data.dataReceived.overlayNinja);
-                    }
-                }
-            });
+            listenToTipJarBridge(iframe, 1);
+        }
+
+        // The second session of a versus board gets its own hidden bridge.
+        if (!previewMode && !useServerOnlyTransport() && hasVersusSecondSession()) {
+            const iframe2 = document.createElement("iframe");
+            iframe2.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=" +
+                encodeURIComponent(password2 || "false") + "&solo&view=" + encodeURIComponent(roomID2) +
+                "&novideo&noaudio&label=tipjar&cleanoutput&room=" + encodeURIComponent(roomID2);
+            iframe2.style.width = "0px";
+            iframe2.style.height = "0px";
+            iframe2.style.position = "fixed";
+            iframe2.style.left = "-100px";
+            iframe2.style.top = "-100px";
+            iframe2.id = "frame2";
+            document.body.appendChild(iframe2);
+
+            listenToTipJarBridge(iframe2, 2);
         }
     </script>
 </body>

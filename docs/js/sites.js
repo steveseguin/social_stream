@@ -332,11 +332,11 @@ document.addEventListener('DOMContentLoaded', function() {
             type: 'standard',
             instructions: `
                 <ul>
-                    <li>Standard capture: open https://hou.la/a/live and select a live stream, or open https://hou.la/studio/live/comments for your own chat. In the desktop app, choose Hou.la, select Standard and paste that page's URL.</li>
-                    <li>For gifts, followers and viewer counts in the desktop app, choose Hou.la and select WebSocket. Add and activate the source, then enter your event key from Hou.la Studio in its window. Extension users can open https://socialstream.ninja/sources/websocket/houla.html to enter their key.</li>
+                    <li>For your own streams, choose Hou.la and select WebSocket to capture comments, gifts, follows and viewer counts. Add and activate the source, then enter your Hou.la Studio event key in its window. Extension users can enter the key at https://socialstream.ninja/sources/websocket/houla.html.</li>
+                    <li>For Standard capture, choose Hou.la, select Standard and paste https://hou.la/studio/live/comments for your own chat while signed in. For someone else's chat, choose a stream at https://hou.la/a/live and paste that stream's URL.</li>
                 </ul>
             `,
-            notes: 'Use one capture mode per live to avoid duplicate chat. Event keys start with hle_; do not use your stream key.'
+            notes: 'Use one capture mode per live to avoid duplicate chat. Enter your hle_ event key here and keep your stream key for broadcasting. You can reuse the event key across streams. If you regenerate or revoke it, replace the saved key.'
         },
         {
             name: 'Kick.com',

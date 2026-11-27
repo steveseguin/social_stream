@@ -47,6 +47,18 @@ const FLOW_TEMPLATES = {
         connections: [{"from": "trigger", "to": "media"}, {"from": "trigger", "to": "sound"}, {"from": "sound", "to": "delay"}, {"from": "delay", "to": "filter-on"}, {"from": "filter-on", "to": "hold"}, {"from": "hold", "to": "filter-off"}]
     },
     // === SIMPLE TEMPLATES ===
+    'chat-voices': {
+        name: 'Chat voices by person or role',
+        description: 'Read chat aloud in Flow Actions. Select Speak Text to choose who gets read and which voice they use.',
+        active: false,
+        nodes: [
+            { id: 'chat', type: 'trigger', triggerType: 'anyMessage', x: 100, y: 50, config: {} },
+            { id: 'voices', type: 'action', actionType: 'ttsSpeak', x: 100, y: 230, config: {
+                useMessageText: true, chatVoiceRules: [{ role: 'vip', voice: '' }, { role: 'member', voice: '' }]
+            } }
+        ],
+        connections: [{ from: 'chat', to: 'voices' }]
+    },
     'chat-relay': {
         name: 'Chat Relay to Discord',
         description: 'Forward chat messages to a Discord webhook',
@@ -824,6 +836,7 @@ class EventFlowEditor {
                                 <option value="song-request">Song Request (!sr)</option>
                                 <option value="channel-points">Channel Points Sound</option>
                                 <option value="tts-chat">TTS for Chat</option>
+                                <option value="chat-voices">Chat voices by person or role</option>
                                 <option value="donation-alert">Donation Alert</option>
                                 <option value="skip-song">Skip Song Command (Mods)</option>
                             </optgroup>
@@ -1198,6 +1211,12 @@ class EventFlowEditor {
             },
             'ai-event-overlay': {
                 url: 'https://socialstream.ninja/beta/docs/index.html?file=ai-event-overlay.md'
+            },
+            'chat-voices': {
+                extensionPath: 'docs/chat-voices.html',
+                rootPath: 'docs/chat-voices.html',
+                actionsPath: '../docs/chat-voices.html',
+                hash: '#voices'
             },
             'event-reference-cross-platform': {
                 extensionPath: 'docs/event-reference.html',
@@ -2460,6 +2479,7 @@ class EventFlowEditor {
                 }
                 // TTS actions
                 case 'ttsSpeak': {
+                    if (Array.isArray(node.config.chatVoiceRules)) return 'Chat voices by person or role';
                     if (node.config.useMessageText) return 'Speak: (chat message)';
                     const text = node.config.text || '';
                     if (!text) return 'Speak: Not configured';
@@ -6283,6 +6303,10 @@ class EventFlowEditor {
 
 			// TTS Actions
 			case 'ttsSpeak':
+				if (Array.isArray(node.config.chatVoiceRules)) {
+					html += this.renderChatVoiceRules(node.config.chatVoiceRules, node.config.requireChatVoiceRole);
+					break;
+				}
 				html += `
 					<div class="property-group">
 						<label class="property-label">Text to Speak</label>
@@ -6654,9 +6678,75 @@ class EventFlowEditor {
         }
     }
 
+    renderChatVoiceRules(rules, requireRole) {
+        const roles = { person: 'People by name', vip: 'VIPs', member: 'Members', follower: 'Confirmed followers' };
+        const guide = this.escapeHtml(this.resolveGuideTarget('chat-voices'));
+        let html = `<div class="property-group">
+            <label class="property-label" title="Everyone, including people listed by name, must have one of the roles listed below. Add at least one role to hear any messages.">
+                <input type="checkbox" class="property-input" id="prop-requireChatVoiceRole" ${requireRole === true ? 'checked' : ''}>
+                Require a listed role
+            </label>
+        </div>
+        <p class="property-help">A person's voice takes priority, then the first matching role. Leave a voice blank to use the Flow Actions voice. <a href="${guide}" target="_blank" rel="noopener">Voice setup guide</a></p>`;
+        rules.forEach((rule, index) => {
+            if (!rule) return;
+            const options = Object.keys(roles).map(key =>
+                '<option value="' + key + '"' + (rule.role === key ? ' selected' : '') + '>' + roles[key] + '</option>').join('');
+            html += `<fieldset class="property-group" data-chat-voice-row="${index}">
+                <legend>Voice ${index + 1}</legend>
+                <label class="property-label">Read messages from
+                    <select class="property-input" data-voice-field="role" data-node-meta="true">${options}</select>
+                </label>`;
+            if (rule.role === 'person') {
+                html += `<label class="property-label">Account names or IDs
+                    <input class="property-input" data-voice-field="account" data-node-meta="true" value="${this.escapeHtml(rule.account || '')}" placeholder="alex:twitch, pat:kick">
+                </label>`;
+            }
+            html += `<label class="property-label">Voice name or ID
+                    <input class="property-input" data-voice-field="voice" data-node-meta="true" value="${this.escapeHtml(rule.voice || '')}" placeholder="Flow Actions default">
+                </label>
+                <button type="button" class="btn btn-small" data-remove-voice>Remove</button>
+            </fieldset>`;
+        });
+        return html + '<button type="button" class="btn" id="add-chat-voice">Add person or group</button>';
+    }
+
     addPropertiesEventListeners(nodeId) {
         const nodeData = this.currentFlow.nodes.find(n => n.id === nodeId);
         if (!nodeData) return;
+
+        const addVoice = document.getElementById('add-chat-voice');
+        if (addVoice && Array.isArray(nodeData.config.chatVoiceRules)) {
+            const rules = nodeData.config.chatVoiceRules;
+            const refresh = () => {
+                this.markUnsavedChanges(true);
+                this.showNodeProperties(nodeData);
+            };
+            addVoice.addEventListener('click', () => {
+                rules.push({ role: 'person', account: '', voice: '' });
+                refresh();
+                document.querySelector('#node-properties-content [data-chat-voice-row="' + (rules.length - 1) + '"] [data-voice-field="account"]').focus();
+            });
+            document.querySelectorAll('#node-properties-content [data-chat-voice-row]').forEach(row => {
+                const index = Number(row.dataset.chatVoiceRow);
+                row.querySelector('[data-remove-voice]').addEventListener('click', () => {
+                    rules.splice(index, 1);
+                    refresh();
+                });
+                row.querySelectorAll('[data-voice-field]').forEach(input => {
+                    const field = input.dataset.voiceField;
+                    input.addEventListener(field === 'role' ? 'change' : 'input', () => {
+                        rules[index][field] = input.value;
+                        if (field === 'role') {
+                            refresh();
+                            document.querySelector('#node-properties-content [data-chat-voice-row="' + index + '"] [data-voice-field="role"]').focus();
+                        } else {
+                            this.markUnsavedChanges(true);
+                        }
+                    });
+                });
+            });
+        }
 
         const openCustomCodeEditorButton = document.getElementById('open-custom-code-editor-btn');
         if (openCustomCodeEditorButton) {

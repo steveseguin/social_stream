@@ -75,6 +75,8 @@ function applyPopupTranslationLanguageImmediately(lang) {
 			}
 			applyPopupTextDirection(normalized);
 			miniTranslate(document.body);
+			refreshCaptionLanguageLabels();
+			refreshCaptionsStatus();
 			renderHandleStatus();
 		})
 		.catch(function(error) {
@@ -244,7 +246,7 @@ function mergeHandleStatusFromBackground(statusMap = {}) {
 	}
 }
 
-function getHandleStatusTranslation(key, fallback, values = {}) {
+function formatPopupTranslation(key, fallback, values = {}) {
 	return String(getTranslation(key, fallback)).replace(/\{(\w+)\}/g, function(match, name) {
 		return Object.prototype.hasOwnProperty.call(values, name) ? values[name] : match;
 	});
@@ -252,23 +254,23 @@ function getHandleStatusTranslation(key, fallback, values = {}) {
 
 function getHandleStatusLabel(key, entry) {
 	const label = HANDLE_STATUS_LABELS[key] || ["file-status-selected-file", "Selected file"];
-	const fallback = getHandleStatusTranslation(label[0], label[1]);
+	const fallback = formatPopupTranslation(label[0], label[1]);
 	const fileName = entry.name || fallback;
 	switch (entry.status) {
 		case HANDLE_STATUS_STATES.ACTIVE:
-			return getHandleStatusTranslation("file-status-active", "Active: {file}", { file: fileName });
+			return formatPopupTranslation("file-status-active", "Active: {file}", { file: fileName });
 		case HANDLE_STATUS_STATES.READY:
-			return getHandleStatusTranslation("file-status-ready", "Ready: {file}", { file: fileName });
+			return formatPopupTranslation("file-status-ready", "Ready: {file}", { file: fileName });
 		case HANDLE_STATUS_STATES.NEEDS_PERMISSION:
 			return entry.name
-				? getHandleStatusTranslation("file-status-needs-permission-file", "Needs permission: {file}", { file: entry.name })
-				: getHandleStatusTranslation("file-status-needs-permission", "Needs permission");
+				? formatPopupTranslation("file-status-needs-permission-file", "Needs permission: {file}", { file: entry.name })
+				: formatPopupTranslation("file-status-needs-permission", "Needs permission");
 		case HANDLE_STATUS_STATES.ERROR:
 			return entry.name
-				? getHandleStatusTranslation("file-status-error-file", "Error: {file}", { file: entry.name })
-				: getHandleStatusTranslation("file-status-file-error", "File error");
+				? formatPopupTranslation("file-status-error-file", "Error: {file}", { file: entry.name })
+				: formatPopupTranslation("file-status-file-error", "File error");
 		default:
-			return getHandleStatusTranslation("file-status-none", "No file selected");
+			return formatPopupTranslation("file-status-none", "No file selected");
 	}
 }
 
@@ -278,10 +280,10 @@ function getHandleStatusDetail(key, entry) {
 	}
 	if (entry.status === HANDLE_STATUS_STATES.MISSING) {
 		const help = HANDLE_STATUS_HELP[key];
-		return help ? getHandleStatusTranslation(help[0], help[1]) : "";
+		return help ? formatPopupTranslation(help[0], help[1]) : "";
 	}
 	if (!entry.persisted && (entry.status === HANDLE_STATUS_STATES.ACTIVE || entry.status === HANDLE_STATUS_STATES.READY)) {
-		return getHandleStatusTranslation("file-status-reselect-after-reload", "Needs to be selected again after reloading.");
+		return formatPopupTranslation("file-status-reselect-after-reload", "Needs to be selected again after reloading.");
 	}
 	return "";
 }
@@ -780,13 +782,11 @@ if (typeof(chrome.runtime)=='undefined'){
 	// Add chrome.tabs API for Electron
 	chrome.tabs = {
 		create: function(options) {
-			// In Electron, open in default browser or new window
 			if (options && options.url) {
-				if (typeof require !== "undefined" && window.shell) {
-					// Use Electron's shell to open external links
+				if (typeof require !== "undefined" && window.shell && !/^file:/i.test(options.url)) {
 					window.shell.openExternal(options.url);
 				} else {
-					// Fallback to window.open
+					// Open local pages in SSApp so the OS file association is never used.
 					window.open(options.url, '_blank');
 				}
 			}
@@ -1282,7 +1282,7 @@ function showImportedLinkStatus(targetId, loadedControlCount) {
 	status.classList.add("visible");
 }
 
-function openEditGeneratedLinkDialog(targetId) {
+function openEditGeneratedLinkDialog(targetId, forGoalCommand = false) {
 	var config = getEditableGeneratedLinkConfig(targetId);
 	if (!config) return;
 	var previousFocus = document.activeElement;
@@ -1301,6 +1301,7 @@ function openEditGeneratedLinkDialog(targetId) {
 	var note = document.createElement("span");
 	note.className = "edit-link-dialog-note";
 	note.textContent = "Paste the old " + config.path + " link. This replaces only the " + config.label + " link controls. Other overlays and your global stream ID stay unchanged; links already in OBS are not changed.";
+	if (forGoalCommand) note.textContent = "Loading this link replaces the current Tip Jar settings in this popup.";
 
 	var input = document.createElement("input");
 	input.type = "text";
@@ -1339,8 +1340,18 @@ function openEditGeneratedLinkDialog(targetId) {
 	loadButton.onclick = function() {
 		try {
 			var parsedUrl = normalizeEditableGeneratedLink(input.value, targetId);
+			if (forGoalCommand && (parsedUrl.searchParams.get("session") || parsedUrl.searchParams.get("room")) !== lastResponse?.streamID) {
+				throw new Error("That goal belongs to a different session. Load a goal from this session.");
+			}
 			var loadedControlCount = applyImportedGeneratedLink(targetId, parsedUrl);
 			closeDialog();
+			if (forGoalCommand) {
+				const feedback = document.getElementById("tipjar-command-feedback");
+				feedback.querySelector('[role="status"]').textContent = "Goal settings loaded. Choose Set or Reset.";
+				feedback.querySelector("button").hidden = true;
+				document.querySelector('[data-action="' + feedback.pendingCommand.cmd + '"]').focus();
+				return;
+			}
 			showImportedLinkStatus(targetId, loadedControlCount);
 			showPopupToast("success", config.label + " link loaded", "Customize it below, then copy the updated link.");
 		} catch (error) {
@@ -2029,6 +2040,7 @@ function updateSourceTypeList(type) {
         const remove = document.createElement('button');
         remove.className = 'remove-source';
         remove.dataset.sourceType = source;
+        remove.setAttribute("aria-label", formatPopupTranslation("captions-remove", "Remove {name}", { name: source }));
         remove.textContent = '×';
         row.appendChild(label);
         row.appendChild(remove);
@@ -2461,8 +2473,8 @@ function setupSourceSelection(inputId, isSettingBased = false) {
     updateSourceTypeList(inputId);
 }
 
-function setupViewerCountSourceTags() {
-    const inputId = 'hideViewerCountSources';
+// A list of sources picked from a dropdown and shown as icon tags. Used by every input named in sourceSelectTagInputs.
+function setupSourceSelectTags(inputId) {
     const input = document.getElementById(inputId);
     if (!input) return;
 
@@ -2479,7 +2491,7 @@ function setupViewerCountSourceTags() {
     addContainer.className = 'add-source-container';
     addContainer.innerHTML = `
         <select id="new${inputId}Type">
-            <option value="" selected>Select source</option>
+            <option value="" selected data-translate="captions-source">Select source</option>
         </select>
         <button id="add${inputId}">Add</button>
     `;
@@ -2489,6 +2501,8 @@ function setupViewerCountSourceTags() {
     container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
 
     const select = document.getElementById(`new${inputId}Type`);
+    miniTranslate(addContainer);
+    if (inputId === "captionstargets") container.querySelector("label").htmlFor = select.id;
     setupLazySourceSelect(select);
     ensureLazySourcesLoaded(function() {
         appendSourceOptions(select);
@@ -2509,6 +2523,274 @@ function setupViewerCountSourceTags() {
     });
 
     updateSourceTypeList(inputId);
+}
+
+// Captions: says where captions are going right now, and next to the room field whether SSN is
+// connected to the Caption.Ninja room.
+function refreshCaptionsStatus() {
+    const status = document.getElementById('captionsStatus');
+    const toggle = document.querySelector('input[data-setting="captionninja"]');
+    const where = document.getElementById('captionsTargetsStatus');
+    if (!status || !toggle) return;
+    if (!toggle.checked) {
+        status.textContent = '';
+    }
+    try {
+        chrome.runtime.sendMessage({ cmd: 'getCaptionStatus' }, function(response) {
+            chrome.runtime.lastError;
+            const targets = response && response.targets;
+            renderCaptionLanguageTags(targets && targets.languages);
+            const choice = document.getElementById('captionsChoice');
+            if (choice) {
+                choice.hidden = !(targets && targets.on && targets.choose);
+            }
+            if (where && targets) {
+                if (!targets.on) {
+                    where.textContent = getTranslation("captions-enable", "Switch on Social Stream Ninja");
+                } else if (targets.choose) {
+                    // Posting is public, so it waits for the host to say so once.
+                    where.textContent = "⚠️ " + getTranslation("captions-choose", "Choose where your captions go");
+                } else if (targets.dockOnly) {
+                    const dockLanguage = targets.languages && targets.languages.dock;
+                    where.textContent = '🖥️ ' + getTranslation("captions-dock-status", "Sending captions to your dock") + (dockLanguage ? ' (' + captionLanguageName(dockLanguage.to) + ')' : '') + captionLanguageNotes(targets.languages || {});
+                } else if (document.querySelector('input[data-setting="disablehost"]:checked')) {
+                    where.textContent = "⚠️ " + getTranslation("captions-disabled", "Host functions are disabled in Settings");
+                } else if (targets.chats && targets.chats.length) {
+                    const languages = targets.languages || {};
+                    const chats = targets.chats.map(function(chat) {
+                        return languages[chat] ? chat + ' (' + captionLanguageName(languages[chat].to) + ')' : chat;
+                    }).join(', ');
+                    where.textContent = '✅ ' + formatPopupTranslation("captions-posting", "Posting to {chats}", { chats }) + (targets.failed > 0 ? ' · ' + formatPopupTranslation("captions-failed", "Not sent: {n}", { n: targets.failed }) : '') + captionLanguageNotes(languages);
+                } else {
+                    where.textContent = getTranslation("captions-no-chats", "No chat connected for posting");
+                }
+            }
+            // Which captions overlays are open now, so the host can tell their OBS source connected.
+            const overlayStatus = document.getElementById('captionsOverlayStatus');
+            if (overlayStatus && targets) {
+                const open = Array.isArray(targets.overlays) ? targets.overlays : [];
+                if (!targets.on) {
+                    overlayStatus.textContent = getTranslation("captions-enable", "Switch on Social Stream Ninja");
+                } else if (!Array.isArray(targets.overlays)) {
+                    overlayStatus.textContent = getTranslation("captions-update", "Update or reload SSN to use the overlay");
+                } else if (!open.length) {
+                    overlayStatus.textContent = getTranslation("captions-no-overlay", "No overlay connected");
+                } else {
+                    const waiting = {};
+                    open.forEach(function(entry) { if (entry.to) waiting[entry.to] = entry; });
+                    const names = open.map(function(entry) {
+                        return entry.to ? captionLanguageName(entry.to) : getTranslation("captions-as-spoken", "As spoken");
+                    }).join(', ');
+                    overlayStatus.textContent = '✅ ' + formatPopupTranslation("captions-open", "Open now: {names}", { names }) + (targets.choose ? ' · ⚠️ ' + getTranslation("captions-choose", "Choose where your captions go") : captionLanguageNotes(waiting));
+                }
+            }
+            const captions = response && response.captions;
+            if (!captions || !toggle.checked) return;
+            if (captions.state === 'connected') {
+                const fromRoom = typeof captions.roomReceived === 'number' ? captions.roomReceived : captions.received;
+                status.textContent = '✅ ' + getTranslation("captions-connected", "Connected") + (fromRoom ? ' · ' + formatPopupTranslation("captions-received", "Received: {n}", { n: fromRoom }) : '');
+            } else if (captions.state === 'connecting') {
+                status.textContent = "⏳ " + getTranslation("captions-connecting", "Connecting…");
+            } else if (captions.state === 'noroom') {
+                status.textContent = getTranslation("captions-enter-room", "Enter your room name");
+            } else if (captions.state === 'problem') {
+                status.textContent = '⚠️ ' + (captions.problem === "Private relay rooms are not supported."
+                    ? getTranslation("captions-private-room", "Private relay rooms cannot connect here. Use a public room.")
+                    : getTranslation("captions-invalid-room", "Enter a public Caption.Ninja room name or room link"));
+            } else {
+                status.textContent = getTranslation("captions-enable", "Switch on Social Stream Ninja");
+            }
+        });
+    } catch (e) {
+        console.warn('Unable to look up the captions status:', e);
+    }
+}
+
+// Captions: a language for one destination, shown as tags such as "youtube → Spanish". The tags
+// are kept in a hidden text setting as "youtube:es, dock:fr".
+function captionLanguageName(code) {
+    try {
+        return new Intl.DisplayNames([document.documentElement.lang || 'en'], { type: 'language' }).of(code) || code;
+    } catch (e) {
+        return code;
+    }
+}
+
+// What is not ready, for the status line: "Preparing Spanish · 2 captions skipped".
+function captionLanguageNotes(languages) {
+    const notes = [];
+    const seen = {};
+    Object.keys(languages || {}).forEach(function(where) {
+        const entry = languages[where];
+        if (!entry || entry.state === 'ready' || seen[entry.to]) return;
+        seen[entry.to] = true;
+        const name = captionLanguageName(entry.to);
+        let note = entry.state === 'preparing' ? formatPopupTranslation("captions-preparing", "Preparing {language}", { language: name }) : entry.state === 'unsupported' ? formatPopupTranslation("captions-unavailable", "Unavailable: {language}", { language: name }) : formatPopupTranslation("captions-retrying", "Retrying {language}", { language: name });
+        if (entry.skipped > 0) note += ' · ' + formatPopupTranslation("captions-skipped", "Skipped: {n}", { n: entry.skipped });
+        notes.push(note);
+    });
+    return notes.length ? ' · ⏳ ' + notes.join('. ') : '';
+}
+
+function readCaptionLanguageTags() {
+    const input = document.getElementById('captionslanguages');
+    const tags = [];
+    String(input ? input.value : '').split(',').forEach(function(entry) {
+        const parts = entry.split(':');
+        const where = String(parts[0] || '').trim().toLowerCase();
+        const to = String(parts[1] || '').trim().toLowerCase();
+        if (where && /^[a-z]{2,3}$/.test(to) && !tags.some(function(tag) { return tag.where === where; })) tags.push({ where: where, to: to });
+    });
+    return tags;
+}
+
+function writeCaptionLanguageTags(tags) {
+    const input = document.getElementById('captionslanguages');
+    if (!input) return;
+    input.value = tags.map(function(tag) { return tag.where + ':' + tag.to; }).join(', ');
+    updateSettings(input);
+    renderCaptionLanguageTags();
+}
+
+let captionLanguageTagsShown = null;
+function renderCaptionLanguageTags(states) {
+    const input = document.getElementById('captionslanguages');
+    const list = document.getElementById('captionslanguagesList');
+    if (!input || !list) return;
+    const key = document.documentElement.lang + '|' + input.value + '|' + JSON.stringify(states || {});
+    if (key === captionLanguageTagsShown) return;
+    captionLanguageTagsShown = key;
+    list.textContent = '';
+    readCaptionLanguageTags().forEach(function(tag) {
+        const row = document.createElement('div');
+        row.className = 'username-tag';
+        const label = document.createElement('span');
+        const state = states && states[tag.where] ? states[tag.where].state : '';
+        const place = tag.where === 'dock' ? getTranslation("captions-ssn-dock", "SSN dock") : tag.where;
+        const language = captionLanguageName(tag.to);
+        let description = language;
+        if (state === 'preparing') description = formatPopupTranslation("captions-preparing", "Preparing {language}", { language });
+        if (state === 'unsupported') description = formatPopupTranslation("captions-unavailable", "Unavailable: {language}", { language });
+        if (state === 'failed') description = formatPopupTranslation("captions-retrying", "Retrying {language}", { language });
+        label.textContent = place + ' → ' + description;
+        if (tag.where !== 'dock') {
+            const sourceType = document.createElement('span');
+            sourceType.className = 'source-type';
+            const icon = document.createElement('img');
+            icon.className = 'icon';
+            icon.alt = '';
+            icon.src = './sources/images/' + tag.where + '.png';
+            sourceType.appendChild(icon);
+            label.appendChild(sourceType);
+        }
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'remove-source';
+        remove.dataset.captionLanguage = tag.where;
+        remove.setAttribute('aria-label', formatPopupTranslation("captions-remove", "Remove {name}", { name: place }));
+        remove.textContent = '×';
+        row.appendChild(label);
+        row.appendChild(remove);
+        list.appendChild(row);
+    });
+}
+
+function setupCaptionLanguageTags() {
+    const where = document.getElementById('captionsLanguageWhere');
+    const to = document.getElementById('captionsLanguageTo');
+    const add = document.getElementById('captionsLanguageAdd');
+    const list = document.getElementById('captionslanguagesList');
+    if (!where || !to || !add || !list) return;
+    setupLazySourceSelect(where);
+    ensureLazySourcesLoaded(function() {
+        appendSourceOptions(where);
+    });
+    // The languages the captions page can listen in, as plain language codes. The overlay's
+    // language picker offers the same ones.
+    const seen = {};
+    const overlayLanguage = document.getElementById('captionsOverlayLanguage');
+    (window.SSN_CAPTION_LANGUAGES || []).forEach(function(entry) {
+        let code = String(entry[0] || '').toLowerCase().split('-')[0];
+        if (code === 'cmn' || code === 'yue') code = 'zh';
+        if (!code || seen[code]) return;
+        seen[code] = true;
+        [to, overlayLanguage].forEach(function(select) {
+            if (!select) return;
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = captionLanguageName(code);
+            select.appendChild(option);
+        });
+    });
+    add.addEventListener('click', function() {
+        const chat = where.value.trim().toLowerCase();
+        if (!chat || !to.value) return;
+        const tags = readCaptionLanguageTags().filter(function(tag) { return tag.where !== chat; });
+        tags.push({ where: chat, to: to.value });
+        writeCaptionLanguageTags(tags);
+        where.value = '';
+        to.value = '';
+    });
+    list.addEventListener('click', function(event) {
+        const chat = event.target && event.target.dataset ? event.target.dataset.captionLanguage : '';
+        if (!chat) return;
+        writeCaptionLanguageTags(readCaptionLanguageTags().filter(function(tag) { return tag.where !== chat; }));
+    });
+    renderCaptionLanguageTags();
+}
+
+// Captions: fills the page-language picker from the list the captions page itself uses.
+function setupCaptionsLanguages() {
+    const select = document.getElementById('captionsLanguage');
+    if (!select || !Array.isArray(window.SSN_CAPTION_LANGUAGES)) return;
+    const chosen = select.value;
+    window.SSN_CAPTION_LANGUAGES.forEach(function(entry) {
+        if (Array.prototype.some.call(select.options, function(option) { return option.value === entry[0]; })) return;
+        const option = document.createElement('option');
+        option.value = entry[0];
+        option.textContent = captionLanguageName(entry[0]);
+        select.appendChild(option);
+    });
+    select.value = chosen;
+}
+
+function refreshCaptionLanguageLabels() {
+    if (document.body.classList.contains('hidelinks')) {
+        ['captions', 'captionsoverlay'].forEach(function(id) {
+            const link = document.getElementById(id + 'link');
+            if (link) link.textContent = hiddenLinkText(id);
+        });
+    }
+    ['captionsLanguage', 'captionsLanguageTo', 'captionsOverlayLanguage'].forEach(function(id) {
+        const select = document.getElementById(id);
+        if (!select) return;
+        Array.from(select.options).forEach(function(option) {
+            if (option.value) option.textContent = captionLanguageName(option.value);
+        });
+    });
+}
+
+function setupCaptionsStatus() {
+    if (!document.getElementById('captionsStatus')) return;
+    const choosePost = document.getElementById('captionsChoosePost');
+    if (choosePost) {
+        choosePost.addEventListener('click', function() {
+            chrome.runtime.sendMessage({ cmd: 'saveSetting', type: 'setting', setting: 'captionsposting', value: true }, function() {
+                chrome.runtime.lastError;
+                refreshCaptionsStatus();
+            });
+        });
+    }
+    const chooseDock = document.getElementById('captionsChooseDock');
+    if (chooseDock) {
+        chooseDock.addEventListener('click', function() {
+            const dockOnly = document.querySelector('input[data-setting="captionsdockonly"]');
+            if (dockOnly && !dockOnly.checked) dockOnly.click();
+            setTimeout(refreshCaptionsStatus, 300);
+        });
+    }
+    refreshCaptionsStatus();
+    setInterval(refreshCaptionsStatus, 2000);
 }
 
 // Viewer count order: one shared setting, edited by dragging platform chips into place.
@@ -2669,7 +2951,7 @@ function setupViewerCountOrder() {
         });
 
         // The chip follows the pointer through the row as it is dragged.
-        container.addEventListener('dragover', function(event) {
+        list.addEventListener('dragover', function(event) {
             if (!viewerCountOrderDrag || viewerCountOrderDrag.list !== list) return;
             event.preventDefault();
             event.dataTransfer.dropEffect = 'move';
@@ -2683,14 +2965,21 @@ function setupViewerCountOrder() {
             }
         });
 
-        container.addEventListener('drop', function(event) {
-            if (viewerCountOrderDrag) event.preventDefault();
+        list.addEventListener('drop', function(event) {
+            if (!viewerCountOrderDrag || viewerCountOrderDrag.list !== list) return;
+            event.preventDefault();
+            viewerCountOrderDrag.dropped = true;
         });
 
         list.addEventListener('dragend', function() {
-            if (!viewerCountOrderDrag) return;
+            if (!viewerCountOrderDrag || viewerCountOrderDrag.list !== list) return;
             viewerCountOrderDrag.chip.classList.remove('is-dragging');
+            const dropped = viewerCountOrderDrag.dropped;
             viewerCountOrderDrag = null;
+            if (!dropped) {
+                renderViewerCountOrder();
+                return;
+            }
             const shown = Array.from(list.querySelectorAll('.viewer-count-order-chip')).map(chip => chip.dataset.sourceType);
             if (shown.join(',') === getViewerCountOrderChips().all.join(',')) {
                 renderViewerCountOrder(); // Nothing moved.
@@ -2751,10 +3040,13 @@ function setupViewerCountOrder() {
 const eventTemplates = {
   botReply: (id) => `
     <div class="event-container">
-      <label class="switch" style="vertical-align: top; margin: 26px 0 0 0">
-        <input type="checkbox" data-setting="botReplyMessageEvent${id}">
-        <span class="slider round"></span>
-      </label>
+      <div class="popup-toggle-row">
+        <label class="switch">
+          <input type="checkbox" id="botReplyMessageEvent${id}" data-setting="botReplyMessageEvent${id}">
+          <span class="slider round"></span>
+        </label>
+        <label for="botReplyMessageEvent${id}" data-translate="enable-this-command">Enable this command</label>
+      </div>
       <div style="display:inline-block">
         <div class="textInputContainer" style="width: 235px">
           <input type="text" id="botReplyMessageCommand${id}" maxlength="200" class="textInput" autocomplete="off" placeholder="!discord, !ds, !disc" data-textsetting="botReplyMessageCommand${id}">
@@ -3200,7 +3492,7 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 }
 
 const sourceTypes = ['relaytargets','eventsSources','ttssources'];
-const sourceSelectTagInputs = ['hideViewerCountSources'];
+const sourceSelectTagInputs = ['hideViewerCountSources', 'captionstargets'];
 const commaTagInputs = ['questionKeywords', 'filtercommandscustomwords', 'bottriggerwords', 'filterevents', 'dockfilterevents', 'featuredfilterevents', 'exactblockedmessages'];
 const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers', 'filterfeaturedusers'];
 // These are canonical payload types that cannot be inferred reliably from a
@@ -3833,6 +4125,7 @@ const SERVER_PARAM_SUPPORT_BY_TARGET = {
   waitlist: { server: true, server2: true, server3: false },
   wordcloud: { server: true, server2: true, server3: false },
   "custom-gif-commands": { server: true, server2: true, server3: false },
+  captions: { server: false, server2: true, server3: true },
   privatechatbot: NO_SERVER_LINK_SUPPORT
 };
 
@@ -3999,7 +4292,25 @@ function syncSupportedServerParamsForTarget(targetId, targetElement, sourceEleme
 		&& document.querySelector('input[data-setting="socketserver"]')?.checked) {
 		targetElement.raw = updateURL(getServerParamToken("server", sourceElement, sourceTokens), targetElement.raw);
 	}
+	// The captions page sends commands to SSN like the Dock does: peer-to-peer normally, or through
+	// the relay when the Dock's commands go that way (server3). server2 only picks which relay
+	// endpoint that uses, so on its own it means nothing to this page.
+	if (targetId === "captions" && !isBothParamChecked("server3")) {
+		targetElement.raw = removeQueryParamWithValue(targetElement.raw, "server2");
+	}
   targetElement.raw = cleanURL(targetElement.raw);
+}
+
+// Caption.Ninja's capture page links itself to this session with &ssn=, so the captions it sends
+// count as the host's. Only the session and its password go in; the page keeps them out of the
+// overlay links it generates.
+function buildCaptionNinjaLinkedUrl(streamId, passwordParams) {
+  let url = "https://caption.ninja/?ssn=" + encodeURIComponent(streamId || "");
+  const sessionPassword = new URLSearchParams(String(passwordParams || "").replace(/^&/, "")).get("password");
+  if (sessionPassword) {
+    url += "&ssnpassword=" + encodeURIComponent(sessionPassword);
+  }
+  return url;
 }
 
 function getSelectedChatOverlayTemplatePath() {
@@ -4076,6 +4387,12 @@ function getGeneratedLinkParams(primaryElement, fallbackElement) {
   return "";
 }
 
+function hiddenLinkText(id) {
+  if (id === "captions") return getTranslation("captions-mic", "Microphone");
+  if (id === "captionsoverlay") return getTranslation("captions-overlay", "Captions overlay for OBS");
+  return "Click to open link";
+}
+
 function getGeneratedLinkDisplayUrl(element, url) {
   const value = typeof url === "string" ? url : "";
   const elementId = element && element.id ? element.id : "";
@@ -4095,12 +4412,12 @@ function setGeneratedLink(element, url) {
     link = element.querySelector("a");
   }
   if (!link) {
-    element.innerHTML = `<a target='_blank' id='${linkId}' href='${element.raw}'>${document.body.classList.contains("hidelinks") ? "Click to open link" : getGeneratedLinkDisplayUrl(element, element.raw)}</a>`;
+    element.innerHTML = `<a target='_blank' id='${linkId}' href='${element.raw}'>${document.body.classList.contains("hidelinks") ? escapeHtml(hiddenLinkText(element.id)) : getGeneratedLinkDisplayUrl(element, element.raw)}</a>`;
     return;
   }
 
   link.href = element.raw;
-  link.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : getGeneratedLinkDisplayUrl(element, element.raw);
+  link.innerText = document.body.classList.contains("hidelinks") ? hiddenLinkText(element.id) : getGeneratedLinkDisplayUrl(element, element.raw);
 }
 
 function moveChatOverlayThemeOptions() {
@@ -4308,6 +4625,8 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
 	{ id: "scoreboard", path: "scoreboard.html"},
 	{ id: "map", path: "map.html" },
 	{ id: "timer", path: "timer.html" },
+	{ id: "captions", path: "captions.html" },
+	{ id: "captionsoverlay", path: "captions-overlay.html" },
 	
   ];
   
@@ -4338,7 +4657,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     
     if (element) {
       const linkStyle = page.style ? `style="${page.style}"` : "";
-	  element.innerHTML = `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${hideLinks ? "Click to open link" : visibleURL}</a>`;
+	  element.innerHTML = `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${hideLinks ? escapeHtml(hiddenLinkText(page.id)) : visibleURL}</a>`;
       element.raw = fullURL;
       syncSupportedServerParamsForTarget(page.id, element, serverParamTokenSource, page.path, serverParamTokens);
     }
@@ -4368,6 +4687,11 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   const obsControlDockUrl = document.getElementById("obs_control_dock_url");
   if (obsControlDockUrl) {
     obsControlDockUrl.href = buildGeneratedUrl("obs-control-dock.html", `session=${encodeURIComponent(streamID)}${getLocalServerConnectionParams()}`, baseURL);
+  }
+
+  const captionsCnUrl = document.getElementById("captions_cn_url");
+  if (captionsCnUrl) {
+    captionsCnUrl.href = buildCaptionNinjaLinkedUrl(streamID, password);
   }
 
 	const streamElementsImporterUrl = document.getElementById("streamelements_importer_link");
@@ -5092,6 +5416,10 @@ function update(response, sync = true) {
             if (obsControlDockUrl) {
                 obsControlDockUrl.href = baseURL + "obs-control-dock.html?session=" + encodeURIComponent(response.streamID) + getLocalServerConnectionParams();
             }
+            const captionsCnUrl = document.getElementById("captions_cn_url");
+            if (captionsCnUrl) {
+                captionsCnUrl.href = buildCaptionNinjaLinkedUrl(response.streamID, password);
+            }
             // The hideLinks variable is not reset to false globally here, its state is managed by the checkbox and classList.
 
             // Refresh all page links.
@@ -5182,7 +5510,8 @@ function update(response, sync = true) {
                     applyPopupTextDirection(
                         response.settings.translationlanguage && response.settings.translationlanguage.optionsetting
                     );
-                    miniTranslate(document.body); // Assuming miniTranslate is defined
+                    miniTranslate(document.body);
+                    refreshCaptionLanguageLabels();
                 }
 
                 createTabsFromSettings(response); // Assuming createTabsFromSettings is defined
@@ -6890,6 +7219,7 @@ function processManifestData(data, manifestData) {
             if (Beta) {
                 if (baseURL == "https://socialstream.ninja/") {
                     baseURL = "https://beta.socialstream.ninja/";
+                    updateStudioLinks();
                     if (lastResponse) {
                         update(lastResponse, false);
                     }
@@ -7308,8 +7638,8 @@ if (sourcemode){
     }
 } else if (location.hostname === "cache.socialstream.ninja") {
     baseURL = Beta ? "https://beta.socialstream.ninja/" : "https://socialstream.ninja/";
-} else if (location.protocol !== "chrome-extension:" && !Beta) {
-    // Only set baseURL from location if we're not already in beta mode
+} else if (location.protocol !== "chrome-extension:" && location.protocol !== "moz-extension:" && !Beta) {
+    // Installed extensions share hosted overlay URLs.
     baseURL = `${location.protocol}//${location.host}/`;
 }
 
@@ -7317,6 +7647,21 @@ const generatedLinkBaseOverride = normalizeGeneratedLinkBase(urlParams.get("gene
 if (generatedLinkBaseOverride) {
 	baseURL = generatedLinkBaseOverride;
 }
+
+// The Overlay Studio links are written for the public site. A beta build opens the beta copy, where new overlays arrive first.
+function updateStudioLinks() {
+	var betaStudio = baseURL.indexOf("https://beta.socialstream.ninja/") === 0;
+	var links = document.querySelectorAll('.misc-links a[href*="socialstream.ninja/overlays/"], a.studio-link');
+	for (var i = 0; i < links.length; i++) {
+		var link = links[i];
+		if (link.hostname !== "socialstream.ninja" && link.hostname !== "beta.socialstream.ninja") continue;
+		link.hostname = betaStudio ? "beta.socialstream.ninja" : "socialstream.ninja";
+		if (link.pathname === "/overlays/" || link.pathname === "/overlays/index.html") {
+			link.pathname = betaStudio ? "/overlays/index.html" : "/overlays/";
+		}
+	}
+}
+updateStudioLinks();
 
 
 
@@ -7394,6 +7739,8 @@ function getTargetMap() {
         'aiprompt': 31,
         'aievent': 32,
         'stickeroverlay': 33,
+        'captions': 34,
+        'captionsoverlay': 35,
     };
 }
 
@@ -9797,6 +10144,10 @@ function refreshLinks(){
   ["dock", "overlay"].forEach(function(targetId) {
     syncSupportedServerParamsForTarget(targetId, document.getElementById(targetId), selectionSource, null, selectionTokens);
   });
+  const captionsCnLink = document.getElementById("captions_cn_url");
+  if (captionsCnLink && lastResponse && lastResponse.streamID) {
+    captionsCnLink.href = buildCaptionNinjaLinkedUrl(lastResponse.streamID, lastResponse.password ? "&password=" + encodeURIComponent(lastResponse.password) : "");
+  }
 
   let hideLinks = false;
   document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
@@ -9845,7 +10196,9 @@ function refreshLinks(){
 	  'scoreboardlink': 'scoreboard',
 	  'spotifylink': 'spotify',
 	  'maplink': 'map',
-	  'timerlink': 'timer'
+	  'timerlink': 'timer',
+	  'captionslink': 'captions',
+	  'captionsoverlaylink': 'captionsoverlay'
     };
     const linkIdsToClean = Object.keys(linkIdToDivIdMap);
 
@@ -9864,7 +10217,7 @@ function refreshLinks(){
         linkElement.href = cleanedUrl; // Update the link's href
 
         // Update link's text based on hideLinks status
-        linkElement.innerText = currentHideLinks ? "Click to open link" : getGeneratedLinkDisplayUrl(divElement, cleanedUrl);
+        linkElement.innerText = currentHideLinks ? hiddenLinkText(divElement.id) : getGeneratedLinkDisplayUrl(divElement, cleanedUrl);
       }
     });
 
@@ -9884,14 +10237,16 @@ function refreshLinks(){
   syncAllOverlayPreviews();
 }
 
+const customCssSelector = "textarea[data-textparam1='cssb64'], textarea[data-textparam2='cssb64'], textarea[data-textparam12='cssb64']";
+
 function flushDeferredCustomCssSettings() {
-	const cssTextareas = document.querySelectorAll("textarea[data-textparam1='cssb64'], textarea[data-textparam2='cssb64']");
+	const cssTextareas = document.querySelectorAll(customCssSelector);
 	for (var i = 0; i < cssTextareas.length; i++) {
 		const ele = cssTextareas[i];
 		if (ele.dataset.pendingSave !== "1") {
 			continue;
 		}
-		const paramType = ele.dataset.textparam1 ? "textparam1" : (ele.dataset.textparam2 ? "textparam2" : null);
+		const paramType = Object.keys(ele.dataset).find(key => /^textparam\d+$/.test(key) && ele.dataset[key] === "cssb64");
 		const setting = paramType ? ele.dataset[paramType] : null;
 		if (!paramType || !setting) {
 			continue;
@@ -9913,7 +10268,7 @@ function flushDeferredCustomCssSettings() {
 }
 
 function setupDeferredCustomCssFlush() {
-	const cssTextareas = document.querySelectorAll("textarea[data-textparam1='cssb64'], textarea[data-textparam2='cssb64']");
+	const cssTextareas = document.querySelectorAll(customCssSelector);
 	for (var i = 0; i < cssTextareas.length; i++) {
 		const ele = cssTextareas[i];
 		ele.addEventListener("input", function () {
@@ -11685,7 +12040,8 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 window.kittenTtsInstance = new KittenTTS();
 
                 // Initialize with model, voices, and explicit WASM path using absolute URLs
-                const modelUrl = baseUrl + 'thirdparty/kitten-tts/kitten_tts_nano_v0_1.onnx';
+                const modelBase = location.origin === 'https://beta.socialstream.ninja' ? 'https://cache.socialstream.ninja/beta/' : baseUrl;
+                const modelUrl = modelBase + 'thirdparty/kitten-tts/kitten_tts_nano_v0_1.onnx';
                 const voicesUrl = baseUrl + 'thirdparty/kitten-tts/voices.json';
                 const wasmPaths = { wasm: baseUrl + 'thirdparty/kitten-tts/ort-wasm-simd-threaded.jsep.wasm' };
                 await window.kittenTtsInstance.init(modelUrl, voicesUrl, wasmPaths);
@@ -12296,7 +12652,15 @@ async function initKokoro(browserOnly = false) {
 			window.SSN_KOKORO_REMOTE_HOST = kokoroAssets.getRemoteHost();
 			console.log("Loading Kokoro dependencies...");
 			console.log("Using Kokoro asset host:", window.SSN_KOKORO_REMOTE_HOST);
-			const module = window.location.href.startsWith("chrome-extension://") ? await import('./thirdparty/kokoro-bundle.es.ext.js') : await import('./thirdparty/kokoro-bundle.es.js');
+			let module;
+			if (location.protocol === 'chrome-extension:') {
+				module = await import('./thirdparty/kokoro-bundle.es.ext.js');
+			} else if (location.origin === 'https://beta.socialstream.ninja') {
+				const bundle = 'https://cache.socialstream.ninja/beta/thirdparty/kokoro-bundle.es.js';
+				module = await import(bundle);
+			} else {
+				module = await import('./thirdparty/kokoro-bundle.es.js');
+			}
 			KokoroTTS = module.KokoroTTS;
 			TextSplitterStream = module.TextSplitterStream;
 			const detectWebGPU = module.detectWebGPU;
@@ -12667,8 +13031,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	// Initialize blocked words tag input
 	setupBlockedWordsInput();
-	setupViewerCountSourceTags();
+	sourceSelectTagInputs.forEach(setupSourceSelectTags);
 	setupViewerCountOrder();
+	setupCaptionsLanguages();
+	setupCaptionLanguageTags();
+	setupCaptionsStatus();
 	commaTagInputs.forEach((inputId) => {
 		setupCommaTagInput(inputId);
 	});
@@ -12960,7 +13327,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	document.querySelectorAll("[data-edit-link]").forEach(function(element) {
 		element.onclick = function(event) {
 			event.preventDefault();
-			openEditGeneratedLinkDialog(element.dataset.editLink);
+			openEditGeneratedLinkDialog(element.dataset.editLink, !!element.closest("#tipjar-command-feedback"));
 		};
 	});
 
@@ -14392,7 +14759,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				const leaderboardLink = document.getElementById('leaderboardlink');
 				const leaderboardContainer = document.getElementById('leaderboard');
 				const fallbackUrl = chrome.runtime.getURL('leaderboard.html');
-				const baseHref = leaderboardLink?.href || leaderboardContainer?.raw || fallbackUrl;
+				const baseHref = leaderboardLink?.getAttribute('href') || leaderboardContainer?.raw || fallbackUrl;
 				let resolvedUrl;
 
 				try {
@@ -15585,19 +15952,35 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						log("ignore callback for this action");
 					});
 				}
-			} else if (msg.cmd == "resettipjar"){
-				var confirmResetTipJar = confirm("Reset the connected Tip Jar/Goal to 0?");
-				if (confirmResetTipJar){
+			} else if (msg.cmd == "resetversus"){
+				if (confirm("Start a new Versus race at 0 for your side?")){
 					chrome.runtime.sendMessage(msg, function (response) {
 						log("ignore callback for this action");
 					});
 				}
-			} else if (msg.cmd == "settipjaramount"){
-				var tipjarAmount = parseFloat(msg.value);
-				if (isNaN(tipjarAmount) || tipjarAmount < 0){
-					alert("Enter a current amount first.");
+			} else if (msg.cmd == "setversuscount"){
+				var versusCount = parseFloat(msg.value);
+				if (isNaN(versusCount) || versusCount < 0){
+					alert("Enter your count first.");
 					return;
 				}
+				chrome.runtime.sendMessage(msg, function (response) {
+					log("ignore callback for this action");
+				});
+			} else if (msg.cmd === "resettipjar" || msg.cmd === "settipjaramount") {
+				if (msg.cmd === "resettipjar") {
+					if (!confirm("Reset the connected Tip Jar/Goal to 0?")) return;
+				} else {
+					const amount = parseFloat(msg.value);
+					if (!Number.isFinite(amount) || amount < 0) {
+						alert("Enter a current amount first.");
+						return;
+					}
+				}
+				msg.selectedGoal = {
+					hype: !!document.querySelector('[data-param12="hype"]')?.checked,
+					excludeGiftPurchase: !!document.querySelector('[data-param12="excludegiftpurchase"]')?.checked
+				};
 				var tipjarSourceSelect = document.querySelector('[data-optionparam12="tipjarsource"]');
 				var tipjarTypeSelect = document.querySelector('[data-optionparam12="tipjartype"]');
 				var tipjarMetricSelect = document.querySelector('[data-optionparam12="goalmetric"]');
@@ -15608,14 +15991,36 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				if (tipjarTypeSelect && tipjarTypeSelect.value) {
 					msg.tipjartype = tipjarTypeSelect.value;
 				}
-				if (tipjarMetricSelect && tipjarMetricSelect.value) {
-					msg.goalmetric = tipjarMetricSelect.value;
+				if (tipjarMetricSelect) {
+					const followerPreset = document.querySelector('[data-param12="followergoal"]');
+					msg.goalmetric = tipjarMetricSelect.value || "value";
+					if (followerPreset && followerPreset.checked && msg.goalmetric !== "subscribers") {
+						msg.goalmetric = "followers";
+					}
 				}
 				if (tipjarEventSelect && tipjarEventSelect.value) {
 					msg.tipjarevent = tipjarEventSelect.value;
 				}
+				const feedback = document.getElementById("tipjar-command-feedback");
+				const status = feedback.querySelector('[role="status"]');
+				const loadLink = feedback.querySelector("button");
+				feedback.hidden = false;
+				feedback.pendingCommand = msg;
+				loadLink.hidden = true;
+				status.textContent = "Waiting for the goal...";
 				chrome.runtime.sendMessage(msg, function (response) {
-					log("ignore callback for this action");
+					if (feedback.pendingCommand !== msg) return;
+					const failed = chrome.runtime.lastError;
+					if (response?.goalApplied) {
+						status.textContent = msg.cmd === "resettipjar" ? "Goal reset." : "Goal amount updated.";
+					} else if (failed || !response) {
+						status.textContent = "Could not reach Social Stream Ninja. Reopen the popup and try again.";
+					} else if (response.state === false) {
+						status.textContent = "Turn on Social Stream Ninja and open your goal, then try again.";
+					} else {
+						status.textContent = "Change unconfirmed. Check the amount before retrying. If needed, refresh the goal or load its link.";
+						loadLink.hidden = false;
+					}
 				});
 			} else {
 				//console.log(msg);

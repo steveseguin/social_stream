@@ -2622,7 +2622,7 @@ details.wrapper[open] > .collapsible-text {
             <div id="panelPreviewNotice" hidden role="status"><span id="panelPreviewText"></span> <button type="button" id="hidePanelPreview" class="popup-secondary-button showalways" data-translate="hide-again">Hide again</button></div>
             <!-- Each tab lists the data-panel-section IDs it shows; unlisted sections fall back to the last tab. -->
             <div id="popupTabs" role="tablist" aria-label="Feature categories">
-                <button type="button" role="tab" id="popup-tab-chat" class="popup-tab showalways" data-popup-tab-sections="dock chatoverlaytemplate overlay"><span class="popup-tab-icon" aria-hidden="true">💬</span><span data-translate="popup-tab-chat">Chat</span></button>
+                <button type="button" role="tab" id="popup-tab-chat" class="popup-tab showalways" data-popup-tab-sections="dock chatoverlaytemplate overlay captions"><span class="popup-tab-icon" aria-hidden="true">💬</span><span data-translate="popup-tab-chat">Chat</span></button>
                 <button type="button" role="tab" id="popup-tab-alerts" class="popup-tab showalways" data-popup-tab-sections="multialerts eventsdashboard hypemeter reactions emoteswall ticker credits meta"><span class="popup-tab-icon" aria-hidden="true">🚨</span><span data-translate="popup-tab-alerts">Alerts</span></button>
                 <button type="button" role="tab" id="popup-tab-interactive" class="popup-tab showalways" data-popup-tab-sections="poll giveaway waitlist games wordcloud map leaderboard scoreboard custom-gif-commands timer spotify"><span class="popup-tab-icon" aria-hidden="true">🎮</span><span data-translate="popup-tab-interactive">Interactive</span></button>
                 <button type="button" role="tab" id="popup-tab-money" class="popup-tab showalways" data-popup-tab-sections="tipjar monetization"><span class="popup-tab-icon" aria-hidden="true">💰</span><span data-translate="popup-tab-money">Money</span></button>
@@ -3446,6 +3446,13 @@ details.wrapper[open] > .collapsible-text {
 							</div>
 							<div class="options_group tts-behavior-options">
 								<h4><span class="popup-control-icon" aria-hidden="true">🔎</span><span data-translate="tts-read-specific">Read out only specific user/messages</span></h4>
+                                <div title="Read a message once if the sender has any of the roles selected below. When off, all selected roles are required.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="anyroletts" aria-label="Match any selected role" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="anyroletts">Match any selected role</span>
+                                </div>
 								<div title="Only 'bot' marked users will have messages read out." data-keywords="bot only automation commands stream elements nightbot restrict">
 									<label class="switch">
 										<input type="checkbox" data-param1="bottts" />
@@ -3467,6 +3474,13 @@ details.wrapper[open] > .collapsible-text {
 									</label>
 									<span data-translate="membertts">🤴 Only members can have messages read</span>
 								</div>
+                                <div title="Read messages from viewers whose source confirms they follow this channel. See the chat voice guide for supported sources.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="followertts" aria-label="Only confirmed followers" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="followertts">Only confirmed followers</span>
+                                </div>
 								<div title="Only 'vip' marked users will have messages read out." data-keywords="vip priority star featured badge elite">
 									<label class="switch">
 										<input type="checkbox" data-param1="viptts" />
@@ -3495,6 +3509,7 @@ details.wrapper[open] > .collapsible-text {
 									</label>
 									<span data-translate="filter-text-to-speech-for-donations-only">🗣️💰 Only donations can have messages read out</span>
 								</div>
+                                <a class="popup-guide-link" href="docs/chat-voices.html" target="_blank" rel="noopener">Chat roles and voices guide</a>
 							</div>
 							<div class="options_group tts-behavior-options">
 								<h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-exclude-bots">Bots, hosts and events are excluded from TTS</span></h4>
@@ -4979,9 +4994,9 @@ details.wrapper[open] > .collapsible-text {
                                     <span data-translate="messages-overlap-on-another">⤵️ Messages overlap on another </span>
                                 </div>
 
-								<div class="textInputContainer" style="width: 95%;margin-top:10px;">
+								<div class="textInputContainer popup-css-field">
 									<textarea id="customCSS" class="textInput" rows="4" data-textparam1="cssb64" placeholder="Enter your custom CSS here"></textarea>
-									<label for="customCSS"><span class="popup-control-icon" aria-hidden="true">💻</span>Custom CSS</label>
+									<label for="customCSS"><span class="popup-control-icon" aria-hidden="true">💻</span><span data-translate="popup-custom-css">Custom CSS</span></label>
 								</div>
 
 								<div class="textInputContainer" style="width: 95%;margin-top:10px;">
@@ -6861,9 +6876,9 @@ details.wrapper[open] > .collapsible-text {
 									<input type="color" aria-labelledby="name_background_label" data-color="name_background" id="name_background_palette" class="colorPicker" />
                                 </div>
 
-								<div class="textInputContainer" style="width: 95%;margin-top:10px;">
+								<div class="textInputContainer popup-css-field">
 									<textarea id="customCSS2" class="textInput" rows="4" data-textparam2="cssb64" placeholder="Enter your custom CSS here"></textarea>
-									<label for="customCSS2"><span class="popup-control-icon" aria-hidden="true">💻</span>Custom CSS</label>
+									<label for="customCSS2"><span class="popup-control-icon" aria-hidden="true">💻</span><span data-translate="popup-custom-css">Custom CSS</span></label>
 								</div>
 
                                 <div>
@@ -7012,6 +7027,192 @@ details.wrapper[open] > .collapsible-text {
 										</label>
 										<span>⏲️ Custom display time <input type="number" style="max-width: calc(8ch + 34px);" max="999999" min="1000" value="30000" size="6" data-numbersetting2="showtime" />ms</span>
 									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="link beginner-basic" data-keywords="captions caption subtitles closed captions cc speech voice microphone mic transcript speech to text stt dictate talk speak voice to chat" data-panel-section="captions">
+				<h2 class="captions_title">
+					<span class="title-group"><span class="emoji" aria-hidden="true">🎙️</span><span data-translate="captions-title">Captions</span></span>
+					<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy microphone link" data-copy="true"><span data-translate="captions-copy-mic">Copy microphone link</span></button>
+					<label for="help-captions" class="help-link rounded_area" tabindex="0" role="button" title="Captions guide">?</label>
+				</h2>
+				<input type="checkbox" id="help-captions" class="link-help-toggle">
+				<div class="link-help-content">
+					<p class="popup-guide-link"><a href="docs/index.html?file=captions.md" target="_blank" rel="noopener">📖 <span data-translate="captions-guide">Captions guide</span></a></p>
+				</div>
+				<p class="popup-section-description"><span data-translate="captions-intro">Open the microphone link to start listening.</span></p>
+				<div id="captions" data-raw="" class="streaming_chat"><a href="" id="captionslink"></a></div>
+			</div>
+
+			<div class="wrapper beginner-basic" data-panel-section="captions">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-captions-post-options" />
+					<label class="collapsible-label" for="wrapper-captions-post-options"><span aria-hidden="true">💬</span> <span data-translate="captions-where">Where captions go</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<div data-keywords="captions post chat destinations connected where status choose">
+									<span id="captionsTargetsStatus" role="status"></span>
+									<span id="captionsChoice" hidden>
+										<button type="button" id="captionsChoosePost" class="popup-secondary-button" title="Your chat posts use your own account." data-translate="captions-post">Post to my chats</button>
+										<button type="button" id="captionsChooseDock" class="popup-secondary-button" title="Dock only, do not post to chat" data-translate="captions-dock">My dock only</button>
+									</span>
+								</div>
+								<div data-keywords="captions post chat destinations platforms pick choose only twitch youtube kick">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="captionstargets" class="textInput instant" autocomplete="off" data-textsetting="captionstargets" />
+										<label for="captionstargets"><span class="popup-control-icon" aria-hidden="true">🎯</span><span data-translate="captions-targets">Only post to these chats</span></label>
+									</div>
+								</div>
+								<div class="isolate" data-keywords="captions translate translation language spanish french german per chat multilingual">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" id="captionslanguages" class="textInput instant hidden" autocomplete="off" data-textsetting="captionslanguages" />
+										<label for="captionsLanguageWhere"><span class="popup-control-icon" aria-hidden="true">🌐</span><span data-translate="captions-translate">Translate for a chat or dock</span></label>
+									</div>
+									<div id="captionslanguagesList" class="source-list-container"></div>
+									<div class="add-source-container">
+										<select id="captionsLanguageWhere"><option value="" selected data-translate="captions-select">Select chat</option><option value="dock" data-translate="captions-ssn-dock">SSN dock</option></select>
+										<select id="captionsLanguageTo" title="Subtitle language"><option value="" selected data-translate="captions-language">Language</option></select>
+										<button type="button" id="captionsLanguageAdd" data-translate="captions-add">Add</button>
+									</div>
+								</div>
+								<div data-keywords="captions post chat delay spacing batch seconds rate">
+									<div class="textInputContainer" style="display: inline-grid; width: 160px;" title="Set to 0 to post each caption separately.">
+										<input type="number" id="captionsgap" class="textInput" min="0" max="120" value="0" autocomplete="off" data-numbersetting="captionsgap" />
+										<label for="captionsgap"><span class="popup-control-icon" aria-hidden="true">⏱️</span><span data-translate="captions-gap">Seconds between posts</span></label>
+									</div>
+								</div>
+								<div title="Dock only, do not post to chat" data-keywords="captions dock only local overlay no post private do not post chat">
+									<label class="switch">
+										<input type="checkbox" aria-labelledby="label-captions-dock-switch" data-setting="captionsdockonly" />
+										<span class="slider round"></span>
+									</label>
+									<span><span class="popup-control-icon" aria-hidden="true">🖥️</span><span id="label-captions-dock-switch" data-translate="captions-dock-switch">Dock only, do not post to chat</span></span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="wrapper beginner-basic" data-panel-section="captions">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-captions-overlay-options" />
+					<label class="collapsible-label" for="wrapper-captions-overlay-options"><span aria-hidden="true">🖼️</span> <span data-translate="captions-overlay">Captions overlay for OBS</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<div data-keywords="captions overlay open connected status obs">
+									<span id="captionsOverlayStatus" role="status"></span>
+								</div>
+								<div class="link beginner-basic" style="margin:0;" title="In OBS, add a Browser source and paste the overlay link." data-keywords="captions overlay obs browser source subtitles closed captions live text on stream">
+									<p class="popup-section-description"><span data-translate="captions-obs-how">In OBS, add a Browser source and paste the overlay link.</span></p>
+									<button type="button" aria-live="polite" class="copy-link rounded_area" title="Copy overlay link" data-copy="true"><span data-translate="captions-copy-obs">Copy overlay link</span></button>
+									<div id="captionsoverlay" data-raw="" class="single_message"><a href="" id="captionsoverlaylink"></a></div>
+								</div>
+								<div data-keywords="captions overlay language translate translation spanish french">
+									<label for="captionsOverlayLanguage"><span class="popup-control-icon" aria-hidden="true">🌐</span><span data-translate="captions-subtitle-language">Subtitle language</span></label>
+									<select id="captionsOverlayLanguage" data-optionparam35="lang">
+										<option value="" data-translate="captions-as-spoken">As spoken</option>
+									</select>
+								</div>
+								<div data-keywords="captions overlay lines rows how many">
+									<label for="captionsOverlayLines"><span class="popup-control-icon" aria-hidden="true">📄</span><span data-translate="captions-lines">Lines shown</span></label>
+									<select id="captionsOverlayLines" data-optionparam35="lines">
+										<option value="">2</option>
+										<option value="1">1</option>
+										<option value="3">3</option>
+										<option value="4">4</option>
+									</select>
+								</div>
+								<div data-keywords="captions overlay seconds duration show time stay">
+									<label for="captionsOverlayShowtime"><span class="popup-control-icon" aria-hidden="true">⏱️</span><span data-translate="captions-duration">Display time</span></label>
+									<select id="captionsOverlayShowtime" data-optionparam35="showtime">
+										<option value="" data-translate="captions-seconds-6">6 seconds</option>
+										<option value="3" data-translate="captions-seconds-3">3 seconds</option>
+										<option value="10" data-translate="captions-seconds-10">10 seconds</option>
+										<option value="20" data-translate="captions-seconds-20">20 seconds</option>
+										<option value="0" data-translate="captions-keep">Until replaced</option>
+									</select>
+								</div>
+								<div data-keywords="captions overlay font size text bigger smaller">
+									<label for="captionsOverlayFontsize"><span class="popup-control-icon" aria-hidden="true">🔠</span><span data-translate="captions-size">Text size</span></label>
+									<select id="captionsOverlayFontsize" data-optionparam35="fontsize">
+										<option value="" data-translate="captions-medium">Medium</option>
+										<option value="28" data-translate="captions-small">Small</option>
+										<option value="54" data-translate="captions-large">Large</option>
+										<option value="72" data-translate="captions-xl">Extra large</option>
+									</select>
+								</div>
+								<div data-keywords="captions overlay align left center right position">
+									<label for="captionsOverlayAlign"><span class="popup-control-icon" aria-hidden="true">↔️</span><span data-translate="captions-align">Alignment</span></label>
+									<select id="captionsOverlayAlign" data-optionparam35="align">
+										<option value="" data-translate="captions-center">Center</option>
+										<option value="left" data-translate="captions-left">Left</option>
+										<option value="right" data-translate="captions-right">Right</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="wrapper beginner-basic" data-panel-section="captions">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-captions-page-options" />
+					<label class="collapsible-label" for="wrapper-captions-page-options"><span aria-hidden="true">🎙️</span> <span data-translate="captions-mic-options">Microphone options</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<div data-keywords="captions language speech recognition microphone spoken">
+									<label for="captionsLanguage"><span class="popup-control-icon" aria-hidden="true">🌐</span><span data-translate="captions-spoken">Spoken language</span></label>
+									<select id="captionsLanguage" data-optionparam34="lang">
+										<option value="" data-translate="captions-on-page">Chosen on the page</option>
+									</select>
+								</div>
+								<div title="Start listening when the page opens" data-keywords="captions autostart automatic start listening microphone">
+									<label class="switch">
+										<input type="checkbox" aria-labelledby="label-captions-autostart" data-param34="autostart" />
+										<span class="slider round"></span>
+									</label>
+									<span><span class="popup-control-icon" aria-hidden="true">▶️</span><span id="label-captions-autostart" data-translate="captions-autostart">Start listening when the page opens</span></span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="wrapper beginner-basic" data-panel-section="captions">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-captions-captionninja-options" />
+					<label class="collapsible-label" for="wrapper-captions-captionninja-options"><span aria-hidden="true">🔗</span> <span data-translate="captions-cn">Captions from Caption.Ninja</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<div data-keywords="captions caption ninja link private connect post chat speech microphone">
+									<span class="popup-control-icon" aria-hidden="true">🔗</span>
+									<a target="_blank" rel="noopener" class="options-link rounded_area" id="captions_cn_url" title="Keep this microphone link private." href="https://caption.ninja/" data-translate="captions-cn-link">Open Caption.Ninja linked to SSN</a>
+								</div>
+								<div title="Room captions appear in the dock and overlays." data-keywords="captions caption ninja subtitles closed captions cc speech voice microphone transcript speech to text stt room">
+									<label class="switch">
+										<input type="checkbox" aria-labelledby="label-captions-cn-show" data-setting="captionninja" />
+										<span class="slider round"></span>
+									</label>
+									<img class="icon" src="./sources/images/captions.png" alt="" style="display: inline-block;" />
+									<span id="label-captions-cn-show" data-translate="captions-cn-show">Show captions from a room</span>
+								</div>
+								<div data-keywords="captions caption ninja room link subtitles speech voice">
+									<div class="textInputContainer" style="display: inline-grid; width: 250px;">
+										<input type="text" id="captionninjaroom" class="textInput" autocomplete="off" placeholder="Room name or Caption.Ninja link" data-textsetting="captionninjaroom" />
+										<label for="captionninjaroom"><span class="popup-control-icon" aria-hidden="true">🔗</span><span data-translate="captions-room">Caption.Ninja room</span></label>
+									</div>
+									<span id="captionsStatus" role="status"></span>
 								</div>
 							</div>
 						</div>
@@ -7888,6 +8089,7 @@ details.wrapper[open] > .collapsible-text {
                     <label class="collapsible-label" for="wrapper-multi-alert-effect-options"><span data-translate="popup-event-animations-sound-effects">✨ Event animations &amp; sound effects</span></label>
                     <div class="collapsible-text">
                         <div class="options ssn-alert-setup popup-settings-panel"><div class="options_group">
+                            <p class="popup-help-text" style="width: 95%;">Want the whole screen to celebrate? Pick a moment in <a class="studio-link" href="https://socialstream.ninja/overlays/#cat=rewards" target="_blank" rel="noopener">Overlay Studio</a>, copy its link, and paste it into an alert's Media box. It plays with the viewer's name and amount.</p>
 
 
                             <details open style="width: 95%; margin-top: 6px;">
@@ -7900,6 +8102,7 @@ details.wrapper[open] > .collapsible-text {
                                         <select id="multi-alert-effect1-type" class="textInput" data-optionparam25="effect1type">
                                             <option value="donation" data-translate="popup-donation-paid-gift">Donation / paid gift</option>
                                             <option value="follow" data-translate="popup-follow">Follow</option>
+                                            <option value="like" data-translate="popup-like">Like</option>
                                             <option value="subscription" data-translate="popup-subscription-member">Subscription / member</option>
                                             <option value="bits" data-translate="popup-bits-cheer">Bits / cheer</option>
                                             <option value="raid" data-translate="popup-raid-host">Raid / host</option>
@@ -7941,6 +8144,7 @@ details.wrapper[open] > .collapsible-text {
                                         <select id="multi-alert-effect2-type" class="textInput" data-optionparam25="effect2type">
                                             <option value="donation" data-translate="popup-donation-paid-gift">Donation / paid gift</option>
                                             <option value="follow" data-translate="popup-follow">Follow</option>
+                                            <option value="like" data-translate="popup-like">Like</option>
                                             <option value="subscription" data-translate="popup-subscription-member">Subscription / member</option>
                                             <option value="bits" data-translate="popup-bits-cheer">Bits / cheer</option>
                                             <option value="raid" data-translate="popup-raid-host">Raid / host</option>
@@ -7982,6 +8186,7 @@ details.wrapper[open] > .collapsible-text {
                                         <select id="multi-alert-effect3-type" class="textInput" data-optionparam25="effect3type">
                                             <option value="donation" data-translate="popup-donation-paid-gift">Donation / paid gift</option>
                                             <option value="follow" data-translate="popup-follow">Follow</option>
+                                            <option value="like" data-translate="popup-like">Like</option>
                                             <option value="subscription" data-translate="popup-subscription-member">Subscription / member</option>
                                             <option value="bits" data-translate="popup-bits-cheer">Bits / cheer</option>
                                             <option value="raid" data-translate="popup-raid-host">Raid / host</option>
@@ -8125,7 +8330,7 @@ details.wrapper[open] > .collapsible-text {
                             <div id="nc-audience-room" class="options_group popup-settings-panel">
                                 <p data-translate="nc-audience-intro">Give viewers a public room for chat and Cheer. Your private SSN links stay private.</p>
                                 <p data-nc-status role="status" aria-live="polite">Not connected</p>
-                                <a class="popup-guide-link" href="docs/ninjachatter-audience.md" target="_blank" rel="noopener noreferrer"><span class="popup-control-icon" aria-hidden="true">📖</span><span data-translate="nc-audience-guide">Setup guide</span></a>
+                                <a class="popup-guide-link" href="docs/index.html?file=ninjachatter-audience.md" target="_blank" rel="noopener noreferrer"><span class="popup-control-icon" aria-hidden="true">📖</span><span data-translate="nc-audience-guide">Setup guide</span></a>
                                 <h4><span class="popup-control-icon" aria-hidden="true">🔌</span><span data-translate="nc-audience-step-connect">1. Connect your room</span></h4>
                                 <p data-translate="nc-audience-pair-help">Create or open a room in NinjaChatter, enable its audience connection, then approve the code below.</p>
                                 <div class="nc-audience-actions">
@@ -8711,6 +8916,13 @@ details.wrapper[open] > .collapsible-text {
                                     </label>
                                     <img src="./sources/images/youtube.png" class="icon" /><span data-translate="no-all-youtube-member-chat-included"> Only monthly featured messages from a YouTube are marked as a membership </span>
                                 </div>
+                                <div title="Twitch WebSocket only. Checks whether a chatter follows this channel using your broadcaster or moderator account. Results are cached briefly.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="twitchcheckfollowers" aria-label="Check Twitch chatters for follower status" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="twitchcheckfollowers">Check Twitch chatters for follower status</span>
+                                </div>
                                 <div title="Mark a message as memberchat only when it is a Twitch subscription or resubscription notification">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="limitedtwitchmemberchat" />
@@ -8840,7 +9052,6 @@ details.wrapper[open] > .collapsible-text {
                                     <span data-translate="allow-lan-only-p2p-connections">🖥️💻 P2P connections via LAN only </span>
                                 </div>
 								<hr>
-
 
 								<!-- Video Stats Polling -->
 								<div title="Poll a video server stats endpoint and send bitrate/health data as meta events.">
@@ -9495,6 +9706,13 @@ details.wrapper[open] > .collapsible-text {
 								<h3><span class="popup-control-icon" aria-hidden="true">💬</span><span data-translate="message-echos">Message doubling / echos / duplicates / relayed</span></h3>
 								<p>If you're using the RELAY ALL function, you might find the following options helpful in controlling for duplicate responses. (I like to call relayed message echos "reflections")</p><br />
 
+								<div title="Include messages typed in the dock in the shared overlay feed, even without a connected chat source.">
+                                    <label class="switch">
+                                        <input type="checkbox" id="showdocksentmessages" data-setting="showdocksentmessages" aria-labelledby="showdocksentmessages-label" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <label for="showdocksentmessages" id="showdocksentmessages-label" data-translate="popup-show-dock-sent">Show my sent messages in the dock</label>
+                                </div>
 								<div title="Do not capture your responses that you make to chat. They will be filtered out, so will not appear in the dock">
                                     <label class="switch">
                                         <input type="checkbox" id="hideallreplies" data-setting="hideallreplies" />
@@ -13306,6 +13524,7 @@ details.wrapper[open] > .collapsible-text {
 					<ul>
 						<li>Running total of all donations</li>
 						<li>Optional count goals for Super Chats and Super Stickers</li>
+						<li>Count new followers or subscribers, with a goal or as a plain counter</li>
 						<li>Optional membership and subscription scoring</li>
 						<li>Visual progress bar display</li>
 						<li>Supports multiple donation platforms</li>
@@ -13367,6 +13586,22 @@ details.wrapper[open] > .collapsible-text {
                                     <input type="number" id="tipjar-set-amount" class="textInput" placeholder="5" min="0" step="0.01" />
                                     <button class="glowingButton" style="width: 220px; border: 1px solid #000; padding: 2px;" data-action="settipjaramount" data-target="tipjar" data-value-source="tipjar-set-amount">
                                         <span style="font-size: 0.8em;">Set connected amount</span>
+                                    </button>
+                                </div>
+                                <div id="tipjar-command-feedback" hidden>
+                                    <span role="status" aria-live="polite"></span>
+                                    <button type="button" class="edit-link rounded_area" data-edit-link="tipjar" hidden>Load goal link</button>
+                                </div>
+                                <div>
+                                    <label for="versus-set-count"><span class="popup-control-icon" aria-hidden="true">🏁</span><span data-translate="popup-versus-my-count">My Versus count</span></label>
+                                    <input type="number" id="versus-set-count" class="textInput" placeholder="0" min="0" step="1" />
+                                    <button class="glowingButton" style="width: 220px; border: 1px solid #000; padding: 2px;" data-action="setversuscount" data-target="tipjar" data-value-source="versus-set-count">
+                                        <span style="font-size: 0.8em;" data-translate="popup-versus-set-count">Set my Versus count</span>
+                                    </button>
+                                </div>
+                                <div>
+                                    <button class="glowingButton" style="width: 220px; border: 1px solid #000; padding: 2px;" data-action="resetversus" data-target="tipjar">
+                                        <span style="font-size: 0.8em;" data-translate="popup-versus-reset-count">Reset my Versus count</span>
                                     </button>
                                 </div>
 
@@ -13482,7 +13717,7 @@ details.wrapper[open] > .collapsible-text {
             <div class="wrapper" data-panel-section="tipjar">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-tipjar-style-options" />
-                    <label class="collapsible-label" for="wrapper-tipjar-style-options"><span>🎨 Style, Goal, and Filters</span></label>
+                    <label class="collapsible-label" for="wrapper-tipjar-style-options"><span>🎨 <span data-translate="popup-tipjar-style-goal-filters">Style, Goal, and Filters</span></span></label>
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group tipjar">
@@ -13502,6 +13737,7 @@ details.wrapper[open] > .collapsible-text {
                                         <option value="ring">Progress Ring</option>
                                         <option value="lowerthird">Lower Third</option>
                                         <option value="segmented">Segmented Bar</option>
+                                        <option value="counter">Counter (running total, no goal)</option>
                                         <optgroup label="Physical jars">
                                             <option value="glassjar">Glass Tip Jar</option>
                                             <option value="jar3d">3D Rotating Jar</option>
@@ -13545,6 +13781,10 @@ details.wrapper[open] > .collapsible-text {
                                     <a id="tipjar-style-preview" href="https://socialstream.ninja/tipjar-preview.html" target="_blank" rel="noopener">🖼️ Preview styles</a>
                                     <small style="display:block;opacity:0.8">Uses sample totals without sending donations to your overlays.</small>
                                 </div>
+                                <div class="textInputContainer popup-css-field">
+                                    <textarea id="tipjar-custom-css" class="textInput" rows="4" data-textparam12="cssb64" placeholder="Enter your custom CSS here"></textarea>
+                                    <label for="tipjar-custom-css"><span class="popup-control-icon" aria-hidden="true">💻</span><span data-translate="popup-custom-css">Custom CSS</span></label>
+                                </div>
                                 <div>
                                     <label class="switch"><input type="checkbox" data-param12="refresh" aria-label="Refresh classic styles" /><span class="slider round"></span></label>
                                     <span>✨ Refresh classic styles</span>
@@ -13556,7 +13796,7 @@ details.wrapper[open] > .collapsible-text {
                                     <small style="display:block;opacity:0.8">Only changes the goal display; amounts and donation units stay the same.</small>
                                 </div>
                                 <details class="popup-settings-panel popup-subsection"><summary>🎨 Panel styling</summary>
-                                <small>These controls apply to Goal Card, Progress Ring, Lower Third, and Segmented Bar.</small>
+                                <small>These controls apply to Goal Card, Progress Ring, Lower Third, Segmented Bar, and Counter.</small>
                                 <div><label for="tipjar-panelopacity"><span class="popup-control-icon" aria-hidden="true">📐</span>Panel opacity (0–1)</label><input id="tipjar-panelopacity" type="number" data-optionparam12="panelopacity" class="textInput" min="0" max="1" step="0.05" placeholder="Default" /></div>
                                 <div class="colorInputRow">
                                     <div class="textInputContainer">
@@ -13592,8 +13832,10 @@ details.wrapper[open] > .collapsible-text {
                                     <select data-optionparam12="goalmetric" class="textInput">
                                         <option value="" selected>Total donation value (default)</option>
                                         <option value="count">Number of qualifying donations</option>
+                                        <option value="followers">New followers / YouTube subscribers</option>
+                                        <option value="subscribers">New paid subs / YouTube members</option>
                                     </select>
-                                    <small style="display: block; opacity: 0.8;">Count goals take priority over Hype scoring.</small>
+                                    <small style="display: block; opacity: 0.8;">Count goals take priority over Hype scoring. The follower and sub options add 1 per new supporter and ignore donations; YouTube subscribers need the YouTube API source and a public subscription.</small>
                                 </div>
                                 <div>
                                     <label><span class="popup-control-icon" aria-hidden="true">🔎</span>Paid event filter:</label>
@@ -18205,6 +18447,10 @@ details.wrapper[open] > .collapsible-text {
 
 					<a href="https://socialstream.ninja/overlays/#cat=scenes" target="_blank">🎬 Starting soon, BRB &amp; ending screens</a>
 
+					<a href="https://socialstream.ninja/overlays/#cat=worlds" target="_blank">🌆 <span data-translate="popup-animated-worlds">Animated backgrounds and little worlds</span></a>
+
+					<a href="https://socialstream.ninja/overlays/#cat=rewards" target="_blank">🎁 <span data-translate="popup-stream-celebrations">Follow, sub and tip celebrations</span></a>
+
 					<a href="https://socialstream.ninja/overlays/#cat=time" target="_blank">⏰ Clocks &amp; timers</a>
 
 					<a href="https://socialstream.ninja/overlays/#cat=gaming" target="_blank">🎮 Gaming HUDs</a>
@@ -18218,6 +18464,8 @@ details.wrapper[open] > .collapsible-text {
 					<a href="https://socialstream.ninja/overlays/#cat=live" target="_blank">📰 Live news, trivia &amp; data</a>
 
 					<a href="https://socialstream.ninja/overlays/#cat=fun" target="_blank">✨ Cute &amp; fun</a>
+
+					<a href="https://socialstream.ninja/overlays/#cat=channelart" target="_blank">📋 Channel page panels &amp; offline screen</a>
 
 				</div>
 
@@ -18246,7 +18494,8 @@ details.wrapper[open] > .collapsible-text {
         <link rel="stylesheet" href="shared/alerts/sound-library.css">
         <script src="shared/alerts/sound-library.js"></script>
         <link rel="stylesheet" href="popup-ui.css">
-        <script type="text/javascript" src="popup.js?v=3"></script>
+        <script src="shared/captions/languages.js"></script>
+        <script type="text/javascript" src="popup.js?v=9"></script>
         <script src="js/popup-capture-reminder.js"></script>
         <script src="shared/stickers/catalog.js"></script>
         <script src="shared/stickers/popup.js"></script>

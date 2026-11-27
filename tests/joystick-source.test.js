@@ -98,7 +98,7 @@ async function testWebSocketCapture(browser) {
 	assert.strictEqual(captured[0].membership, "Subscriber");
 	assert.strictEqual(captured[0].nameColor, "#123456");
 	assert.strictEqual(captured[0].mod, true);
-	assert.strictEqual(captured[0].timestamp, "2026-08-23T13:56:05Z");
+	assert.strictEqual(captured[0].timestamp, Date.UTC(2026, 7, 23, 13, 56, 5));
 	assert.strictEqual(captured[0].meta.messageId, "m-1");
 	assert.strictEqual("rawType" in captured[0].meta, false);
 

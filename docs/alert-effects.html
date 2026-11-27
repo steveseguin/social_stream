@@ -37,6 +37,7 @@ main.container { padding-top: 10.4rem; }
 })();
 </script>
 <link rel="stylesheet" href="css/visual-guides.css">
+<script defer src="../shared/utils/hostedAssets.js" data-doc-media></script>
 </head>
 <body class="visual-guide">
 <header>
@@ -47,7 +48,7 @@ main.container { padding-top: 10.4rem; }
 <main class="container">
 <h1>Animation and sound alerts</h1>
 <p>Setting up your stream? Follow <a href="alerts-and-chat-commands.html">Set up alerts, chat commands and reminders</a> for custom sounds, command replies, and automatic reminders.</p>
-<nav class="guide-jump-links" aria-label="On this page"><a href="#read-section-1">Set up your first alert</a><a href="#read-section-2">Amount limits and priority</a><a href="#read-section-3">Preview and sound</a><a href="#read-section-4">Event Flow and OBS effects</a></nav>
+<nav class="guide-jump-links" aria-label="On this page"><a href="#read-section-1">Set up your first alert</a><a href="#read-section-2">Amount limits and priority</a><a href="#read-section-3">Preview and sound</a><a href="#read-section-5">Full-screen celebrations</a><a href="#read-section-4">Event Flow and OBS effects</a></nav>
 <section class="guide-card">
 <h2 id="read-section-1">Set up your first alert</h2>
 <figure class="guide-shot"><a href="images/guides/visual/alert-sounds.webp"><img src="images/guides/visual/alert-sounds.webp" width="472" height="598" alt="Choose a sound for each alert category." loading="lazy" decoding="async"></a><figcaption>Choose a sound for each alert category.</figcaption></figure>
@@ -70,6 +71,17 @@ main.container { padding-top: 10.4rem; }
 <p>Test alert opens and focuses the local preview. It does not send an event to your live channels. The preview uses your current overlay settings, filters, media, and timing. Sound volume is under Sound &amp; Timing.</p>
 <p>Clear sound removes the custom sound override; default alert audio still applies. Disable Play alert sound to mute overlay audio. Enable alert pauses a rule while preserving its settings. Reset alert clears that rule alone.</p>
 <p>Voiced phrases are labelled synthetic recordings. For names or changing text, use the Event Flow editor's Speak Text action.</p>
+</section>
+<section class="guide-card">
+<h2 id="read-section-5">Full-screen celebrations</h2>
+<p>An alert can set off a moment that fills the screen: hearts swarming for a follow, a treasure chest for a tip, a welcome for a raid. The viewer's name, the amount and the raid size are filled in for you.</p>
+<ol>
+<li>Choose a moment from the <a href="stream-celebrations.html">celebrations gallery</a>, or in <a href="../overlays/#cat=rewards">Overlay Studio</a> under Follows, subs &amp; tips.</li>
+<li>Adjust it, then choose Copy link.</li>
+<li>Paste the link into the alert's Media box, in place of a GIF.</li>
+<li>Use Test alert.</li>
+</ol>
+<p>The moment plays behind the alert card and covers the whole Multi-Alerts source, so size that source to your full canvas. The alert's own sound plays and the moment stays silent. Hide GIF / media attachments turns these moments off too.</p>
 </section>
 <section class="guide-card">
 <h2 id="read-section-4">Event Flow and OBS effects</h2>

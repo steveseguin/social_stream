@@ -668,7 +668,8 @@
 		}
 
 		function addLocalScore(data) {
-			if (!data || !data.chatname || !data.type || data.bot === true) return;
+			// Captions are the host's own speech shown as text; they never score.
+			if (!data || !data.chatname || !data.type || data.bot === true || data.type === "captions") return;
 			var amount = 0;
 			if (showLocalChatPoints && data.chatmessage) amount += 1;
 			if (showLocalDonationPoints && data.hasDonation) amount += Math.round(parseDonationAmount(data.hasDonation) * 100);

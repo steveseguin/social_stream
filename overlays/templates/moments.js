@@ -149,7 +149,7 @@
 		[dim, back, mid, front].forEach(function (n) { wrap.appendChild(n); });
 		root.appendChild(wrap);
 		var st = { root: root, wrap: wrap, dim: dim, mid: mid, back: back, front: front, gb: back.getContext("2d"), gf: front.getContext("2d"), W: 0, H: 0, d: 1, u: 1, time: 0, tick: null, draw: null, onfit: null };
-		var dirty = true, alive = true, last = null, frameId, GOV = window.SSO_FRAMES || null;
+		var dirty = true, alive = true, last = null, frameId, GOV = window.SSO_FRAMES || null, said = false;
 		function fit(force) {
 			var W = root.clientWidth || window.innerWidth, H = root.clientHeight || window.innerHeight;
 			if (!force && W === st.W && H === st.H) { return; }
@@ -167,7 +167,8 @@
 			var dt = SSO.frameDelta(now - last);
 			last = now; st.time += dt;
 			fit();
-			var busy = st.tick ? st.tick(dt) : false;
+			var busy = st.tick ? !!st.tick(dt) : false;
+			if (busy !== said) { said = busy; if (SSO.momentState) { SSO.momentState(busy); } }
 			if (busy || dirty) {
 				st.gb.setTransform(st.d, 0, 0, st.d, 0, 0); st.gb.clearRect(0, 0, st.W, st.H);
 				st.gf.setTransform(st.d, 0, 0, st.d, 0, 0); st.gf.clearRect(0, 0, st.W, st.H);
@@ -982,8 +983,8 @@
 		size: [1920, 1080],
 		sizeFor: stageSize,
 		fields: [
-			{ key: "raider", label: "Who is raiding", type: "text", group: "Raid", default: "CoolStreamer" },
-			{ key: "count", label: "How many raiders (0 = hide the number)", type: "number", group: "Raid", default: 127, min: 0, max: 9999999, step: 1 },
+			{ key: "raider", label: "Who is raiding", type: "text", group: "Raid", default: "CoolStreamer", live: "name" },
+			{ key: "count", label: "How many raiders (0 = hide the number)", type: "number", group: "Raid", default: 127, min: 0, max: 9999999, step: 1, live: true },
 			{ key: "headline", label: "Headline", type: "text", group: "Raid", default: "RAID!" },
 			{ key: "tagline", label: "Small line on top (blank = none)", type: "text", group: "Raid", default: "INCOMING" },
 			{ key: "countlabel", label: "Word after the number", type: "text", group: "Raid", default: "raiders" },

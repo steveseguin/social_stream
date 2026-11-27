@@ -115,7 +115,7 @@ function connectWebSocket(room, index) {
 if (socketserverURL) (upstream ? roomID.split(',') : ['']).forEach((room, index) => connectWebSocket(room.trim(), index));
 window.addEventListener('beforeunload', function () { stopped = true; sockets.forEach(socket => socket.close()); });
 function respondP2P(data) {
-    var msg = { response: data.trim() };
+    var msg = { response: data.trim(), dockInput: true };
     if (!msg.response) return false;
     if (socketserverURL) {
         if (!sockets.length || sockets.some(socket => socket.readyState !== 1)) return upstream ? false : send2Extension(msg);

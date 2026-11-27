@@ -1,4 +1,5 @@
 // Local executable dependencies and model data are packaged with the app.
+importScripts('../utils/hostedAssets.js');
 var classifier = null;
 var tokenizer = null;
 var TensorClass = null;
@@ -23,15 +24,21 @@ async function loadClassifier() {
         env.customCache = {
             match: async function (request) {
                 var url = typeof request === 'string' ? request : request.url;
+                var modelRoot = env.localModelPath + 'granite-guardian-hap-38m/';
+                // Transformers checks its cache for hosted tokenizer metadata before opening the model.
+                if (/^https?:/.test(modelRoot) && url.startsWith(modelRoot) && url.endsWith('.json')) {
+                    var metadata = await fetch(url);
+                    return metadata.ok ? metadata : undefined;
+                }
                 if (!url.endsWith('/onnx/model_quantized.onnx')) return undefined;
-                var modelBase = env.localModelPath + 'granite-guardian-hap-38m/onnx/';
+                var modelBase = modelRoot + 'onnx/';
                 var manifestResponse = await fetch(modelBase + 'model-parts.json');
                 if (!manifestResponse.ok) throw new Error('IBM model manifest is unavailable.');
                 var parts = await manifestResponse.json();
                 var buffers = [];
                 for (var index = 0; index < parts.length; index++) {
                     var part = parts[index];
-                    var response = await fetch(modelBase + part.file);
+                    var response = await fetch(self.SSNHostedAssetURL(part.file, modelBase));
                     if (!response.ok) throw new Error('IBM model data is unavailable: ' + part.file);
                     var buffer = await response.arrayBuffer();
                     var digest = await crypto.subtle.digest('SHA-256', buffer);
@@ -43,7 +50,7 @@ async function loadClassifier() {
             },
             put: async function () {}
         };
-        var base = new URL('../../thirdparty/transformersjs/ort/', self.location.href).href;
+        var base = self.SSNHostedAssetURL('../../thirdparty/transformersjs/ort/', self.location.href);
         env.backends.onnx.wasm.wasmPaths = { wasm: base + 'ort-wasm-simd-threaded.asyncify.wasm', mjs: base + 'ort-wasm-simd-threaded.asyncify.mjs' };
         env.backends.onnx.wasm.numThreads = 1;
         env.backends.onnx.wasm.proxy = false;

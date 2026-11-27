@@ -13,15 +13,19 @@
 		{ id: "gaming", label: "Gaming" },
 		{ id: "time", label: "Clocks & timers" },
 		{ id: "scenes", label: "Scenes & frames" },
+		{ id: "corners", label: "Corner decorations" },
+		{ id: "worlds", label: "Backgrounds & worlds" },
 		{ id: "vertical", label: "Vertical 9:16" },
 		{ id: "3d", label: "3D scenes" },
 		{ id: "random", label: "Dice, wheels & draws" },
 		{ id: "celebrate", label: "Winners, raids & giveaways" },
+		{ id: "rewards", label: "Follows, subs & tips" },
 		{ id: "maps", label: "Maps" },
 		{ id: "pets", label: "Pets" },
 		{ id: "obs", label: "Reacts to OBS" },
 		{ id: "holidays", label: "Countries & holidays" },
-		{ id: "fun", label: "Cute & fun" }
+		{ id: "fun", label: "Cute & fun" },
+		{ id: "channelart", label: "Channel page art" }
 	];
 
 	// Extras every overlay understands (handled in view.html).
@@ -38,7 +42,10 @@
 		def.fields = def.fields || [];
 		def.presets = def.presets || [];
 		def.size = def.size || [800, 200];
-		def.fields = def.fields.concat(SSO.GLOBAL_FIELDS);
+		// A still picture (def.still, channel art) is downloaded, never loaded in OBS, so the OBS extras do not apply.
+		if (!def.still) { def.fields = def.fields.concat(SSO.GLOBAL_FIELDS); }
+		// An id is in people's saved links, so a second template must never take over one that is already there.
+		if (templateMap[def.id]) { if (global.console && console.error) { console.error("Overlay template id used twice, second one ignored: " + def.id); } return; }
 		templates.push(def);
 		templateMap[def.id] = def;
 	};
@@ -74,7 +81,8 @@
 	SSO.color = function (value, fallback) {
 		var v = String(value == null ? "" : value).trim();
 		if (!v) { return fallback || "transparent"; }
-		if (/^[0-9a-f]{3}([0-9a-f]{3})?([0-9a-f]{2})?$/i.test(v)) { return "#" + v; }
+		// 3, 6 or 8 hex digits. (Five used to slip through and made a colour no browser accepts.)
+		if (/^([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(v)) { return "#" + v; }
 		// Colours are also used in generated HTML attributes. Validate the CSS value
 		// and reject markup delimiters before allowing it into those attributes.
 		if (/[<>"']/.test(v)) { return fallback || "transparent"; }
@@ -126,8 +134,15 @@
 		}
 	}
 
+	// A still picture's settings: the query string, plus anything after the #. Channel art keeps its words after the #,
+	// which no server is sent, so a long text can never make a link too long to open. Where both name a setting, the
+	// query wins. Every other overlay reads the query string alone, as it always has.
+	SSO.pageQuery = function () {
+		var query = global.location.search || "", hash = String(global.location.hash || "").slice(1);
+		return hash.indexOf("=") === -1 ? query : (query ? query + "&" : "?") + hash;
+	};
 	SSO.readConfig = function (def, search) {
-		var params = new URLSearchParams(search == null ? global.location.search : search);
+		var params = new URLSearchParams(search == null ? (def.still ? SSO.pageQuery() : global.location.search) : search);
 		var cfg = {};
 		def.fields.forEach(function (field) {
 			var raw = params.get(field.key);

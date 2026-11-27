@@ -296,9 +296,14 @@ const metadataOverlays = [...new Set(['dock.html', 'featured.html', 'bot.html', 
           }, { mode, native, pixel });
           await page.addScriptTag({ content: [
             section('sources/websocket/twitch.js', 'const twitchDisplayNameByLogin =', 'const WEBSOCKET_READY_STATE ='),
+            section('sources/websocket/twitch.js', 'const TWITCH_BOT_LOGINS =', 'var clientId ='),
+            section('sources/websocket/twitch.js', 'let currentChannelId =', 'function createTransientTokenValidationError('),
+            section('sources/websocket/twitch.js', '\tfunction followerChecksEnabled(', '\tasync function checkChatFollower('),
+            section('sources/websocket/twitch.js', '\tfunction isBotBadgeId(', '\tfunction parseBadges('),
             section('sources/websocket/twitch.js', '\tfunction normalizeTwitchLogin(', '\tfunction rememberTwitchDisplayName('),
             section('sources/websocket/twitch.js', '\t\tfunction convertChatPayloadToLegacyMessage(payload)', '\tfunction convertMembershipPayloadToUserNotice('),
             section('sources/websocket/twitch.js', '\tfunction replaceEmotesWithImages(', '\tlet globalBadges'),
+            section('sources/websocket/twitch.js', '\tfunction toTimestampMs(', '\tfunction buildHypeTrainMeta('),
             section('sources/websocket/twitch.js', '\tasync function processMessage(parsedMessage)', '\tfunction addEvent(description)')
           ].join('\n') });
           await page.evaluate(async input => processMessage(convertChatPayloadToLegacyMessage(input)), input);

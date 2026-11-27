@@ -6,6 +6,7 @@
 	var scriptUrl = document.currentScript && document.currentScript.src
 		? document.currentScript.src
 		: new URL("./page-i18n.js", document.baseURI).href;
+	var interfaceLanguageOnly = document.currentScript && document.currentScript.hasAttribute("data-interface-language-only");
 	var defaultContent = new Map();
 	var currentLanguage = "en-us";
 	var currentTranslation = { innerHTML: {} };
@@ -36,7 +37,7 @@
 	function languageFromLocation() {
 		try {
 			var params = new URLSearchParams(global.location.search);
-			return normalizeLanguage(params.get("ln") || params.get("lang") || params.get("language"));
+			return normalizeLanguage(params.get("ln") || (interfaceLanguageOnly ? navigator.language : params.get("lang") || params.get("language")));
 		} catch (_) {
 			return "en-us";
 		}

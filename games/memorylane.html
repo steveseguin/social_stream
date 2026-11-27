@@ -456,6 +456,8 @@
 
         // Process incoming message
         function processData(data) {
+            // Captions are the host's own speech shown as text. They are not chat to take part with.
+            if (data && (data.content || data).type === "captions") return;
             // Handle different data formats from Social Stream
             if (data && data.content) {
                 data = data.content;

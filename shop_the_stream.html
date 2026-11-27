@@ -296,6 +296,8 @@ function connectWebSocket() {
 }
 
 function handleChatCommand(message) {
+    // Captions (the host's speech shown as text) never run a command.
+    if (message.type === 'captions') return;
     const cmd = message.chatmessage.trim().toLowerCase();
     
     // Simple command handler - can be expanded

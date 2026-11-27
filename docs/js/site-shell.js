@@ -2,6 +2,12 @@
     'use strict';
     // One navigation definition for the homepage, documentation, and galleries.
     var siteRoot = new URL('../../', document.currentScript.src);
+    if (siteRoot.origin === 'https://beta.socialstream.ninja' && !document.querySelector('script[data-doc-media]')) {
+        var mediaScript = document.createElement('script');
+        mediaScript.src = new URL('shared/utils/hostedAssets.js', siteRoot).href;
+        mediaScript.setAttribute('data-doc-media', '');
+        document.head.appendChild(mediaScript);
+    }
     var translated = document.documentElement.hasAttribute('data-site-language');
     var translations;
     function t(label, values) {

@@ -1,9 +1,11 @@
 // Local neural speech. Executable dependencies are packaged; remote requests are model data only.
 import { ort, env, AutoTokenizer, phonemize, phonemizeKokoro } from '../../thirdparty/neural-tts/runtime.js';
+import '../utils/hostedAssets.js';
 import { splitText, chunksToWav } from './pcm.js';
 
 ort.env.wasm.numThreads = 1;
-ort.env.wasm.wasmPaths = new URL('../../thirdparty/neural-tts/', import.meta.url).href;
+const speechAssets = self.SSNHostedAssetURL('../../thirdparty/neural-tts/', import.meta.url);
+ort.env.wasm.wasmPaths = speechAssets;
 env.backends.onnx.wasm.numThreads = 1;
 env.backends.onnx.wasm.wasmPaths = ort.env.wasm.wasmPaths;
 env.allowLocalModels = false;
@@ -31,7 +33,7 @@ async function initialize(options, progress, recovery) {
     if (!ort.env.wasm.wasmBinary) {
         // Keep each packaged asset below the site's per-file deployment limit.
         const parts = await Promise.all([1, 2].map(async part => {
-            const url = new URL('../../thirdparty/neural-tts/ort-wasm-simd-threaded.asyncify.part' + part + '.bin', import.meta.url);
+            const url = new URL('ort-wasm-simd-threaded.asyncify.part' + part + '.bin', speechAssets);
             const response = await fetch(url);
             if (!response.ok) throw new Error('Speech runtime could not load. Reload the page and try again.');
             return new Uint8Array(await response.arrayBuffer());
@@ -86,7 +88,7 @@ async function initialize(options, progress, recovery) {
             }
         }
     } else {
-        const response = await fetch(new URL('../../thirdparty/neural-tts/kitten-models.json', import.meta.url));
+        const response = await fetch(new URL('kitten-models.json', speechAssets));
         if (!response.ok) throw new Error('Kitten model list could not load.');
         const models = await response.json();
         kittenConfig = models[options.model] || models.nano;
@@ -102,7 +104,7 @@ async function multilingualPhonemes(text, language) {
     if (!languageModule) {
         const { createPiperPhonemize } = await import('../../thirdparty/piper/piper-o91UDS6e.js');
         languageModule = await createPiperPhonemize({
-            locateFile: name => new URL('../../thirdparty/piper/' + name, import.meta.url).href,
+            locateFile: name => self.SSNHostedAssetURL('../../thirdparty/piper/' + name, import.meta.url),
             print: line => { if (languageResult) languageResult(line); },
             printErr: line => console.warn(line)
         });
@@ -139,7 +141,7 @@ async function synthesize(text, options, progress) {
         const voice = kittenConfig.config.voice_aliases[options.voice] || options.voice;
         const table = kittenConfig.voices[voice];
         if (!table) throw new Error('Choose a valid Kitten voice.');
-        if (!voices.has(voice)) voices.set(voice, new Float32Array(await asset(new URL('../../thirdparty/neural-tts/' + table.file, import.meta.url).href, progress)));
+        if (!voices.has(voice)) voices.set(voice, new Float32Array(await asset(new URL(table.file, speechAssets).href, progress)));
         const symbols = '$' + ';:,.!?¡¿—…"«»"" ' + 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' + "ɑɐɒæɓʙβɔɕçɗɖðʤəɘɚɛɜɝɞɟʄɡɠɢʛɦɧħɥʜɨɪʝɭɬɫɮʟɱɯɰŋɳɲɴøɵɸθœɶʘɹɺɾɻʀʁɽʂʃʈʧʉʊʋⱱʌɣɤʍχʎʏʑʐʒʔʡʕʢǀǁǂǃˈˌːˑʼʴʰʱʲʷˠˤ˞↓↑→↗↘'̩'ᵻ";
         const dictionary = new Map(Array.from(symbols, (symbol, index) => [symbol, index]));
         const phonemes = (await phonemize(text, 'en-us')).join(' ');

@@ -482,6 +482,8 @@
 	function handle(m) {
 		if (m && m.content) m = m.content;
 		if (!m || typeof m !== 'object') return;
+		// Captions are the host's own speech shown as text. They are not chat to take part with.
+		if (m.type === 'captions') return;
 		var type = String(m.type || '').toLowerCase();
 		if ((only.length && only.indexOf(type) < 0) || hide.indexOf(type) >= 0) return;
 		if (typeof m.chatname !== 'string' || !m.chatname || m.chatname.length > 400) return;

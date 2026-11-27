@@ -106,6 +106,8 @@ body .textInputContainer .textInput + label::before { display:none; }
 body .textInputContainer .textInputUploadButton { grid-area:2 / 2; position:static; }
 /* Align swatches with the field below its label, including wrapped labels. */
 .colorInputRow { display:flex; flex-wrap:wrap; align-items:flex-end; column-gap:8px; row-gap:0; }
+body .textInputContainer.popup-css-field { width:95%; }
+body .popup-css-field textarea { resize:vertical; }
 body .colorInputRow > .textInputContainer { flex:1; min-width:0; width:auto; margin:8px 0; padding:0; }
 body .colorInputRow > .textInputContainer > input.textInput { height:32px; min-height:32px; margin:0; padding:6px 8px; }
 body .colorInputRow > input.colorPicker[type="color"] { flex:0 0 32px; box-sizing:border-box; cursor:pointer; width:32px; height:32px; margin:0 0 8px; padding:2px; border:1px solid var(--settings-control-border); border-radius:4px; background:var(--color-accent-subtle); }

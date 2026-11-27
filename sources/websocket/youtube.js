@@ -430,6 +430,13 @@ window.addEventListener('youtubeVideoChanged', function(e) {
 	}
 });
 
+window.addEventListener('youtubeCaptionResult', function(e) {
+	if (!e.detail || typeof e.detail.requestId !== 'string') return;
+	chrome.runtime.sendMessage(chrome.runtime.id, { youtubeCaptionResult: e.detail }, function() {
+		chrome.runtime.lastError;
+	});
+});
+
 window.addEventListener('youtubeEmojiRequest', function(e) {
 	if (!e.detail || !e.detail.videoId) {
 		return;
@@ -616,7 +623,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			}
 			if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
 				window.dispatchEvent(new CustomEvent('sendExtensionMessage', {
-					detail: { message: request.message, youtubeReplyVideoId: request.youtubeReplyVideoId },
+					detail: { message: request.message, youtubeReplyVideoId: request.youtubeReplyVideoId, captionRequestId: request.captionRequestId },
 					bubbles: true
 				}));
 				sendResponse(true);
@@ -677,7 +684,7 @@ window.addEventListener('message', function(event) {
 	}
 	if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
 		window.dispatchEvent(new CustomEvent('sendExtensionMessage', {
-			detail: { message: request.message, youtubeReplyVideoId: request.youtubeReplyVideoId },
+			detail: { message: request.message, youtubeReplyVideoId: request.youtubeReplyVideoId, captionRequestId: request.captionRequestId },
 			bubbles: true
 		}));
 	}

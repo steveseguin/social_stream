@@ -7,14 +7,14 @@
 
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Overlay Studio - Social Stream Ninja</title>
-	<meta name="description" content="Free stream overlays: banners, socials, timers, a live-for clock, pets that react to OBS scene changes, gaming and Minecraft styles, punk, spicy, cozy and more. Customize, copy the link, paste into OBS.">
+	<meta name="description" content="Free stream overlays for OBS: banners, socials, timers, animated backgrounds, pixel dioramas, celebrations for follows, subs and tips, pets that react to scene changes and more. Customize, copy the link, paste into OBS.">
 
 	<meta property="og:title" content="Overlay Studio - Social Stream Ninja">
 	<meta property="og:description" content="Free stream overlays you can customize and drop into OBS as a browser source.">
 	<link rel="icon" href="../favicon.ico">
 	<link rel="stylesheet" href="../docs/css/site-shell.css">
 	<script src="../docs/js/site-shell.js"></script>
-	<link rel="stylesheet" href="studio.css?v=16">
+	<link rel="stylesheet" href="studio.css?v=18">
 </head>
 <body class="site-header-offset studio-index">
 	<a class="studio-skip" href="#gallery">Skip to overlays</a>
@@ -24,8 +24,8 @@
 	<section class="hero">
 		<p class="eyebrow">NO SESSION NEEDED</p>
 		<h1>Overlay Studio</h1>
-		<p>Choose a banner, social bar, timer, pet or gaming overlay. Customize it and paste the link into an OBS <b>Browser Source</b>. Styles marked <span class="obs-chip">OBS</span> react to scene changes and going live.</p>
-		<div class="studio-links"><a href="../docs/overlay-gallery.html">Chat overlays &amp; alerts</a><a href="../docs/obs-quick-start.html">OBS setup guide</a></div>
+		<p>Choose a banner, timer, animated background, celebration, pet or gaming overlay. Customize it and paste the link into an OBS <b>Browser Source</b>. Styles marked <span class="obs-chip">OBS</span> react to scene changes and going live.</p>
+		<div class="studio-links"><a href="#cat=worlds">Animated backgrounds</a><a href="#cat=rewards">Follow, sub &amp; tip celebrations</a><a href="#cat=channelart">Channel panels &amp; offline screens</a><a href="../docs/overlay-gallery.html">Chat overlays &amp; alerts</a><a href="../docs/obs-quick-start.html">OBS setup guide</a></div>
 	</section>
 
 	<div class="filters">
@@ -76,7 +76,7 @@
 	</div>
 
 	</main>
-	<script src="core.js?v=21"></script>
+	<script src="core.js?v=25"></script>
 	<script src="templates/countries.js?v=15"></script>
 	<script src="templates/engines.js?v=19"></script>
 	<script src="templates/socials.js?v=18"></script>
@@ -86,7 +86,7 @@
 	<script src="templates/scenes.js?v=21"></script>
 	<script src="templates/maps.js?v=18"></script>
 	<script src="templates/fun.js?v=15"></script>
-	<script src="templates/obs.js?v=16"></script>
+	<script src="templates/obs.js?v=17"></script>
 	<script src="templates/petrig.js?v=1"></script>
 	<script src="templates/pets.js?v=16"></script>
 	<script src="templates/extra.js?v=24"></script>
@@ -102,19 +102,43 @@
 	<script src="templates/themebar.js?v=16"></script>
 	<script src="templates/winter.js?v=3"></script>
 	<script src="templates/winterstrip.js?v=2"></script>
-	<script src="templates/winterscenes.js?v=2"></script>
+	<script src="templates/winterscenes.js?v=3"></script>
 	<script src="templates/winterfx.js?v=2"></script>
 	<script src="templates/frames2.js?v=2"></script>
 	<script src="templates/lowerfx.js?v=1"></script>
 	<script src="templates/seasons.js?v=1"></script>
 	<script src="templates/seasondecor.js?v=1"></script>
 	<script src="templates/splat.js?v=3"></script>
-	<script src="templates/three3d.js?v=2"></script>
+	<script src="templates/three3d.js?v=3"></script>
 	<script src="templates/portrait.js?v=3"></script>
-	<script src="templates/celebrate.js?v=3"></script>
-	<script src="templates/moments.js?v=4"></script>
+	<script src="templates/celebrate.js?v=4"></script>
+	<script src="templates/moments.js?v=5"></script>
 	<script src="templates/random.js?v=3"></script>
 	<script src="templates/countscreen.js?v=3"></script>
+	<script src="templates/channelart.js?v=2"></script>
+	<script src="templates/fxkit.js?v=2"></script>
+	<script src="templates/rewards.js?v=1"></script>
+	<script src="templates/thanks.js?v=1"></script>
+	<script src="templates/megafx.js?v=1"></script>
+	<script src="templates/cityscapes.js?v=2"></script>
+	<script src="templates/wilds.js?v=1"></script>
+	<script src="templates/habitats.js?v=1"></script>
+	<script src="templates/stackworld.js?v=1"></script>
+	<script src="templates/tinyworlds.js?v=1"></script>
+	<script src="templates/retro8.js?v=1"></script>
+	<script src="templates/retro3d.js?v=1"></script>
+	<script src="templates/cornerkit.js?v=1"></script>
+	<script src="templates/corners-harvest.js?v=1"></script>
+	<script src="templates/corners-xmas.js?v=1"></script>
+	<script src="templates/corners-winter.js?v=1"></script>
+	<script src="templates/corners-party.js?v=1"></script>
+	<script src="templates/corners-cozy.js?v=1"></script>
+	<script src="templates/corners-love.js?v=1"></script>
+	<script src="templates/corners-spring.js?v=1"></script>
+	<script src="templates/corners-tropic.js?v=1"></script>
+	<script src="templates/corners-crystal.js?v=1"></script>
+	<script src="templates/corners-haunt.js?v=1"></script>
+	<script src="templates/corners.js?v=1"></script>
 	<script src="templates/seasontags.js?v=1"></script>
 	<script>
 	(function () {
@@ -124,7 +148,7 @@
 			$("gallery").focus();
 			window.scrollTo(0, 0);
 		});
-		var OBS_TEMPLATES = ["pets", "status", "scenename", "scenetimer", "rundown", "recap", "livetimer", "growth", "lowerthirdfx", "coins3d", "winner", "fireworks", "namedraw", "podium", "moment", "raid", "numberdraw", "dice", "spinner", "coinflip", "carddraw", "listdraw", "crystalball", "rps"];
+		var OBS_TEMPLATES = ["pets", "status", "scenename", "scenetimer", "rundown", "recap", "livetimer", "growth", "lowerthirdfx", "coins3d", "winner", "fireworks", "namedraw", "podium", "moment", "raid", "numberdraw", "dice", "spinner", "coinflip", "carddraw", "listdraw", "crystalball", "rps", "followburst", "subforge", "giftdrop", "tipchest", "cheergems", "stickerpop", "neonthanks", "raidfleet", "levelup", "clink", "meteor", "dragon", "vault", "launch", "storm", "supernova"];
 		var MAX_LOADING = 4;
 		var state = { cat: "all", type: "", vibe: "", q: "", sort: "mix", page: 1 };
 		var cols = parseInt(SSO.store.get("gallery-cols"), 10) || (window.innerWidth < 900 ? 2 : 3);
@@ -223,10 +247,22 @@
 
 		// ---- preview loading queue ----
 		var queue = [], loading = 0;
+		var previewObserver = window.IntersectionObserver && new IntersectionObserver(function (entries) {
+			entries.forEach(function (entry) {
+				var box = entry.target;
+				box._near = entry.isIntersecting;
+				if (box._near) {
+					queue.push({ box: box, card: box._card });
+				} else if (box.firstChild) {
+					box.removeChild(box.firstChild);
+				}
+			});
+			pump();
+		}, { rootMargin: "120px" });
 		function pump() {
 			while (loading < MAX_LOADING && queue.length) {
 				var item = queue.shift();
-				if (!item.box.isConnected) { continue; }
+				if (!item.box.isConnected || item.box.firstChild || (previewObserver && !item.box._near)) { continue; }
 				loading++;
 				(function (item) {
 					var frame = document.createElement("iframe");
@@ -252,6 +288,9 @@
 			frame.style.top = ((box.clientHeight - dims[1] * s) / 2) + "px";
 			frame.style.transform = "scale(" + s + ")";
 		}
+
+		// Channel art is looked at on a channel page, so it is never previewed over the game scene.
+		function thumbBg(card) { return card.def.still && bg === "game" ? "dark" : bg; }
 
 		function pager(el, pages) {
 			el.innerHTML = "";
@@ -310,6 +349,7 @@
 			pager($("pagerBottom"), pages);
 
 			queue = [];
+			if (previewObserver) { previewObserver.disconnect(); }
 			var grid = $("grid");
 			grid.innerHTML = "";
 			if (!slice.length) {
@@ -320,13 +360,17 @@
 				a.className = "card";
 				a.href = "editor.html?" + card.query;
 				a.innerHTML = '<div class="thumb"></div><div class="meta"><div><div class="name"></div><div class="sub"></div></div><span class="btn small">Customize</span></div>';
-				a.querySelector(".thumb").className = "thumb bg-" + bg;
+				a.querySelector(".thumb").className = "thumb bg-" + thumbBg(card);
 				a.querySelector(".name").textContent = card.preset.name;
 				var sub = a.querySelector(".sub");
 				sub.textContent = card.def.name;
 				if (OBS_TEMPLATES.indexOf(card.def.id) !== -1) { sub.insertAdjacentHTML("beforeend", ' <span class="obs-chip" title="Reacts to OBS scene changes / going live">OBS</span>'); }
+				if (card.def.still) { sub.insertAdjacentHTML("beforeend", ' <span class="obs-chip" title="A picture you download, not an OBS link">PNG</span>'); }
 				grid.appendChild(a);
-				queue.push({ box: a.querySelector(".thumb"), card: card });
+				var box = a.querySelector(".thumb");
+				box._card = card;
+				if (previewObserver) { previewObserver.observe(box); }
+				else { queue.push({ box: box, card: card }); }
 			});
 			pump();
 			try { history.replaceState(null, "", "#" + Object.keys(state).filter(function (k) { return state[k] && !(k === "cat" && state[k] === "all") && !(k === "page" && state[k] === 1) && !(k === "sort" && state[k] === "mix"); }).map(function (k) { return k + "=" + encodeURIComponent(state[k]); }).join("&")); } catch (e) {}
@@ -345,7 +389,7 @@
 			bg = $("bgpick").value;
 			SSO.store.set("gallery-bg", bg);
 			var thumbs = document.querySelectorAll(".thumb");
-			for (var i = 0; i < thumbs.length; i++) { thumbs[i].className = "thumb bg-" + bg; }
+			for (var i = 0; i < thumbs.length; i++) { thumbs[i].className = "thumb bg-" + thumbBg(thumbs[i]._card); }
 		});
 		var segs = document.querySelectorAll(".seg button");
 		for (var k = 0; k < segs.length; k++) {

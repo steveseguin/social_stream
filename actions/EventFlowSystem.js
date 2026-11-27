@@ -2334,6 +2334,39 @@ class EventFlowSystem {
         return overallResult;
     }
     
+    findChatVoiceRule(rules, message, requireRole) {
+        if (!message || typeof message.chatmessage !== 'string' || !message.chatmessage.trim()) return null;
+        if (message.event || message.private || message.reflection) return null;
+        const source = message.type === 'youtubeshorts' ? 'youtube' : message.type;
+        const login = String(message.username || message.chatname || '').trim().toLowerCase().replace(/^@/, '');
+        const userId = message.userid == null ? '' : String(message.userid).trim();
+        let person = null;
+        let group = null;
+        for (const rule of rules) {
+            if (!rule) continue;
+            if (rule.role === 'person') {
+                if (person) continue;
+                for (const entry of String(rule.account || '').split(',')) {
+                    const separator = entry.indexOf(':');
+                    const account = (separator < 0 ? entry : entry.slice(0, separator)).trim();
+                    if (separator >= 0 && entry.slice(separator + 1).trim().toLowerCase() !== source) continue;
+                    const name = account.toLowerCase().replace(/^@/, '');
+                    if (name && (name === login || account === userId)) {
+                        if (!requireRole) return rule;
+                        person = rule;
+                        break;
+                    }
+                }
+            } else if (!group) {
+                if (rule.role === 'vip' && message.vip) group = rule;
+                if (rule.role === 'member' && (message.membership || message.hasMembership)) group = rule;
+                if (rule.role === 'follower' && message.meta?.follower === true) group = rule;
+            }
+        }
+        if (requireRole && !group) return null;
+        return person || group;
+    }
+
     stripHtml(html) {
         // Simple HTML stripping function that preserves emoji alt text
         if (!html || typeof html !== 'string') return html;
@@ -4976,7 +5009,13 @@ class EventFlowSystem {
             // TTS Actions
             case 'ttsSpeak': {
                 let ttsText = config.text || '';
-                if (config.useMessageText && message.chatmessage) {
+                let voice = config.voice;
+                if (Array.isArray(config.chatVoiceRules)) {
+                    const rule = this.findChatVoiceRule(config.chatVoiceRules, message, config.requireChatVoiceRole === true);
+                    if (!rule) break;
+                    voice = rule.voice;
+                    ttsText = message.textonly ? message.chatmessage : this.stripHtml(message.chatmessage);
+                } else if (config.useMessageText && message.chatmessage) {
                     ttsText = message.chatmessage;
                 } else {
                     ttsText = this.replaceTemplateVars(ttsText, message);
@@ -4986,7 +5025,7 @@ class EventFlowSystem {
                         overlayNinja: {
                             actionType: 'tts',
                             text: ttsText,
-                            voice: typeof config.voice === 'string' ? config.voice.trim() : '',
+                            voice: typeof voice === 'string' ? voice.trim() : '',
                             force: config.force || false
                         }
                     }, 'actions');

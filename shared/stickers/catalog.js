@@ -33,6 +33,13 @@
         var n = Number(value);
         return value !== '' && value != null && Number.isFinite(n) ? Math.max(min, Math.min(max, Math.floor(n))) : fallback;
     }
+    function builtInImage(image, base) {
+        var url = new URL('media/stickers/' + image, base);
+        if (url.origin === 'https://beta.socialstream.ninja' && /\.webp$/i.test(image)) {
+            return 'https://cache.socialstream.ninja/beta' + url.pathname;
+        }
+        return url.href;
+    }
     function mediaUrl(value) {
         try {
             var url = new URL(String(value || ''));
@@ -75,7 +82,7 @@
         settings.custom.forEach(function (reward) { items.push(Object.assign({}, reward, { pack: 'custom', duration: settings.duration })); });
         return items;
     }
-    var catalog = { packs: packs, motions: motions, config: config, rewards: rewards, mediaUrl: mediaUrl, number: number };
+    var catalog = { packs: packs, motions: motions, config: config, rewards: rewards, mediaUrl: mediaUrl, builtInImage: builtInImage, number: number };
     root.SSNStickers = catalog;
     if (typeof module !== 'undefined' && module.exports) module.exports = catalog;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

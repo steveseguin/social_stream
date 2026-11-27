@@ -3,6 +3,7 @@
 
 (function(window) {
   'use strict';
+  const scriptUrl = document.currentScript && document.currentScript.src;
   
   class RealESpeakTTS {
     constructor() {
@@ -46,7 +47,7 @@
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         
         // Determine the correct worker path based on the protocol
-        let workerPath = './thirdparty/espeakng.worker.js';
+        let workerPath = scriptUrl ? new URL('espeakng.worker.js', scriptUrl).href : './thirdparty/espeakng.worker.js';
         
         // If we're running from a file:// URL, we need to use a different approach
         if (window.location.protocol === 'file:') {
@@ -116,7 +117,7 @@
       
       // Load the SimpleTTS script
       const script = document.createElement('script');
-      script.src = './thirdparty/espeakng-simple.js';
+      script.src = scriptUrl ? new URL('espeakng-simple.js', scriptUrl).href : './thirdparty/espeakng-simple.js';
       
       const loadPromise = new Promise((resolve, reject) => {
         script.onload = resolve;

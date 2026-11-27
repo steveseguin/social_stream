@@ -98,7 +98,7 @@
 			hasRefreshToken: !!localStorage.getItem(STORAGE_KEYS.refreshToken),
 			expiresAt: expiry,
 			expired: !expiry || expiry <= now,
-			accessLevel: normalizeAccessLevel(localStorage.getItem(STORAGE_KEYS.accessLevel)),
+			accessLevel: normalizeAccessLevel(localStorage.getItem(STORAGE_KEYS.tokenAccessLevel) || localStorage.getItem(STORAGE_KEYS.accessLevel)),
 			authSource: localStorage.getItem(STORAGE_KEYS.authSource) || ""
 		};
 	}
@@ -136,11 +136,18 @@
 			localStorage.setItem(STORAGE_KEYS.refreshToken, refreshToken);
 		}
 		localStorage.setItem(STORAGE_KEYS.accessLevel, accessLevel);
-		localStorage.setItem(STORAGE_KEYS.tokenAccessLevel, accessLevel);
+		var tokenAccessLevel = accessLevel;
+		if (accessLevel === "admin" && payload.scope != null) {
+			var scopes = new Set(String(payload.scope).split(/\s+/));
+			if (!scopes.has("https://www.googleapis.com/auth/youtube.force-ssl") && !scopes.has("https://www.googleapis.com/auth/youtube")) {
+				tokenAccessLevel = "readonly";
+			}
+		}
+		localStorage.setItem(STORAGE_KEYS.tokenAccessLevel, tokenAccessLevel);
 		localStorage.setItem(STORAGE_KEYS.authSource, authSource);
 
 		var state = getState();
-		setStatus("YouTube sign-in is ready.", "signed-in");
+		showSignedInStatus(state);
 		try {
 			window.dispatchEvent(new CustomEvent("ssyoutubeauthready", { detail: state }));
 		} catch (_) {}
@@ -190,6 +197,7 @@
 
 		if (!bridge || typeof bridge.startYouTubeOAuth !== "function") {
 			var target = "youtube.html?authonly=1&autostartauth=1&access=" + encodeURIComponent(accessLevel);
+			localStorage.setItem(STORAGE_KEYS.accessLevel, accessLevel);
 			location.href = target;
 			return null;
 		}
@@ -219,16 +227,22 @@
 			refreshToken: data.refresh_token,
 			expiresIn: data.expires_in,
 			accessLevel: accessLevel,
+			scope: data.scope == null ? result.scope : data.scope,
 			authSource: YT_AUTH_SOURCE_HOSTED
 		});
 		clearStoredState();
 		return seeded;
 	}
 
+	function showSignedInStatus(state) {
+		var needsWrite = localStorage.getItem(STORAGE_KEYS.accessLevel) === "admin" && state.accessLevel === "readonly";
+		setStatus(needsWrite ? "Signed in with read-only access. Sign in again and approve write access to send replies." : "YouTube sign-in is ready.", "signed-in");
+	}
+
 	function initPage() {
 		var state = getState();
 		if (state.hasToken && !state.expired) {
-			setStatus("YouTube sign-in is ready.", "signed-in");
+			showSignedInStatus(state);
 		} else if (state.hasRefreshToken) {
 			setStatus("YouTube refresh token is saved.", "signed-in");
 		} else {

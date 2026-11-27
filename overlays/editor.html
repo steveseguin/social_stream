@@ -11,7 +11,7 @@
 	<link rel="icon" href="../favicon.ico">
 	<link rel="stylesheet" href="../docs/css/site-shell.css">
 	<script src="../docs/js/site-shell.js"></script>
-	<link rel="stylesheet" href="studio.css?v=16">
+	<link rel="stylesheet" href="studio.css?v=18">
 </head>
 <body class="site-header-offset studio-editor">
 	<a class="studio-skip" href="#form">Skip to settings</a>
@@ -27,7 +27,7 @@
 		</aside>
 		<main class="ed-main">
 			<div class="ed-tools">
-				<div class="grp"><label for="w">OBS size</label><input type="number" id="w" aria-label="OBS width" min="50" max="7680"><span class="x">×</span><input type="number" id="h" aria-label="OBS height" min="20" max="4320"></div>
+				<div class="grp" id="sizeGrp"><label for="w">OBS size</label><input type="number" id="w" aria-label="OBS width" min="50" max="7680"><span class="x">×</span><input type="number" id="h" aria-label="OBS height" min="20" max="4320"></div>
 				<div class="grp"><label for="bg">Preview on</label>
 					<select id="bg">
 						<option value="game">Game background</option>
@@ -69,7 +69,7 @@
 	</div>
 	<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-	<script src="core.js?v=21"></script>
+	<script src="core.js?v=25"></script>
 	<script src="templates/countries.js?v=15"></script>
 	<script src="templates/engines.js?v=19"></script>
 	<script src="templates/socials.js?v=18"></script>
@@ -79,7 +79,7 @@
 	<script src="templates/fun.js?v=15"></script>
 	<script src="templates/text.js?v=15"></script>
 	<script src="templates/gaming.js?v=17"></script>
-	<script src="templates/obs.js?v=16"></script>
+	<script src="templates/obs.js?v=17"></script>
 	<script src="templates/petrig.js?v=1"></script>
 	<script src="templates/pets.js?v=16"></script>
 	<script src="templates/extra.js?v=24"></script>
@@ -95,30 +95,73 @@
 	<script src="templates/themebar.js?v=16"></script>
 	<script src="templates/winter.js?v=3"></script>
 	<script src="templates/winterstrip.js?v=2"></script>
-	<script src="templates/winterscenes.js?v=2"></script>
+	<script src="templates/winterscenes.js?v=3"></script>
 	<script src="templates/winterfx.js?v=2"></script>
 	<script src="templates/frames2.js?v=2"></script>
 	<script src="templates/lowerfx.js?v=1"></script>
 	<script src="templates/seasons.js?v=1"></script>
 	<script src="templates/seasondecor.js?v=1"></script>
 	<script src="templates/splat.js?v=3"></script>
-	<script src="templates/three3d.js?v=2"></script>
+	<script src="templates/three3d.js?v=3"></script>
 	<script src="templates/portrait.js?v=3"></script>
-	<script src="templates/celebrate.js?v=3"></script>
-	<script src="templates/moments.js?v=4"></script>
+	<script src="templates/celebrate.js?v=4"></script>
+	<script src="templates/moments.js?v=5"></script>
 	<script src="templates/random.js?v=3"></script>
 	<script src="templates/countscreen.js?v=3"></script>
+	<script src="templates/channelart.js?v=2"></script>
+	<script src="templates/fxkit.js?v=2"></script>
+	<script src="templates/rewards.js?v=1"></script>
+	<script src="templates/thanks.js?v=1"></script>
+	<script src="templates/megafx.js?v=1"></script>
+	<script src="templates/cityscapes.js?v=2"></script>
+	<script src="templates/wilds.js?v=1"></script>
+	<script src="templates/habitats.js?v=1"></script>
+	<script src="templates/stackworld.js?v=1"></script>
+	<script src="templates/tinyworlds.js?v=1"></script>
+	<script src="templates/retro8.js?v=1"></script>
+	<script src="templates/retro3d.js?v=1"></script>
+	<script src="templates/cornerkit.js?v=1"></script>
+	<script src="templates/corners-harvest.js?v=1"></script>
+	<script src="templates/corners-xmas.js?v=1"></script>
+	<script src="templates/corners-winter.js?v=1"></script>
+	<script src="templates/corners-party.js?v=1"></script>
+	<script src="templates/corners-cozy.js?v=1"></script>
+	<script src="templates/corners-love.js?v=1"></script>
+	<script src="templates/corners-spring.js?v=1"></script>
+	<script src="templates/corners-tropic.js?v=1"></script>
+	<script src="templates/corners-crystal.js?v=1"></script>
+	<script src="templates/corners-haunt.js?v=1"></script>
+	<script src="templates/corners.js?v=1"></script>
 	<script src="templates/seasontags.js?v=1"></script>
 	<script>
 	(function () {
 		var $ = function (id) { return document.getElementById(id); };
 		var params = new URLSearchParams(location.search);
 		var def = SSO.get(params.get("t")) || SSO.list()[0];
-		var cfg = SSO.readConfig(def, location.search);
-		var sizeTouched = params.has("w") || params.has("h");
+		var cfg = SSO.readConfig(def);
+		// Settings can sit after the # in the link, so the skip link must not put "#form" in their place.
+		document.querySelector(".studio-skip").addEventListener("click", function (event) { event.preventDefault(); $("form").focus(); });
+		// A still picture (channel art) is downloaded as PNG files; it has no OBS link, size or events.
+		var still = def.still || null;
+		// strip: on a phone, panels are shown in one row at a size that can be read; the row is swiped sideways.
+		var strip = false, stillCount = 0;
+		function narrow() { return window.innerWidth <= 860; }
+		function wantStrip() { return !!(still && still.row && stillCount && narrow()); }
+		// mine: the text boxes the viewer has typed in. A new style never replaces those, even where the words happen to
+		// match a style's own sample. For a still picture the list rides in the link, so it is still known after a reload.
+		function readMine() {
+			var out = {};
+			if (!still) { return out; }
+			(new URLSearchParams(SSO.pageQuery()).get("mine") || "").split(",").forEach(function (key) {
+				if (def.fields.some(function (f) { return f.key === key; })) { out[key] = true; }
+			});
+			return out;
+		}
+		var mine = readMine();
+		var sizeTouched = !still && (params.has("w") || params.has("h"));
 		var extra = new URLSearchParams();
 		["css", "b64css", "cssb64", "scale"].forEach(function (key) { if (params.has(key)) { extra.set(key, params.get(key)); } });
-		var size = [parseInt(params.get("w"), 10) || 0, parseInt(params.get("h"), 10) || 0];
+		var size = still ? [0, 0] : [parseInt(params.get("w"), 10) || 0, parseInt(params.get("h"), 10) || 0];
 
 		// template picker
 		SSO.CATEGORIES.forEach(function (cat) {
@@ -141,6 +184,13 @@
 		$("desc").textContent = def.description || "";
 		document.title = def.name + " - Overlay Editor - Social Stream Ninja";
 
+		// Sample words come with the overlay: its defaults, and the words its styles bring. Anything else in a text box is
+		// the viewer's own.
+		function isSample(field, value) {
+			var own = String(value == null ? "" : value);
+			if (own === String(field.default == null ? "" : field.default)) { return true; }
+			return def.presets.some(function (preset) { return preset.values && field.key in preset.values && String(preset.values[field.key]) === own; });
+		}
 		def.presets.forEach(function (p) {
 			var b = document.createElement("button");
 			b.type = "button";
@@ -148,13 +198,19 @@
 			b.textContent = p.name;
 			b.addEventListener("click", function () {
 				// Presets restyle; the viewer's own text, messages and socials carry over.
+				// On an ordinary overlay a style still sets every text box it names, as it always has: a text box there can
+				// be a working setting (which list of drawn numbers to use), not only words.
+				// Channel art is all words. There a style's sample words replace other sample words, never something the
+				// viewer typed.
 				var keep = {};
 				def.fields.forEach(function (f) {
-					if ((f.type === "text" || f.type === "textarea" || f.type === "socials") && !(f.key in p.values)) { keep[f.key] = cfg[f.key]; }
+					var words = f.type === "text" || f.type === "textarea" || f.type === "socials";
+					if (!words && !f.keep) { return; }
+					if (!(f.key in p.values) || (still && words && (mine[f.key] || !isSample(f, cfg[f.key])))) { keep[f.key] = cfg[f.key]; }
 				});
 				cfg = SSO.readConfig(def, "");
-				Object.keys(keep).forEach(function (k) { cfg[k] = keep[k]; });
 				Object.keys(p.values).forEach(function (k) { cfg[k] = p.values[k]; });
+				Object.keys(keep).forEach(function (k) { cfg[k] = keep[k]; });
 				buildForm();
 				if (!sizeTouched) { size = [0, 0]; }
 				update(true);
@@ -178,7 +234,7 @@
 			var list = SSO.parseSocials(cfg[field.key]).map(function (s) { return { net: s.net, handle: s.handle }; });
 			var holder = document.createElement("div");
 			wrap.appendChild(holder);
-			function save() { cfg[field.key] = SSO.stringifySocials(list); update(); }
+			function save() { cfg[field.key] = SSO.stringifySocials(list); mine[field.key] = true; update(); }
 			function draw() {
 				holder.innerHTML = "";
 				list.forEach(function (item, idx) {
@@ -264,7 +320,13 @@
 						sel.appendChild(opt);
 					});
 					sel.value = value;
-					sel.addEventListener("change", function () { cfg[field.key] = sel.value; update(); refreshVisibility(); });
+					sel.addEventListener("change", function () {
+						cfg[field.key] = sel.value;
+						update();
+						refreshVisibility();
+						// A choice other fields take their look from (a theme) redraws the form.
+						if (field.rebuild) { buildForm(); if ($(id)) { $(id).focus(); } }
+					});
 					wrap.appendChild(sel);
 				} else if (field.type === "textarea") {
 					var ta = document.createElement("textarea");
@@ -276,7 +338,7 @@
 						wrap.appendChild(up2);
 					}
 					ta.value = value;
-					ta.addEventListener("input", function () { cfg[field.key] = ta.value; update(); });
+					ta.addEventListener("input", function () { cfg[field.key] = ta.value; mine[field.key] = true; update(); });
 					wrap.appendChild(ta);
 				} else if (field.type === "range") {
 					var row = document.createElement("div");
@@ -307,9 +369,11 @@
 					txt.type = "text";
 					txt.id = id;
 					txt.value = value ? "#" + String(value).replace(/^#/, "") : "";
-					txt.placeholder = field.default === "" ? "none" : "#rrggbb";
+					txt.placeholder = field.placeholder || (field.default === "" ? "none" : "#rrggbb");
 					var syncPick = function () {
 						var v = String(cfg[field.key] || "").replace(/^#/, "");
+						// An empty colour can stand for one the overlay picks itself; show that one in the swatch.
+						if (!v && field.auto) { v = String(field.auto(cfg) || "").replace(/^#/, ""); }
 						if (/^[0-9a-f]{6}/i.test(v)) { pick.value = "#" + v.slice(0, 6); }
 						else if (/^[0-9a-f]{3}$/i.test(v)) { pick.value = "#" + v[0] + v[0] + v[1] + v[1] + v[2] + v[2]; }
 					};
@@ -351,6 +415,7 @@
 							cfg[field.key] = n;
 						} else {
 							cfg[field.key] = inp.value;
+							mine[field.key] = true;
 						}
 						update();
 						refreshVisibility();
@@ -397,18 +462,25 @@
 		// ---------- preview + output ----------
 		var bg = SSO.store.get("editor-bg") || "game";
 		if (["game", "dark", "light", "checker"].indexOf(bg) === -1) { bg = "game"; }
+		// Channel art is looked at on a channel page, not over a game.
+		if (still) { $("bg").remove(0); if (bg === "game") { bg = "dark"; } }
 		$("bg").value = bg;
 		$("bg").addEventListener("change", function () { bg = $("bg").value; SSO.store.set("editor-bg", bg); $("box").className = "frame-box bg-" + bg; });
 		$("box").className = "frame-box bg-" + bg;
 
 		function currentSize() {
-			var base = def.sizeFor ? def.sizeFor(cfg) : def.size;
+			var base = def.sizeFor ? def.sizeFor(cfg, false, strip) : def.size;
 			return [SSO.clamp(Math.round(size[0] || base[0]), 50, 7680), SSO.clamp(Math.round(size[1] || base[1]), 20, 4320)];
 		}
 		function fit() {
 			var s = currentSize();
 			var stage = $("stage");
-			var scale = Math.min((stage.clientWidth - 40) / s[0], (stage.clientHeight - 40) / s[1], 1);
+			stage.className = "stage" + (strip ? " strip" : "");
+			if (!strip) { stage.style.height = ""; }
+			// In a strip one picture fills the width, whatever its height: the rest are a swipe away, and a tall one
+			// scrolls down inside the preview.
+			var scale = strip ? Math.min((stage.clientWidth - 24) / 344, 1) : Math.min((stage.clientWidth - 40) / s[0], (stage.clientHeight - 40) / s[1], 1);
+			if (strip) { stage.style.height = SSO.clamp(Math.round(s[1] * scale) + 16, 200, Math.round(window.innerHeight * 0.62)) + "px"; }
 			var frame = $("preview");
 			frame.style.width = s[0] + "px";
 			frame.style.height = s[1] + "px";
@@ -439,11 +511,34 @@
 			var link = SSO.viewerBase() + "?" + query;
 			$("url").value = link;
 			$("open").href = link;
-			$("hint").innerHTML = "In OBS: <b>Sources → + → Browser</b>, paste the link, and set width <b>" + s[0] + "</b> and height <b>" + s[1] + "</b>. Bookmark this page to edit it later.";
-			try { history.replaceState(null, "", "editor.html?" + query + (sizeTouched ? "&w=" + s[0] + "&h=" + s[1] : "")); } catch (e) {}
+			$("hint").innerHTML = still ? still.hint : "In OBS: <b>Sources → + → Browser</b>, paste the link, and set width <b>" + s[0] + "</b> and height <b>" + s[1] + "</b>. Bookmark this page to edit it later." +
+				// A moment with a name or amount in it can be played by the alert box for real events.
+				(def.fields.some(function (f) { return f.live; }) ? " To play it for real follows, subs and tips with the viewer's name filled in, paste the link into the <b>Media</b> box of an alert under <b>Multi-Stream Alert Box → Event animations &amp; sound effects</b> in Social Stream Ninja." : "");
+			if (still) { stillButtons(); }
+			var pageLink = "editor.html?" + query + (sizeTouched ? "&w=" + s[0] + "&h=" + s[1] : ""), frameLink = "view.html?" + query + "&preview";
+			if (still) {
+				// Channel art can hold a lot of text. Its settings ride after the #, which no server is sent, so the link can
+				// always be opened again however long it gets. What the preview page reads from the query itself (scale, css)
+				// stays in the query, and so does the overlay's name.
+				var own = SSO.buildQuery(def, cfg), split = own.indexOf("&"), head = (split < 0 ? own : own.slice(0, split)) + (extra.toString() ? "&" + extra.toString() : "");
+				var typed = Object.keys(mine).sort().join(","), tail = split < 0 ? "" : own.slice(split + 1);
+				if (typed) { tail += (tail ? "&" : "") + "mine=" + typed; }
+				if (tail) { tail = "#" + tail; }
+				pageLink = "editor.html?" + head + tail;
+				frameLink = "view.html?" + head + "&preview" + (strip ? "&row=1" : "") + tail;
+			}
+			try { history.replaceState(null, "", pageLink); } catch (e) {}
 			fit();
 			clearTimeout(timer);
-			timer = setTimeout(function () { $("preview").src = "view.html?" + query + "&preview"; }, now ? 0 : 300);
+			timer = setTimeout(function () {
+				var frame = $("preview");
+				// A still picture's preview is swapped in place. Setting src would add an entry to the browser's history on
+				// every change, and Back would then step the preview to an older design while the form stayed on this one.
+				if (still) {
+					try { frame.contentWindow.location.replace(new URL(frameLink, location.href).href); return; } catch (e) {}
+				}
+				frame.src = frameLink;
+			}, now ? 0 : 300);
 		}
 		$("replay").addEventListener("click", function () { update(true); });
 		// Scene changes step through a typical show, so every scene-aware reaction gets its turn.
@@ -461,21 +556,214 @@
 			if (this.value) { sendObs(this.value, this.options[this.selectedIndex].text); }
 			this.value = "";
 		});
-		$("copy").addEventListener("click", function () {
+		function copyLink(text, message) {
 			var input = $("url");
-			var done = function () { toast("Link copied. Paste it into an OBS Browser Source."); };
+			var done = function () { toast(message); };
 			function fallback() {
+				var row = input.parentNode, was = row.style.display, old = input.value;
+				row.style.display = "";
+				input.value = text;
 				input.focus(); input.select();
 				var copied = false;
 				try { copied = document.execCommand("copy"); } catch (e) {}
 				if (copied) { done(); } else { toast("Link selected. Press Ctrl+C (Command+C on Mac) to copy."); }
+				if (copied) { input.value = old; row.style.display = was; }
 			}
 			if (navigator.clipboard && navigator.clipboard.writeText) {
-				navigator.clipboard.writeText(input.value).then(done, fallback);
+				navigator.clipboard.writeText(text).then(done, fallback);
 			} else {
 				fallback();
 			}
-		});
+		}
+		$("copy").addEventListener("click", function () { copyLink($("url").value, "Link copied. Paste it into an OBS Browser Source."); });
+
+		// ---------- still pictures (channel art): downloads in place of an OBS link ----------
+		var stillRow = null, stillWarn = null, stillKey = null, stillBusy = false, crcTable = null, checkSeq = 0, checkTimer = 0, lateChecks = 0;
+		function settingsNow() {
+			var copy = {}, key;
+			for (key in cfg) { copy[key] = cfg[key]; }
+			return copy;
+		}
+		// A picture can only be so tall. Past that the end of its text is left out, and that must never happen quietly.
+		function showCut(items) {
+			var cut = items.filter(function (item) { return item.cut; }).map(function (item) { return item.label; });
+			stillWarn.innerHTML = "<b>Too much text.</b> <span></span>";
+			stillWarn.lastChild.textContent = cut.join(", ") + (cut.length === 1 ? " has" : " have") + " more text than fits in one picture, so the end is left out. Shorten it, or move some of it to another panel.";
+			stillWarn.style.display = cut.length ? "" : "none";
+		}
+		// Asks the overlay which pictures are cut. It answers once its fonts are loaded on this page, so the answer is
+		// the one a download would give, not a guess made with a stand-in font.
+		function checkFit() {
+			var seq = ++checkSeq;
+			if (!still.check) { return; }
+			still.check(settingsNow(), function (items) {
+				if (seq !== checkSeq || !items) { return; }
+				showCut(items);
+				// The fonts are in on this page now, so the preview is sized from the same measurements it is drawn with.
+				fit();
+			});
+		}
+		function saveBlob(blob, name) {
+			var a = document.createElement("a"), href = URL.createObjectURL(blob);
+			a.href = href;
+			a.download = name;
+			document.body.appendChild(a);
+			a.click();
+			setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(href); }, 4000);
+		}
+		function crc32(bytes) {
+			var crc = -1, n, k, c;
+			if (!crcTable) {
+				crcTable = [];
+				for (n = 0; n < 256; n++) {
+					c = n;
+					for (k = 0; k < 8; k++) { c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; }
+					crcTable[n] = c >>> 0;
+				}
+			}
+			for (n = 0; n < bytes.length; n++) { crc = crcTable[(crc ^ bytes[n]) & 255] ^ (crc >>> 8); }
+			return (crc ^ -1) >>> 0;
+		}
+		// A zip with the files stored as they are (PNG is already compressed). files: [{ name, bytes }], names in plain ASCII.
+		function zipOf(files) {
+			var parts = [], central = [], offset = 0, centralSize = 0, now = new Date();
+			var time = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+			var date = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+			files.forEach(function (file) {
+				var name = new Uint8Array(file.name.length), crc = crc32(file.bytes), size = file.bytes.length, i;
+				for (i = 0; i < file.name.length; i++) { name[i] = file.name.charCodeAt(i) & 127; }
+				var local = new DataView(new ArrayBuffer(30)), entry = new DataView(new ArrayBuffer(46));
+				local.setUint32(0, 0x04034b50, true); local.setUint16(4, 20, true); local.setUint16(10, time, true); local.setUint16(12, date, true);
+				local.setUint32(14, crc, true); local.setUint32(18, size, true); local.setUint32(22, size, true); local.setUint16(26, name.length, true);
+				entry.setUint32(0, 0x02014b50, true); entry.setUint16(4, 20, true); entry.setUint16(6, 20, true); entry.setUint16(12, time, true); entry.setUint16(14, date, true);
+				entry.setUint32(16, crc, true); entry.setUint32(20, size, true); entry.setUint32(24, size, true); entry.setUint16(28, name.length, true); entry.setUint32(42, offset, true);
+				parts.push(local.buffer, name, file.bytes);
+				central.push(entry.buffer, name);
+				offset += 30 + name.length + size;
+				centralSize += 46 + name.length;
+			});
+			var end = new DataView(new ArrayBuffer(22));
+			end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, centralSize, true); end.setUint32(16, offset, true);
+			return new Blob(parts.concat(central, [end.buffer]), { type: "application/zip" });
+		}
+		// cb([{ name, blob, bytes }]) with every picture at its real size, or cb(null) when they could not be made.
+		// It always answers, so a failure can never leave the download buttons switched off.
+		function stillFiles(settings, cb) {
+			var over = false, guard = setTimeout(function () { finish(null); }, 20000);
+			function finish(result) { if (!over) { over = true; clearTimeout(guard); cb(result); } }
+			try {
+				still.files(settings, function (pictures) {
+					var left = pictures ? pictures.length : 0, out = [];
+					if (!pictures) { finish(null); return; }
+					if (!left) { finish(out); return; }
+					pictures.forEach(function (picture, i) {
+						picture.canvas.toBlob(function (blob) {
+							if (!blob) { finish(null); return; }
+							var reader = new FileReader();
+							reader.onerror = function () { finish(null); };
+							reader.onload = function () {
+								out[i] = { name: picture.name, label: picture.label, cut: !!picture.cut, blob: blob, bytes: new Uint8Array(reader.result) };
+								if (!--left) { finish(out); }
+							};
+							reader.readAsArrayBuffer(blob);
+						}, "image/png");
+					});
+				});
+			} catch (e) {
+				finish(null);
+				throw e;
+			}
+		}
+		// name: which picture, or null for all of them (one zip when there are several). The settings are copied at the
+		// click, so typing while the pictures are being made cannot change what gets saved.
+		function download(name) {
+			if (stillBusy) { return; }
+			var settings = settingsNow(), drawnFor = SSO.buildQuery(def, settings);
+			stillBusy = true;
+			toast("Making your pictures…");
+			stillFiles(settings, function (made) {
+				stillBusy = false;
+				if (!made) { toast("Sorry, the pictures could not be made. Please try again."); return; }
+				if (!made.length) { toast("There is nothing to download yet."); return; }
+				// What was just drawn is the last word on what fits, but only for the design it was drawn from. If the form
+				// has moved on since the click (another design opened, more typing), that design's own check stands.
+				if (SSO.buildQuery(def, cfg) === drawnFor) { checkSeq++; showCut(made); }
+				if (name === null && made.length > 1) {
+					saveBlob(zipOf(made), still.zip || "channel-art.zip");
+					toast(made.length + " pictures saved in " + (still.zip || "channel-art.zip") + ".");
+					return;
+				}
+				var one = name === null ? made[0] : made.filter(function (file) { return file.name === name; })[0];
+				if (!one) { toast("Sorry, that picture could not be made. Please try again."); return; }
+				saveBlob(one.blob, one.name);
+				toast("Saved " + one.name + (one.cut ? ". Not all of its text fits." : "."));
+			});
+		}
+		function stillButton(label, primary, onClick) {
+			var b = document.createElement("button");
+			b.type = "button";
+			b.className = "btn" + (primary ? " primary" : "");
+			b.textContent = label;
+			b.addEventListener("click", onClick);
+			stillRow.appendChild(b);
+			return b;
+		}
+		// The download buttons follow the pictures: one each, plus everything in a zip when there are several.
+		function stillButtons() {
+			var list = still.list(cfg), key = list.map(function (item) { return item.name + "|" + item.label; }).join("\n");
+			stillCount = list.length;
+			strip = wantStrip();
+			lateChecks = 0;
+			clearTimeout(checkTimer);
+			checkTimer = setTimeout(checkFit, 200);
+			if (key === stillKey) { return; }
+			stillKey = key;
+			stillRow.innerHTML = "";
+			if (list.length > 1) {
+				stillButton("Download all (.zip)", true, function () { download(null); });
+				var each = document.createElement("span");
+				each.className = "still-each";
+				each.textContent = "or one picture:";
+				stillRow.appendChild(each);
+			}
+			list.forEach(function (item) { stillButton(item.label, list.length === 1, function () { download(list.length === 1 ? null : item.name); }); });
+			stillButton("Copy link to edit later", false, function () { copyLink(location.href, "Link copied. Open it any time to change your pictures."); }).className += " still-link";
+		}
+		if (still) {
+			document.body.className += " studio-still";
+			$("sizeGrp").style.display = "none";
+			$("replay").style.display = "none";
+			document.querySelector(".obs-test").style.display = "none";
+			$("url").parentNode.style.display = "none";
+			stillWarn = document.createElement("div");
+			stillWarn.className = "still-warn";
+			stillWarn.setAttribute("role", "status");
+			stillWarn.style.display = "none";
+			$("hint").parentNode.insertBefore(stillWarn, $("hint"));
+			stillRow = document.createElement("div");
+			stillRow.className = "row still";
+			$("hint").parentNode.insertBefore(stillRow, $("hint"));
+			document.querySelector(".studio-breadcrumb [aria-current]").textContent = "Customize pictures";
+			// Opening another saved design in this tab (a pasted link, Back, Forward) only changes what follows the #, and
+			// that does not load the page again. The form and the downloads must follow the address.
+			window.addEventListener("hashchange", function () {
+				cfg = SSO.readConfig(def);
+				mine = readMine();
+				stillKey = null;
+				buildForm();
+				update(true);
+			});
+			// A font that turns up late changes how tall the pictures are and how much text fits. When one lands, the
+			// preview is sized again and the question of what fits is asked again.
+			if (document.fonts && document.fonts.addEventListener) {
+				document.fonts.addEventListener("loadingdone", function () {
+					fit();
+					if (lateChecks++ > 6) { return; }
+					clearTimeout(checkTimer);
+					checkTimer = setTimeout(checkFit, 250);
+				});
+			}
+		}
 		var toastTimer;
 		function toast(msg) {
 			clearTimeout(toastTimer);
@@ -485,7 +773,13 @@
 			toastTimer = setTimeout(function () { t.className = "toast"; }, 2200);
 		}
 		var rt;
-		window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(fit, 100); });
+		window.addEventListener("resize", function () {
+			clearTimeout(rt);
+			rt = setTimeout(function () {
+				// Crossing the phone width swaps the channel art preview between the board and the single row.
+				if (still && strip !== wantStrip()) { update(true); } else { fit(); }
+			}, 100);
+		});
 
 		buildForm();
 		update(true);

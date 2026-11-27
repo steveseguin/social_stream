@@ -583,8 +583,11 @@
 		description: "Your running order for the stream. The part you are on lights up by itself as you change scenes, finished parts get ticked off, and it shows how long you have been on the current one.",
 		size: [420, 330],
 		sizeFor: function (c) {
-			var n = Math.max(1, SSO.lines(c.items).length);
-			return c.layout === "row" ? [Math.min(1900, Math.round(n * c.fontsize * 9 + 60)), Math.round(c.fontsize * (c.title ? 5.2 : 3.4))] : [Math.round(c.fontsize * 17), Math.round(c.fontsize * (n * 1.95 + (c.title ? 3.2 : 1.6)))];
+			var lines = SSO.lines(c.items), n = Math.max(1, lines.length);
+			// A row is as wide as its words (about 0.62 of the font size per letter), plus a tick and a gap for every part and
+			// room for the clock on the one in progress. Counting parts alone left the last one cut off.
+			var letters = lines.reduce(function (sum, line) { return sum + String(line).split("|")[0].trim().length; }, 0);
+			return c.layout === "row" ? [Math.min(1900, Math.round(c.fontsize * (letters * 0.62 + n * 2.7 + 5) + 60)), Math.round(c.fontsize * (c.title ? 5.2 : 3.4))] : [Math.round(c.fontsize * 17), Math.round(c.fontsize * (n * 1.95 + (c.title ? 3.2 : 1.6)))];
 		},
 		fields: [
 			{ key: "title", label: "Title (blank = none)", type: "text", group: "Content", default: "Today's show" },

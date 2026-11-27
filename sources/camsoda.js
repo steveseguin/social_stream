@@ -1,4 +1,118 @@
 (function () {
+	var moderationHost = /(^|\.)camsoda\.com$/.test(location.hostname);
+	function room() { return location.pathname.toLowerCase().replace(/\/$/, ""); }
+	function startModerationReader() {
+		if (!moderationHost || window.__ssnCamModerationReader) return;
+		window.__ssnCamModerationReader = true;
+		var attached, waiting = [];
+		var detach, sodaHandler, sodaRoom = "";
+		function publish(data) {
+			data.type = "camsoda";
+			if (!data.room) data.room = room();
+			if (waiting) {
+				waiting.push(data);
+				if (waiting.length > 5000) waiting.shift();
+			} else document.dispatchEvent(new CustomEvent("ssn-cam-moderation", { detail: JSON.stringify(data) }));
+		}
+		document.addEventListener("ssn-camsoda-moderation-ready", function () {
+			var early = waiting;
+			waiting = null;
+			if (early) early.forEach(publish);
+		});
+		function walk(row, visit) {
+			if (!row) return;
+			var key = Object.keys(row).find(function (key) { return key.indexOf("__reactFiber") === 0; });
+			var fiber = key && row[key];
+			for (var depth = 0; fiber && depth < 180; depth++, fiber = fiber.return) {
+				if (visit(fiber.memoizedProps || {})) return;
+			}
+		}
+		function connectSoda() {
+			var username = room().split("/")[1];
+			var client = null;
+			walk(document.querySelector("[class*='message-module__wrapper--']") || document.querySelector("[class*='chat-module__wrapper--']"), function (props) {
+				var value = props.value && props.value[username];
+				if (!value || typeof value.on !== "function" || typeof value.off !== "function" || !value.socket) return false;
+				client = value;
+				return true;
+			});
+			if (!client && room() === sodaRoom) return;
+			if (client && client === attached && (typeof client.listeners !== "function" || client.listeners("v3.chat.moderate").indexOf(sodaHandler) !== -1)) return;
+			if (detach) detach();
+			attached = client;
+			detach = null;
+			if (!client) return;
+			var currentRoom = room();
+			sodaRoom = currentRoom;
+			function moderate(event) {
+				if (!event || !event.username) return;
+				if ((event.action === "banned" && event.type === "add") || event.action === "silenced") {
+					publish({ room: currentRoom, username: String(event.username) });
+				}
+			}
+			client.on("v3.chat.moderate", moderate);
+			sodaHandler = moderate;
+			detach = function () { client.off("v3.chat.moderate", moderate); };
+		}
+		function attach() {
+			try { connectSoda(); } catch (_) {}
+		}
+		attach();
+		setInterval(attach, 2000);
+	}
+	if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.id) {
+		startModerationReader();
+		return;
+	}
+	if (window.__ssnCamsodaChatSource) return;
+	window.__ssnCamsodaChatSource = true;
+
+	var deleted = new Set(), rowIds = new WeakMap();
+	var serial = 0, instance = Date.now().toString(36) + Math.random().toString(36).slice(2);
+	var records = new Map(), deletedRows = new WeakSet();
+	function trim(collection) {
+		if (collection.size > 5000) collection.delete(collection.keys().next().value);
+	}
+	function removeMessage(id) {
+		if (deleted.has(id)) return;
+		deleted.add(id);
+		trim(deleted);
+		records.delete(id);
+		try { chrome.runtime.sendMessage(chrome.runtime.id, { delete: { type: "camsoda", meta: { messageId: id } } }, function () {}); } catch (_) {}
+	}
+	function trackModeration(row, data) {
+		if (!moderationHost) return true;
+		if (deletedRows.has(row)) return false;
+		var id = rowIds.get(row);
+		if (!id) {
+			id = room() + ":ssn:" + instance + ":" + (++serial);
+			rowIds.set(row, id);
+		}
+		if (deleted.has(id)) return false;
+		data.meta = data.meta || {};
+		data.meta.messageId = id;
+		records.set(id, { room: room(), user: (data.chatname || "").toLowerCase() });
+		trim(records);
+		return true;
+	}
+	if (moderationHost) document.addEventListener("ssn-cam-moderation", function (event) {
+		try {
+			var data = JSON.parse(event.detail);
+			if (!data || data.type !== "camsoda" || data.room !== room()) return;
+			var username = typeof data.username === "string" && data.username.toLowerCase();
+			if (!username) return;
+			records.forEach(function (record, id) {
+				if (record.room === data.room && record.user === username) removeMessage(id);
+			});
+			document.querySelectorAll("[class*='message-module__wrapper--']").forEach(function (row) {
+				var name = row.querySelector("[class*='chat-user-module__user--']");
+				if (name && name.textContent.trim().replace(/:$/, "").toLowerCase() === username) deletedRows.add(row);
+			});
+		} catch (_) {}
+	});
+	if (window.ninjafy) startModerationReader();
+	if (moderationHost) document.dispatchEvent(new Event("ssn-camsoda-moderation-ready"));
+
 	 
 	 
 	var checking = false;
@@ -173,7 +287,7 @@
 		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "camsoda";
-		if (window.__ssnCamModeration && !window.__ssnCamModeration.track(ele, data)) return;
+		if (!trackModeration(ele, data)) return;
 		
 		//console.log(data);
 		pushMessage(data);

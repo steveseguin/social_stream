@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/docs/chat-voices.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="https://socialstream.ninja/docs/chat-voices.html">
+    <meta property="og:title" content="Chat roles and voices - Social Stream Ninja">
+    <meta property="og:description" content="Choose whose chat gets read aloud, approve VIPs, and give people or groups their own voices.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/docs/chat-voices.html">
+    <meta name="twitter:title" content="Chat roles and voices - Social Stream Ninja">
+    <meta name="twitter:description" content="Choose whose chat gets read aloud, approve VIPs, and give people or groups their own voices.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logo">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat roles and voices - Social Stream Ninja</title>
+    <script src="../shared/utils/documentation.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Choose whose chat gets read aloud, approve VIPs, and give people or groups their own voices.">
+<link rel="stylesheet" href="../docs/css/site-shell.css">
+<script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
+</head>
+<body class="visual-guide">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+
+    <section class="page-hero">
+        <div class="container"><h1>Choose whose chat gets read aloud</h1>
+            <p>Let everyone chat while giving VIPs, members or followers a voice on stream.</p>
+        </div>
+    </section>
+    <main class="guide-section"><div class="container">
+        <nav class="guide-jump-links" aria-label="On this page">
+            <a href="#dock">Set up the dock</a><a href="#vip">Approve a VIP</a>
+            <a href="#followers">Include followers</a><a href="#voices">Assign voices</a>
+        </nav>
+        <section class="guide-card" id="dock">
+            <h2>Read VIPs or members</h2>
+            <div class="guide-step-layout">
+                <ol class="guide-steps">
+                    <li>Open the extension popup or the settings panel in the desktop app. Under <strong>Main Chat</strong>, open <strong>Message - Text to Speech</strong>.</li>
+                    <li>Turn on <strong>Text-to-speech incoming messages</strong>. Scroll to <strong>Read specific messages only</strong>.</li>
+                    <li>Turn on <strong>Match any selected role</strong>, <strong>Only members can have messages read</strong> and <strong>Only VIP marked users can have messages read</strong>.</li>
+                    <li>Copy the updated Main Chat link. Open it, or paste it over the old URL in your OBS dock or browser source.</li>
+                </ol>
+                <figure class="guide-figure"><a href="images/chat-voices/dock-roles.png"><img src="images/chat-voices/dock-roles.png" alt="Dock role settings with Match any, Members and VIPs switched on" class="guide-image" loading="lazy"></a><figcaption>These three switches read either group.</figcaption></figure>
+            </div>
+            <p>For VIPs alone, select only VIP. For members alone, select only Member. With multiple roles selected, <strong>Match any</strong> reads someone who qualifies for any one of them, once. With it off, the sender needs every selected role.</p>
+            <p>The same choice applies to moderators, hosts, bots, privileged users and confirmed followers. Other restrictions, such as donations only, allowed sources, or the default exclusions for bots and hosts, still apply.</p>
+            <details class="guide-extra"><summary>Using a chat command or an existing dock URL?</summary>
+                <p>For on-demand speech, turn off automatic reading and enable the TTS chat command (usually <code>!say</code>). <strong>Only members can use the TTS command</strong> adds a separate membership requirement. Leave that command restriction off to let a VIP qualify through your selected roles.</p>
+                <p>If you edit links by hand, <code>&amp;speech&amp;viptts&amp;membertts&amp;anyroletts</code> reads VIPs or members. Add <code>&amp;followertts</code> to include confirmed followers. With no roles selected, <strong>Match any</strong> alone leaves the audience unrestricted.</p>
+            </details>
+        </section>
+        <section class="guide-card" id="vip">
+            <h2>Approve a VIP</h2>
+            <div class="guide-step-layout">
+                <div><p>Right-click one of their messages in Main Chat and choose <strong>User Actions &gt; VIP User</strong>. Their next message qualifies for VIP speech. This gives them a local Social Stream VIP role.</p>
+                <p>To add someone ahead of time or remove them later, search settings for <strong>Identify by name who are VIPs</strong>. Separate entries with commas. Use <code>alex:twitch,pat:kick</code> to choose specific accounts. An entry without a platform applies across sources.</p>
+                <p>The source supplies membership automatically. Use VIP to approve someone yourself.</p></div>
+                <figure class="guide-figure"><a href="images/chat-voices/vip-user.png"><img src="images/chat-voices/vip-user.png" alt="User Actions menu in the chat dock, with VIP User visible" class="guide-image" loading="lazy"></a><figcaption>Approve a viewer from their chat message.</figcaption></figure>
+            </div>
+        </section>
+        <section class="guide-card" id="followers">
+            <h2>Include free followers</h2>
+            <p>Select <strong>Only confirmed followers</strong> in the same dock settings. To read followers, VIPs and members, select all three and turn on <strong>Match any selected role</strong>. Copy the updated link again.</p>
+            <div class="guide-table-scroll"><table class="guide-table">
+                <thead><tr><th scope="col">Source</th><th scope="col">Who qualifies</th></tr></thead>
+                <tbody>
+                    <tr><th scope="row">Twitch</th><td>Subscribers qualify as members when Twitch marks the message. For free followers, connect in <strong>WebSocket</strong> mode as the broadcaster or a moderator with follower-read access. Search SSN settings for <strong>Check Twitch chatters for follower status</strong> and turn it on. SSN reuses each answer for about a minute.</td></tr>
+                    <tr><th scope="row">TikTok</th><td>Subscribers can qualify as members. In the desktop app, follower matching also works when the connection supplies follower status on the chat message. Standard browser capture can see follow alerts, but ordinary chat usually has no follower status.</td></tr>
+                    <tr><th scope="row">Kick</th><td>Subscribers can qualify as members when identified. A follow alert doesn't establish the sender's status on later chat. Use VIP to approve a free follower.</td></tr>
+                    <tr><th scope="row">YouTube</th><td>Channel members can qualify. An ordinary free subscription can be private. Use VIP to approve a viewer, or turn on subscribers-only chat in YouTube Studio if you want to restrict who can type, too.</td></tr>
+                </tbody>
+            </table></div>
+            <p>If follower status is unavailable, the viewer can still qualify through another selected role with <strong>Match any</strong> on. An older dock link with <code>&amp;tiktokfollowertts</code> applies a separate TikTok-only restriction. Remove that parameter if you want a TikTok VIP or member to qualify independently. For regular chat from paid Twitch or YouTube members, leave the source settings that limit membership to subscription notices or monthly highlights off.</p>
+        </section>
+        <section class="guide-card" id="voices">
+            <h2>Give people or groups different voices</h2>
+            <p>Use the <strong>Flow Actions</strong> overlay to handle speech. Turn off automatic TTS in any Main Chat dock or other overlay reading the same messages so you hear each one once.</p>
+            <div class="guide-step-layout">
+                <ol class="guide-steps">
+                    <li>Open <strong>Event Flow Editor</strong>. Under <strong>Start with a template</strong>, choose <strong>Chat voices by person or role</strong>. It starts inactive.</li>
+                    <li>Click the <strong>Speak Text</strong> node. It starts with VIPs and Members. Under each group, enter a voice name or ID from your Flow Actions speech provider. Leave it blank to use the provider's default voice.</li>
+                    <li>Choose <strong>Add person or group</strong> to add a follower group or a person. Choose <strong>Remove</strong> to drop a rule. Only listed people and groups have ordinary chat read.</li>
+                </ol>
+                <figure class="guide-figure"><a href="images/chat-voices/group-voices.png"><img src="images/chat-voices/group-voices.png" alt="Speak Text voice rules with separate voices for VIPs and members" class="guide-image" loading="lazy"></a><figcaption>Choose a voice for each group you want to hear.</figcaption></figure>
+            </div>
+            <div class="guide-step-layout">
+                <div><h3>Give people their preferred voice</h3>
+                    <p>To read only VIPs, members or confirmed followers, turn on <strong>Require a listed role</strong> and add each role you accept. A viewer needs any one of them. With the checkbox off, listing someone by name also lets them be read.</p>
+                    <p>Add a <strong>People by name</strong> row for each voice. Enter the voice and list the accounts that want it, separated by commas, such as <code>alex:twitch, pat:kick</code>. You can also enter captured user IDs. A matching person gets their assigned voice. Other eligible viewers use the first matching role's voice.</p>
+                    <p>For Edge Natural, select <strong>Edge Natural</strong> under <strong>Flow Actions &gt; Text-to-Speech Settings</strong> in the desktop app and keep the app open and online. Enter an Edge voice ID for each list, such as <code>en-US-EmmaMultilingualNeural</code>.</p>
+                </div>
+                <figure class="guide-figure"><a href="images/chat-voices/person-voice.png"><img src="images/chat-voices/person-voice.png" alt="A named voice rule for Twitch and Kick accounts using the Kokoro voice af_bella" class="guide-image" loading="lazy"></a><figcaption>Include the platform to match one account.</figcaption></figure>
+            </div>
+            <h3>Play the voices on stream</h3>
+            <ol class="guide-steps">
+                <li>Turn on <strong>Active</strong> and click <strong>Save Flow</strong>.</li>
+                <li>In the popup, find <strong>Flow Actions</strong>. Under <strong>Text-to-Speech Settings</strong>, pick the provider that matches your voice names. Copy the <strong>Flow Actions</strong> link and keep it open in your browser or OBS Browser Source.</li>
+                <li>Have an approved viewer send a chat message. If you're using OBS, watch the source in the audio mixer. If their message plays twice, check for a second open reader or another active speech flow.</li>
+            </ol>
+            <p>Dock checkboxes control the dock. Edit the template's people and groups to change who the Flow Actions overlay reads. For help picking a provider or routing OBS audio, see the <a href="tts-setup-guide.html">TTS setup guide</a>.</p>
+        </section>
+    </div></main>
+</body>
+</html>

@@ -521,6 +521,7 @@ body.ultra .content-img {
             }
             if (d.chatname && message.dataset.chatname !== String(d.chatname)) { return false; }
             if (d.type && message.dataset.sourceType !== String(d.type)) { return false; }
+            // Without a message ID, match the supplied user or platform. A platform alone intentionally matches all its messages.
             return !!(d.chatname || d.type);
         }, onlyLast || d.onlyLast);
     }

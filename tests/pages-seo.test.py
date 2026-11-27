@@ -93,6 +93,26 @@ class MetadataTests(unittest.TestCase):
         _, head, _ = self.prepare(path)
         self.assertEqual(head.links("icon")[0][3]["href"], custom)
 
+    def test_a_page_can_name_its_own_share_picture(self):
+        picture = "docs/images/overlay-studio/stream-celebrations-social.jpg"
+        page = self.page("docs/stream-celebrations.html", "<title>Celebrations</title>")
+        # Without the file in the package the brand logo is used, never a link to a picture that is not there.
+        _, head, _ = self.prepare(page)
+        self.assertEqual(head.meta("og:image")[0][3]["content"], "https://socialstream.ninja/media/logo.png")
+        self.assertEqual(head.meta("twitter:card")[0][3]["content"], "summary")
+        self.write(picture, "jpeg")
+        _, head, _ = self.prepare(page)
+        self.assertEqual(head.meta("og:image")[0][3]["content"], "https://socialstream.ninja/" + picture)
+        self.assertEqual(head.meta("og:image:width")[0][3]["content"], "1200")
+        self.assertEqual(head.meta("og:image:height")[0][3]["content"], "630")
+        self.assertEqual(head.meta("twitter:card")[0][3]["content"], "summary_large_image")
+        self.assertEqual(head.meta("twitter:image")[0][3]["content"], "https://socialstream.ninja/" + picture)
+        self.assertIn("treasure chest", head.meta("og:image:alt")[0][3]["content"])
+        self.assertEqual(len(head.meta("og:image")), 1)
+        # Other pages keep the logo.
+        _, other, _ = self.prepare(self.page("docs/other.html", "<title>Other</title>"))
+        self.assertEqual(other.meta("og:image")[0][3]["content"], "https://socialstream.ninja/media/logo.png")
+
     def test_sitemap_aliases_and_page_classes(self):
         for name in ["index.html", "landing.html", "TOS.html", "docs/index.html", "docs/guide.html", "lite/index.html", "actions/event-flow-guide.html", "streamelements-importer.html", "dock.html", "affiliate.html", "404.html", "actions/index.html", "beta/docs/guide.html"]:
             self.page(name, '<title>Example</title>')

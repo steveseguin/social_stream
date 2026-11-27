@@ -144,6 +144,7 @@
 			if (hasValue(deletion.id)) return hasValue(message.id) && String(message.id) === String(deletion.id);
 			if (hasValue(deletion.userid)) return hasValue(message.userid) && String(message.userid) === String(deletion.userid);
 			if (deletion.chatname) return String(message.chatname || "") === String(deletion.chatname);
+			// A platform alone intentionally matches every message from it.
 			return !!deletion.type;
 		}
 		function deleteCards(deletion) {

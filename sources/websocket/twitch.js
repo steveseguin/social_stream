@@ -495,6 +495,26 @@ function updateChatConnectionStatus(status) {
 try{
 	window.websocket = websocketProxy;
 	var isExtensionOn = true;
+
+	// Exact Twitch logins only; custom bot accounts can still be assigned in settings.
+	const TWITCH_BOT_LOGINS = new Set([
+		"botrixoficial",
+		"fossabot",
+		"kofistreambot",
+		"moobot",
+		"nightbot",
+		"own3d",
+		"pokemoncommunitygame",
+		"pretzelrocks",
+		"sery_bot",
+		"soundalerts",
+		"streamelements",
+		"streamlabs",
+		"tangiabot",
+		"twitchmusicid",
+		"wizebot"
+	]);
+
 	var clientId = 'sjjsgy1sgzxmy346tdkghbyz4gtx0k'; 
 	var hostedClientId = 'ysbszgkt7uh5kn7qjed822dd89722n';
 	var redirectURI = window.location.href.split("/twitch")[0]+"/twitch.html"; //  'https://socialstream.ninja/sources/websocket/twitch.html';
@@ -557,6 +577,8 @@ try{
 	var lastBotSendAuthorizationError = '';
 	let currentChannelId = null;
 	let currentAuthUser = null;
+	let followerChecks = null;
+	let followerDeliveryTail = null;
 
 	function createTransientTokenValidationError(status, message) {
 		return {
@@ -1627,6 +1649,32 @@ try{
 	var userDetails = {};
 	var userDetailsById = {};
 
+	async function fetchTwitchUserProfile(url, token) {
+		const controller = typeof AbortController === 'function' ? new AbortController() : null;
+		let timer;
+		const deadline = new Promise((_, reject) => {
+			timer = setTimeout(() => {
+				if (controller) controller.abort();
+				reject(new Error('Twitch user profile request timed out'));
+			}, 5000);
+		});
+		try {
+			const request = fetch(url, {
+				headers: { 'Client-ID': getTwitchApiClientId(), 'Authorization': `Bearer ${token}` },
+				...(controller ? { signal: controller.signal } : {})
+			}).then(async response => {
+				if (!response.ok) {
+					await handleTwitchApiAuthError(response, url);
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+				return response.json();
+			});
+			return await Promise.race([request, deadline]);
+		} finally {
+			clearTimeout(timer);
+		}
+	}
+
 	async function getUserInfo(username) {
 		
 		if (userDetails[username]){
@@ -1644,11 +1692,7 @@ try{
 		}
 
 		try {
-			const response = await fetchWithTimeout(`https://api.twitch.tv/helix/users?login=${username}`, 5000, {'Client-ID': getTwitchApiClientId(), 'Authorization': `Bearer ${token}`});
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-			const data = await response.json();
+			const data = await fetchTwitchUserProfile(`https://api.twitch.tv/helix/users?login=${username}`, token);
 			const deets = data.data[0];
 			userDetails[username] = deets;
 			if (deets && deets.id) {
@@ -1676,11 +1720,7 @@ try{
 		}
 
 		try {
-			const response = await fetchWithTimeout(`https://api.twitch.tv/helix/users?id=${encodeURIComponent(userId)}`, 5000, {'Client-ID': getTwitchApiClientId(), 'Authorization': `Bearer ${token}`});
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-			const data = await response.json();
+			const data = await fetchTwitchUserProfile(`https://api.twitch.tv/helix/users?id=${encodeURIComponent(userId)}`, token);
 			const deets = data.data[0];
 			userDetailsById[userId] = deets;
 			if (deets && deets.login) {
@@ -2161,6 +2201,7 @@ async function ensureChatClientInstance() {
 		}
 		tokenRefreshResumePending = false;
 		currentAuthUser = authUser;
+		reportPostingAccount();
 		twitchChatWriteAuthorized = hasTwitchScope(authUser, 'user:write:chat');
 		token = getStoredToken() || token;
 
@@ -2760,7 +2801,9 @@ async function ensureChatClientInstance() {
 				}
 				if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
 					sendMessage(request.message, { messageOrigin: request.messageOrigin })
-						.then((result) => sendResponse(result?.ok === true))
+						.then((result) => sendResponse(request.detail === true
+							? { ok: result?.ok === true, busy: result?.busy === true }
+							: result?.ok === true))
 						.catch((err) => {
 							console.error('Twitch extension SEND_MESSAGE failed', err);
 							sendResponse(false);
@@ -2769,6 +2812,7 @@ async function ensureChatClientInstance() {
 				}
 				if ("settings" in request) {
 					settings = request.settings;
+					if (!followerChecksEnabled()) followerChecks = null;
 					sendResponse(true);
 					syncThirdPartyEmotesForChannel(false);
 					return;
@@ -3154,7 +3198,8 @@ async function ensureChatClientInstance() {
 		}
 		if (chatSendInFlight) {
 			console.warn('Twitch chat send ignored because another send is already in progress.');
-			return unsentResult;
+			// busy: nothing was attempted, so a caller that asked for detail can safely try again.
+			return Object.assign({ busy: true }, unsentResult);
 		}
 		if (!isTwitchChatConnected()) {
 			const socketConnected = chatClient?.getState?.().status === 'connected';
@@ -3636,10 +3681,11 @@ async function ensureChatClientInstance() {
 
 
 	async function processMessage(parsedMessage) {
-		const pendingMessage = {};
+		const pendingMessage = { followerCheck: followerChecksEnabled() };
 		try {
 		//console.log("Processing message:", parsedMessage);
 		const normalizedPayload = parsedMessage.__normalizedPayload || null;
+		const messageChannelId = currentChannelId;
 		const normalizedEventType = normalizedPayload?.event;
 		const normalizedEventTypeLower =
 			typeof normalizedEventType === 'string' ? normalizedEventType.toLowerCase() : '';
@@ -3858,14 +3904,31 @@ async function ensureChatClientInstance() {
 			}
 		}
 		
+		if (pendingMessage.followerCheck || followerDeliveryTail) {
+			const tags = parsedMessage.tags || {};
+			const roomId = tags['source-room-id'] || tags['room-id'] || messageChannelId;
+			const userId = String(tags['user-id'] || normalizedPayload?.userId || userInfo?.id || '');
+			const eligible = pendingMessage.followerCheck && followerChecksEnabled() && !data.event && data.chatmessage
+				&& messageChannelId === currentChannelId && String(roomId) === String(messageChannelId);
+			// Lookups run concurrently. Release prepared chat rows in order, even on a cache hit.
+			pendingMessage.followerCheck = true;
+			const lookup = eligible ? checkChatFollower(messageChannelId, userId).catch(() => false) : false;
+			const turn = Promise.all([followerDeliveryTail, lookup]).then(results => results[1]);
+			followerDeliveryTail = turn;
+			const follows = await turn;
+			if (followerDeliveryTail === turn) followerDeliveryTail = null;
+			if (pendingMessage.deleted || messageChannelId !== currentChannelId) return;
+			if (follows && followerChecksEnabled()) {
+				data.meta = data.meta || {};
+				data.meta.follower = true;
+			}
+		}
 		data.membership = markSubscriberAsMembership ? subscriber : "";
 		data.subtitle = subtitle;
 		data.mod = mod;
-		if (normalizedPayload?.bot === true || (globalThis.SSNTwitchBots && (
-			globalThis.SSNTwitchBots.isKnownBot(user)
-			|| globalThis.SSNTwitchBots.hasBotBadge(parsedMessage.tags?.badges)
-			|| globalThis.SSNTwitchBots.hasBotBadge(parsedMessage.tags?.['source-badges'])
-		))) {
+		if (normalizedPayload?.bot === true || TWITCH_BOT_LOGINS.has(user.trim().toLowerCase())
+			|| hasTwitchBotBadge(parsedMessage.tags?.badges)
+			|| hasTwitchBotBadge(parsedMessage.tags?.['source-badges'])) {
 			data.bot = true;
 		}
 
@@ -4111,6 +4174,22 @@ async function ensureChatClientInstance() {
 		});
 	}
 	
+	function isBotBadgeId(value) {
+		return typeof value === "string" && value.split("/")[0].trim().toLowerCase() === "bot-badge";
+	}
+
+	function hasTwitchBotBadge(badges) {
+		if (typeof badges === "string") {
+			return badges.split(",").some(isBotBadgeId);
+		}
+		if (Array.isArray(badges)) {
+			return badges.some(function (badge) {
+				return badge && isBotBadgeId(badge.set_id);
+			});
+		}
+		return !!badges && typeof badges === "object" && Object.prototype.hasOwnProperty.call(badges, "bot-badge");
+	}
+
 	function parseBadges(parsedMessage) {
 		// Early return if no valid badges data
 		if (!parsedMessage?.tags?.badges || typeof parsedMessage.tags.badges !== 'string') {
@@ -4164,6 +4243,20 @@ async function ensureChatClientInstance() {
 	}
 
 	var settings = {};
+
+	// Tells SSN which account this page sends chat with. SSN uses it to tell its own posts coming
+	// back from someone else typing the same words. Repeated in case SSN restarted or the sign-in changed.
+	function reportPostingAccount() {
+		try {
+			const account = currentAuthUser && currentAuthUser.user_id
+				? { userid: String(currentAuthUser.user_id), username: currentAuthUser.login || '' }
+				: null;
+			chrome.runtime.sendMessage(chrome.runtime.id, { postingAccount: account }, function() {
+				chrome.runtime.lastError;
+			});
+		} catch(e) {}
+	}
+	setInterval(reportPostingAccount, 60000);
 
 	function pushMessage(data) {
 		try {
@@ -4273,6 +4366,56 @@ async function ensureChatClientInstance() {
 			event: 'viewer_update',
 			meta: lastKnownViewers
 		});
+	}
+
+	function followerChecksEnabled() {
+		return settings.twitchcheckfollowers === true || settings.twitchcheckfollowers?.setting === true;
+	}
+
+	async function checkChatFollower(channelId, userId) {
+		if (!channelId || !userId || !hasTwitchScope(currentAuthUser, 'moderator:read:followers')) return false;
+		const account = currentAuthUser.user_id;
+		const token = getStoredToken();
+		if (!account || !token) return false;
+		if (!followerChecks || followerChecks.channel !== channelId || followerChecks.account !== account) {
+			followerChecks = { channel: channelId, account, results: new Map(), pending: new Map(), retryAfter: 0 };
+		}
+		const checks = followerChecks;
+		const now = Date.now();
+		const cached = checks.results.get(userId);
+		if (cached && cached.expires > now) return cached.follows;
+		if (checks.pending.has(userId)) return checks.pending.get(userId);
+		if (checks.retryAfter > now || checks.pending.size >= 6) return false;
+
+		const controller = new AbortController();
+		const timeout = setTimeout(() => controller.abort(), 1500);
+		const url = 'https://api.twitch.tv/helix/channels/followers?broadcaster_id=' + encodeURIComponent(channelId)
+			+ '&user_id=' + encodeURIComponent(userId);
+		const lookup = fetch(url, {
+			headers: { 'Client-ID': getTwitchApiClientId(), Authorization: 'Bearer ' + token },
+			signal: controller.signal
+		}).then(async response => {
+			if (!response.ok) {
+				const reset = Number(response.headers.get('Ratelimit-Reset')) * 1000;
+				checks.retryAfter = Math.max(Date.now() + 30000, response.status === 429 ? reset || 0 : 0);
+				return false;
+			}
+			const body = await response.json();
+			if (!Array.isArray(body.data)) return false;
+			const follows = body.data.some(row => row && String(row.user_id) === userId);
+			checks.results.delete(userId);
+			if (checks.results.size >= 2000) checks.results.delete(checks.results.keys().next().value);
+			checks.results.set(userId, { follows, expires: Date.now() + 60000 });
+			return follows && followerChecks === checks;
+		}).catch(() => {
+			checks.retryAfter = Date.now() + 5000;
+			return false;
+		}).finally(() => {
+			clearTimeout(timeout);
+			checks.pending.delete(userId);
+		});
+		checks.pending.set(userId, lookup);
+		return lookup;
 	}
 
 	// Function to fetch followers
@@ -4410,6 +4553,10 @@ async function ensureChatClientInstance() {
 
 async function cleanupCurrentConnection() {
 	isDisconnecting = true;
+		pendingTwitchMessages.forEach(message => {
+			if (message.followerCheck) message.deleted = true;
+		});
+		followerDeliveryTail = null;
 		
 		// Clear any existing timeouts
 		if (reconnectTimeout) {
@@ -4465,6 +4612,7 @@ async function cleanupCurrentConnection() {
 		activeSubscriptions.clear();
 		currentChannelId = null;
 		currentAuthUser = null;
+		followerChecks = null;
 		lastKnownViewers = null;
 		lastKnownFollowers = null;
 		lastKnownSubscribers = null;

@@ -4167,6 +4167,46 @@ function getYoutubeAvatarImage(url, skip = false) {
 	return false;
 }
 
+function extractYouTubePageData(html, variable) {
+	const markers = [variable + '"] = ', variable + "'] = ", "var " + variable + " = "];
+	let jsonStart = -1;
+	for (const m of markers) {
+		const idx = html.indexOf(m);
+		if (idx !== -1) {
+			jsonStart = idx + m.length;
+			break;
+		}
+	}
+	if (jsonStart === -1) return null;
+	let depth = 0,
+		inStr = false,
+		esc = false,
+		end = -1;
+	for (let scanIndex = jsonStart; scanIndex < html.length; scanIndex++) {
+		const c = html[scanIndex];
+		if (esc) {
+			esc = false;
+			continue;
+		}
+		if (c === "\\" && inStr) {
+			esc = true;
+			continue;
+		}
+		if (c === '"') {
+			inStr = !inStr;
+			continue;
+		}
+		if (inStr) continue;
+		if (c === "{") depth++;
+		else if (c === "}" && --depth === 0) {
+			end = scanIndex + 1;
+			break;
+		}
+	}
+	if (end === -1) return null;
+	return JSON.parse(html.slice(jsonStart, end));
+}
+
 function YouTubeGetID(url) {
 	var ID = "";
 	url = url.replace(/(>|<)/gi, "").split(/(vi\/|v=|\/v\/|youtu\.be\/|\/embed\/)/);
@@ -4516,6 +4556,107 @@ function forgetYouTubeChannel(tabId) {
 	youtubeChannelByTab.delete(tabId);
 }
 
+var pendingGlobalEmotes = Object.create(null);
+const GLOBAL_EMOTE_CHAT_WAIT_MS = 2000;
+
+function loadGlobalEmotes(provider, load) {
+	if (!pendingGlobalEmotes[provider]) {
+		const ready = load().catch(function (error) {
+			console.warn("Global emote lookup failed", provider, error);
+		});
+		// One deadline per cold lookup. Filters and source scripts still need the full list.
+		let timer;
+		const forChat = Promise.race([ready, new Promise(resolve => {
+			timer = setTimeout(resolve, GLOBAL_EMOTE_CHAT_WAIT_MS);
+		})]);
+		pendingGlobalEmotes[provider] = { ready, forChat };
+		ready.then(function () {
+			clearTimeout(timer);
+			delete pendingGlobalEmotes[provider];
+		});
+	}
+	return pendingGlobalEmotes[provider];
+}
+
+async function loadGlobalBTTV() {
+	Globalbttv = getItemWithExpiry("globalbttv2");
+
+	if (!Globalbttv) {
+		const data = await fetch("https://api.betterttv.net/3/cached/emotes/global")
+			.then(result => result.json()).catch(() => null);
+		if (Array.isArray(data)) {
+			Globalbttv = data.reduce((acc, emote) => {
+				const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/2x`;
+				acc[emote.code] = imageUrl;
+				return acc;
+			}, {});
+			setItemWithExpiry("globalbttv2", Globalbttv);
+		} else {
+			Globalbttv = [];
+		}
+	} else {
+		log("Globalbttv recovererd from storage");
+	}
+}
+
+async function loadGlobalSEVENTV() {
+	Globalseventv = getItemWithExpiry("globalseventv");
+
+	if (!Globalseventv) {
+		const data = await fetch("https://7tv.io/v3/emote-sets/global")
+			.then(result => result.json())
+			.catch(err => {
+				console.error(err);
+			});
+		if (data && Array.isArray(data.emotes)) {
+			Globalseventv = data.emotes.reduce((acc, emote) => {
+				const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`;
+				if (emote.flags) {
+					acc[emote.name] = { url: imageUrl, zw: true };
+				} else {
+					acc[emote.name] = imageUrl;
+				}
+				return acc;
+			}, {});
+			setItemWithExpiry("globalseventv", Globalseventv);
+		} else {
+			Globalseventv = [];
+		}
+	} else {
+		log("Globalseventv recovererd from storage");
+	}
+}
+
+async function loadGlobalFFZ() {
+	Globalffz = getItemWithExpiry("globalffz");
+
+	if (!Globalffz) {
+		// Use FFZ API to get global emotes
+		const data = await fetch("https://api.frankerfacez.com/v1/set/global")
+			.then(result => result.json())
+			.catch(err => {
+				console.error(err);
+			});
+		if (data && data.sets) {
+			Globalffz = Object.values(data.sets)
+				.flatMap(set =>
+					set.emoticons.map(emote => ({
+						[emote.name]: {
+							url: emote.urls["1"], // Use 1x size as default
+							zw: emote.modifier // FFZ uses 'modifier' flag for zero-width emotes
+						}
+					}))
+				)
+				.reduce((acc, curr) => Object.assign(acc, curr), {});
+			setItemWithExpiry("globalffz", Globalffz);
+		} else {
+			Globalffz = {};
+		}
+	} else {
+		log("Globalffz recovered from storage");
+	}
+}
+
 async function getBTTVEmotes(url = false, type = null, channel = null) {
 	var bttv = {};
 	var userID = false;
@@ -4686,34 +4827,7 @@ async function getBTTVEmotes(url = false, type = null, channel = null) {
 			}
 		}
 
-		if (!Globalbttv) {
-			Globalbttv = getItemWithExpiry("globalbttv2");
-
-			if (!Globalbttv) {
-				Globalbttv = await fetch("https://api.betterttv.net/3/cached/emotes/global")
-					.then(result => {
-						return result.json();
-					})
-					.then(result => {
-						return result;
-					})
-					.catch(err => {
-						//log(err);
-					});
-				if (Globalbttv) {
-					Globalbttv = Globalbttv.reduce((acc, emote) => {
-						const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/2x`;
-						acc[emote.code] = imageUrl;
-						return acc;
-					}, {});
-					setItemWithExpiry("globalbttv2", Globalbttv);
-				} else {
-					Globalbttv = [];
-				}
-			} else {
-				log("Globalbttv recovererd from storage");
-			}
-		}
+		if (!Globalbttv) await loadGlobalEmotes("bttv", loadGlobalBTTV).ready;
 
 		if (Globalbttv) {
 			if (!bttv) {
@@ -4964,38 +5078,7 @@ async function getSEVENTVEmotes(url = false, type = null, channel = null, userID
 			}
 		}
 
-		if (!Globalseventv) {
-			Globalseventv = getItemWithExpiry("globalseventv");
-
-			if (!Globalseventv) {
-				Globalseventv = await fetch("https://7tv.io/v3/emote-sets/global")
-					.then(result => {
-						return result.json();
-					})
-					.then(result => {
-						return result;
-					})
-					.catch(err => {
-						console.error(err);
-					});
-				if (Globalseventv && Globalseventv.emotes) {
-					Globalseventv = Globalseventv.emotes.reduce((acc, emote) => {
-						const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`;
-						if (emote.flags) {
-							acc[emote.name] = { url: imageUrl, zw: true };
-						} else {
-							acc[emote.name] = imageUrl;
-						}
-						return acc;
-					}, {});
-					setItemWithExpiry("globalseventv", Globalseventv);
-				} else {
-					Globalseventv = [];
-				}
-			} else {
-				log("Globalseventv recovererd from storage");
-			}
-		}
+		if (!Globalseventv) await loadGlobalEmotes("seventv", loadGlobalSEVENTV).ready;
 		if (Globalseventv) {
 			if (!seventv) {
 				seventv = {};
@@ -5143,35 +5226,7 @@ async function getFFZEmotes(url = false, type = null, channel = null) {
 			}
 		}
 
-		if (!Globalffz) {
-			Globalffz = getItemWithExpiry("globalffz");
-
-			if (!Globalffz) {
-				// Use FFZ API to get global emotes
-				Globalffz = await fetch("https://api.frankerfacez.com/v1/set/global")
-					.then(result => result.json())
-					.catch(err => {
-						console.error(err);
-					});
-				if (Globalffz && Globalffz.sets) {
-					Globalffz = Object.values(Globalffz.sets)
-						.flatMap(set =>
-							set.emoticons.map(emote => ({
-								[emote.name]: {
-									url: emote.urls["1"], // Use 1x size as default
-									zw: emote.modifier // FFZ uses 'modifier' flag for zero-width emotes
-								}
-							}))
-						)
-						.reduce((acc, curr) => Object.assign(acc, curr), {});
-					setItemWithExpiry("globalffz", Globalffz);
-				} else {
-					Globalffz = {};
-				}
-			} else {
-				log("Globalffz recovered from storage");
-			}
-		}
+		if (!Globalffz) await loadGlobalEmotes("ffz", loadGlobalFFZ).ready;
 		if (Globalffz) {
 			if (!ffz) {
 				ffz = {};
@@ -5718,6 +5773,7 @@ function cancelPendingModeratedCaptures(deletion) {
 		} else if (deletion.type === "twitch" && deletion.meta && deletion.meta.pluralmind && deletion.username) {
 			if (message.username !== deletion.username) return;
 		} else if (deletion.chatname && message.chatname !== deletion.chatname) return;
+		// A platform-only delete intentionally cancels every pending capture in its scope.
 		matches.push(pending);
 	});
 	if (deletion.onlyLast && !deletion.id && !(deletion.meta && deletion.meta.messageId)) matches.splice(0, Math.max(0, matches.length - 1));
@@ -5758,7 +5814,17 @@ async function processIncomingMessage(message, sender = null) {
 			}
 		}
 
+		// A caption SSN posted to chat comes back from that chat like any other message, and that copy
+		// is how the dock shows it. It is dropped here only when the host's own settings hide their
+		// returning messages. Caption posts are tracked apart from the text match below, so they can
+		// never make it hide a viewer who typed the same words.
+		const captionReturn = window.ssnCaptions ? window.ssnCaptions.checkReturn(message) : "";
+		if (captionReturn === "hide") {
+			return;
+		}
+
 		let reflection = false;
+		if (getSettingFlag("showdocksentmessages") && isDisplayedDockReply(message)) return;
 
 		// checkExactDuplicateAlreadyReceived only does work if there was a message responsein the last 10 seconds.
 		// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
@@ -5769,6 +5835,14 @@ async function processIncomingMessage(message, sender = null) {
 
 		if (reflection === null) {
 			reflection = true;
+		}
+
+		// The host's own caption coming back from chat, or the same words while that post is pending
+		// from a sender who cannot be identified. It is shown, but not relayed, answered or read aloud:
+		// the host has just said it, and it has already gone to every chat it should.
+		if (captionReturn === "own" || captionReturn === "unknown") {
+			reflection = true;
+			message.meta = Object.assign({}, message.meta && typeof message.meta === "object" ? message.meta : {}, { captionCopy: true });
 		}
 
 		if (reflection) {
@@ -5874,7 +5948,16 @@ async function processIncomingMessage(message, sender = null) {
 		const pendingCapture = tracksPendingModeration(message)
 			? { message: Object.assign({}, message), cancelled: false } : null;
 		if (pendingCapture) pendingModeratedCaptures.add(pendingCapture);
+		let finishFirstTimer;
 		try {
+			if (message.chatname && message.chatmessage && getSettingFlag("firsttimers") && !getSettingFlag("disableDB")) {
+				try {
+					finishFirstTimer = await messageStoreDB.beginFirstTimerCapture(message);
+				} catch (error) {
+					console.warn("Could not check pending first-time chatter", error);
+				}
+				if (pendingCapture && pendingCapture.cancelled) return;
+			}
 			try {
 				message = await applyBotActions(message, sender?.tab); // perform any immediate actions
 			} catch (e) {
@@ -5895,6 +5978,7 @@ async function processIncomingMessage(message, sender = null) {
 
 			await sendToDestinations(message, individualLikeRouting.routed, pendingCapture); // send the data to the dock
 		} finally {
+			if (finishFirstTimer) finishFirstTimer();
 			if (pendingCapture) pendingModeratedCaptures.delete(pendingCapture);
 		}
 	}
@@ -5958,6 +6042,13 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		const senderTabId = hasSenderTabId ? senderTab.id : null;
 		const senderTabUrl = senderTab && typeof senderTab.url === "string" ? senderTab.url : "";
 
+		if (request.youtubeCaptionResult) {
+			const result = request.youtubeCaptionResult;
+			const pending = pendingYouTubeCaptionPosts.get(result.requestId);
+			if (pending && pending.tabId === senderTabId) pending.finish(result.ok === true ? "sent" : "failed");
+			sendResponse({ state: isExtensionOn });
+			return response;
+		}
 		if (request.cmd === "aiEvent") {
             try {
                 sendResponse({ value: await window.SSNAiEventBackground.handleSettings(request, sender) });
@@ -5999,6 +6090,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			const activeViewerCountTypes = new Set(Object.keys(buildViewerCountsFromMetaStore()));
 			Object.keys(viewerCounts).forEach(sourceKey => activeViewerCountTypes.add(sourceKey.split("-")[0]));
 			sendResponse({ state: isExtensionOn, viewerCountSources: Array.from(activeViewerCountTypes).filter(Boolean) });
+		} else if (request.cmd && request.cmd === "getCaptionStatus") {
+			// Connection state of the captions source, for the popup.
+			sendResponse({ state: isExtensionOn, captions: window.ssnCaptions ? window.ssnCaptions.getStatus() : null, targets: window.ssnCaptions ? await window.ssnCaptions.getTargets() : null });
 		} else if (request.cmd && request.cmd === "getSettings") {
 			ensureHandleStatusCache();
 			const cohostCapability = await getOpenAIRealtimeCohostCapability();
@@ -6611,6 +6705,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			sendResponse({ state: isExtensionOn });
 		} else if ("delete" in request) {
 			sendResponse({ state: isExtensionOn });
+			// Forward platform-only deletes: the sender can request a platform clear without a message ID or user.
 			if (isExtensionOn && (request.delete.type || request.delete.chatname || request.delete.id)) {
 				forgetLocalCensorMessages(request.delete, sender?.tab);
 				cancelPendingModeratedCaptures(request.delete);
@@ -6840,45 +6935,6 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 						chrome.runtime.lastError;
 					});
 				};
-				const extractInitialData = function (html) {
-					const markers = ['ytInitialData"] = ', "ytInitialData'] = ", "var ytInitialData = "];
-					let jsonStart = -1;
-					for (const m of markers) {
-						const idx = html.indexOf(m);
-						if (idx !== -1) {
-							jsonStart = idx + m.length;
-							break;
-						}
-					}
-					if (jsonStart === -1) return null;
-					let depth = 0,
-						inStr = false,
-						esc = false,
-						end = -1;
-					for (let scanIndex = jsonStart; scanIndex < html.length; scanIndex++) {
-						const c = html[scanIndex];
-						if (esc) {
-							esc = false;
-							continue;
-						}
-						if (c === "\\" && inStr) {
-							esc = true;
-							continue;
-						}
-						if (c === '"') {
-							inStr = !inStr;
-							continue;
-						}
-						if (inStr) continue;
-						if (c === "{") depth++;
-						else if (c === "}" && --depth === 0) {
-							end = scanIndex + 1;
-							break;
-						}
-					}
-					if (end === -1) return null;
-					return JSON.parse(html.slice(jsonStart, end));
-				};
 				const extractApiKey = function (html) {
 					const match = html.match(/"INNERTUBE_API_KEY"\s*:\s*"([^"]+)"/) || html.match(/'INNERTUBE_API_KEY'\s*:\s*'([^']+)'/);
 					return match && match[1] ? match[1] : "";
@@ -6994,7 +7050,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 							return;
 						}
 						const html = await resp.text();
-						sendRichChatResult(slimInitialData(extractInitialData(html), html) || (await fetchPublicInitialData(videoId)));
+						sendRichChatResult(slimInitialData(extractYouTubePageData(html, "ytInitialData"), html) || (await fetchPublicInitialData(videoId)));
 					} catch (e) {
 						console.log("Background YouTube rich chat fetch failed:", e);
 						sendRichChatResult(null);
@@ -7256,6 +7312,13 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			if (!settings.disabletiktokpoke && hasSenderTabId && senderTabUrl) {
 				pokeSite(senderTabUrl, senderTabId);
 			}
+		} else if ("postingAccount" in request) {
+			// A source says which account it sends chat with, so SSN can tell its own posts coming back
+			// from someone else typing the same words.
+			if (window.ssnCaptions && hasSenderTabId) {
+				window.ssnCaptions.setAccount(senderTabId, request.postingAccount);
+			}
+			sendResponse({ state: isExtensionOn });
 		} else if ("keepAlive" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 			const keepAliveMessage = {};
@@ -7474,28 +7537,33 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		} else if (request.cmd && request.cmd === "resetleaderboard") {
 			broadcastLeaderboardReset();
 			sendResponse({ state: isExtensionOn, success: true });
-		} else if (request.cmd && request.cmd === "resettipjar") {
-			sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
-			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "resetversus") {
+			sendResponse({ state: isExtensionOn, success: !!(window.versusService && window.versusService.reset()) });
+		} else if (request.cmd && request.cmd === "setversuscount") {
+			sendResponse({ state: isExtensionOn, success: !!(window.versusService && window.versusService.setCount(request.value)) });
 		} else if (request.cmd && request.cmd === "resetmetastats") {
 			sendTargetP2P({ cmd: "resetmetastats" }, "meta");
 			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "metastats") {
 			sendTargetP2P({ cmd: "metastats", value: request.value }, "meta");
 			sendResponse({ state: isExtensionOn });
-		} else if (request.cmd && request.cmd === "settipjaramount") {
-			sendTargetP2P(
-				{
-					cmd: "settipjaramount",
-					value: request.value,
-					tipjarsource: request.tipjarsource || "",
-					tipjartype: request.tipjartype || "",
-					goalmetric: request.goalmetric || "",
-					tipjarevent: request.tipjarevent || ""
-				},
-				"tipjar"
-			);
-			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd === "settipjaramount" || request.cmd === "resettipjar") {
+			const command = {
+				cmd: request.cmd,
+				value: request.value,
+				selectedGoal: request.selectedGoal,
+				tipjarsource: request.tipjarsource || "",
+				tipjartype: request.tipjartype || "",
+				goalmetric: request.goalmetric || "",
+				tipjarevent: request.tipjarevent || ""
+			};
+			if (command.selectedGoal) {
+				const goalApplied = await sendSelectedTipJarCommand(command);
+				sendResponse({ state: isExtensionOn, goalApplied });
+			} else {
+				sendTargetP2P(command, "tipjar");
+				sendResponse({ state: isExtensionOn });
+			}
 		} else if (request.cmd && request.cmd === "stopentries") {
 			toggleEntries(false);
 			sendResponse({ state: isExtensionOn });
@@ -8205,7 +8273,8 @@ function hasTargetedMetaPayload(message) {
 	}
 	if (message.meta && typeof message.meta === "object" && !Array.isArray(message.meta)) {
 		const metaKeys = Object.keys(message.meta);
-		if (metaKeys.length === 1 && metaKeys[0] === "webhookId") {
+		// captionCopy only marks a chat row; it is not data for the meta overlays.
+		if (metaKeys.length === 1 && (metaKeys[0] === "webhookId" || metaKeys[0] === "captionCopy")) {
 			return false;
 		}
 	}
@@ -8244,29 +8313,18 @@ async function sendToDestinations(message, individualLikeAlreadyRouted, pendingC
 		if (message.chatmessage) {
 			// Relay boundary: sanitize HTML-mode chatmessage only. textonly=true is literal text, so bypass HTML parsing/filtering and preserve the flag.
 			if (!message.textonly) {
-				if (settings.bttv) {
-					if (!Globalbttv) {
-						await getBTTVEmotes();
-					}
-					if (Globalbttv) {
-						message.chatmessage = replaceEmotesWithImages(message.chatmessage, Globalbttv);
-					}
+				const bttvLoad = settings.bttv && !Globalbttv && loadGlobalEmotes("bttv", loadGlobalBTTV).forChat;
+				const sevenTvLoad = settings.seventv && !Globalseventv && loadGlobalEmotes("seventv", loadGlobalSEVENTV).forChat;
+				const ffzLoad = settings.ffz && !Globalffz && loadGlobalEmotes("ffz", loadGlobalFFZ).forChat;
+				if (bttvLoad || sevenTvLoad || ffzLoad) await Promise.all([bttvLoad, sevenTvLoad, ffzLoad]);
+				if (settings.bttv && Globalbttv) {
+					message.chatmessage = replaceEmotesWithImages(message.chatmessage, Globalbttv);
 				}
-				if (settings.seventv) {
-					if (!Globalseventv) {
-						await getSEVENTVEmotes();
-					}
-					if (Globalseventv) {
-						message.chatmessage = replaceEmotesWithImages(message.chatmessage, Globalseventv, true);
-					}
+				if (settings.seventv && Globalseventv) {
+					message.chatmessage = replaceEmotesWithImages(message.chatmessage, Globalseventv, true);
 				}
-				if (settings.ffz) {
-					if (!Globalffz) {
-						await getFFZEmotes();
-					}
-					if (Globalffz) {
-						message.chatmessage = replaceEmotesWithImages(message.chatmessage, Globalffz, true);
-					}
+				if (settings.ffz && Globalffz) {
+					message.chatmessage = replaceEmotesWithImages(message.chatmessage, Globalffz, true);
 				}
 				message.chatmessage = filterXSS(message.chatmessage);
 			} //else {
@@ -8316,6 +8374,21 @@ async function sendToDestinations(message, individualLikeAlreadyRouted, pendingC
 
 		if (isEventBlockedByCustomFilter(message)) {
 			return false;
+		}
+
+		// Captions are speech, not chat. They are shown in the dock and overlays and saved to history,
+		// and take none of the exits further down: no audience room, credits, translation, giveaway,
+		// poll, map, word cloud, GIF command, sticker reward, H2R, webhook, Discord or Streamer.bot.
+		if (message.type === "captions") {
+			if (pendingCapture && pendingCapture.cancelled) return false;
+			try {
+				sendDataP2P(message);
+			} catch (e) {
+				console.error(e);
+			}
+			sendToDisk(message);
+			message.idx = await addMessageDB(message);
+			return true;
 		}
 
 		var individualLikeRouting = routeIndividualLikeEvent(message, !!individualLikeAlreadyRouted);
@@ -8409,6 +8482,9 @@ async function sendToDestinations(message, individualLikeAlreadyRouted, pendingC
 	var isAlertMessage = !!(message && (message.event || isDonationMessage));
 	var excludeFromDockAsAlert = !!(settings.excludeAlertsDock && isAlertMessage && !isDonationAlert);
 	var isReactionMessage = reactionEventName === "reaction";
+
+	// The Versus board's score is kept by this host, so a copy of the board that opens late still shows it.
+	if (window.versusService) window.versusService.count(message);
 
 	try {
 		if (!excludeFromDockAsAlert) {
@@ -8511,7 +8587,7 @@ async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, 
 	const db = await messageStoreDB.ensureDB();
 
 	return new Promise((resolve, reject) => {
-		const transaction = db.transaction([messageStoreDB.storeName], "readonly");
+		const transaction = messageStoreDB.historyTransaction(db, "readonly");
 		const store = transaction.objectStore(messageStoreDB.storeName);
 		const index = store.index("timestamp");
 		const messages = [];
@@ -9045,6 +9121,19 @@ function normalizeMessageForTracking(msg, textonly = false) {
 }
 
 const messageStore = {};
+const displayedDockReply = Symbol("displayedDockReply");
+
+function isDisplayedDockReply(message) {
+	const entries = messageStore[message.tid];
+	if (!entries || !message.chatmessage || message.event || message.hasDonation) return false;
+	const text = normalizeMessageForTracking(message.chatmessage, message.textonly);
+	const now = Date.now();
+	const entry = entries.find(item => item.dockText && item.dockText === text && now - item.timestamp <= 10000);
+	if (!entry || !window.ssnCaptions || window.ssnCaptions.whoSent(message) !== "own") return false;
+	delete entry.dockText;
+	return true;
+}
+
 function checkExactDuplicateAlreadyRelayed(msg, sanitized = true, tabid = false, save = true) {
 	// FOR RELAY PURPOSES ONLY.
 
@@ -11539,6 +11628,71 @@ async function routeStreamDeckRemoteRequest(request, context) {
 			};
 		}
 	}
+	// The Captions page sends what the host said. It needs the same host permission as the buttons below.
+	if (request.operatorRelay === true && request.action === "caption") {
+		if (!isExtensionOn || settings.disablehost) return { kind: "command", result: router.makeError(request, "CONTROL_UNAVAILABLE", "Social Stream is off.") };
+		const caption = request.value && typeof request.value === "object" ? request.value : {};
+		// A linked Caption.Ninja capture page also publishes each caption to its public room. It gives
+		// its publisher id here, and each caption's id, so SSN can pair the two copies and show one.
+		if (caption.linked === true) {
+			if (!window.ssnCaptions || !window.ssnCaptions.linkPublisher(caption.pub)) {
+				return { kind: "command", result: router.makeError(request, "INVALID_VALUE", "A publisher id is needed.") };
+			}
+			// The reply says where that page's captions would go now, the same way a caption's reply does,
+			// so the line it shows stays true between captions. With no chat to post to, a linked page's
+			// captions are shown from the room when the room is being read.
+			if (typeof caption.lang === "string") {
+				window.ssnCaptions.setSpoken(caption.lang);
+			}
+			const linkedTargets = await window.ssnCaptions.getTargets();
+			const roomState = window.ssnCaptions.getStatus().state;
+			const shownFromRoom = !linkedTargets.chats.length && (roomState === "connected" || roomState === "connecting");
+			return { kind: "command", result: router.makeResponse(request, { accepted: true, dock: linkedTargets.dockOnly === true || shownFromRoom, chats: linkedTargets.chats, choose: linkedTargets.choose === true && !shownFromRoom, languages: linkedTargets.languages }, "accepted") };
+		}
+		// The host's choice of where their captions go, made on the page: "post" to chat, or the
+		// "dock" only. Until one is made, captions are neither posted nor shown.
+		if (caption.choose === "post" || caption.choose === "dock") {
+			if (!window.ssnCaptions) {
+				return { kind: "command", result: router.makeError(request, "CONTROL_UNAVAILABLE", "Captions are not available.") };
+			}
+			if (caption.choose === "post") {
+				settings.captionsposting = { setting: true };
+				delete settings.captionsdockonly;
+			} else {
+				settings.captionsdockonly = { setting: true };
+			}
+			chrome.storage.local.set({ settings: settings });
+			const chosen = await window.ssnCaptions.getTargets();
+			return { kind: "command", result: router.makeResponse(request, { accepted: true, dock: chosen.dockOnly === true, chats: chosen.chats, failed: chosen.failed, choose: chosen.choose === true }, "accepted") };
+		}
+		// Words in progress, for captions overlays only. They are never shown in the dock or posted.
+		if (typeof caption.interim === "string") {
+			if (window.ssnCaptions && caption.interim.length <= 2000) {
+				window.ssnCaptions.liveFromHost(caption.interim, typeof caption.lang === "string" ? caption.lang : "");
+			}
+			return { kind: "command", result: router.makeResponse(request, { accepted: true }, "accepted") };
+		}
+		// The page asks where a caption said now would go, so it can show that before anything is said.
+		if (caption.where === true) {
+			// The page also says which language is being spoken, so tagged languages are made ready for it.
+			if (window.ssnCaptions && typeof caption.lang === "string") {
+				window.ssnCaptions.setSpoken(caption.lang);
+			}
+			const targets = window.ssnCaptions ? await window.ssnCaptions.getTargets() : null;
+			return { kind: "command", result: router.makeResponse(request, { accepted: true, dock: !!(targets && targets.dockOnly), chats: targets && Array.isArray(targets.chats) ? targets.chats : [], failed: targets ? targets.failed : 0, choose: !!(targets && targets.choose), languages: targets ? targets.languages : {}, overlay: !!(targets && targets.overlay) }, "accepted") };
+		}
+		if (typeof caption.text === "string" && caption.text.length > 2000) {
+			return { kind: "command", result: router.makeError(request, "PAYLOAD_TOO_LARGE", "A caption is limited to 2000 characters.") };
+		}
+		// This page reaches SSN over the session's own connection, so its captions count as the host's.
+		// `lang` is the language being spoken, which a chat tagged with another language is translated from.
+		const taken = window.ssnCaptions && typeof caption.text === "string" ? await window.ssnCaptions.addPrivateCopy(caption.text, typeof caption.name === "string" ? caption.name : "", window.ssnCaptions.pairKey(caption.pub, caption.id), window.ssnCaptions.partOf(caption.at, caption.of), typeof caption.lang === "string" ? caption.lang : "") : false;
+		if (!taken) {
+			return { kind: "command", result: router.makeError(request, "INVALID_VALUE", "A caption needs some text.") };
+		}
+		// The page is told where the caption went, so it can say so, or say that no chat is connected.
+		return { kind: "command", result: router.makeResponse(request, { accepted: true, dock: taken.dock === true, chats: Array.isArray(taken.chats) ? taken.chats : [], failed: window.ssnCaptions.getStatus().failedPosts, choose: taken.choose === true, languages: (await window.ssnCaptions.getTargets()).languages }, "accepted") };
+	}
 	// These existing OBS buttons predate the versioned Stream Deck action list.
 	// Keep their ordinary host behavior, scoped to operator-page requests.
 	if (request.operatorRelay === true && ["startentries", "stopentries", "selectwinner", "resetwaitlist", "clearDock"].includes(request.action)) {
@@ -13080,37 +13234,34 @@ async function openchat(target = null, force = false) {
 	}
 
 	async function openYouTubeLiveChats(chatSettings) {
-		// Ensure username starts with @
-		if (!chatSettings.youtube_username.textsetting.startsWith("@")) {
-			chatSettings.youtube_username.textsetting = "@" + chatSettings.youtube_username.textsetting;
-		}
+		const name = (chatSettings.youtube_username.textsetting || "").trim();
+		if (!name) return;
+		const channelId = /^UC[\w-]{22}$/.test(name);
+		const handle = channelId || name.startsWith("@") ? name : "@" + name;
+		const exactHandle = name.startsWith("@");
 
 		try {
 			// Try our API first
-			const response = await fetch(`https://api.socialstream.ninja/youtube/streams?username=${encodeURIComponent(chatSettings.youtube_username.textsetting)}`);
+			const response = await fetch(`https://api.socialstream.ninja/youtube/streams?username=${encodeURIComponent(handle)}&liveonly=1${exactHandle ? "&usernameonly" : ""}`);
 			const data = await response.json();
-
-			if (response.ok && Array.isArray(data) && data.length > 0) {
-				// We found live streams, open chat for each one
-				data.forEach(stream => {
-					if (stream.videoId) {
-						let url = "https://www.youtube.com/live_chat?is_popout=1&v=" + stream.videoId;
-						if (stream.isShort) {
-							url += "&shorts";
-						}
+			const legacy = Array.isArray(data);
+			const streams = legacy ? data : data && data.success && data.data;
+			if (response.ok && Array.isArray(streams)) {
+				const live = streams.filter(stream => stream && /^[\w-]{11}$/.test(stream.videoId || "") && !stream.actualEndTime
+					&& (stream.status === "live" || (legacy && !stream.status)));
+				if (live.length) {
+					for (const stream of live) {
+						let url = "https://www.youtube.com/live_chat?is_popout=1&v=" + encodeURIComponent(stream.videoId);
+						if (stream.isShort) url += "&shorts";
 						openURL(url, true);
 					}
-				});
-				return; // Successfully handled via API
+					return;
+				}
 			}
-
-			// If API returns error or no streams, fall back to old method
-			await fallbackYouTubeLiveChat(chatSettings);
 		} catch (error) {
 			console.error("API Error:", error);
-			// API failed, fall back to old method
-			await fallbackYouTubeLiveChat(chatSettings);
 		}
+		await fallbackYouTubeLiveChat(handle, channelId);
 	}
 
 	async function openRumbleLiveChat(chatSettings) {
@@ -13141,33 +13292,30 @@ async function openchat(target = null, force = false) {
 		return false;
 	}
 
-	async function fallbackYouTubeLiveChat(chatSettings) {
+	async function fallbackYouTubeLiveChat(identifier, byChannelId) {
 		try {
-			// Try first URL format
-			const response1 = await fetch("https://www.youtube.com/c/" + chatSettings.youtube_username.textsetting + "/live");
-			const data1 = await response1.text();
-			const videoID = data1.split('{"videoId":"')[1].split('"')[0];
-
-			if (videoID) {
-				let url = "https://www.youtube.com/live_chat?is_popout=1&v=" + videoID;
-				openURL(url, true);
-				return;
+			const url = new URL("https://www.youtube.com/");
+			const channelPath = byChannelId ? "channel/" + encodeURIComponent(identifier) : "@" + encodeURIComponent(identifier.slice(1));
+			url.pathname = "/" + channelPath + "/live";
+			const response = await fetch(url.href);
+			if (!response.ok) return;
+			const player = extractYouTubePageData(await response.text(), "ytInitialPlayerResponse");
+			const video = player?.videoDetails;
+			const info = player?.microformat?.playerMicroformatRenderer;
+			const broadcast = info?.liveBroadcastDetails;
+			if (player?.playabilityStatus?.status !== "OK" || !/^[\w-]{11}$/.test(video?.videoId || "")
+				|| !video.channelId || video.isUpcoming || broadcast?.endTimestamp
+				|| !(broadcast?.isLiveNow === true || video.isLive === true)) return;
+			if (byChannelId) {
+				if (video.channelId !== identifier) return;
+			} else {
+				const owner = new URL(info.ownerProfileUrl, "https://www.youtube.com");
+				if (!["youtube.com", "www.youtube.com"].includes(owner.hostname)
+					|| decodeURIComponent(owner.pathname).toLowerCase() !== "/" + identifier.toLowerCase()) return;
 			}
-		} catch (e) {
-			try {
-				// Try second URL format
-				const response2 = await fetch("https://www.youtube.com/" + chatSettings.youtube_username.textsetting + "/live");
-				const data2 = await response2.text();
-				const videoID = data2.split('{"videoId":"')[1].split('"')[0];
-
-				if (videoID) {
-					let url = "https://www.youtube.com/live_chat?is_popout=1&v=" + videoID;
-					openURL(url, true);
-					return;
-				}
-			} catch (fallbackError) {
-				console.log("No live streams found");
-			}
+			openURL("https://www.youtube.com/live_chat?is_popout=1&v=" + video.videoId, true);
+		} catch (error) {
+			console.log("Could not verify a live YouTube chat", error.message);
 		}
 	}
 
@@ -13759,6 +13907,32 @@ function sendAiOverlayCommand(input = {}, defaults = {}) {
 }
 
 var overlayControlPending = new Map();
+var pendingTipJarUpdates = new Map();
+
+async function sendSelectedTipJarCommand(command) {
+	if (!isExtensionOn || settings.disablehost) return false;
+	const packet = prepareOverlayControl(command, "tipjar");
+	const id = packet.ssnControl.id;
+	let timer;
+	const confirmed = new Promise(resolve => {
+		pendingTipJarUpdates.set(id, { session: streamID, resolve });
+		timer = setTimeout(() => resolve(false), 3000);
+	});
+	try {
+		// Send once. A transport acknowledgement alone cannot confirm the goal matched.
+		sendTargetP2P(packet, "tipjar").catch(error => console.warn("[Tip Jar] Send failed", error));
+		return await confirmed;
+	} finally {
+		clearTimeout(timer);
+		pendingTipJarUpdates.delete(id);
+	}
+}
+
+function confirmTipJarUpdate(ack) {
+	if (ack.target !== "tipjar" || ack.goalApplied !== true) return;
+	const pending = pendingTipJarUpdates.get(ack.id);
+	if (pending && pending.session === streamID) pending.resolve(true);
+}
 var pollControlState = null;
 var mapControlState = null;
 var overlayStateEpoch = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
@@ -13778,7 +13952,7 @@ function prepareOverlayControl(data, target) {
 		(target === "poll" && (data.settings || data.setting || data.cmd)) || (target === "hype" && data.hype) ||
         (target === "map" && (data.settings || data.setting || ["startmap", "pausemap", "resetmap"].includes(data.cmd))) ||
         (target === "timer" && data.timer) || (target === "ticker" && data.ticker) || (target === "spotify" && data.spotify) || (target === "music" && data.music) ||
-        (target === "tipjar" && ["resettipjar", "settipjaramount"].includes(data.cmd)) ||
+        (target === "tipjar" && (["resettipjar", "settipjaramount"].includes(data.cmd) || data.versusState)) ||
         (target === "meta" && ["resetmetastats", "metastats"].includes(data.cmd)) ||
         ((target === "alerts" || target === "dock") && data.action === "eventOverlayControl" && data.surface === (target === "alerts" ? "alerts" : "events")) || (target === "alerts" && data.action === "clearAlerts") || (target === "bot" && data.action === "clearBotOverlay") ||
         (target === "wordcloud" && (data.chatmessage || "state" in data)) || (target === "gif" && data.contentimg) ||
@@ -13837,6 +14011,7 @@ function handleOverlayControlRequest(data, socket, replyChannel, allowSnapshot) 
 		return true;
 	}
 	if (data.ssnControlAck) {
+		if (data.ssnControlAck.goalApplied === true) confirmTipJarUpdate(data.ssnControlAck);
 		var pending = overlayControlPending.get(data.ssnControlAck.id);
 		if (pending && pending.session === streamID && pending.target === data.ssnControlAck.target) pending.resolve(true);
 		return true;
@@ -13854,7 +14029,11 @@ function handleOverlayControlRequest(data, socket, replyChannel, allowSnapshot) 
 	}
 	if (!allowSnapshot) return true;
 	var request = data.ssnControlRequest, packet;
-	if (request.target === "poll") {
+	if (request.target === "versus" && window.versusService) {
+		const score = window.versusService.snapshot();
+		if (!score) return true;
+		packet = prepareOverlayControl({ versusState: score }, "tipjar");
+	} else if (request.target === "poll") {
 		packet = prepareOverlayControl({ settings: settings }, "poll");
 
 	} else if (request.target === "hype") {
@@ -15830,6 +16009,13 @@ async function processEventFlowBridgeEvent(value) {
 }
 
 async function processIncomingRequest(request, UUID = false) {
+	if (request?.ssnControlAck?.goalApplied === true && UUID) {
+		const peers = ninjaBridge && typeof ninjaBridge.getPeers === "function" ? ninjaBridge.getPeers() : null;
+		if (isExtensionOn && !settings.disablehost && (peers?.[UUID] === "tipjar" || connectedPeers?.[UUID] === "tipjar")) {
+			confirmTipJarUpdate(request.ssnControlAck);
+		}
+		return;
+	}
 	if (request && request.action === 'localAudioRead') {
 		const peers = ninjaBridge && typeof ninjaBridge.getPeers === 'function' ? ninjaBridge.getPeers() : connectedPeers;
 		if (UUID && peers && peers[UUID] === 'actions' && window.eventFlowSystem &&
@@ -15868,12 +16054,28 @@ async function processIncomingRequest(request, UUID = false) {
 		await processEventFlowBridgeEvent(request.value);
 		return;
 	}
+	// A captions overlay (an OBS browser source) says it is open, and which language it shows. This
+	// is heard even with the host's controls switched off: it only tells SSN that a page is there to
+	// draw captions, and captions read from a Caption.Ninja room still need somewhere to go.
+	if (request && request.action === "registerCaptionsOverlay") {
+		if (window.ssnCaptions && UUID) {
+			window.ssnCaptions.overlayHello(UUID, request.value && typeof request.value.lang === "string" ? request.value.lang : "");
+		}
+		return;
+	}
 	if (settings.disablehost) {
 		return;
 	}
 	if (request && request.ssnControlRequest && request.ssnControlRequest.target === "leaderboard" && UUID) {
 		if (isExtensionOn) {
 			await broadcastPointsLeaderboard("connected", undefined, packet => sendDataP2P(packet, UUID));
+		}
+		return true;
+	}
+	if (request && request.action === "requestVersusScore" && UUID) {
+		if (isExtensionOn && window.versusService) {
+			const score = window.versusService.snapshot();
+			if (score) sendDataP2P({ versusState: score }, UUID);
 		}
 		return true;
 	}
@@ -15899,6 +16101,13 @@ async function processIncomingRequest(request, UUID = false) {
 		// we receieved a response from the dock
 		if (!request.outgoingOrigin && !request.bot) {
 			request.outgoingOrigin = "host";
+		}
+		if (request.dockInput === true && request.outgoingOrigin === "host" && !request.bot && isExtensionOn &&
+			getSettingFlag("showdocksentmessages") && typeof request.response === "string" && request.response.trim()) {
+			const firstHost = getCachedCommaList(getSettingTextValue("hostnamesext"))[0] || "";
+			const name = firstHost.split(":")[0].trim() || "Host";
+			sendDataP2P({ id: ++messageCounter, type: "socialstream", host: true, chatname: filterXSS(name), chatmessage: request.response, textonly: true });
+			request[displayedDockReply] = true;
 		}
 		sendMessageToTabs(request, false, null, false, false, false);
 	} else if ("action" in request) {
@@ -17393,6 +17602,61 @@ function getLegacySSAppRelaySourceType(tab) {
 	return false;
 }
 
+// Pages SSN captures that are not a stream's public chat: private messaging, meetings and
+// assistants. Captions are never sent to these by default; the host can still pick one by name.
+const CAPTION_DEFAULT_EXCLUDED_CHAT_TYPES = new Set(["whatsapp", "telegram", "telegramk", "discord", "slack", "teams", "zoom", "webex", "meet", "meets", "googlemeet", "chime", "messenger", "instagram", "linkedin", "openai", "chatgpt", "claude", "threads", "workplace", "nextcloud"]);
+
+// The chat types SSN could post to right now: one entry for each kind of connected chat page.
+// Captions use this, because by default they go to every connected chat. Given a list of picked
+// chats instead, the answer is which of those has a connected chat page, matched the same way a
+// post addressed to that chat is.
+async function getPostableChatTypes(only) {
+	if (!chrome.debugger || !isExtensionOn || settings.disablehost) {
+		return [];
+	}
+	const tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
+	const candidates = (tabs || []).filter(tab => tab && tab.url && isRelayAllowedTabUrl(tab.url));
+	const found = await Promise.all(
+		candidates.map(async tab => {
+			let sourceType = tab.id ? await getSourceType(tab.id) : false;
+			if (typeof sourceType !== "string" || !sourceType) {
+				sourceType = getLegacySSAppRelaySourceType(tab);
+			}
+			sourceType = String(sourceType || "").toLowerCase();
+			// A YouTube chat is addressed as "youtube" or "youtubeshorts" by the page it is on, so it is
+			// listed the way a post to it has to be addressed.
+			if (sourceType === "youtube" || sourceType === "youtubeshorts") {
+				sourceType = getExactYouTubeRelaySourceType(tab, sourceType) || sourceType;
+			}
+			return { tab: tab, sourceType: sourceType };
+		})
+	);
+	const stageTen = !!(settings.s10apikey && settings.s10);
+	if (Array.isArray(only) && only.length) {
+		const connectedPicks = [];
+		for (const destination of only) {
+			let isConnected = stageTen && String(destination).toLowerCase() === "stageten";
+			for (let i = 0; i < found.length && !isConnected; i++) {
+				isConnected = !!found[i].sourceType && (await matchesRelayDestination(found[i].tab, destination, "sourceType", found[i].sourceType));
+			}
+			if (isConnected) {
+				connectedPicks.push(destination);
+			}
+		}
+		return connectedPicks;
+	}
+	const types = [];
+	found.forEach(entry => {
+		if (entry.sourceType && types.indexOf(entry.sourceType) === -1 && !CAPTION_DEFAULT_EXCLUDED_CHAT_TYPES.has(entry.sourceType)) {
+			types.push(entry.sourceType);
+		}
+	});
+	if (stageTen && types.indexOf("stageten") === -1) {
+		types.push("stageten");
+	}
+	return types;
+}
+
 function createRelayTabContext(tab, data, now, relayMode, messageOrigin, shouldCheckDynamicPerTab) {
 	const throttleProfile = getThrottleProfileForTab(tab, data);
 	const throttleOptions = {
@@ -17414,8 +17678,9 @@ function createRelayTabContext(tab, data, now, relayMode, messageOrigin, shouldC
 				return;
 			}
 			const sanitized = checkExactDuplicateAlreadyRelayed(value, false, false, true);
-			if (sanitized) {
-				handleMessageStore(tab.id, sanitized, now, relayMode, messageOrigin);
+			if (sanitized || data[displayedDockReply]) {
+				const entry = handleMessageStore(tab.id, sanitized, now, relayMode, messageOrigin, data && data.captionIds);
+				if (entry && data[displayedDockReply]) entry.dockText = normalizeMessageForTracking(value, true);
 			}
 		},
 		markAutoIfNeeded() {
@@ -17439,6 +17704,50 @@ function relayStoreOnlyForTab(relayTabContext, message) {
 
 function isWebsocketSourceTabUrl(url) {
 	return !!(url && url.includes("/sources/websocket/") && (url.includes("socialstream.ninja") || url.startsWith("file://") || url.startsWith("chrome-extension://")));
+}
+
+const pendingYouTubeCaptionPosts = new Map();
+
+// Sends a caption post to a WebSocket source and waits for the source's own answer, in the
+// extension and in SSApp alike. Resolves "sent", "busy" (the source was in the middle of another
+// send and attempted nothing) or "failed" (refused, unknown, or no answer in time).
+function sendCaptionToWebsocketSourceTab(tabId, message, platform) {
+	return new Promise(resolve => {
+		const request = { type: "SEND_MESSAGE", message: message, messageOrigin: "caption", detail: true };
+		let settled = false;
+		const finish = outcome => {
+			if (settled) return;
+			settled = true;
+			clearTimeout(timer);
+			if (request.captionRequestId) pendingYouTubeCaptionPosts.delete(request.captionRequestId);
+			resolve(outcome);
+		};
+		const timer = setTimeout(() => finish("failed"), 12000);
+		if (platform === "youtube") {
+			// The desktop tab bridge acknowledges dispatch before the YouTube API finishes.
+			request.captionRequestId = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
+			pendingYouTubeCaptionPosts.set(request.captionRequestId, { tabId, finish });
+		}
+		try {
+			const pending = chrome.tabs.sendMessage(tabId, request, function (response) {
+				chrome.runtime.lastError;
+				if (request.captionRequestId) {
+					if (response !== true) finish("failed");
+					return;
+				}
+				if (response && typeof response === "object") {
+					finish(response.ok === true ? "sent" : response.busy === true ? "busy" : "failed");
+				} else {
+					finish(response === true ? "sent" : "failed");
+				}
+			});
+			if (pending && typeof pending.catch === "function") {
+				pending.catch(() => finish("failed"));
+			}
+		} catch (e) {
+			finish("failed");
+		}
+	});
 }
 
 function relayMessageToWebsocketSourceTab(tabId, message, messageOrigin = "relay", youtubeReplyVideoId) {
@@ -17487,11 +17796,13 @@ async function dispatchRelayMessageToTab(tab, data, options = {}) {
 		};
 		const profile = resolveThrottleProfile(tab.id, relayTabContext.throttleProfile, overrideTimeout);
 		relayTabContext.storeMessage(message);
-		if (profile) {
-			await scheduleThrottledSend(tab.id, profile, payload, relayTabContext.throttleOptions);
-		} else {
-			await performGeneralFakeChatSend(tab.id, payload);
-		}
+		const caption = messageOrigin === "caption" && Array.isArray(data.captionOutcomes)
+			? { tab: tab.id, outcome: "failed" } : null;
+		if (caption) data.captionOutcomes.push(caption);
+		const result = profile
+			? await scheduleThrottledSend(tab.id, profile, payload, relayTabContext.throttleOptions)
+			: await performGeneralFakeChatSend(tab.id, payload);
+		if (caption && result?.success === true) caption.outcome = "sent";
 		relayTabContext.markAutoIfNeeded();
 		return;
 	}
@@ -17611,9 +17922,32 @@ async function dispatchRelayMessageToTab(tab, data, options = {}) {
 	}
 
 	if (isWebsocketSourceTabUrl(url) || (isSSAPP && tab.virtualSourceTarget === "discord")) {
-		if (relayMessageToWebsocketSourceTab(tab.id, data.response, messageOrigin, data.youtubeReplyVideoId)) {
+		if (messageOrigin === "caption") {
+			// A caption post is recorded first, so its returning copy is recognised however fast the chat
+			// echoes it. Then it waits for the source to say whether it really sent it: the caption queue
+			// sends nothing more to this chat until that answer arrives, and retries if the source was busy.
 			relayTabContext.storeMessage(data.response);
-			lastSentMessage = sanitizeMessageForTracking(data.response, false);
+			const outcome = await sendCaptionToWebsocketSourceTab(tab.id, data.response, getWebsocketSourcePlatformFromUrl(url.split(/[?#]/, 1)[0]));
+			// Reported per chat tab: with two tabs of one platform, only the one that was busy is asked again.
+			if (Array.isArray(data.captionOutcomes)) {
+				data.captionOutcomes.push({ tab: tab.id, outcome: outcome });
+			}
+			if (outcome === "sent") {
+				lastSentMessage = sanitizeMessageForTracking(data.response, false);
+				lastSentTimestamp = Date.now();
+				lastMessageCounter = 0;
+				messageTimeout[tab.id] = Date.now();
+			} else if (outcome === "busy" && window.ssnCaptions) {
+				// Nothing was attempted, so no copy will come back for this record.
+				window.ssnCaptions.forgetPost(tab.id, checkExactDuplicateAlreadyRelayed(String(data.response), false, false, true));
+			}
+			return;
+		}
+		const youtubeBotReply = messageOrigin === "chatbot" && getWebsocketSourcePlatformFromUrl(url.split(/[?#]/, 1)[0]) === "youtube";
+		const message = youtubeBotReply ? limitMessageForPlatform(data.response, "youtube") : data.response;
+		if (relayMessageToWebsocketSourceTab(tab.id, message, messageOrigin, data.youtubeReplyVideoId)) {
+			relayTabContext.storeMessage(message);
+			lastSentMessage = sanitizeMessageForTracking(message, false);
 			lastSentTimestamp = now;
 			lastMessageCounter = 0;
 			messageTimeout[tab.id] = now;
@@ -17772,9 +18106,16 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 
 	lastAntiSpam = messageCounter;
 
+	// Stage TEN is sent to here, before the chat tabs are filtered by destination. A caption post names
+	// the one chat it is for: it goes to Stage TEN only when Stage TEN is that chat, and then without
+	// the copy to Social Stream Chat that the Stage TEN helper also sends.
 	if (settings.s10apikey && settings.s10) {
 		try {
-			handleStageTen(data, metadata);
+			if (messageOrigin !== "caption") {
+				handleStageTen(data, metadata);
+			} else if (String(data.destination || "").toLowerCase() === "stageten") {
+				sendToS10({ chatmessage: data.response, type: "socialstream", chatimg: "https://socialstream.ninja/icons/icon-128.png" }, true);
+			}
 		} catch (e) {}
 	}
 
@@ -17839,7 +18180,8 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 		await processRelayTabBatch(tabs, published, !hasSpecificTids || needsValidation ? tab => isValidTab(tab, routingData, reverse, published, now, overrideTimeout, relayMode, { chatbotDestinationRoles, relayRoleAllowList, relayRoleBlockList }) : null, processTab);
 
 		// If no platform match was found, fall back to matching a custom destination against the tab URL.
-		if (routingData.destination && !processedAnyTab) {
+		// Not for caption posts: those go to the picked chat type or nowhere.
+		if (routingData.destination && !processedAnyTab && messageOrigin !== "caption") {
 			published = {};
 			await processRelayTabBatch(tabs, published, tab => isValidTab(tab, routingData, reverse, published, now, overrideTimeout, relayMode, { destinationMode: "url", chatbotDestinationRoles, relayRoleAllowList, relayRoleBlockList }), processTab);
 		}
@@ -17883,7 +18225,13 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
 }
 
 // Helper function to handle message store
-function handleMessageStore(tabId, msg2Save, now, relayMode, origin = "relay") {
+function handleMessageStore(tabId, msg2Save, now, relayMode, origin = "relay", captionIds) {
+	// Caption posts are tracked by the captions module, apart from the text-only reflection check.
+	// Each is recorded with the captions that went into it, so its returning copy can be tied to them.
+	if (origin === "caption" && window.ssnCaptions) {
+		window.ssnCaptions.recordPost(tabId, msg2Save, now, captionIds);
+		return;
+	}
 	try {
 		if (!messageStore[tabId]) {
 			messageStore[tabId] = [];
@@ -17892,12 +18240,14 @@ function handleMessageStore(tabId, msg2Save, now, relayMode, origin = "relay") {
 				messageStore[tabId].shift();
 			}
 		}
-		messageStore[tabId].push({
+		const entry = {
 			message: msg2Save,
 			timestamp: now,
 			relayMode: relayMode,
 			origin: origin
-		});
+		};
+		messageStore[tabId].push(entry);
+		return entry;
 	} catch (e) {
 		errorlog(e);
 	}
@@ -18356,6 +18706,7 @@ function processThrottleQueue(tabId) {
 	}
 
 	const execute = async () => {
+		let sendResult;
 		try {
 			const now = Date.now();
 			const elapsed = now - state.lastSent;
@@ -18371,12 +18722,12 @@ function processThrottleQueue(tabId) {
 			}
 
 			state.lastSent = Date.now(); // Set BEFORE send so focusChat time counts towards minInterval
-			await performGeneralFakeChatSend(tabId, entry.payload);
+			sendResult = await performGeneralFakeChatSend(tabId, entry.payload);
 		} catch (error) {
 			warnlog(`Fake chat throttle send failed for tab ${tabId} (${entry.profile.key}): ${error?.message || error}`);
 		} finally {
 			if (typeof entry.resolve === "function") {
-				entry.resolve();
+				entry.resolve(entry.origin === "caption" && entry.payload.youtubeOwnerSender ? sendResult : undefined);
 			}
 			finish();
 		}
@@ -19219,7 +19570,7 @@ async function applyBotActions(data, tab = false, userFiltersOnly = false) {
 
 		if (getSettingFlag("firsttimers") && !getSettingFlag("disableDB") && data.chatname && data.chatmessage && data.type) {
 			try {
-				const checkResult = await messageStoreDB.checkUserTypeExists(data.userid || data.chatname, data.type, data.chatname);
+				const checkResult = await messageStoreDB.checkUserTypeExists(data.userid, data.type, data.chatname);
 				const exists = typeof checkResult === "object" ? checkResult.exists : !!checkResult;
 				const unavailable = typeof checkResult === "object" && checkResult.unavailable;
 				const lastActivityRaw = typeof checkResult === "object" ? checkResult.lastActivity : null;
@@ -19564,7 +19915,8 @@ async function applyBotActions(data, tab = false, userFiltersOnly = false) {
 			}
 		}
 
-		if (data.chatmessage && !data.chatbotReflection) {
+		// A caption coming back from chat is the host's own speech: auto-replies do not answer it.
+		if (data.chatmessage && !data.chatbotReflection && !(data.meta && data.meta.captionCopy === true)) {
 			const botReplyEvents = settings["botReply"] || [];
 			for (const id of botReplyEvents) {
 				const event = settings[`botReplyMessageEvent${id}`];
@@ -19915,7 +20267,7 @@ async function applyBotActions(data, tab = false, userFiltersOnly = false) {
 		}
 
 		const emoteOnlyModeEnabled = !!(settings.emoteonlymode && (settings.emoteonlymode.setting ?? settings.emoteonlymode));
-		if (emoteOnlyModeEnabled && hadOriginalChatMessage) {
+		if (emoteOnlyModeEnabled && originalChatMessage) {
 			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 			const emoteOnlyMessage = await buildEmoteOnlyMessage(data.chatmessage || "", Boolean(data.textonly || settings.textonlymode));
 			data.chatmessage = emoteOnlyMessage;

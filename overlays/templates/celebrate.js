@@ -161,7 +161,7 @@
 		[dim, back, mid, front].forEach(function (n) { wrap.appendChild(n); });
 		root.appendChild(wrap);
 		var st = { root: root, wrap: wrap, dim: dim, mid: mid, back: back, front: front, gb: back.getContext("2d"), gf: front.getContext("2d"), W: 0, H: 0, d: 1, q: 1, u: 1, time: 0, tick: null, draw: null, onfit: null };
-		var dirty = 3, idle = 0, alive = true, last = null, frameId, lag = 16, seen = 0, GOV = window.SSO_FRAMES || null;
+		var dirty = 3, idle = 0, alive = true, last = null, frameId, lag = 16, seen = 0, GOV = window.SSO_FRAMES || null, said = false;
 		function fit(force) {
 			var W = root.clientWidth || window.innerWidth, H = root.clientHeight || window.innerHeight;
 			if (!force && W === st.W && H === st.H) { return; }
@@ -178,7 +178,8 @@
 			var gap = now - last, dt = SSO.frameDelta(gap);
 			last = now; st.time += dt;
 			fit();
-			var busy = st.tick ? st.tick(dt) : false;
+			var busy = st.tick ? !!st.tick(dt) : false;
+			if (busy !== said) { said = busy; if (SSO.momentState) { SSO.momentState(busy); } }
 			// A slow machine (or OBS without GPU acceleration) gets a lower canvas resolution, a step at a time, instead of a
 			// stutter. It only ever steps down; a pause of the page (hidden source) is not counted as a slow frame.
 			if (busy && gap < 250 && !window.SSO_FRAMES) {
@@ -855,7 +856,7 @@
 		sizeFor: function (c, thumb) { return thumb ? [960, 540] : [1920, 1080]; },
 		fields: [
 			{ key: "headline", label: "Headline", type: "text", group: "Winner", default: "WINNER!" },
-			{ key: "name", label: "Winner's name", type: "text", group: "Winner", default: "YourViewer123" },
+			{ key: "name", label: "Winner's name", type: "text", group: "Winner", default: "YourViewer123", live: true },
 			{ key: "prize", label: "Line under the name (blank = none)", type: "text", group: "Winner", default: "wins the giveaway" },
 			{ key: "art", label: "Picture", type: "select", group: "Winner", default: "trophy", options: [["trophy", "Trophy"], ["crown", "Crown"], ["medal", "Medal"], ["rosette", "Ribbon rosette"], ["star", "Star"], ["none", "None"]] },
 			{ key: "metal", label: "Metal", type: "select", group: "Winner", default: "gold", options: METAL_OPTIONS, show: { art: ["trophy", "crown", "medal", "rosette", "star"] } },

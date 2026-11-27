@@ -1,3 +1,4 @@
+importScripts('../utils/hostedAssets.js');
 importScripts('ragSemanticCache.js');
 var tokenizer, encoder;
 var passages = [];
@@ -19,12 +20,12 @@ async function loadModel() {
         match: async function (request) {
             var url = typeof request === 'string' ? request : request.url;
             if (!url.startsWith(env.localModelPath + 'all-MiniLM-L6-v2/')) return undefined;
-            var response = await fetch(url);
+            var response = await fetch(url.endsWith('.onnx') ? self.SSNHostedAssetURL(url) : url);
             return response.ok ? response : undefined;
         },
         put: async function () {}
     };
-    var base = new URL('../../thirdparty/transformersjs/ort/', self.location.href).href;
+    var base = self.SSNHostedAssetURL('../../thirdparty/transformersjs/ort/', self.location.href);
     env.backends.onnx.wasm.wasmPaths = { wasm: base + 'ort-wasm-simd-threaded.asyncify.wasm', mjs: base + 'ort-wasm-simd-threaded.asyncify.mjs' };
     env.backends.onnx.wasm.numThreads = 1;
     env.backends.onnx.wasm.proxy = false;

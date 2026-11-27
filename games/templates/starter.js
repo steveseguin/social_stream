@@ -87,6 +87,8 @@
             if (!payload || typeof payload !== 'object') return;
             if (payload.overlayNinja) { receive(payload.overlayNinja); return; }
             if (payload.content) { receive(payload.content); return; }
+            // Captions are the host's own speech shown as text. They are not chat to take part with.
+            if (payload.type === 'captions') return;
             if (payload.target && payload.target !== 'null' && payload.target !== 'dock') return;
             if (!demo) text('connection', 'Receiving events');
             document.getElementById('payload').textContent = JSON.stringify(payload, null, 2);

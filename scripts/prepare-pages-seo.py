@@ -253,19 +253,27 @@ def prepare_page(root, path, base_url=ORIGIN):
         additions.append('<link rel="icon" href="' + fallback_icon(root, path, content_root) + '" type="image/x-icon">')
 
     if public:
+        # A page may name its own share picture in seo-pages.json ("image": {"path", "width", "height", "alt"}),
+        # shared by its translations. The picture must be in the package; every other page uses the brand logo.
+        original = Path(*logical.parts[1:]) if language else logical
+        share = OVERRIDES.get(original.as_posix(), {}).get("image")
+        if share and not (content_root / share["path"]).is_file():
+            share = None
+        image = base_url + "/" + (quote(share["path"], safe="/") if share else "media/logo.png")
+        image_alt = share["alt"] if share else "Social Stream Ninja logo"
         for key, value in {
             "og:type": "website", "og:site_name": BRAND, "og:locale": LANGUAGE_LOCALES.get(language, "en_US"),
             "og:url": canonical, "og:title": title, "og:description": description,
-            "og:image": base_url + "/media/logo.png", "og:image:width": "1024",
-            "og:image:height": "1024", "og:image:alt": head.meta("og:image:alt")[0][3]["content"] if language and head.meta("og:image:alt") else "Social Stream Ninja logo",
+            "og:image": image, "og:image:width": str(share["width"]) if share else "1024",
+            "og:image:height": str(share["height"]) if share else "1024", "og:image:alt": head.meta("og:image:alt")[0][3]["content"] if language and head.meta("og:image:alt") else image_alt,
         }.items():
             meta(key, value, "property")
-        # The existing brand image is square, so use a matching summary card.
+        # The brand image is square, so it gets a summary card; a page's own wide picture gets the large one.
         for key, value in {
-            "twitter:card": "summary", "twitter:url": canonical,
+            "twitter:card": "summary_large_image" if share else "summary", "twitter:url": canonical,
             "twitter:title": title, "twitter:description": description,
-            "twitter:image": base_url + "/media/logo.png",
-            "twitter:image:alt": head.meta("twitter:image:alt")[0][3]["content"] if language and head.meta("twitter:image:alt") else "Social Stream Ninja logo",
+            "twitter:image": image,
+            "twitter:image:alt": head.meta("twitter:image:alt")[0][3]["content"] if language and head.meta("twitter:image:alt") else image_alt,
         }.items():
             meta(key, value)
     if head.html_tag and not head.html_tag[2].get("lang"):

@@ -3,7 +3,8 @@
 
 // Create global TTS namespace
 window.TTS = {};
-TTS.edgeClientBaseUrl = document.currentScript && document.currentScript.src;
+TTS.scriptUrl = document.currentScript && document.currentScript.src;
+TTS.edgeClientBaseUrl = TTS.scriptUrl;
 TTS.edgeSettings = { voice: 'en-US-EmmaMultilingualNeural', rate: 1, pitch: 0 };
 TTS.edgeClientPromise = null;
 
@@ -531,6 +532,8 @@ TTS.hosttts = false;
 TTS.admintts = false;
 TTS.viptts = false;
 TTS.membertts = false;
+TTS.followertts = false;
+TTS.anyroletts = false;
 TTS.allowbottts = false;
 TTS.norelfectionstts = false;
 TTS.allowhosttts = false;
@@ -1268,6 +1271,9 @@ TTS.configure = function(urlParams) {
         TTS.admintts = true;
     }
 
+    TTS.anyroletts = urlParams.has("anyroletts");
+    TTS.followertts = urlParams.has("followertts");
+
     if (urlParams.has("viptts")) {
         TTS.viptts = true;
     }
@@ -1884,6 +1890,13 @@ TTS.speechMeta = function(data, allow = false) {
         console.error("TTS.speechMeta: No data provided");
         return;
     }
+
+    // Captions are the host's own speech, and so may be a chat message that matches a caption the
+    // host just posted. Reading either aloud would feed the microphone again, so they are only
+    // spoken when someone asks for that message directly.
+    if ((data.type === "captions" || (data.meta && data.meta.captionCopy === true)) && !allow) {
+        return;
+    }
     
     if (TTS.skipTTSMessages && !data.hasDonation) {
         if (parseInt(data.id||0) % TTS.skipTTSMessages !== 0) {
@@ -1911,32 +1924,19 @@ TTS.speechMeta = function(data, allow = false) {
         }
     }
 	
-    if (!data.bot && TTS.bottts) {
-        //console.log("Filter: Only bot messages allowed and this is not a bot message");
-        return;
-    } 
-    else if (!data.host && TTS.hosttts) {
-        //console.log("Filter: Only host messages allowed and this is not a host message");
-        return;
-    } 
-    else if (!data.mod && TTS.modtts) {
-        //console.log("Filter: Only mod messages allowed and this is not a mod message");
-        return;
+    if (TTS.bottts || TTS.hosttts || TTS.modtts || TTS.viptts || TTS.membertts || TTS.admintts || TTS.followertts) {
+        const matches = [];
+        if (TTS.bottts) matches.push(data.bot);
+        if (TTS.hosttts) matches.push(data.host);
+        if (TTS.modtts) matches.push(data.mod);
+        if (TTS.viptts) matches.push(data.vip);
+        if (TTS.membertts) matches.push(data.membership || data.hasMembership);
+        if (TTS.admintts) matches.push(data.admin);
+        if (TTS.followertts) matches.push(meta.follower === true);
+        if (!(TTS.anyroletts ? matches.some(Boolean) : matches.every(Boolean))) return;
     }
-    else if (!data.vip && TTS.viptts) {
-        //console.log("Filter: Only VIP messages allowed and this is not a VIP message");
-        return;
-    } 
-	else if (!(data.membership || data.hasMembership) && TTS.membertts) {
-        //console.log("Filter: Only Member messages allowed and this is not a member message");
-        return;
-    } 
-    else if (!data.admin && TTS.admintts) {
-        //console.log("Filter: Only admin messages allowed and this is not an admin message");
-        return;
-    }
-    
-    else if (data.bot && !(TTS.allowbottts || TTS.bottts)) {
+
+    if (data.bot && !(TTS.allowbottts || TTS.bottts)) {
         //console.log("Filter: Bot messages not allowed");
         return;
     } 
@@ -2320,10 +2320,10 @@ TTS.initKokoro = async function(voice) {
         const kokoroAssets = TTS.getKokoroAssets();
         window.SSN_KOKORO_REMOTE_HOST = kokoroAssets.getRemoteHost();
 
-        const relativePath = window.location.href.startsWith("chrome-extension://")
-            ? './thirdparty/kokoro-bundle.es.ext.js'
-            : './thirdparty/kokoro-bundle.es.js';
-        const module = await import(relativePath);
+        let bundle = './thirdparty/kokoro-bundle.es.js';
+        if (location.protocol === 'chrome-extension:') bundle = './thirdparty/kokoro-bundle.es.ext.js';
+        if (location.origin === 'https://beta.socialstream.ninja') bundle = 'https://cache.socialstream.ninja/beta/thirdparty/kokoro-bundle.es.js';
+        const module = await import(bundle);
 
         TTS.KokoroTTS = module.KokoroTTS;
         TTS.TextSplitterStream = module.TextSplitterStream;
@@ -3099,7 +3099,7 @@ TTS.initEspeak = async function() {
         // Load real eSpeak-NG implementation
         await new Promise((resolve, reject) => {
             const script = document.createElement('script');
-            script.src = './thirdparty/espeak-ng-real.js';
+            script.src = new URL('./thirdparty/espeak-ng-real.js', TTS.scriptUrl || location.href).href;
             script.onload = resolve;
             script.onerror = reject;
             document.head.appendChild(script);
@@ -3245,7 +3245,7 @@ TTS.initPiper = async function(voiceName) {
             for (const src of scripts) {
                 await new Promise((resolve, reject) => {
                     const script = document.createElement('script');
-                    script.src = src;
+                    script.src = new URL(src, TTS.scriptUrl || location.href).href;
                     script.onload = resolve;
                     script.onerror = () => reject(new Error(`Failed to load ${src}`));
                     document.head.appendChild(script);
@@ -3500,13 +3500,13 @@ TTS.initKitten = async function() {
         //console.log("Loading Kitten TTS module...");
         
         // Calculate base URL once
-        const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+        const baseUrl = new URL('.', TTS.scriptUrl || location.href).href.replace(/\/$/, '');
         
         // Load ONNX Runtime first if not loaded
         if (typeof ort === 'undefined') {
             await new Promise((resolve, reject) => {
                 const ortScript = document.createElement('script');
-                ortScript.src = './thirdparty/ort.min.js';
+                ortScript.src = new URL('./thirdparty/ort.min.js', TTS.scriptUrl || location.href).href;
                 ortScript.onload = resolve;
                 ortScript.onerror = reject;
                 document.head.appendChild(ortScript);
@@ -3534,7 +3534,8 @@ TTS.initKitten = async function() {
         TTS.kittenInstance = new KittenTTS();
         
         // Initialize with model and voices - use absolute URLs
-        const modelUrl = baseUrl + '/thirdparty/kitten-tts/kitten_tts_nano_v0_1.onnx';
+        const modelBase = location.origin === 'https://beta.socialstream.ninja' ? 'https://cache.socialstream.ninja/beta' : baseUrl;
+        const modelUrl = modelBase + '/thirdparty/kitten-tts/kitten_tts_nano_v0_1.onnx';
         const voicesUrl = baseUrl + '/thirdparty/kitten-tts/voices.json';
         
         await TTS.kittenInstance.init(modelUrl, voicesUrl, kittenWasmPaths);
