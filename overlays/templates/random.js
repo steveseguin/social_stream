@@ -1455,12 +1455,14 @@
 					var st = S.st, BW = st.BW, BH = st.BH, T = S.T, n = coins.length, i;
 					var top = c.label ? BH * 0.2 : BH * 0.06, bottom = c.callout ? BH * 0.78 : BH * 0.95;
 					if (c.label) { drawLabel(g, st, c, c.label, BW / 2, BH * 0.105, BH * 0.085, BW * 0.9); }
-					var grid = gridFor(n, BW * 0.9, bottom - top, 1), r = Math.min(grid.sc * 0.36, BH * (n === 1 ? 0.23 : 0.2));
+					var grid = gridFor(n, BW * 0.9, bottom - top, 1), r = Math.min(grid.sc * 0.36, grid.ch * 0.30, BH * (n === 1 ? 0.23 : 0.2));
+					// Keep the enlarged face inside its row at the top of the toss.
+					var lift = Math.min(BH * 0.3, grid.ch * 0.56 - r * 1.34);
 					for (i = 0; i < n; i++) {
-						var k = coins[i], cell = cellAt(grid, i, n, BW * 0.05, top, BW * 0.9), cx = cell.x + cell.w / 2, gy = cell.y + cell.h / 2 + r * 0.25;
+						var k = coins[i], cell = cellAt(grid, i, n, BW * 0.05, top, BW * 0.9), cx = cell.x + cell.w / 2, gy = cell.y + cell.h * 0.56 + r * 0.25;
 						var q = clamp01(T / (k.land * 0.82)), after = T - k.land * 0.82;
 						// up and down once, then two small bounces while it rings to a stop
-						var h = q < 1 ? 4 * q * (1 - q) * (BH * 0.3) : Math.abs(Math.sin(after * 11)) * r * 0.5 * Math.exp(-after * 6);
+						var h = q < 1 ? 4 * q * (1 - q) * lift : Math.abs(Math.sin(after * 11)) * r * 0.5 * Math.exp(-after * 6);
 						var phi = Math.PI * k.turns * (q < 1 ? (1 - Math.pow(1 - q, 1.7)) : 1), cosv = Math.cos(phi);
 						if (q >= 1) { cosv = (sideOf(k) ? -1 : 1) * (1 - 0.22 * Math.abs(Math.sin(after * 17)) * Math.exp(-after * 5)); }
 						var face = cosv >= 0 ? 0 : 1, sq = Math.max(0.03, Math.abs(cosv)), sc = 1 + 0.32 * h / (BH * 0.3), rr2 = r * sc, cy = gy - h - r * 0.25;

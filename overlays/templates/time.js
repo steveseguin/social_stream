@@ -32,16 +32,22 @@
 		el.className = cls;
 		wrap.appendChild(el);
 		root.appendChild(wrap);
-		// A readout wider than the source (12-hour time with seconds, three-digit day counts) used to run off both
-		// edges. Shrink it to fit instead; nothing changes while it already fits.
+		// Scale the whole readout around its anchor when either dimension exceeds the source.
 		var origin = c.align === "flex-start" ? "0 50%" : c.align === "flex-end" ? "100% 50%" : "50% 50%";
 		function fit() {
-			var room = wrap.clientWidth - 24, need = el.offsetWidth;
-			var want = need > room && room > 40 ? "scale(" + (room / need).toFixed(3) + ")" : "";
+			var scale = Math.min(1, Math.max(1, wrap.clientWidth - 24) / Math.max(1, el.offsetWidth), wrap.clientHeight / Math.max(1, el.offsetHeight));
+			var want = scale < 1 ? "scale(" + scale + ")" : "";
 			if (el.style.transform !== want) { el.style.transformOrigin = origin; el.style.transform = want; }
 		}
-		setTimeout(fit, 0);
-		setInterval(fit, 500);
+		if (window.ResizeObserver) {
+			var observer = new ResizeObserver(fit);
+			observer.observe(wrap);
+			observer.observe(el);
+			SSO.onCleanup(root, function () { observer.disconnect(); });
+		} else {
+			setTimeout(fit, 0);
+			setInterval(fit, 500);
+		}
 		return el;
 	}
 	function tick(fn, ms) { fn(); setInterval(fn, ms || 250); }
@@ -113,9 +119,12 @@
 			if (c.style === "analog" && c.label) { el.querySelector(".tm-label").style.fontSize = ".1em"; }
 			var big = el.querySelector(".tm-big");
 			var sub = el.querySelector(".tm-sub");
-			var last = "";
+			var last = "", lastTick = -1, dateKey = "";
 			tick(function () {
 				var now = new Date();
+				var stamp = Math.floor(now.getTime() / (c.seconds || c.style === "analog" ? 1000 : 60000));
+				if (stamp === lastTick) { return; }
+				lastTick = stamp;
 				var p = SSO.zonedParts(now, c.tz);
 				if (c.style === "analog") {
 					var hDeg = (p.h % 12) * 30 + p.m * 0.5, mDeg = p.m * 6 + p.s * 0.1, sDeg = p.s * 6;
@@ -145,7 +154,8 @@
 						last = SSO.formatTime(p, c.h12, c.seconds);
 					}
 				}
-				if (sub) { sub.textContent = SSO.formatDate(now, c.tz, c.date); }
+				var day = p.y + "/" + p.mo + "/" + p.d;
+				if (sub && day !== dateKey) { sub.textContent = SSO.formatDate(now, c.tz, c.date); dateKey = day; }
 			}, 250);
 		}
 	});
@@ -199,8 +209,12 @@
 				return '<div class="wc-z" style="' + (c.cards ? "background:" + SSO.rgba(c.bg, c.bgopacity) + ";border-radius:" + c.radius + "px;" : "") + '"><div class="wc-name"></div><div><span class="wc-time"></span><span class="wc-dn"></span></div></div>';
 			}).join("");
 			var nodes = el.querySelectorAll(".wc-z");
+			var lastMinute = -1;
 			tick(function () {
 				var now = new Date();
+				var minute = Math.floor(now.getTime() / 60000);
+				if (minute === lastMinute) { return; }
+				lastMinute = minute;
 				zones.forEach(function (z, i) {
 					var p = SSO.zonedParts(now, z.tz);
 					var t = SSO.formatTime(p, c.h12, false);

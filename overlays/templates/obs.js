@@ -719,8 +719,8 @@
 			var st = { start: session.start(), changes: 0, clips: 0, per: {}, cur: "", curAt: Date.now(), stopped: 0 };
 			try { var saved = JSON.parse(SSO.store.get(store) || "null"); if (saved && saved.start === st.start && !preview) { st = saved; st.curAt = Date.now(); } } catch (e) {}
 			if (preview) { st = { start: Date.now() - 8040000, changes: 23, clips: 4, per: { "Gameplay": 5200000, "Just Chatting": 2300000 }, cur: "Ending", curAt: Date.now(), stopped: 0 }; }
-			var ending = preview, streaming = !SSO.obs.available(), shown = false, shownAt = 0;
-			SSO.onCleanup(root, function () { alive = false; });
+			var ending = preview, streaming = !SSO.obs.available(), shown = false, shownAt = 0, introTimer = 0, lastStats = "";
+			SSO.onCleanup(root, function () { alive = false; clearTimeout(introTimer); });
 			function save() { if (!preview) { SSO.store.set(store, JSON.stringify(st)); } }
 			function bank() { if (st.cur) { st.per[st.cur] = (st.per[st.cur] || 0) + Date.now() - st.curAt; } st.curAt = Date.now(); }
 			function fresh() { st = { start: session.start(), changes: 0, clips: 0, per: {}, cur: st.cur, curAt: Date.now(), stopped: 0 }; save(); }
@@ -728,8 +728,13 @@
 			function paint() {
 				if (!alive) { return; }
 				var show = c.show === "always" || ending || (st.stopped && !streaming) || preview, html = "", best = "", most = 0, k, ms, ease;
-				if (show && !shown) { shownAt = Date.now(); }
-				shown = show;
+				if (!!show !== shown) {
+					shown = !!show;
+					el.className = shown ? "rc" : "rc off";
+					if (shown) { shownAt = Date.now(); }
+				}
+				clearTimeout(introTimer);
+				if (!shown) { return; }
 				// numbers count up as the card arrives
 				ease = Math.min(1, (Date.now() - shownAt) / 1400); ease = 1 - Math.pow(1 - ease, 3);
 				ms = (st.stopped || Date.now()) - st.start;
@@ -739,8 +744,8 @@
 				if (c.changes) { html += stat(String(Math.round(st.changes * ease)), st.changes === 1 ? "scene change" : "scene changes"); }
 				if (c.clips) { html += stat(String(Math.round(st.clips * ease)), st.clips === 1 ? "replay saved" : "replays saved"); }
 				if (c.top && best) { html += stat(best, "most time in", true); }
-				el.querySelector(".rc-grid").innerHTML = html;
-				el.className = "rc" + (show ? "" : " off");
+				if (html !== lastStats) { el.querySelector(".rc-grid").innerHTML = html; lastStats = html; }
+				if (ease < 1) { introTimer = setTimeout(paint, 60); }
 			}
 			el.innerHTML = '<div class="rc-title"></div><div class="rc-grid"></div>' + (c.footer ? '<div class="rc-foot">' + esc(c.footer) + "</div>" : "");
 			var title = el.querySelector(".rc-title");
@@ -761,8 +766,6 @@
 			}
 			paint();
 			setInterval(function () { if (alive) { paint(); if (!preview && !st.stopped) { bank(); save(); } } }, 1000);
-			// keep the count-up smooth for the first moments after it appears
-			setInterval(function () { if (alive && shown && Date.now() - shownAt < 1600) { paint(); } }, 60);
 		}
 	});
 })();

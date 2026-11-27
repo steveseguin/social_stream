@@ -2683,6 +2683,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Hides all stream events"
           },
           {
+            "key": "hideeventsfrom",
+            "displayName": "hideeventsfrom",
+            "aliases": [
+              "hideeventsfrom"
+            ],
+            "values": "comma-separated sources",
+            "description": "Hides event rows from the listed platforms in this dock, e.g. tiktok,kick."
+          },
+          {
             "key": "dissolve",
             "displayName": "dissolve",
             "aliases": [

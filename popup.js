@@ -1524,6 +1524,9 @@ function miniTranslate(ele, ident = false, direct=false) {
 		});
 		translatePopupAttribute(ele, "placeholder", translation.placeholders);
 	}
+	if (ele === document.body) {
+		ele.querySelectorAll(".source-list-container .remove-source[data-source-type]").forEach(translateSourceRemoveButton);
+	}
 	var obsTransparentNotes = ele.querySelectorAll('.obs-transparent-note');
 	obsTransparentNotes.forEach(function(ele2) {
 		ele2.innerHTML = getTranslation(
@@ -2012,6 +2015,10 @@ function removeSourceType(sourceType, type) {
     }
 }
 
+function translateSourceRemoveButton(button) {
+    button.setAttribute("aria-label", formatPopupTranslation("captions-remove", "Remove {name}", { name: button.dataset.sourceType }));
+}
+
 function updateSourceTypeList(type) {
     let input = document.getElementById(type);
     if (!input) {
@@ -2040,7 +2047,7 @@ function updateSourceTypeList(type) {
         const remove = document.createElement('button');
         remove.className = 'remove-source';
         remove.dataset.sourceType = source;
-        remove.setAttribute("aria-label", formatPopupTranslation("captions-remove", "Remove {name}", { name: source }));
+        translateSourceRemoveButton(remove);
         remove.textContent = '×';
         row.appendChild(label);
         row.appendChild(remove);
@@ -2493,7 +2500,7 @@ function setupSourceSelectTags(inputId) {
         <select id="new${inputId}Type">
             <option value="" selected data-translate="captions-source">Select source</option>
         </select>
-        <button id="add${inputId}">Add</button>
+        <button id="add${inputId}" data-translate="captions-add">Add</button>
     `;
 
     container.parentNode.classList.add('isolate');
@@ -3492,7 +3499,7 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 }
 
 const sourceTypes = ['relaytargets','eventsSources','ttssources'];
-const sourceSelectTagInputs = ['hideViewerCountSources', 'captionstargets'];
+const sourceSelectTagInputs = ['hideViewerCountSources', 'captionstargets', 'hideeventsfrom'];
 const commaTagInputs = ['questionKeywords', 'filtercommandscustomwords', 'bottriggerwords', 'filterevents', 'dockfilterevents', 'featuredfilterevents', 'exactblockedmessages'];
 const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers', 'filterfeaturedusers'];
 // These are canonical payload types that cannot be inferred reliably from a
@@ -5021,7 +5028,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                     refreshCommaTagInput(ele.id || key);
                 } else if (userTypes.includes(ele.id) || userTypes.includes(key)) {
                     updateUsernameList(ele.id || key);
-                } else if (sourceTypes.includes(ele.id) || sourceTypes.includes(key)) {
+                } else if (sourceTypes.includes(ele.id) || sourceTypes.includes(key) || sourceSelectTagInputs.includes(ele.id)) {
                     updateSourceTypeList(ele.id || key);
                 }
             }

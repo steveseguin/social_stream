@@ -5,7 +5,7 @@ const path = require("path");
 const repoRoot = path.resolve(__dirname, "..");
 const backgroundSource = fs.readFileSync(path.join(repoRoot, "background.js"), "utf8");
 const popupHtml = fs.readFileSync(path.join(repoRoot, "popup.html"), "utf8");
-const popupSource = fs.readFileSync(path.join(repoRoot, "popup.js"), "utf8");
+const popupSource = fs.readFileSync(path.join(repoRoot, "popup.js"), "utf8").replace(/\r\n/g, "\n");
 const multiAlertsSource = fs.readFileSync(path.join(repoRoot, "multi-alerts.js"), "utf8");
 const settingsDefinitionsSource = fs.readFileSync(path.join(repoRoot, "shared", "config", "settingsDefinitions.js"), "utf8");
 

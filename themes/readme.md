@@ -33,9 +33,9 @@ file:///C:/path/to/your/theme.html?session=YOUR_SESSION_ID
 ### Themed Packages (with documentation)
 These themes include readme files, sample photos, and guides:
 
-- [Deuk's Theme](https://socialstream.ninja/themes/deuks_overlay)
+- [Deuk's Theme](./deuks_overlay/readme.md)
 - [Windows3.1 Theme](https://socialstream.ninja/themes/Windows3.1)
-- [Neutron Theme](https://socialstream.ninja/themes/Neutron)
+- [Neutron Theme](./Neutron/readme.md)
 
 ### Layout & Welcome Overlays
 Add `?session=XXXXXXX` to these URLs. Both accept `&style=` with any matching collection; the welcome card also accepts the illustrated `art-*` styles.
