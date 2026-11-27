@@ -808,7 +808,6 @@
 			/* fitChatName() keeps a long name on one line: shrunk a little when that is enough, otherwise cut with "...". */
 			.highlight-chat .hl-name.hl-name-fit {
 				white-space: nowrap;
-				min-width: 0;
 			}
 
 			.hl-name.hl-name-fit > .hl-name-text {
@@ -820,6 +819,7 @@
 				margin: -0.25em -0.2em;
 			}
 
+			/* How wide a fitted name may be: compact rows, right-aligned compact rows, then the default layout. */
 			.highlight-chat > .hl-message > .hl-name.hl-name-fit {
 				max-width: calc(100% - 10px);
 			}
@@ -830,11 +830,33 @@
 			}
 
 			.notcompactmode .highlight-chat > .hl-name.hl-name-fit {
-				max-width: min(max(220px, 25vw), calc(100% - 10px));
+				max-width: min(max(220px, 25vw), 45%);
 				flex-shrink: 0;
 			}
 
+			/* Where the name sits on its own line above the message it can use the whole row. */
+			body.inlinechat .highlight-chat > .hl-name.hl-name-fit {
+				max-width: min(max(220px, 25vw), calc(100% - 10px));
+			}
+
+			@media only screen and (max-width: 400px) {
+				.vanilla.notcompactmode .highlight-chat > .hl-name.hl-name-fit {
+					max-width: min(max(220px, 25vw), calc(100% - 10px));
+				}
+			}
+
+			@media only screen and (max-width: 801px) {
+				.OBS.vanilla.notcompactmode .highlight-chat > .hl-name.hl-name-fit {
+					max-width: min(max(220px, 25vw), calc(100% - 10px));
+				}
+			}
+
 			/* The rows a name sits in must not grow past the chat row, or there is nothing to cut the name against. */
+			body:not(.notcompactmode) .hl-firstline > .hl-name.hl-name-fit,
+			body:not(.notcompactmode) .hl-righttopline > .hl-name.hl-name-fit {
+				min-width: 0;
+			}
+
 			.highlight-chat > .hl-firstline {
 				max-width: 100%;
 			}

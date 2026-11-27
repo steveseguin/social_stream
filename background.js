@@ -6042,6 +6042,13 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		const senderTabId = hasSenderTabId ? senderTab.id : null;
 		const senderTabUrl = senderTab && typeof senderTab.url === "string" ? senderTab.url : "";
 
+		if (request.youtubeCaptionResult) {
+			const result = request.youtubeCaptionResult;
+			const pending = pendingYouTubeCaptionPosts.get(result.requestId);
+			if (pending && pending.tabId === senderTabId) pending.finish(result.ok === true ? "sent" : "failed");
+			sendResponse({ state: isExtensionOn });
+			return response;
+		}
 		if (request.cmd === "aiEvent") {
             try {
                 sendResponse({ value: await window.SSNAiEventBackground.handleSettings(request, sender) });
@@ -17612,7 +17619,7 @@ async function getPostableChatTypes(only) {
 	const found = await Promise.all(
 		candidates.map(async tab => {
 			let sourceType = tab.id ? await getSourceType(tab.id) : false;
-			if (!sourceType) {
+			if (typeof sourceType !== "string" || !sourceType) {
 				sourceType = getLegacySSAppRelaySourceType(tab);
 			}
 			sourceType = String(sourceType || "").toLowerCase();
@@ -17699,22 +17706,35 @@ function isWebsocketSourceTabUrl(url) {
 	return !!(url && url.includes("/sources/websocket/") && (url.includes("socialstream.ninja") || url.startsWith("file://") || url.startsWith("chrome-extension://")));
 }
 
+const pendingYouTubeCaptionPosts = new Map();
+
 // Sends a caption post to a WebSocket source and waits for the source's own answer, in the
 // extension and in SSApp alike. Resolves "sent", "busy" (the source was in the middle of another
 // send and attempted nothing) or "failed" (refused, unknown, or no answer in time).
-function sendCaptionToWebsocketSourceTab(tabId, message) {
+function sendCaptionToWebsocketSourceTab(tabId, message, platform) {
 	return new Promise(resolve => {
+		const request = { type: "SEND_MESSAGE", message: message, messageOrigin: "caption", detail: true };
 		let settled = false;
 		const finish = outcome => {
 			if (settled) return;
 			settled = true;
 			clearTimeout(timer);
+			if (request.captionRequestId) pendingYouTubeCaptionPosts.delete(request.captionRequestId);
 			resolve(outcome);
 		};
 		const timer = setTimeout(() => finish("failed"), 12000);
+		if (platform === "youtube") {
+			// The desktop tab bridge acknowledges dispatch before the YouTube API finishes.
+			request.captionRequestId = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
+			pendingYouTubeCaptionPosts.set(request.captionRequestId, { tabId, finish });
+		}
 		try {
-			const pending = chrome.tabs.sendMessage(tabId, { type: "SEND_MESSAGE", message: message, messageOrigin: "caption", detail: true }, function (response) {
+			const pending = chrome.tabs.sendMessage(tabId, request, function (response) {
 				chrome.runtime.lastError;
+				if (request.captionRequestId) {
+					if (response !== true) finish("failed");
+					return;
+				}
 				if (response && typeof response === "object") {
 					finish(response.ok === true ? "sent" : response.busy === true ? "busy" : "failed");
 				} else {
@@ -17776,11 +17796,13 @@ async function dispatchRelayMessageToTab(tab, data, options = {}) {
 		};
 		const profile = resolveThrottleProfile(tab.id, relayTabContext.throttleProfile, overrideTimeout);
 		relayTabContext.storeMessage(message);
-		if (profile) {
-			await scheduleThrottledSend(tab.id, profile, payload, relayTabContext.throttleOptions);
-		} else {
-			await performGeneralFakeChatSend(tab.id, payload);
-		}
+		const caption = messageOrigin === "caption" && Array.isArray(data.captionOutcomes)
+			? { tab: tab.id, outcome: "failed" } : null;
+		if (caption) data.captionOutcomes.push(caption);
+		const result = profile
+			? await scheduleThrottledSend(tab.id, profile, payload, relayTabContext.throttleOptions)
+			: await performGeneralFakeChatSend(tab.id, payload);
+		if (caption && result?.success === true) caption.outcome = "sent";
 		relayTabContext.markAutoIfNeeded();
 		return;
 	}
@@ -17905,7 +17927,7 @@ async function dispatchRelayMessageToTab(tab, data, options = {}) {
 			// echoes it. Then it waits for the source to say whether it really sent it: the caption queue
 			// sends nothing more to this chat until that answer arrives, and retries if the source was busy.
 			relayTabContext.storeMessage(data.response);
-			const outcome = await sendCaptionToWebsocketSourceTab(tab.id, data.response);
+			const outcome = await sendCaptionToWebsocketSourceTab(tab.id, data.response, getWebsocketSourcePlatformFromUrl(url.split(/[?#]/, 1)[0]));
 			// Reported per chat tab: with two tabs of one platform, only the one that was busy is asked again.
 			if (Array.isArray(data.captionOutcomes)) {
 				data.captionOutcomes.push({ tab: tab.id, outcome: outcome });
@@ -18684,6 +18706,7 @@ function processThrottleQueue(tabId) {
 	}
 
 	const execute = async () => {
+		let sendResult;
 		try {
 			const now = Date.now();
 			const elapsed = now - state.lastSent;
@@ -18699,12 +18722,12 @@ function processThrottleQueue(tabId) {
 			}
 
 			state.lastSent = Date.now(); // Set BEFORE send so focusChat time counts towards minInterval
-			await performGeneralFakeChatSend(tabId, entry.payload);
+			sendResult = await performGeneralFakeChatSend(tabId, entry.payload);
 		} catch (error) {
 			warnlog(`Fake chat throttle send failed for tab ${tabId} (${entry.profile.key}): ${error?.message || error}`);
 		} finally {
 			if (typeof entry.resolve === "function") {
-				entry.resolve();
+				entry.resolve(entry.origin === "caption" && entry.payload.youtubeOwnerSender ? sendResult : undefined);
 			}
 			finish();
 		}

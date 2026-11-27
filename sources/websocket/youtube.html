@@ -8653,22 +8653,27 @@ function enableBackgroundKeepAlive() {
 
 	// Handle messages from extension/dock via content script
 	{
-		const extensionMessageHandler = function(e) {
+		const extensionMessageHandler = async function(e) {
 			if (!e.detail || !e.detail.message) {
 				return;
 			}
-			if (!liveChatId) {
-				reportOutboundChatFailure('YouTube host chat was not sent: no active live chat is connected.');
-				return;
-			}
-			if (!hasYouTubeWriteAccess()) {
-				reportOutboundChatFailure(getWriteAccessRequiredMessage());
-				return;
-			}
-			sendChatMessage(e.detail.message, e.detail.youtubeReplyVideoId).catch(error => {
+			let sent = false;
+			try {
+				if (!liveChatId) {
+					reportOutboundChatFailure('YouTube host chat was not sent: no active live chat is connected.');
+				} else if (!hasYouTubeWriteAccess()) {
+					reportOutboundChatFailure(getWriteAccessRequiredMessage());
+				} else {
+					sent = !!(await sendChatMessage(e.detail.message, e.detail.youtubeReplyVideoId));
+				}
+			} catch (error) {
 				console.error('Failed to send extension message:', error);
 				reportOutboundChatFailure('YouTube host chat failed to send: ' + (error && error.message ? error.message : error));
-			});
+			} finally {
+				if (e.detail.captionRequestId) {
+					window.dispatchEvent(new CustomEvent('youtubeCaptionResult', { detail: { requestId: e.detail.captionRequestId, ok: sent } }));
+				}
+			}
 		};
 		window.addEventListener('sendExtensionMessage', extensionMessageHandler);
 		registerCleanup(() => window.removeEventListener('sendExtensionMessage', extensionMessageHandler));

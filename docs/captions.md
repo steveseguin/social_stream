@@ -6,7 +6,7 @@ Use your microphone to post what you say to your connected chats or keep it in y
 
 ![The Captions page while listening. It says it is posting to twitch and youtube, and shows the last sentences heard.](images/captions/captions-page.png)
 
-You need [Social Stream Ninja](https://socialstream.ninja/docs/download.html) and a microphone. Captions is in beta: in the **desktop app**, turn on **Enable Beta Mode** above **Added Sources** to see it.
+You need [Social Stream Ninja](https://socialstream.ninja/docs/download.html) and a microphone.
 
 ## 1. Open Captions
 
