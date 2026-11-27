@@ -801,6 +801,48 @@
 				 overflow-wrap: normal;
 			}
 
+			.highlight-chat > .hl-message:not(.hl-content) {
+				min-width: 0;
+			}
+
+			/* fitChatName() keeps a long name on one line: shrunk a little when that is enough, otherwise cut with "...". */
+			.highlight-chat .hl-name.hl-name-fit {
+				white-space: nowrap;
+				min-width: 0;
+			}
+
+			.hl-name.hl-name-fit > .hl-name-text {
+				display: block;
+				min-width: 0;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				padding: 0.25em 0.2em;
+				margin: -0.25em -0.2em;
+			}
+
+			.highlight-chat > .hl-message > .hl-name.hl-name-fit {
+				max-width: calc(100% - 10px);
+			}
+
+			.alignright .compactmode > .hl-message > .hl-name.hl-name-fit {
+				max-width: 50%;
+				flex-shrink: 0;
+			}
+
+			.notcompactmode .highlight-chat > .hl-name.hl-name-fit {
+				max-width: min(max(220px, 25vw), calc(100% - 10px));
+				flex-shrink: 0;
+			}
+
+			/* The rows a name sits in must not grow past the chat row, or there is nothing to cut the name against. */
+			.highlight-chat > .hl-firstline {
+				max-width: 100%;
+			}
+
+			.highlight-chat > .hl-rightside {
+				min-width: 0;
+			}
+
 			.hl-message img,
 			.hl-message svg {
 				margin: auto 0px;
@@ -13216,7 +13258,9 @@
 					}
 					
 					// Parent-relative sizes avoid applying Android WebView text zoom twice.
-					if (splitMode && compactmode){
+					if (!horizontal && fitChatName(node.querySelector(".hl-name"), node)) {
+						// kept to one line: shrunk a little, or ended with "..."
+					} else if (splitMode && compactmode){
 						// this mode isn't compatible
 					} else if (horizontal || twoLines || largeavatar) {
 						// do not shrink the names to fit
@@ -13746,6 +13790,76 @@
 				send2Extension(msg.overlayNinja);
 			}
 			
+			// Keeps a chat name on one line. A slightly long name is shrunk, never below 75% of its size;
+			// a longer one keeps its size and ends in "...". Returns true when it stepped in.
+			function fitChatName(nameEle, row) {
+				if (!nameEle || !nameEle.textContent) return false;
+				nameEle.classList.add("hl-name-fit"); // one line, held to the width its row allows
+				var style = window.getComputedStyle(nameEle);
+				var padding = (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0);
+				var pageScale = row && row.offsetWidth ? (row.getBoundingClientRect().width / row.offsetWidth) || 1 : 1;
+				var contents = document.createRange();
+				contents.selectNodeContents(nameEle);
+				var room = nameEle.clientWidth - padding;
+				// scrollWidth misses a name that overflows to the left (right-aligned two-line rows), so the contents are measured as well.
+				var need = Math.max(nameEle.scrollWidth - padding, contents.getBoundingClientRect().width / pageScale - 1);
+				if (room > 0 && need <= room) {
+					nameEle.classList.remove("hl-name-fit");
+					return false;
+				}
+				// Wrap the name itself, not its badges, so CSS ends it with "..." whenever it does not fit.
+				var text = document.createElement("span");
+				text.className = "hl-name-text";
+				var kids = Array.prototype.slice.call(nameEle.childNodes);
+				for (var i = 0; i < kids.length; i++) {
+					var kid = kids[i];
+					if (kid.nodeType === 1 && (kid.classList.contains("hl-badge") || kid.classList.contains("hl-badges"))) continue;
+					if (!text.parentNode) nameEle.insertBefore(text, kid);
+					text.appendChild(kid);
+				}
+				if (!text.parentNode) return true;
+				// A name that is only a little too long is shrunk instead, as long as it stays at 75% of its size or more.
+				var parentSize = parseFloat(window.getComputedStyle(nameEle.parentElement).fontSize);
+				var fullSize = parseFloat(style.fontSize);
+				var textStyle = window.getComputedStyle(text);
+				var inner = document.createRange();
+				inner.selectNodeContents(text);
+				var size = room > 0 && parentSize > 0 ? Math.floor(fullSize * (room - 1) / need) : 0;
+				while (size >= fullSize * 0.75) {
+					nameEle.style.fontSize = (100 * size / parentSize) + "%";
+					var spare = (text.getBoundingClientRect().width - inner.getBoundingClientRect().width) / pageScale - (parseFloat(textStyle.paddingLeft) || 0) - (parseFloat(textStyle.paddingRight) || 0);
+					if (spare > -0.1) return true;
+					size -= 1;
+				}
+				nameEle.style.fontSize = "";
+				return true;
+			}
+
+			// Font loads and window resizes change how wide names are, so the names already on screen get measured again.
+			var refitChatNamesTimer = null;
+			function refitChatNames() {
+				clearTimeout(refitChatNamesTimer);
+				refitChatNamesTimer = setTimeout(function () {
+					if (horizontal) return;
+					var names = document.querySelectorAll(".highlight-chat .hl-name");
+					for (var i = 0; i < names.length; i++) {
+						var nameEle = names[i];
+						var text = nameEle.classList.contains("hl-name-fit") ? nameEle.querySelector(".hl-name-text") : null;
+						if (text) {
+							while (text.firstChild) nameEle.insertBefore(text.firstChild, text);
+							nameEle.removeChild(text);
+							nameEle.classList.remove("hl-name-fit");
+							nameEle.style.fontSize = "";
+						}
+						fitChatName(nameEle, nameEle.closest(".highlight-chat"));
+					}
+				}, 250);
+			}
+			window.addEventListener("resize", refitChatNames);
+			if (document.fonts && document.fonts.addEventListener) {
+				document.fonts.addEventListener("loadingdone", refitChatNames);
+			}
+
 			function truncateText(text, maxLength) {
 				if (text.length <= maxLength) {
 					return text;
