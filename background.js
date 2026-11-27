@@ -12773,11 +12773,11 @@ function selectRumbleLivestreamFromSnapshot(snapshot, preferredStreamId = "") {
 }
 
 function buildRumblePopupUrlFromStream(stream) {
-	const streamId = normalizeRumbleSettingText(stream && stream.id);
-	if (!streamId) {
-		return "";
-	}
-	return "https://rumble.com/chat/popup/" + encodeURIComponent(streamId);
+	const streamId = stream && stream.id;
+	// Creator API strings are base 36, even when they contain only digits. Numeric IDs are already decimal.
+	const chatId = typeof streamId === "string" && /^[a-z0-9]+$/i.test(streamId.trim())
+		? parseInt(streamId.trim(), 36) : streamId;
+	return Number.isSafeInteger(chatId) && chatId > 0 ? buildRumblePopupUrlFromChatId(chatId) : "";
 }
 
 function buildRumblePopupUrlFromChatId(chatId) {

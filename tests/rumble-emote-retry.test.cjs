@@ -135,7 +135,9 @@ test('A failed stream does not delay another stream or an explicit reconnect', a
     const otherStream = fixture('network-error');
     await otherStream.ensureRumbleEmoteCatalog('123');
     assert.equal(await otherStream.ensureRumbleEmoteCatalog('456'), true);
-    assert.equal(otherStream.requests[1], 'https://rumble.com/chat/popup/456');
+    assert.equal(otherStream.requests[1], 'https://rumble.com/chat/popup/5370');
+    assert.equal(await otherStream.ensureRumbleEmoteCatalog(456), true);
+    assert.equal(otherStream.requests[2], 'https://rumble.com/chat/popup/456');
 
     const reconnect = fixture('network-error');
     await reconnect.ensureRumbleEmoteCatalog('123');

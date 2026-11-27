@@ -318,12 +318,16 @@
         return normalizeText(value);
     }
 
-    function buildPopupChatUrl(stream) {
-        const streamId = normalizeStreamId(stream && stream.id);
-        if (!streamId) {
-            return '';
-        }
-        return 'https://rumble.com/chat/popup/' + encodeURIComponent(streamId);
+    function getApiChatId(streamId) {
+        // Creator API strings are base 36, even when they contain only digits. Numeric IDs are already decimal.
+        const id = typeof streamId === 'string' && /^[a-z0-9]+$/i.test(streamId.trim())
+            ? parseInt(streamId.trim(), 36) : streamId;
+        return Number.isSafeInteger(id) && id > 0 ? String(id) : '';
+    }
+
+    function buildPopupChatUrl(streamId) {
+        const chatId = getApiChatId(streamId);
+        return chatId ? 'https://rumble.com/chat/popup/' + chatId : '';
     }
 
     function buildChatStreamUrl(streamId) {
@@ -649,18 +653,17 @@
     }
 
     function ensureRumbleEmoteCatalog(streamId) {
-        const normalized = normalizeStreamId(streamId);
-        const popupUrl = buildPopupChatUrl({ id: normalized });
-        if (!normalized || !popupUrl) {
+        const popupUrl = buildPopupChatUrl(streamId);
+        if (!popupUrl) {
             return Promise.resolve(false);
         }
-        if (state.sseEmoteCatalogStreamId === normalized) {
+        if (state.sseEmoteCatalogStreamId === streamId) {
             return Promise.resolve(true);
         }
         if (state.sseEmoteCatalogPromise) {
             return state.sseEmoteCatalogPromise;
         }
-        if (state.sseEmoteCatalogFailedStreamId === normalized && Date.now() < state.sseEmoteCatalogRetryAfter) {
+        if (state.sseEmoteCatalogFailedStreamId === streamId && Date.now() < state.sseEmoteCatalogRetryAfter) {
             return Promise.resolve(false);
         }
 
@@ -680,7 +683,7 @@
             })
         ]);
         state.sseEmoteCatalogPromise = request.then(function (html) {
-            if (token !== state.sseToken || (state.sseStreamId && state.sseStreamId !== normalized)) {
+            if (token !== state.sseToken || (state.sseStreamId && state.sseStreamId !== streamId)) {
                 return false;
             }
             const parsed = parseRumbleEmoteCatalog(html);
@@ -688,7 +691,7 @@
                 throw new Error('No Rumble emotes found in the chat page');
             }
             state.sseEmotes = parsed;
-            state.sseEmoteCatalogStreamId = normalized;
+            state.sseEmoteCatalogStreamId = streamId;
             state.sseEmoteCatalogFailedStreamId = '';
             state.sseEmoteCatalogRetryAfter = 0;
             if (Object.keys(parsed).length) {
@@ -701,7 +704,7 @@
             }
             state.sseEmotes = {};
             state.sseEmoteCatalogStreamId = '';
-            state.sseEmoteCatalogFailedStreamId = normalized;
+            state.sseEmoteCatalogFailedStreamId = streamId;
             // Existing chat polling/SSE batches retry after this cooldown.
             state.sseEmoteCatalogRetryAfter = Date.now() + EMOTE_CATALOG_RETRY_MS;
             log('Rumble emote catalog unavailable; chat will use text shortcodes. Retrying in 30 seconds. ' + ((error && error.message) || error), 'warn');
@@ -1524,7 +1527,7 @@
     }
 
     function updatePopupControls(stream) {
-        const popupUrl = buildPopupChatUrl(stream);
+        const popupUrl = buildPopupChatUrl(stream && stream.id);
         if (els.popupUrl) {
             els.popupUrl.value = popupUrl;
         }
@@ -1600,8 +1603,8 @@
     }
 
     function shouldUseSseForStream(stream) {
-        const streamId = normalizeStreamId(stream && stream.id);
-        return !!(state.cfg.useSse && streamId && /^\d+$/.test(streamId) && state.sseFailedStreamId !== streamId);
+        const streamId = stream && stream.id;
+        return !!(state.cfg.useSse && getApiChatId(streamId) && state.sseFailedStreamId !== streamId);
     }
 
     function stopSseLoop() {
@@ -1637,7 +1640,7 @@
             return;
         }
         const requestedAt = Math.floor(Date.now() / 1000) * 1000;
-        fetchSseBatch(streamId, includeInit).then(function (batch) {
+        fetchSseBatch(getApiChatId(streamId), includeInit).then(function (batch) {
             if (!state.active || !state.sseActive || token !== state.sseToken || state.sseStreamId !== streamId) {
                 return;
             }
@@ -1672,7 +1675,7 @@
     }
 
     function syncSseForStream(stream) {
-        const streamId = normalizeStreamId(stream && stream.id);
+        const streamId = stream && stream.id;
         if (!streamId || !shouldUseSseForStream(stream)) {
             if (state.sseActive) {
                 stopSseLoop();
