@@ -72,14 +72,14 @@
 	<script src="core.js?v=25"></script>
 	<script src="templates/countries.js?v=15"></script>
 	<script src="templates/engines.js?v=19"></script>
-	<script src="templates/socials.js?v=18"></script>
-	<script src="templates/time.js?v=17"></script>
+	<script src="templates/socials.js?v=19"></script>
+	<script src="templates/time.js?v=18"></script>
 	<script src="templates/scenes.js?v=21"></script>
 	<script src="templates/maps.js?v=18"></script>
 	<script src="templates/fun.js?v=15"></script>
 	<script src="templates/text.js?v=15"></script>
 	<script src="templates/gaming.js?v=17"></script>
-	<script src="templates/obs.js?v=17"></script>
+	<script src="templates/obs.js?v=18"></script>
 	<script src="templates/petrig.js?v=1"></script>
 	<script src="templates/pets.js?v=16"></script>
 	<script src="templates/extra.js?v=24"></script>
@@ -89,10 +89,10 @@
 	<script src="templates/live.js?v=16"></script>
 	<script src="templates/games.js?v=16"></script>
 	<script src="templates/reef.js?v=16"></script>
-	<script src="templates/kaiju.js?v=16"></script>
+	<script src="templates/kaiju.js?v=17"></script>
 	<script src="templates/party.js?v=17"></script>
 	<script src="templates/cozy.js?v=17"></script>
-	<script src="templates/themebar.js?v=16"></script>
+	<script src="templates/themebar.js?v=17"></script>
 	<script src="templates/winter.js?v=3"></script>
 	<script src="templates/winterstrip.js?v=2"></script>
 	<script src="templates/winterscenes.js?v=3"></script>
@@ -107,7 +107,7 @@
 	<script src="templates/celebrate.js?v=4"></script>
 	<script src="templates/moments.js?v=5"></script>
 	<script src="templates/random.js?v=3"></script>
-	<script src="templates/countscreen.js?v=3"></script>
+	<script src="templates/countscreen.js?v=4"></script>
 	<script src="templates/channelart.js?v=2"></script>
 	<script src="templates/fxkit.js?v=2"></script>
 	<script src="templates/rewards.js?v=1"></script>
@@ -289,6 +289,64 @@
 			draw();
 		}
 
+		var uploadOrigin = "https://fileuploads.socialstream.ninja";
+		var pendingUploads = new Map();
+		window.addEventListener("message", function (event) {
+			if (event.origin !== uploadOrigin || !event.data || event.data.type !== "media-uploaded") { return; }
+			var apply = pendingUploads.get(event.source);
+			if (!apply) { return; }
+			pendingUploads.delete(event.source);
+			apply(event.data);
+		});
+
+		function imageUploadButton(input) {
+			var button = document.createElement("button");
+			var products = def.id === "merch" && input.id === "f-products";
+			button.type = "button";
+			button.className = "btn small";
+			button.textContent = "Upload image";
+			if (products) { button.title = "Upload an image for the product on the current line"; }
+			button.addEventListener("click", function () {
+				var line, original;
+				if (products) {
+					line = input.value.slice(0, input.selectionStart).split("\n").length - 1;
+					original = input.value.split("\n")[line];
+					if (!original.split("|")[0].trim()) { toast("Choose a line with a product name first."); input.focus(); return; }
+				}
+				function apply(result) {
+					if (!input.isConnected) { return; }
+					if (typeof result.url !== "string" || !/^https:\/\//i.test(result.url) || (result.contentType && !/^image\//i.test(result.contentType))) {
+						toast("Choose an image file."); return;
+					}
+					if (products) {
+						var lines = input.value.split("\n");
+						if (lines[line] !== original) { toast("The product changed. Select its line and upload again."); return; }
+						var parts = original.split("|");
+						parts[2] = result.url;
+						lines[line] = parts.join("|");
+						input.value = lines.join("\n");
+					} else if (input.tagName === "TEXTAREA") {
+						input.value += (input.value && !input.value.endsWith("\n") ? "\n" : "") + result.url;
+					} else {
+						input.value = result.url;
+					}
+					input.dispatchEvent(new Event("input", { bubbles: true }));
+					input.focus();
+				}
+				if (window.ninjafy && typeof window.ninjafy.startMediaUpload === "function") {
+					window.ninjafy.startMediaUpload({ popupName: "overlayImageUpload" }).then(function (result) {
+						if (result && result.success) { apply(result); }
+					}).catch(function () { toast("Upload did not finish. Try again."); });
+					return;
+				}
+				var popup = window.open(uploadOrigin + "/popup/upload", "_blank", "width=640,height=640");
+				if (!popup) { toast("Allow pop-ups to upload an image."); return; }
+				pendingUploads.forEach(function (_, win) { if (win.closed) { pendingUploads.delete(win); } });
+				pendingUploads.set(popup, apply);
+			});
+			return button;
+		}
+
 		function control(field) {
 			var wrap = document.createElement("div");
 			wrap.className = "fld" + (field.type === "bool" ? " bool" : "");
@@ -331,15 +389,10 @@
 				} else if (field.type === "textarea") {
 					var ta = document.createElement("textarea");
 					ta.id = id;
-					if (field.image) {
-						var up2 = document.createElement("div");
-						up2.className = "help";
-						up2.innerHTML = 'Host images on the <a href="https://fileupload.socialstream.ninja/" target="_blank" rel="noopener">SSN uploader</a> and paste each link on its own line.';
-						wrap.appendChild(up2);
-					}
 					ta.value = value;
 					ta.addEventListener("input", function () { cfg[field.key] = ta.value; mine[field.key] = true; update(); });
 					wrap.appendChild(ta);
+					if (field.image) { wrap.appendChild(imageUploadButton(ta)); }
 				} else if (field.type === "range") {
 					var row = document.createElement("div");
 					row.className = "row";
@@ -390,13 +443,6 @@
 				} else {
 					var inp = document.createElement("input");
 					inp.type = field.type === "number" ? "number" : "text";
-					if (field.image) {
-						// Images can be hosted on the SSN uploader, then pasted back here as a link.
-						var up = document.createElement("div");
-						up.className = "help";
-						up.innerHTML = 'Need a link for your image? <a href="https://fileupload.socialstream.ninja/" target="_blank" rel="noopener">Upload it here</a>, then paste the link.';
-						wrap.appendChild(up);
-					}
 					inp.id = id;
 					if (field.type === "number") {
 						if (field.min != null) { inp.min = field.min; }
@@ -421,6 +467,7 @@
 						refreshVisibility();
 					});
 					wrap.appendChild(inp);
+					if (field.image) { wrap.appendChild(imageUploadButton(inp)); }
 				}
 			}
 			if (field.help) {

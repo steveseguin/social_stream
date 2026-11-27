@@ -252,11 +252,12 @@
 			var preview = !!(ctx && ctx.preview), el = document.createElement("div"), fg = SSO.color(c.fg, "#ffffff"), accent = SSO.color(c.accent, "#22d3ee");
 			el.className = "cs";
 			el.style.cssText = "color:" + fg + ";font-family:" + SSO.fontStack(c.font) + ";--a0:" + accent + ";--f:" + fg + ";";
+			var backdrop = null, fadeTimer = 0;
 			if (c.backdrop !== "none") {
 				var bg = document.createElement("div");
 				bg.className = "cs-bg";
 				el.appendChild(bg);
-				if (SSO.ENGINES && SSO.ENGINES[c.backdrop]) { SSO.startEngine(c.backdrop, bg, { c1: c.c1, c2: c.c2, c3: c.accent, speed: 1, count: 8, minutes: 3 }); }
+				if (SSO.ENGINES && SSO.ENGINES[c.backdrop]) { backdrop = SSO.startEngine(c.backdrop, bg, { c1: c.c1, c2: c.c2, c3: c.accent, speed: 1, count: 8, minutes: 3 }); }
 				else { bg.style.background = "radial-gradient(ellipse 90% 85% at 50% 45%," + SSO.color(c.c2 || "1b2a5a") + " 0%," + SSO.color(c.c1 || "070b18") + " 100%)"; }
 				if (c.dim > 0) {
 					var dim = document.createElement("div");
@@ -275,7 +276,7 @@
 			function fit() { el.style.fontSize = (Math.min((root.clientWidth || window.innerWidth) / 1920, (root.clientHeight || window.innerHeight) / 1080) * c.clocksize * 10).toFixed(3) + "px"; }
 			fit();
 			window.addEventListener("resize", fit);
-			SSO.onCleanup(root, function () { window.removeEventListener("resize", fit); });
+			SSO.onCleanup(root, function () { clearTimeout(fadeTimer); window.removeEventListener("resize", fit); });
 
 			var now = Date.now(), start = now, end, target = SSO.parseTarget(c.target), keep = c.remember && !preview, key = "countscreen:" + (c.target || c.minutes) + ":" + c.title;
 			if (target) {
@@ -294,8 +295,15 @@
 				var left = end - Date.now(), p = partsOf(left);
 				if (left <= 0) {
 					done = true;
+					clearInterval(timer);
 					el.className = "cs";
-					if (c.hideend) { el.style.opacity = "0"; }
+					if (c.hideend) {
+						el.style.opacity = "0";
+						fadeTimer = setTimeout(function () {
+							if (backdrop) { backdrop.stop(); }
+							el.style.display = "none";
+						}, 1200);
+					}
 					else { clock.innerHTML = '<div class="cs-end">' + esc(c.endtext) + "</div>"; cap.textContent = ""; }
 					return;
 				}
@@ -307,8 +315,8 @@
 				var urgent = c.urgent && p.total <= 10;
 				if ((el.className === "cs cs-urgent") !== urgent) { el.className = urgent ? "cs cs-urgent" : "cs"; }
 			}
+			var timer = setInterval(update, 200);
 			update();
-			setInterval(update, 200);
 		}
 	});
 })();

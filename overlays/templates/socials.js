@@ -316,7 +316,8 @@
 			bgStyle += bannerPattern(c);
 			var html = '<div class="bn-bg" style="' + bgStyle + '">' + (c.bgstyle === "blocks" ? '<div class="bn-grass" style="background:' + pixelPattern("grass") + '"></div>' : "") + (c.bgstyle === "flag" ? '<div class="bn-flag"></div>' : "") + "</div>";
 			if (c.label) {
-				html += '<div class="bn-label" style="background:' + SSO.color(c.accent) + ";color:" + SSO.color(c.bg) + '">' + esc(c.label) + "</div>";
+				var badgeInk = c.bgstyle === "flag" ? SSO.kit.inkOn(SSO.color(c.accent)) : SSO.color(c.bg);
+				html += '<div class="bn-label" style="background:' + SSO.color(c.accent) + ";color:" + badgeInk + '">' + esc(c.label) + "</div>";
 			}
 			html += '<div class="bn-view"></div>';
 			if (c.socialsin === "end" && socials.length) {

@@ -98,23 +98,23 @@
 		id: "kaiju", label: "Kaiju destroys the city (3D)", colors: ["05070f", "3a4a3a", "4cc9ff"],
 		start: function (host, o) {
 			host.style.background = "#05070f";
-			var stopped = false;
+			var stopped = false, renderer, frameId;
 			load(function () {
 				var THREE = window.THREE;
-				if (!THREE || stopped) {
+				if (stopped) { return; }
+				if (!THREE) {
 					host.innerHTML = '<div style="position:absolute;left:0;right:0;top:45%;text-align:center;color:#9fb3c8;font:600 18px system-ui">This scene needs a newer OBS / browser (WebGL + three.js).</div>';
 					return;
 				}
 				var W = host.clientWidth || 1280, H = host.clientHeight || 720;
-				var renderer;
 				try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false }); } catch (e) { host.textContent = "WebGL unavailable"; return; }
 				renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 				renderer.setSize(W, H);
 				renderer.shadowMap.enabled = false;
 				host.appendChild(renderer.domElement);
 				var scene = new THREE.Scene();
-				scene.background = new THREE.Color(0x070a16);
-				scene.fog = new THREE.FogExp2(0x0b1022, 0.011);
+				scene.background = new THREE.Color(0x0b1022);
+				scene.fog = new THREE.FogExp2(scene.background, 0.011);
 				var cam = new THREE.PerspectiveCamera(42, W / H, 0.5, 400);
 				scene.add(new THREE.HemisphereLight(0x4a5a8a, 0x080808, 1.1));
 				var moon = new THREE.DirectionalLight(0x9fb6ff, 1.2); moon.position.set(-30, 50, 20); scene.add(moon);
@@ -130,13 +130,19 @@
 				// buildings
 				var texes = [windowTexture(THREE, "a"), windowTexture(THREE, "b"), windowTexture(THREE, "c")];
 				var buildings = [], rnd = SSO.seeded("city");
+				var roof = new THREE.MeshStandardMaterial({ color: 0x1a1d24, roughness: 0.95 });
 				function makeBuilding(x, z) {
 					var h = 3 + Math.pow(rnd(), 2.4) * 15, w = 2.8 + rnd() * 1.6, d = 2.8 + rnd() * 1.6;
 					var tex = texes[Math.floor(rnd() * texes.length)].clone();
 					tex.needsUpdate = true; tex.repeat.set(Math.max(1, w / 2.5), Math.max(1, h / 5));
 					var mat = new THREE.MeshStandardMaterial({ color: 0x2a2f3a, roughness: 0.7, metalness: 0.2, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.9, map: tex });
-					var roof = new THREE.MeshStandardMaterial({ color: 0x1a1d24, roughness: 0.95 });
-					var mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), [mat, mat, roof, roof, mat, mat]);
+					var box = new THREE.BoxGeometry(w, h, d);
+					// BoxGeometry orders faces in pairs along X, Y and Z. Draw each pair together.
+					box.clearGroups();
+					box.addGroup(0, 12, 0);
+					box.addGroup(12, 12, 1);
+					box.addGroup(24, 12, 0);
+					var mesh = new THREE.Mesh(box, [mat, roof]);
 					mesh.position.set(x, h / 2, z);
 					scene.add(mesh);
 					var b = { mesh: mesh, x: x, z: z, w: w, d: d, h: h, alive: true, grow: 1, sign: null };
@@ -169,11 +175,18 @@
 					}
 				});
 				// searchlights
-				var beamTex = glowTexture(THREE, "rgba(200,220,255,.35)", "rgba(120,160,255,.08)");
 				var beams = [];
+				var cone = new THREE.ConeGeometry(4, 60, 16, 1, true);
+				var heights = cone.getAttribute("position"), glow = [];
+				for (var vi = 0; vi < heights.count; vi++) {
+					var strength = (heights.getY(vi) + 30) / 60;
+					glow.push(strength, strength, strength);
+				}
+				cone.setAttribute("color", new THREE.Float32BufferAttribute(glow, 3));
+				cone.translate(0, -30, 0);
+				var beamMat = new THREE.MeshBasicMaterial({ color: 0x8fb0ff, vertexColors: true, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.FrontSide });
 				for (var s = 0; s < 3; s++) {
-					var beam = new THREE.Mesh(new THREE.ConeGeometry(4, 60, 16, 1, true), new THREE.MeshBasicMaterial({ color: 0x8fb0ff, transparent: true, opacity: 0.07, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-					beam.geometry.translate(0, -30, 0);
+					var beam = new THREE.Mesh(cone, beamMat);
 					var holder = new THREE.Group(); holder.position.set(-half + s * half, 0, half + 8); holder.add(beam); beam.rotation.x = Math.PI; scene.add(holder);
 					beams.push(holder);
 				}
@@ -184,7 +197,7 @@
 				scene.add(kaiju);
 				// rim + key light that follow the monster so it reads against the night sky
 				var rim = new THREE.PointLight(SSO.color(o.c3), 60, 60, 1.2); scene.add(rim);
-				var key = new THREE.PointLight(0xffd6a0, 40, 70, 1.2); scene.add(key);
+				var key = new THREE.PointLight(0xffdfb0, 95, 70, 1.2); scene.add(key);
 				var target = new THREE.Vector3(0, 0, 0), walkPhase = 0;
 				function newTarget() {
 					var alive = buildings.filter(function (b) { return b.alive; });
@@ -226,7 +239,8 @@
 				var breath = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.9, 1, 12, 1, true), new THREE.MeshBasicMaterial({ color: SSO.color(o.c3), transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
 				breath.visible = false; scene.add(breath);
 				var breathT = 12, breathOn = 0, breathTarget = null;
-				var shake = 0, angle = 0, clock = performance.now();
+				// Start on the monster's side of the skyline so the buildings don't hide its entrance.
+				var shake = 0, angle = 2.15, clock = performance.now();
 				function frame(now) {
 					if (stopped) { return; }
 					var dt = SSO.frameDelta(now - clock) * (o.speed || 1); clock = now;
@@ -299,11 +313,18 @@
 					rim.position.set(pos.x - Math.cos(angle) * 10, 16, pos.z - Math.sin(angle) * 10);
 					key.position.set(pos.x + Math.cos(angle) * 14, 20, pos.z + Math.sin(angle) * 14);
 					renderer.render(scene, cam);
-					requestAnimationFrame(frame);
+					frameId = requestAnimationFrame(frame);
 				}
-				requestAnimationFrame(frame);
+				frameId = requestAnimationFrame(frame);
 			});
-			return { stop: function () { stopped = true; } };
+			return { stop: function () {
+				stopped = true;
+				cancelAnimationFrame(frameId);
+				if (renderer) {
+					renderer.dispose();
+					renderer.forceContextLoss();
+				}
+			} };
 		}
 	});
 
