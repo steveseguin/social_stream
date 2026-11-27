@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Dancing Parade: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dancing Parade - Social Stream Ninja</title>
+    <link rel="icon" href="../favicon.ico" />
+    <style>
+        /* Hide scrollbars */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        * {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            overflow: hidden;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        /* The parade walks along the bottom of the scene; the rest stays clear for the stream */
+        #parade-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40vmin;
+            overflow: hidden;
+        }
+
+        .portrait #parade-container {
+            height: 54vmin;
+        }
+
+        #parade-track {
+            position: absolute;
+            bottom: 5.4vmin;
+            left: 0;
+            width: 100%;
+            height: 0;
+        }
+
+        .dancer {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 11vmin;
+            height: 11vmin;
+            transform-origin: 50% 100%;
+            will-change: transform;
+        }
+
+        .dancer-shadow {
+            position: absolute;
+            left: 12%;
+            right: 12%;
+            bottom: -4%;
+            height: 16%;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.28);
+        }
+
+        .dancer-body {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            font-size: 9.8vmin;
+            line-height: 1.1;
+            transform-origin: 50% 90%;
+            animation: walk 0.9s ease-in-out infinite;
+        }
+
+        @keyframes walk {
+            0%, 100% { transform: translateY(0) rotate(-5deg); }
+            50% { transform: translateY(-0.8vmin) rotate(5deg); }
+        }
+
+        .dancing .dancer-body {
+            animation: dance 0.5s ease-in-out infinite;
+        }
+
+        @keyframes dance {
+            0%, 100% { transform: translateY(0) rotate(-14deg) scale(1); }
+            25% { transform: translateY(-3.4vmin) rotate(14deg) scale(1.1); }
+            50% { transform: translateY(0) rotate(-14deg) scale(1); }
+            75% { transform: translateY(-3.4vmin) rotate(14deg) scale(1.1); }
+        }
+
+        /* During a conga line every dancing character gets a rainbow underfoot */
+        .conga .dancing .dancer-shadow {
+            left: -10%;
+            right: -10%;
+            height: 12%;
+            border-radius: 1vmin;
+            background: linear-gradient(90deg, #ff5d5d, #ffb02e, #ffe14d, #4fd17a, #4f8df5, #9c5de5);
+        }
+
+        .username-label {
+            position: absolute;
+            top: 104%;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 15vmin;
+            padding: 0.3vmin 1.1vmin;
+            border-radius: 2vmin;
+            background: rgba(20, 24, 40, 0.84);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: #fff;
+            font-size: 2.6vmin;
+            font-weight: 700;
+            line-height: 1.35;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sparkle {
+            position: absolute;
+            font-size: 4vmin;
+            line-height: 1;
+            animation: sparkle 1s ease-out forwards;
+            pointer-events: none;
+            z-index: 30;
+        }
+
+        @keyframes sparkle {
+            0% {
+                transform: translate(-50%, 0) scale(0.2);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -8vmin) scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        .confetti {
+            position: absolute;
+            width: 1.3vmin;
+            height: 1.3vmin;
+            border-radius: 0.3vmin;
+            top: -2vmin;
+            animation: confettiFall 2.4s linear forwards;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(54vmin) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        .dance-battle-zone {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 34vmin;
+            height: 22vmin;
+            background: radial-gradient(ellipse at bottom, rgba(255, 215, 0, 0.5) 0%, rgba(255, 215, 0, 0) 70%);
+            display: none;
+        }
+
+        #hint {
+            position: fixed;
+            left: 3vmin;
+            bottom: 41vmin;
+            padding: 0.8vmin 2.8vmin;
+            border-radius: 5vmin;
+            background: rgba(20, 24, 40, 0.84);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: #fff;
+            font-size: 3.6vmin;
+            font-weight: 800;
+            line-height: 1.25;
+            white-space: nowrap;
+        }
+
+        .portrait #hint {
+            bottom: 55vmin;
+        }
+
+        #hint span {
+            margin-left: 2vmin;
+            padding-left: 2vmin;
+            border-left: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="parade-container">
+        <div id="dance-battle-zone" class="dance-battle-zone"></div>
+        <div id="parade-track"></div>
+    </div>
+
+    <div id="hint">!join<span>!dance</span></div>
+
+    <script>
+    // Game state
+    const dancers = new Map();
+    const MAX_DANCERS = 30;
+    const availableCharacters = ['🕺', '💃', '🦜', '🦄', '🐸', '🤖', '👻', '🦋', '🐙', '🦊'];
+    const danceEmotes = ['🎵', '🎶', '🎤', '🎸', '🥁', '🎹', '🎺', '🎷'];
+    let congaLineActive = false;
+    let lastDanceCommand = Date.now();
+    
+    // URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
+    const sessionId = urlParams.get('session') || 'test';
+    const password = urlParams.get('password') || 'false';
+
+    // Sizes follow the window. The parade marches in rows, two in landscape and three in
+    // portrait, each row above the one in front and a little smaller. Everyone keeps the same pace and
+    // a new dancer takes the next free spot in the shortest row, so nobody walks through anybody.
+    let view = { width: 0, unit: 0, rows: 2, size: 0, rowStep: 0, spacing: 0, speed: 0, loop: 0 };
+
+    function layout() {
+        const W = window.innerWidth, H = window.innerHeight;
+        const unit = Math.min(W, H) / 100;
+        const portrait = H > W;
+        const rows = portrait ? 3 : 2;
+        const size = 11 * unit;
+        const spacing = size * 1.45; // wider than a name tag, so tags never touch
+        document.body.classList.toggle('portrait', portrait);
+        view = {
+            width: W, unit, rows, size, spacing,
+            rowStep: 14.2 * unit, // a full dancer plus its name tag, so rows never cover each other
+            speed: W * 0.05, // pixels per second
+            // A row is a loop: off the right edge, around the back, in again from the left
+            loop: Math.max(W + size * 2, spacing * Math.ceil(MAX_DANCERS / rows))
+        };
+        dancers.forEach(dancer => dancer.place());
+    }
+
+    function loopDistance(a, b) {
+        const d = (((a - b) % view.loop) + view.loop) % view.loop;
+        return Math.min(d, view.loop - d);
+    }
+
+    function pickRow() {
+        const counts = [];
+        for (let row = 0; row < view.rows; row++) counts.push(0);
+        dancers.forEach(dancer => { counts[dancer.row]++; });
+        return counts.indexOf(Math.min.apply(null, counts));
+    }
+
+    // How far the parade has marched within one spacing. Places in line are counted from it,
+    // which keeps each row evenly spaced and the rows half a step out of line with each other.
+    let paradeTravel = 0;
+
+    // Just off the left edge, or further back in line if that spot is taken
+    function entryPosition(row) {
+        const taken = [];
+        dancers.forEach(dancer => { if (dancer.row === row) taken.push(dancer.position); });
+        const edge = -view.size * 1.5;
+        const offset = paradeTravel + row * view.spacing * 0.5;
+        const start = edge - ((((edge - offset) % view.spacing) + view.spacing) % view.spacing);
+        for (let back = 0; back < view.loop; back += view.spacing) {
+            const candidate = start - back;
+            if (taken.every(position => loopDistance(position, candidate) >= view.spacing * 0.98)) return candidate;
+        }
+        return start;
+    }
+
+    class Dancer {
+        constructor(username, character) {
+            this.username = username;
+            this.character = character;
+            this.lane = pickRow();
+            this.position = entryPosition(this.lane);
+            this.isDancing = false;
+            this.element = this.createElement();
+            this.danceTimer = 0;
+            this.sparkleTimer = 0;
+            this.place();
+        }
+
+        get row() {
+            return this.lane % view.rows;
+        }
+
+        createElement() {
+            const dancer = document.createElement('div');
+            dancer.className = 'dancer';
+
+            const shadow = document.createElement('div');
+            shadow.className = 'dancer-shadow';
+            dancer.appendChild(shadow);
+
+            const body = document.createElement('div');
+            body.className = 'dancer-body';
+            body.textContent = this.character;
+            dancer.appendChild(body);
+
+            const label = document.createElement('div');
+            label.className = 'username-label';
+            label.textContent = this.username;
+            dancer.appendChild(label);
+
+            document.getElementById('parade-track').appendChild(dancer);
+            return dancer;
+        }
+
+        place() {
+            const row = this.row;
+            this.element.style.zIndex = String(10 - row);
+            this.element.style.transform = 'translate3d(' + this.position.toFixed(1) + 'px,' + (-row * view.rowStep).toFixed(1) + 'px,0) scale(' + (1 - row * 0.07) + ')';
+        }
+
+        update(dt) {
+            // Move across screen
+            this.position += view.speed * dt;
+
+            // Wrap around
+            if (this.position > view.loop - view.size * 1.5) {
+                this.position -= view.loop;
+            }
+
+            this.place();
+
+            // Update dance state
+            if (this.isDancing) {
+                this.danceTimer -= dt;
+                if (this.danceTimer <= 0) {
+                    this.isDancing = false;
+                    this.element.classList.remove('dancing');
+                }
+
+                // Create sparkles while dancing
+                this.sparkleTimer += dt;
+                if (this.sparkleTimer >= 0.35) {
+                    this.sparkleTimer = 0;
+                    this.createSparkle('✨');
+                }
+            }
+        }
+
+        dance() {
+            this.isDancing = true;
+            this.danceTimer = 3; // seconds
+            this.element.classList.add('dancing');
+        }
+
+        createSparkle(symbol) {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            sparkle.textContent = symbol;
+            sparkle.style.left = (this.position + view.size * (0.2 + Math.random() * 0.6)) + 'px';
+            sparkle.style.bottom = (5.4 * view.unit + this.row * view.rowStep + view.size * 0.95) + 'px';
+            document.getElementById('parade-container').appendChild(sparkle);
+
+            setTimeout(() => sparkle.remove(), 1000);
+        }
+
+        remove() {
+            this.element.remove();
+        }
+    }
+
+    function addDancer(username, playerKey = username) {
+        if (dancers.has(playerKey)) {
+            // Make existing dancer dance
+            dancers.get(playerKey).dance();
+            checkCongaLine();
+            return;
+        }
+
+        if (dancers.size >= MAX_DANCERS) {
+            const oldestUsername = dancers.keys().next().value;
+            dancers.get(oldestUsername).remove();
+            dancers.delete(oldestUsername);
+        }
+
+        // Pick random character
+        const character = availableCharacters[Math.floor(Math.random() * availableCharacters.length)];
+        const dancer = new Dancer(username, character);
+        dancers.set(playerKey, dancer);
+
+        // Create join effect
+        createConfetti();
+
+        // Check for conga line
+        checkCongaLine();
+
+        sendResponse(`${character} ${username} joined the parade!`);
+    }
+
+    function makeDance(username, playerKey = username) {
+        const dancer = dancers.get(playerKey);
+        if (dancer) {
+            dancer.dance();
+
+            // Show random dance emote
+            const emote = danceEmotes[Math.floor(Math.random() * danceEmotes.length)];
+            dancer.createSparkle(emote);
+
+            // Update last dance time
+            lastDanceCommand = Date.now();
+
+            // Check for dance battle
+            checkDanceBattle(dancer);
+            checkCongaLine();
+        } else {
+            sendResponse(`@${username}, join the parade first with !join`);
+        }
+    }
+
+    function checkCongaLine() {
+        const activeDancers = Array.from(dancers.values()).filter(d => d.isDancing);
+
+        if (activeDancers.length >= 3) {
+            if (!congaLineActive) {
+                congaLineActive = true;
+                document.body.classList.add('conga');
+                showCongaLineBonus();
+
+                setTimeout(() => {
+                    congaLineActive = false;
+                    document.body.classList.remove('conga');
+                }, 5000);
+            }
+        }
+    }
+
+    // Three or more dancing at once: party poppers go off along the parade
+    function showCongaLineBonus() {
+        const container = document.getElementById('parade-container');
+        for (let i = 0; i < 6; i++) {
+            setTimeout(() => {
+                const popper = document.createElement('div');
+                popper.className = 'sparkle';
+                popper.textContent = i % 2 ? '🎊' : '🎉';
+                popper.style.fontSize = (7 * view.unit) + 'px';
+                popper.style.left = (view.width * (0.08 + Math.random() * 0.84)) + 'px';
+                popper.style.bottom = ((12 + Math.random() * 8) * view.unit) + 'px';
+                container.appendChild(popper);
+                setTimeout(() => popper.remove(), 1000);
+            }, i * 180);
+        }
+    }
+
+    function checkDanceBattle(dancer) {
+        // Check if another dancer is nearby and dancing
+        const nearbyDancers = Array.from(dancers.values()).filter(d =>
+            d !== dancer &&
+            d.isDancing &&
+            Math.abs(d.position - dancer.position) < view.size * 1.6
+        );
+
+        if (nearbyDancers.length > 0) {
+            // Start dance battle
+            const battleZone = document.getElementById('dance-battle-zone');
+            battleZone.style.transform = 'translateX(' + (dancer.position + view.size / 2 - 17 * view.unit) + 'px)';
+            battleZone.style.display = 'block';
+
+            sendResponse(`⚡ DANCE BATTLE between ${dancer.username} and ${nearbyDancers[0].username}! ⚡`);
+
+            clearTimeout(checkDanceBattle.timer);
+            checkDanceBattle.timer = setTimeout(() => {
+                battleZone.style.display = 'none';
+            }, 3000);
+        }
+    }
+
+    function createConfetti() {
+        const container = document.getElementById('parade-container');
+        if (container.querySelectorAll('.confetti').length > 40) return;
+        for (let i = 0; i < 10; i++) {
+            setTimeout(() => {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * window.innerWidth + 'px';
+                confetti.style.background = `hsl(${Math.random() * 360}, 90%, 60%)`;
+                container.appendChild(confetti);
+
+                setTimeout(() => confetti.remove(), 2400);
+            }, i * 100);
+        }
+    }
+
+    function sendResponse(message) {
+        if (urlParams.has('demo')) return;
+        const response = {
+            chatname: 'ParadeBot',
+            chatmessage: message,
+            type: 'bot',
+            timestamp: Date.now()
+        };
+        
+        if (window.parent !== window) {
+            window.parent.postMessage({
+                overlay: 'dancingparade',
+                response: response
+            }, '*');
+        }
+        
+        console.log('Bot response:', message);
+    }
+    
+    function stripHtml(html) {
+        return new DOMParser().parseFromString(String(html), 'text/html').body.textContent || '';
+    }
+
+    function processData(data) {
+        // Captions are the host's own speech shown as text. They are not chat to take part with.
+        if (data && (data.content || data).type === "captions") return;
+        if (!data || typeof data !== 'object') return;
+
+        if (data.content) {
+            data = data.content;
+        }
+
+        if (!data.chatmessage || !data.chatname) return;
+
+        let rawMessage = data.chatmessage;
+        // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
+        if (!data.textonly) {
+            rawMessage = stripHtml(rawMessage);
+        }
+        const message = rawMessage.trim().toLowerCase();
+        const username = String(data.chatname);
+        const playerKey = JSON.stringify([data.type || '', String(data.userid || data.username || data.chatname)]);
+
+        if (message === '!join') {
+            addDancer(username, playerKey);
+        } else if (message === '!dance') {
+            makeDance(username, playerKey);
+        } else if (message === '!leave') {
+            const dancer = dancers.get(playerKey);
+            if (dancer) {
+                dancer.remove();
+                dancers.delete(playerKey);
+                sendResponse(`${username} left the parade 👋`);
+            }
+        }
+    }
+
+    // Game loop
+    let lastFrame = performance.now();
+    let noteTimer = 0;
+    function update(now) {
+        const dt = Math.max(0, Math.min(0.1, (now - lastFrame) / 1000));
+        lastFrame = now;
+        paradeTravel = (paradeTravel + view.speed * dt) % view.spacing;
+        dancers.forEach(dancer => dancer.update(dt));
+
+        // A music note drifts up now and then while there is a parade
+        noteTimer += dt;
+        if (noteTimer > 1.6 && dancers.size > 0) {
+            noteTimer = 0;
+            const note = document.createElement('div');
+            note.className = 'sparkle';
+            note.textContent = danceEmotes[Math.floor(Math.random() * 2)];
+            note.style.left = Math.random() * window.innerWidth + 'px';
+            note.style.bottom = ((16 + Math.random() * 8) * view.unit) + 'px';
+            document.getElementById('parade-container').appendChild(note);
+            setTimeout(() => note.remove(), 1000);
+        }
+
+        requestAnimationFrame(update);
+    }
+
+    layout();
+    window.addEventListener('resize', layout);
+    requestAnimationFrame(update);
+    
+    // Setup iframe communication
+    if (!urlParams.has('demo') && !chatRelay.enabled) {
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.position = "fixed";
+        iframe.style.left = "-100px";
+        iframe.style.top = "-100px";
+        iframe.id = "frame1";
+        document.body.appendChild(iframe);
+        
+        window.addEventListener("message", function(e) {
+            if (e.source !== iframe.contentWindow) return;
+            
+            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+                if ("overlayNinja" in e.data.dataReceived) {
+                    processData(e.data.dataReceived.overlayNinja);
+                }
+            }
+        });
+    }
+
+    // Handle WebSocket if server parameter provided
+    if (!urlParams.has('demo') && chatRelay.enabled) {
+        const serverUrl = chatRelay.url;
+        let socketserver = null;
+        let reconnectTimeout = null;
+
+        function connectWebSocket() {
+            socketserver = new WebSocket(serverUrl);
+
+            socketserver.onopen = function() {
+                socketserver.send(JSON.stringify({
+                    join: sessionId.split(",")[0],
+                    out: chatRelay.out, in: chatRelay.in
+                }));
+            };
+
+            socketserver.onclose = function() {
+                clearTimeout(reconnectTimeout);
+                reconnectTimeout = setTimeout(connectWebSocket, 5000);
+            };
+
+            socketserver.onerror = function() {
+                try { socketserver.close(); } catch (e) {}
+            };
+
+            socketserver.onmessage = function(event) {
+                if (event.data) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        processData(data);
+                    } catch (e) {
+                        console.error('WebSocket parse error:', e);
+                    }
+                }
+            };
+        }
+
+        connectWebSocket();
+    }
+
+    // Demo mode
+    if (urlParams.has('demo')) {
+        const demoUsers = ['Dancer1', 'Dancer2', 'Dancer3', 'Groover', 'PartyAnimal', 'Twirl', 'Bop', 'Shimmy'];
+
+        // Add some dancers
+        setTimeout(() => {
+            demoUsers.forEach((user, index) => {
+                setTimeout(() => addDancer(user), index * 900);
+            });
+        }, 500);
+
+        // Make them dance randomly
+        setInterval(() => {
+            if (Math.random() < 0.6) {
+                const user = demoUsers[Math.floor(Math.random() * demoUsers.length)];
+                if (dancers.has(user)) {
+                    makeDance(user);
+                }
+            }
+        }, 1200);
+    }
+    </script>
+</body>
+</html>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Emoji Rain: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji Rain - Social Stream Ninja</title>
+    <link rel="icon" href="../favicon.ico" />
+    <link rel="preload" href="../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+    <style>
+        /* Hide scrollbars */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        * {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        @font-face {
+            font-family: NotoColorEmojiLimited;
+            unicode-range: U+1F1E6-1F1FF;
+            src: url(../thirdparty/NotoColorEmoji.ttf);
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            font-family: 'NotoColorEmojiLimited', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: white;
+        }
+
+        body.chroma {
+            background: #00ff00;
+        }
+
+        body.darkmode {
+            background: #000000;
+        }
+
+        body.transparent {
+            background: transparent;
+        }
+
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .emoji-drop {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1em;
+            height: 1em;
+            margin-left: -0.5em;
+            line-height: 1;
+            text-align: center;
+            font-family: 'NotoColorEmojiLimited', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+            pointer-events: none;
+            will-change: transform;
+            animation: fall linear both;
+        }
+
+        .emoji-drop span {
+            display: block;
+            animation: sway 1.4s ease-in-out infinite alternate;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translate(var(--x), -16vmin) rotate(var(--from));
+            }
+            100% {
+                transform: translate(calc(var(--x) + var(--drift)), calc(100vh + 4vmin)) rotate(var(--to));
+            }
+        }
+
+        @keyframes sway {
+            0% { transform: translateX(-1.6vmin); }
+            100% { transform: translateX(1.6vmin); }
+        }
+
+        /* Three of the same emoji in a row sets off a burst */
+        .emoji-burst {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1em;
+            height: 1em;
+            margin: -0.5em 0 0 -0.5em;
+            font-size: 9vmin;
+            line-height: 1;
+            text-align: center;
+            font-family: 'NotoColorEmojiLimited', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+            pointer-events: none;
+            will-change: transform, opacity;
+            animation: burst 1.3s cubic-bezier(0.15, 0.7, 0.3, 1) both;
+        }
+
+        .emoji-burst.core {
+            font-size: 22vmin;
+            animation-name: burst-core;
+            animation-duration: 1s;
+        }
+
+        @keyframes burst {
+            0% {
+                transform: translate(var(--x), var(--y)) scale(0.2);
+                opacity: 1;
+            }
+            70% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(calc(var(--x) + var(--dx)), calc(var(--y) + var(--dy))) scale(1) rotate(var(--spin));
+                opacity: 0;
+            }
+        }
+
+        @keyframes burst-core {
+            0% {
+                transform: translate(var(--x), var(--y)) scale(0.2);
+                opacity: 0;
+            }
+            30% {
+                transform: translate(var(--x), var(--y)) scale(1.15);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--x), var(--y)) scale(1.5);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+
+    <script>
+        // URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
+        const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
+        const password = urlParams.get('password') || 'false';
+
+        // Apply theme settings
+        if (urlParams.has('chroma')) {
+            document.body.classList.add('chroma');
+        } else if (urlParams.has('darkmode')) {
+            document.body.classList.add('darkmode');
+        }
+        if (urlParams.has('transparent')) {
+            document.body.classList.add('transparent');
+        }
+
+        // Game state
+        let gameState = {
+            totalDrops: 0,
+            emojiRate: 0,
+            activeDrops: 0,
+            emojiTimestamps: [],
+            lastComboEmoji: '',
+            comboStreak: 0
+        };
+
+        const container = document.getElementById('game-container');
+
+        // Extract emojis from text (using same pattern as emotes.html)
+        function extractEmojis(text) {
+            const emojiRegex = /(\p{Regional_Indicator}\p{Regional_Indicator}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F)(\p{Emoji_Modifier}|\u200D\p{Emoji})*|\p{Emoji_Component}\uFE0F/gu;
+            return text.match(emojiRegex) || [];
+        }
+
+        // Create falling emoji
+        const MAX_ACTIVE_DROPS = 150; // keep OBS rendering smooth during chat floods
+        function createFallingEmoji(emoji, x = null) {
+            if (gameState.activeDrops >= MAX_ACTIVE_DROPS) return;
+            const drop = document.createElement('div');
+            drop.className = 'emoji-drop';
+            const face = document.createElement('span');
+            face.textContent = emoji;
+            face.style.animationDelay = (-Math.random() * 1.4) + 's';
+            drop.appendChild(face);
+
+            // Random horizontal position if not specified
+            const xPos = x !== null ? x : window.innerWidth * (0.04 + Math.random() * 0.92);
+            drop.style.setProperty('--x', xPos + 'px');
+            drop.style.fontSize = (8 + Math.random() * 5) + 'vmin';
+
+            // The busier chat is, the harder it rains
+            const intensity = gameState.emojiRate;
+            const baseDuration = Math.max(2.2, 6 - (intensity / 50));
+            const duration = baseDuration + (Math.random() * 2);
+            drop.style.animationDuration = duration + 's';
+
+            // Add slight horizontal drift and a lazy tumble
+            const spin = Math.random() * 80 - 40;
+            drop.style.setProperty('--drift', ((Math.random() - 0.5) * 16) + 'vmin');
+            drop.style.setProperty('--from', (-spin) + 'deg');
+            drop.style.setProperty('--to', spin + 'deg');
+
+            container.appendChild(drop);
+            gameState.activeDrops++;
+
+            // Remove after animation
+            setTimeout(() => {
+                if (drop.parentNode) {
+                    drop.parentNode.removeChild(drop);
+                    gameState.activeDrops--;
+                }
+            }, duration * 1000);
+        }
+
+        // Create emoji burst effect
+        function createEmojiBurst(emoji, x, y) {
+            const reach = Math.min(window.innerWidth, window.innerHeight) * 0.34;
+
+            function piece(className, life) {
+                const element = document.createElement('div');
+                element.className = className;
+                element.textContent = emoji;
+                element.style.setProperty('--x', x + 'px');
+                element.style.setProperty('--y', y + 'px');
+                container.appendChild(element);
+                setTimeout(() => {
+                    if (element.parentNode) {
+                        element.parentNode.removeChild(element);
+                    }
+                }, life);
+                return element;
+            }
+
+            piece('emoji-burst core', 1000);
+            for (let i = 0; i < 10; i++) {
+                const angle = (Math.PI * 2 / 10) * i + Math.random() * 0.3;
+                const distance = reach * (0.6 + Math.random() * 0.4);
+                const bit = piece('emoji-burst', 1300);
+                bit.style.setProperty('--dx', (Math.cos(angle) * distance) + 'px');
+                bit.style.setProperty('--dy', (Math.sin(angle) * distance) + 'px');
+                bit.style.setProperty('--spin', (Math.random() * 240 - 120) + 'deg');
+            }
+        }
+
+        // Calculate emoji rate
+        function updateEmojiRate() {
+            const now = Date.now();
+            gameState.emojiTimestamps = gameState.emojiTimestamps.filter(t => now - t < 60000); // Last minute
+            gameState.emojiRate = gameState.emojiTimestamps.length;
+        }
+
+        // Process incoming message
+        function processData(data) {
+            // Captions are the host's own speech shown as text. They are not chat to take part with.
+            if (data && (data.content || data).type === "captions") return;
+            // Handle different data formats from Social Stream
+            if (data && data.content) {
+                data = data.content;
+            }
+            
+            if (!data || !data.chatmessage || !data.chatname) return;
+
+            let text = data.chatmessage;
+            
+            // If textonly is not set, we need to extract text from HTML
+            // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
+            if (!data.textonly) {
+                text = new DOMParser().parseFromString(String(data.chatmessage), 'text/html').body.textContent || '';
+            }
+
+            const emojis = extractEmojis(text).slice(0, 12);
+            if (emojis.length === 0) return;
+
+            emojis.forEach((emoji, index) => {
+                // Track emoji activity per emoji dropped
+                gameState.emojiTimestamps.push(Date.now());
+                gameState.totalDrops++;
+
+                // Check for combo (same emoji in sequence)
+                if (emoji === gameState.lastComboEmoji) {
+                    gameState.comboStreak++;
+                    if (gameState.comboStreak % 3 === 0 && document.querySelectorAll('.emoji-burst.core').length < 3) {
+                        // Create burst effect at random location
+                        const x = window.innerWidth * (0.15 + Math.random() * 0.7);
+                        const y = window.innerHeight * (0.2 + Math.random() * 0.6);
+                        createEmojiBurst(emoji, x, y);
+                    }
+                } else {
+                    gameState.comboStreak = 1;
+                }
+                gameState.lastComboEmoji = emoji;
+
+                // Create falling emoji with slight delay for multiple emojis
+                setTimeout(() => {
+                    createFallingEmoji(emoji);
+                }, index * 100);
+            });
+        }
+
+        // Setup iframe communication
+        if (!urlParams.has('demo') && !chatRelay.enabled) {
+            const iframe = document.createElement("iframe");
+            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            document.body.appendChild(iframe);
+            
+            // Listen for messages
+            window.addEventListener("message", function(e) {
+                if (e.source !== iframe.contentWindow) return;
+                
+                if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        processData(e.data.dataReceived.overlayNinja);
+                    }
+                }
+            });
+        }
+
+        // Handle WebSocket connection
+        if (!urlParams.has('demo') && chatRelay.enabled) {
+            const serverUrl = chatRelay.url;
+            let socketserver = null;
+            let reconnectTimeout = null;
+
+            function connectWebSocket() {
+                socketserver = new WebSocket(serverUrl);
+
+                socketserver.onopen = function() {
+                    socketserver.send(JSON.stringify({
+                        join: sessionId.split(",")[0],
+                        out: chatRelay.out, in: chatRelay.in
+                    }));
+                };
+
+                socketserver.onclose = function() {
+                    clearTimeout(reconnectTimeout);
+                    reconnectTimeout = setTimeout(connectWebSocket, 5000);
+                };
+
+                socketserver.onerror = function() {
+                    try { socketserver.close(); } catch (e) {}
+                };
+
+                socketserver.onmessage = function(event) {
+                    if (event.data) {
+                        try {
+                            const data = JSON.parse(event.data);
+                            processData(data);
+                        } catch (e) {
+                            console.error('WebSocket parse error:', e);
+                        }
+                    }
+                };
+            }
+
+            connectWebSocket();
+        }
+
+        // Demo mode
+        if (urlParams.has('demo')) {
+            const demoEmojis = ['😀', '😍', '🤔', '😂', '👍', '❤️', '🔥', '💯', '🎉', '⚡', '🌟', '💫'];
+
+            function demoDrop() {
+                const emoji = demoEmojis[Math.floor(Math.random() * demoEmojis.length)];
+                const shouldCombo = Math.random() < 0.3; // 30% chance for combo
+                const picked = shouldCombo && gameState.lastComboEmoji ? gameState.lastComboEmoji : emoji;
+
+                processData({
+                    chatname: 'DemoUser',
+                    chatmessage: Math.random() < 0.25 ? picked + picked + picked : picked
+                });
+
+                setTimeout(demoDrop, 350 + Math.random() * 700);
+            }
+            setTimeout(demoDrop, 300);
+        }
+
+        // Update emoji rate periodically
+        setInterval(updateEmojiRate, 1000);
+    </script>
+</body>
+</html>

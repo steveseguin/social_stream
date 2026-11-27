@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Pixel Battle: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Battle - Social Stream Ninja</title>
+    <link rel="icon" href="../favicon.ico" />
+    <style>
+        /* Hide scrollbars */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        * {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            overflow: hidden;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            color: white;
+        }
+
+        body.chroma {
+            background: #00ff00;
+        }
+
+        body.darkmode {
+            background: #000000;
+        }
+
+        body.transparent {
+            background: transparent;
+        }
+
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .portrait #game-container {
+            flex-direction: column;
+        }
+
+        #pixel-canvas {
+            display: block;
+            flex: none;
+        }
+
+        #side {
+            flex: none;
+            display: flex;
+            flex-direction: column;
+            width: 40vmin;
+            margin-left: 3vmin;
+        }
+
+        .portrait #side {
+            width: 94vmin;
+            margin: 3vmin 0 0;
+        }
+
+        #hint {
+            align-self: center;
+            display: flex;
+            align-items: center;
+            padding: 0.9vmin 3vmin 0.9vmin 2.2vmin;
+            border-radius: 5vmin;
+            background: rgba(20, 24, 40, 0.86);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            font-size: 4vmin;
+            font-weight: 800;
+            line-height: 1.25;
+            white-space: nowrap;
+        }
+
+        #hint-color {
+            width: 3.4vmin;
+            height: 3.4vmin;
+            margin-right: 1.4vmin;
+            border-radius: 1vmin;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+        }
+
+        #palette {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 1vmin;
+            margin-top: 2.4vmin;
+        }
+
+        .portrait #palette {
+            grid-template-columns: repeat(6, 1fr);
+            margin-top: 3vmin;
+        }
+
+        .portrait .swatch {
+            padding: 1.7vmin 0;
+        }
+
+        .swatch {
+            padding: 1vmin 0;
+            border-radius: 1.6vmin;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            font-size: 2.7vmin;
+            font-weight: 800;
+            line-height: 1.3;
+            text-align: center;
+        }
+
+        #leaderboard-list {
+            margin-top: 2.4vmin;
+        }
+
+        .portrait #leaderboard-list {
+            margin-top: 3vmin;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 1vmin;
+        }
+
+        .artist-entry {
+            display: flex;
+            align-items: center;
+            margin-top: 1vmin;
+            padding: 0.9vmin 1.8vmin 0.9vmin 1.2vmin;
+            border-radius: 2vmin;
+            background: rgba(20, 24, 40, 0.86);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            font-size: 3vmin;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .portrait .artist-entry {
+            margin-top: 0;
+            font-size: 2.7vmin;
+            padding: 1.5vmin 1.4vmin 1.5vmin 1.1vmin;
+        }
+
+        .artist-rank {
+            flex: none;
+            margin-right: 1vmin;
+        }
+
+        .artist-name {
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .artist-count {
+            flex: none;
+            margin-left: 1.2vmin;
+            font-variant-numeric: tabular-nums;
+            color: #ffd866;
+        }
+
+        .paint-pop {
+            position: absolute;
+            pointer-events: none;
+            animation: paint-pop 0.45s ease-out forwards;
+        }
+
+        @keyframes paint-pop {
+            0% { transform: scale(2.2); opacity: 0.9; }
+            100% { transform: scale(1); opacity: 0; }
+        }
+
+        .collaboration-burst {
+            position: absolute;
+            line-height: 1;
+            animation: collab-burst 1.4s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes collab-burst {
+            0% { opacity: 0; transform: scale(0.2); }
+            30% { opacity: 1; transform: scale(1.2); }
+            100% { opacity: 0; transform: scale(1) translateY(-60%); }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="pixel-canvas"></canvas>
+        <div id="side">
+            <div id="hint"><span id="hint-color"></span><span id="hint-text">red 3 4</span></div>
+            <div id="palette"></div>
+            <div id="leaderboard-list"></div>
+        </div>
+    </div>
+
+    <script>
+        // URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
+        const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
+        const password = urlParams.get('password') || 'false';
+
+        // Apply theme settings
+        if (urlParams.has('chroma')) {
+            document.body.classList.add('chroma');
+        } else if (urlParams.has('darkmode')) {
+            document.body.classList.add('darkmode');
+        }
+        if (urlParams.has('transparent')) {
+            document.body.classList.remove('chroma', 'darkmode');
+            document.body.classList.add('transparent');
+        }
+
+        // Game state
+        let gameState = {
+            canvas: null,
+            ctx: null,
+            cols: 20,
+            rows: 15,
+            cell: 20,
+            cells: new Map(),
+            pixelsPainted: 0,
+            artists: new Map(),
+            collaborations: 0,
+            canvasProgress: 0,
+            lastPaintTime: new Map(),
+            paintedCells: new Set()
+        };
+
+        // Color palette (the names are what viewers type)
+        const colors = {
+            red: '#f03e3e',
+            blue: '#3b6ef5',
+            green: '#37b24d',
+            yellow: '#ffd43b',
+            purple: '#9c5de5',
+            orange: '#ff922b',
+            pink: '#ff8fc7',
+            cyan: '#3bc9db',
+            white: '#ffffff',
+            black: '#22262e',
+            brown: '#9c6b3f',
+            gray: '#9aa0a9'
+        };
+
+        // The example shown in the hint chip; its cell is outlined on the board.
+        let example = { name: 'red', x: 3, y: 4 };
+        let board = { pad: 0, head: 0, width: 0, height: 0 };
+
+        function isLightColor(hex) {
+            const value = parseInt(hex.slice(1), 16);
+            return ((value >> 16) & 255) * 0.299 + ((value >> 8) & 255) * 0.587 + (value & 255) * 0.114 > 165;
+        }
+
+        function roundedRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+        }
+
+        // Size the board to the window: 20 x 15 in landscape, 15 x 20 in portrait
+        function layout() {
+            const W = window.innerWidth, H = window.innerHeight;
+            const portrait = H > W;
+            const unit = Math.min(W, H) / 100;
+            document.body.classList.toggle('portrait', portrait);
+
+            gameState.cols = portrait ? 15 : 20;
+            gameState.rows = portrait ? 20 : 15;
+
+            const areaW = portrait ? W - 6 * unit : W - 52 * unit;
+            const areaH = portrait ? H - 46 * unit : H - 6 * unit;
+            const cell = Math.max(6, Math.floor(Math.min(areaW / (gameState.cols + 1.6), areaH / (gameState.rows + 1.6))));
+            gameState.cell = cell;
+            board.pad = Math.round(cell * 0.35);
+            board.head = Math.round(cell * 0.9);
+            board.width = board.pad * 2 + board.head + cell * gameState.cols;
+            board.height = board.pad * 2 + board.head + cell * gameState.rows;
+
+            const ratio = Math.min(2, window.devicePixelRatio || 1);
+            const canvas = gameState.canvas;
+            canvas.width = Math.round(board.width * ratio);
+            canvas.height = Math.round(board.height * ratio);
+            canvas.style.width = board.width + 'px';
+            canvas.style.height = board.height + 'px';
+            gameState.ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+            drawBoard();
+        }
+
+        // Initialize canvas
+        function initCanvas() {
+            gameState.canvas = document.getElementById('pixel-canvas');
+            gameState.ctx = gameState.canvas.getContext('2d');
+            layout();
+            window.addEventListener('resize', layout);
+        }
+
+        function drawBoard() {
+            const ctx = gameState.ctx, cell = gameState.cell;
+            const cols = gameState.cols, rows = gameState.rows;
+            const left = board.pad + board.head, top = board.pad + board.head;
+            const inset = Math.max(1, cell * 0.06), radius = cell * 0.2;
+            const exampleColor = colors[example.name];
+
+            ctx.clearRect(0, 0, board.width, board.height);
+            roundedRect(ctx, 0.5, 0.5, board.width - 1, board.height - 1, cell * 0.6);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.16)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Column numbers across the top, row numbers down the left
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            for (let x = 0; x < cols; x++) {
+                const marked = x === example.x;
+                if (marked) {
+                    roundedRect(ctx, left + x * cell + inset, board.pad, cell - inset * 2, board.head - inset, radius);
+                    ctx.fillStyle = '#22262e';
+                    ctx.fill();
+                }
+                ctx.font = (marked || x % 5 === 0 ? '800 ' : '600 ') + Math.round(cell * 0.5) + 'px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+                ctx.fillStyle = marked ? '#ffffff' : (x % 5 === 0 ? '#22262e' : '#6b7480');
+                ctx.fillText(String(x), left + x * cell + cell / 2, board.pad + board.head / 2);
+            }
+            for (let y = 0; y < rows; y++) {
+                const marked = y === example.y;
+                if (marked) {
+                    roundedRect(ctx, board.pad, top + y * cell + inset, board.head - inset, cell - inset * 2, radius);
+                    ctx.fillStyle = '#22262e';
+                    ctx.fill();
+                }
+                ctx.font = (marked || y % 5 === 0 ? '800 ' : '600 ') + Math.round(cell * 0.5) + 'px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+                ctx.fillStyle = marked ? '#ffffff' : (y % 5 === 0 ? '#22262e' : '#6b7480');
+                ctx.fillText(String(y), board.pad + board.head / 2, top + y * cell + cell / 2);
+            }
+
+            // Cells
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    const color = gameState.cells.get(x + ',' + y);
+                    roundedRect(ctx, left + x * cell + inset, top + y * cell + inset, cell - inset * 2, cell - inset * 2, radius);
+                    ctx.fillStyle = color || ((x === example.x || y === example.y) ? '#dfe4ec' : '#eef1f5');
+                    ctx.fill();
+                    if (color) {
+                        ctx.strokeStyle = 'rgba(0, 0, 0, 0.16)';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Outline the example cell so the numbers in the hint can be read off the board
+            if (exampleColor && example.x < cols && example.y < rows) {
+                const width = Math.max(2, cell * 0.1);
+                roundedRect(ctx, left + example.x * cell + width / 2, top + example.y * cell + width / 2, cell - width, cell - width, radius);
+                ctx.setLineDash([cell * 0.22, cell * 0.14]);
+                ctx.lineWidth = width;
+                ctx.strokeStyle = example.name === 'white' ? '#22262e' : exampleColor;
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+
+        // Pick a new example command and show it in the hint chip
+        function nextExample() {
+            const names = Object.keys(colors).filter(name => name !== 'white');
+            let x = 3, y = 4;
+            for (let attempt = 0; attempt < 30; attempt++) {
+                x = Math.floor(Math.random() * gameState.cols);
+                y = Math.floor(Math.random() * gameState.rows);
+                if (!gameState.cells.has(x + ',' + y)) break;
+            }
+            example = { name: names[Math.floor(Math.random() * names.length)], x, y };
+            showExample();
+        }
+
+        function showExample() {
+            document.getElementById('hint-text').textContent = example.name + ' ' + example.x + ' ' + example.y;
+            document.getElementById('hint-color').style.backgroundColor = colors[example.name];
+            drawBoard();
+        }
+
+        // Page position of a grid cell, for effects drawn over the canvas
+        function cellPosition(x, y) {
+            const rect = gameState.canvas.getBoundingClientRect();
+            return {
+                left: rect.left + board.pad + board.head + x * gameState.cell,
+                top: rect.top + board.pad + board.head + y * gameState.cell
+            };
+        }
+
+        // Paint pixel
+        function paintPixel(x, y, color, artist) {
+            if (x < 0 || x >= gameState.cols || y < 0 || y >= gameState.rows) {
+                return false;
+            }
+
+            gameState.cells.set(x + ',' + y, color);
+
+            // Update stats (only count unique cells)
+            gameState.paintedCells.add(`${x},${y}`);
+
+            // Track artist
+            const currentCount = gameState.artists.get(artist) || 0;
+            gameState.artists.set(artist, currentCount + 1);
+
+            // Check for collaborations (pixels painted near each other by different artists)
+            checkCollaboration(x, y, artist);
+
+            // Create visual effect
+            createPaintEffect(x, y, color);
+
+            drawBoard();
+            updateDisplay();
+            return true;
+        }
+
+        // Check for collaboration
+        function checkCollaboration(x, y, artist) {
+            const now = Date.now();
+
+            // Prune entries older than the cooldown window
+            gameState.lastPaintTime.forEach((time, key) => {
+                if (now - time > 10000) {
+                    gameState.lastPaintTime.delete(key);
+                }
+            });
+
+            // Check adjacent pixels for recent activity by different artists
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    if (dx === 0 && dy === 0) continue;
+
+                    const checkX = x + dx;
+                    const checkY = y + dy;
+                    let collabFound = false;
+
+                    gameState.lastPaintTime.forEach((time, key) => {
+                        if (collabFound) return;
+                        const keyParts = key.split(':');
+                        const coords = keyParts[0].split(',');
+                        const keyArtist = keyParts.slice(1).join(':');
+
+                        if (parseInt(coords[0]) === checkX && parseInt(coords[1]) === checkY &&
+                            keyArtist !== artist && now - time < 5000) {
+                            gameState.collaborations++;
+                            createCollaborationBurst(x, y);
+                            collabFound = true;
+                        }
+                    });
+
+                    if (collabFound) break;
+                }
+            }
+
+            // Record this paint
+            gameState.lastPaintTime.set(`${x},${y}:${artist}`, now);
+        }
+
+        // Create paint effect
+        function createPaintEffect(x, y, color) {
+            const position = cellPosition(x, y);
+            const effect = document.createElement('div');
+            effect.className = 'paint-pop';
+            effect.style.left = position.left + 'px';
+            effect.style.top = position.top + 'px';
+            effect.style.width = gameState.cell + 'px';
+            effect.style.height = gameState.cell + 'px';
+            effect.style.borderRadius = (gameState.cell * 0.2) + 'px';
+            effect.style.backgroundColor = color;
+
+            document.getElementById('game-container').appendChild(effect);
+
+            setTimeout(() => effect.remove(), 450);
+        }
+
+        // Create collaboration burst (at most one every few seconds so a busy canvas stays readable)
+        let lastCollaborationBurst = 0;
+        function createCollaborationBurst(x, y) {
+            const now = Date.now();
+            if (now - lastCollaborationBurst < 3000) return;
+            lastCollaborationBurst = now;
+            const position = cellPosition(x, y);
+            const burst = document.createElement('div');
+            burst.className = 'collaboration-burst';
+            burst.textContent = '🤝';
+            burst.style.fontSize = gameState.cell + 'px';
+            burst.style.left = (position.left - gameState.cell * 0.15) + 'px';
+            burst.style.top = (position.top - gameState.cell) + 'px';
+
+            document.getElementById('game-container').appendChild(burst);
+
+            setTimeout(() => burst.remove(), 1400);
+        }
+
+        // The palette doubles as the list of color words chat can use
+        function initColorPalette() {
+            const paletteDiv = document.getElementById('palette');
+
+            Object.keys(colors).forEach(name => {
+                const swatch = document.createElement('div');
+                swatch.className = 'swatch';
+                swatch.style.backgroundColor = colors[name];
+                swatch.style.color = isLightColor(colors[name]) ? '#22262e' : '#ffffff';
+                swatch.textContent = name;
+                paletteDiv.appendChild(swatch);
+            });
+        }
+
+        // Update leaderboard
+        function updateLeaderboard() {
+            const leaderboardList = document.getElementById('leaderboard-list');
+            leaderboardList.textContent = '';
+
+            const sortedArtists = Array.from(gameState.artists.entries())
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3);
+
+            const medals = ['🥇', '🥈', '🥉'];
+            sortedArtists.forEach(([artist, count], index) => {
+                const entry = document.createElement('div');
+                entry.className = 'artist-entry';
+
+                const rank = document.createElement('span');
+                rank.className = 'artist-rank';
+                rank.textContent = medals[index];
+                const name = document.createElement('span');
+                name.className = 'artist-name';
+                name.textContent = artist;
+                const total = document.createElement('span');
+                total.className = 'artist-count';
+                total.textContent = count;
+
+                entry.appendChild(rank);
+                entry.appendChild(name);
+                entry.appendChild(total);
+                leaderboardList.appendChild(entry);
+            });
+        }
+
+        // Update display
+        function updateDisplay() {
+            gameState.pixelsPainted = gameState.paintedCells.size;
+            gameState.canvasProgress = (gameState.pixelsPainted / (gameState.cols * gameState.rows)) * 100;
+
+            updateLeaderboard();
+        }
+
+        function stripHtml(html) {
+            // Keep the existing div parsing context inside inert template content.
+            const template = document.createElement('template');
+            const tmp = template.content.appendChild(document.createElement('div'));
+            tmp.innerHTML = html;
+            return tmp.textContent || tmp.innerText || '';
+        }
+
+        // Parse paint commands from chat
+        function parsePaintCommand(message) {
+            message = message.toLowerCase().trim();
+            
+            // Pattern: "paint color x y" or "color x y"
+            let match = message.match(/(?:paint\s+)?(\w+)\s+(\d+)\s+(\d+)/);
+            if (match) {
+                const colorName = match[1];
+                const x = parseInt(match[2]);
+                const y = parseInt(match[3]);
+                
+                if (colors[colorName]) {
+                    return { color: colors[colorName], x, y };
+                }
+            }
+            
+            // Pattern: "x y color"
+            match = message.match(/(\d+)\s+(\d+)\s+(\w+)/);
+            if (match) {
+                const x = parseInt(match[1]);
+                const y = parseInt(match[2]);
+                const colorName = match[3];
+                
+                if (colors[colorName]) {
+                    return { color: colors[colorName], x, y };
+                }
+            }
+            
+            return null;
+        }
+
+        // Process incoming message
+        function processData(data) {
+            // Captions are the host's own speech shown as text. They are not chat to take part with.
+            if (data && (data.content || data).type === "captions") return;
+            // Handle different data formats from Social Stream
+            if (data && data.content) {
+                data = data.content;
+            }
+            
+            if (!data || !data.chatmessage || !data.chatname) return;
+
+            const username = stripHtml(data.chatname);
+            let message = data.chatmessage;
+            // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
+            if (!data.textonly) {
+                message = stripHtml(message);
+            }
+
+            // Try to parse paint command
+            const paintCommand = parsePaintCommand(message);
+            if (paintCommand) {
+                const success = paintPixel(paintCommand.x, paintCommand.y, paintCommand.color, username);
+                if (!success) {
+                    console.log(`Invalid coordinates: ${paintCommand.x}, ${paintCommand.y}`);
+                }
+            }
+        }
+
+        // Setup iframe communication (skip when using WebSocket mode)
+        if (!urlParams.has('demo') && !chatRelay.enabled) {
+            if (!urlParams.has('demo') && !chatRelay.enabled) {
+            const iframe = document.createElement("iframe");
+                iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
+                iframe.style.width = "0px";
+                iframe.style.height = "0px";
+                iframe.style.position = "fixed";
+                iframe.style.left = "-100px";
+                iframe.style.top = "-100px";
+                iframe.id = "frame1";
+                document.body.appendChild(iframe);
+                
+                // Listen for messages
+                window.addEventListener("message", function(e) {
+                    if (e.source !== iframe.contentWindow) return;
+                    
+                    if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+                        if ("overlayNinja" in e.data.dataReceived) {
+                            processData(e.data.dataReceived.overlayNinja);
+                        }
+                    }
+                });
+            }
+        }
+
+        // Handle WebSocket connection
+        if (!urlParams.has('demo') && chatRelay.enabled) {
+            const serverUrl = chatRelay.url;
+            let socketserver = null;
+            let reconnectTimeout = null;
+
+            function connectWebSocket() {
+                socketserver = new WebSocket(serverUrl);
+
+                socketserver.onopen = function() {
+                    socketserver.send(JSON.stringify({
+                        join: sessionId.split(",")[0],
+                        out: chatRelay.out, in: chatRelay.in
+                    }));
+                };
+
+                socketserver.onclose = function() {
+                    clearTimeout(reconnectTimeout);
+                    reconnectTimeout = setTimeout(connectWebSocket, 5000);
+                };
+
+                socketserver.onerror = function() {
+                    try { socketserver.close(); } catch (e) {}
+                };
+
+                socketserver.onmessage = function(event) {
+                    if (event.data) {
+                        try {
+                            const data = JSON.parse(event.data);
+                            processData(data);
+                        } catch (e) {
+                            console.error('WebSocket parse error:', e);
+                        }
+                    }
+                };
+            }
+
+            connectWebSocket();
+        }
+
+        // Initialize everything
+        initCanvas();
+        initColorPalette();
+        showExample();
+        updateDisplay();
+        setInterval(nextExample, 8000);
+
+        // Demo mode: a few artists paint simple pictures through the normal chat path
+        if (urlParams.has('demo')) {
+            const demoArtists = ['PixelMaster', 'ArtBot', 'PaintPro', 'ColorKing', 'PixelQueen'];
+            const demoPictures = [
+                { color: 'red', rows: ['0110110', '1111111', '1111111', '0111110', '0011100', '0001000'] },
+                { color: 'yellow', rows: ['0001000', '0011100', '1111111', '0111110', '0110110', '1100011'] },
+                { color: 'blue', rows: ['0111110', '1000001', '1010101', '1000001', '1011101', '1000001', '0111110'] },
+                { color: 'green', rows: ['0001000', '0011100', '0111110', '1111111', '0001000', '0001000'] }
+            ];
+            let demoQueue = [];
+            let demoIndex = 0;
+
+            const queuePicture = () => {
+                const picture = demoPictures[demoIndex++ % demoPictures.length];
+                const width = picture.rows[0].length, height = picture.rows.length;
+                const startX = demoIndex === 1 ? Math.floor((gameState.cols - width) / 2) : Math.floor(Math.random() * (gameState.cols - width + 1));
+                const startY = demoIndex === 1 ? Math.floor((gameState.rows - height) / 2) : Math.floor(Math.random() * (gameState.rows - height + 1));
+                picture.rows.forEach((row, rowIndex) => {
+                    row.split('').forEach((pixel, colIndex) => {
+                        if (pixel === '1') demoQueue.push(picture.color + ' ' + (startX + colIndex) + ' ' + (startY + rowIndex));
+                    });
+                });
+            };
+
+            setInterval(() => {
+                if (!demoQueue.length) queuePicture();
+                const next = demoQueue.splice(Math.floor(Math.random() * Math.min(6, demoQueue.length)), 1)[0];
+                processData({
+                    chatname: demoArtists[Math.floor(Math.random() * demoArtists.length)],
+                    chatmessage: 'paint ' + next
+                });
+            }, 320);
+        }
+    </script>
+</body>
+</html>

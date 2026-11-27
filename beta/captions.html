@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="description" content="Captions. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+		<meta name="robots" content="noindex">
+		<link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>Captions | Social Stream Ninja</title>
+		<link rel="stylesheet" href="captions.css" />
+		<script src="js/local-server-url.js"></script>
+</head>
+	<body>
+		<main>
+			<header>
+				<img src="sources/images/captions.png" alt="" width="26" height="26" />
+				<h1 data-page-translate="captions-title">Captions</h1>
+				<span id="mode" class="off">Not connected</span>
+			</header>
+
+			<section id="connect" hidden>
+				<form id="sessionForm">
+					<label for="sessionInput" data-page-translate="captions-session">Session ID</label>
+					<div class="row"><input id="sessionInput" type="text" autocomplete="off" spellcheck="false" aria-describedby="sessionHint" /><button class="primary" data-page-translate="captions-connect">Connect</button></div>
+				</form>
+				<p class="hint" id="sessionHint"><span data-page-translate="captions-session-hint">Paste your session ID or an SSN link.</span></p>
+			</section>
+
+			<section id="mic">
+				<div id="choose" class="choose" hidden>
+					<p><span data-page-translate="captions-choose">Choose where your captions go</span>. <span data-page-translate="captions-public">Your chat posts use your own account.</span></p>
+					<div class="row"><button id="choosePost" class="primary" data-page-translate="captions-post">Post to my chats</button><button id="chooseDock" data-page-translate="captions-dock">My dock only</button></div>
+				</div>
+				<div class="controls" id="controls">
+					<button id="start" class="primary" data-page-translate="captions-start">Start listening</button>
+					<button id="stop" disabled data-page-translate="captions-stop">Stop</button>
+					<span id="phase" class="phase">Stopped</span>
+					<label class="language" for="language"><span data-page-translate="captions-spoken">Spoken language</span> <select id="language"></select></label>
+				</div>
+				<p id="message" role="status"></p>
+				<p id="where" class="where" role="status" hidden></p>
+				<p id="languages" class="where none" role="status" hidden></p>
+			</section>
+
+			<section id="heardBox">
+				<h2 id="heardHeading" data-page-translate="captions-heard">Last heard</h2>
+				<p id="heard" dir="auto" class="heard">Nothing yet.</p>
+				<p id="interim" dir="auto" class="interim" aria-hidden="true"></p>
+				<ol id="earlier" class="earlier" aria-labelledby="heardHeading"></ol>
+			</section>
+
+			<footer>
+				<p class="note" id="note">Keep this tab open while you speak. It uses your default microphone.</p>
+				<button id="copy" hidden data-page-translate="captions-copy-mic">Copy microphone link</button>
+			</footer>
+		</main>
+		<script src="shared/captions/languages.js"></script>
+		<script src="shared/captions/desktop-recognition.js"></script>
+		<script src="shared/operator-connection.js"></script>
+		<script src="translations/page-i18n.js?v=2" data-interface-language-only></script>
+		<script src="captions.js?v=5"></script>
+	</body>
+</html>

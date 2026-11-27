@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Chaos Mode: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chaos Mode - Social Stream Ninja</title>
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <link rel="preload" href="../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+    <style>
+        /* Hide scrollbars */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        * {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        @font-face {
+            font-family: NotoColorEmojiLimited;
+            unicode-range: U+1F1E6-1F1FF;
+            src: url(../thirdparty/NotoColorEmoji.ttf);
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            font-family: 'NotoColorEmojiLimited', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: white;
+        }
+
+        body.chroma {
+            background: #00ff00;
+        }
+
+        body.darkmode {
+            background: #000000;
+        }
+
+        body.transparent {
+            background: transparent;
+        }
+
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #stage, #feed-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #stage.shake {
+            animation: stage-shake 0.5s ease-in-out;
+        }
+
+        #stage.glitch {
+            animation: stage-glitch 0.6s steps(1, end);
+        }
+
+        @keyframes stage-shake {
+            0%, 100% { transform: translate(0, 0); }
+            15% { transform: translate(-1.6vmin, 0.6vmin); }
+            35% { transform: translate(1.6vmin, -0.8vmin); }
+            55% { transform: translate(-1.2vmin, -0.4vmin); }
+            75% { transform: translate(1vmin, 0.6vmin); }
+        }
+
+        @keyframes stage-glitch {
+            0% { transform: translate(0, 0) skewX(0deg); }
+            20% { transform: translate(-1.5vmin, 0) skewX(-4deg); }
+            40% { transform: translate(1.2vmin, 0.4vmin) skewX(3deg); }
+            60% { transform: translate(-0.8vmin, -0.4vmin) skewX(-2deg); }
+            80% { transform: translate(0.8vmin, 0) skewX(2deg); }
+            100% { transform: translate(0, 0) skewX(0deg); }
+        }
+
+        /* Spinning colour wash that fades in near the top of the meter */
+        #rainbow-bg {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 150vmax;
+            height: 150vmax;
+            margin: -75vmax 0 0 -75vmax;
+            background: conic-gradient(#ff6b6b, #ffd166, #06d6a0, #4cc9f0, #b388ff, #ff8fab, #ff6b6b);
+            opacity: 0;
+            transition: opacity 0.6s ease;
+            animation: rainbow-spin 14s linear infinite;
+            animation-play-state: paused;
+        }
+
+        #rainbow-bg.on {
+            animation-play-state: running;
+        }
+
+        @keyframes rainbow-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Chaos meter */
+        #chaos-meter {
+            position: absolute;
+            top: 5vmin;
+            left: 50%;
+            width: 56vmin;
+            height: 4.4vmin;
+            margin-left: -28vmin;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            border-radius: 999px;
+            box-sizing: border-box;
+            z-index: 100;
+        }
+
+        #chaos-track {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        #chaos-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #06d6a0, #ffd166, #ffa94d, #ff6b6b, #ff8fab);
+            background-size: 56vmin 100%;
+            border-radius: 999px;
+            transition: width 0.3s ease;
+        }
+
+        #chaos-face {
+            position: absolute;
+            top: 50%;
+            left: 0%;
+            font-size: 8.5vmin;
+            line-height: 1;
+            font-family: 'NotoColorEmojiLimited', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+            transform: translate(-50%, -52%);
+            transition: left 0.3s ease;
+        }
+
+        #chaos-face.bump {
+            animation: face-bump 0.45s ease-out;
+        }
+
+        @keyframes face-bump {
+            0% { transform: translate(-50%, -52%) scale(1); }
+            40% { transform: translate(-50%, -52%) scale(1.5) rotate(-10deg); }
+            100% { transform: translate(-50%, -52%) scale(1); }
+        }
+
+        /* Chat messages fly across as stickers */
+        .sticker {
+            position: absolute;
+            left: 0;
+            top: 0;
+            will-change: transform;
+            animation-timing-function: linear;
+            animation-fill-mode: both;
+        }
+
+        .sticker.fly-right {
+            animation-name: fly-right;
+        }
+
+        .sticker.fly-left {
+            animation-name: fly-left;
+        }
+
+        @keyframes fly-right {
+            0% { transform: translate(-100%, var(--y)) rotate(var(--tilt)); }
+            100% { transform: translate(100vw, var(--y)) rotate(calc(var(--tilt) * -1)); }
+        }
+
+        @keyframes fly-left {
+            0% { transform: translate(100vw, var(--y)) rotate(var(--tilt)); }
+            100% { transform: translate(-100%, var(--y)) rotate(calc(var(--tilt) * -1)); }
+        }
+
+        .sticker-pill {
+            max-width: 82vw;
+            padding: 1.3vmin 3vmin;
+            border-radius: 999px;
+            border: 1px solid rgba(0, 0, 0, 0.18);
+            box-sizing: border-box;
+            font-size: 3.6vmin;
+            line-height: 1.25;
+            font-weight: 700;
+            color: #1c1c22;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            animation: sticker-bob 1.1s ease-in-out infinite alternate;
+        }
+
+        .sticker-pill strong {
+            margin-right: 0.5em;
+            font-weight: 900;
+            opacity: 0.6;
+        }
+
+        @keyframes sticker-bob {
+            0% { transform: translateY(-1.6vmin); }
+            100% { transform: translateY(1.6vmin); }
+        }
+
+        /* Emoji pop up wherever they land */
+        .pop {
+            position: absolute;
+            left: 0;
+            top: 0;
+            margin: -0.5em 0 0 -0.5em;
+            width: 1em;
+            height: 1em;
+            font-size: 11vmin;
+            line-height: 1;
+            text-align: center;
+            font-family: 'NotoColorEmojiLimited', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+            will-change: transform, opacity;
+            animation: pop 1.8s ease-out both;
+        }
+
+        .pop.big {
+            font-size: 20vmin;
+            animation-duration: 1.1s;
+        }
+
+        @keyframes pop {
+            0% { transform: translate(var(--x), var(--y)) scale(0) rotate(-40deg); opacity: 0; }
+            22% { transform: translate(var(--x), var(--y)) scale(1.25) rotate(10deg); opacity: 1; }
+            70% { transform: translate(var(--x), calc(var(--y) - 5vmin)) scale(1) rotate(-6deg); opacity: 1; }
+            100% { transform: translate(var(--x), calc(var(--y) - 12vmin)) scale(0.6) rotate(18deg); opacity: 0; }
+        }
+
+        .ring {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 20vmin;
+            height: 20vmin;
+            margin: -10vmin 0 0 -10vmin;
+            border-radius: 50%;
+            border: 1.6vmin solid #ffd166;
+            box-sizing: border-box;
+            will-change: transform, opacity;
+            animation: ring 0.9s ease-out both;
+        }
+
+        .ring.wave {
+            border-width: 1vmin;
+            animation-duration: 1.8s;
+        }
+
+        @keyframes ring {
+            0% { transform: translate(var(--x), var(--y)) scale(0.1); opacity: 1; }
+            100% { transform: translate(var(--x), var(--y)) scale(var(--grow)); opacity: 0; }
+        }
+
+        .bit {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 2.6vmin;
+            height: 2.6vmin;
+            margin: -1.3vmin 0 0 -1.3vmin;
+            border-radius: 35%;
+            will-change: transform, opacity;
+            animation: bit 1.1s cubic-bezier(0.15, 0.7, 0.3, 1) both;
+        }
+
+        @keyframes bit {
+            0% { transform: translate(var(--x), var(--y)) scale(1); opacity: 1; }
+            100% { transform: translate(calc(var(--x) + var(--dx)), calc(var(--y) + var(--dy))) scale(0.3) rotate(260deg); opacity: 0; }
+        }
+
+        .portal {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 28vmin;
+            height: 28vmin;
+            margin: -14vmin 0 0 -14vmin;
+            border-radius: 50%;
+            border: 3vmin solid;
+            border-color: #b388ff #4cc9f0 #ff8fab #ffd166;
+            box-sizing: border-box;
+            will-change: transform;
+            animation: portal 2.2s ease-in-out both;
+        }
+
+        @keyframes portal {
+            0% { transform: translate(var(--x), var(--y)) rotate(0deg) scale(0); }
+            30% { transform: translate(var(--x), var(--y)) rotate(360deg) scale(1); }
+            70% { transform: translate(var(--x), var(--y)) rotate(900deg) scale(1); }
+            100% { transform: translate(var(--x), var(--y)) rotate(1260deg) scale(0); }
+        }
+
+        .glitch-bar {
+            position: absolute;
+            left: -10%;
+            top: 0;
+            width: 120%;
+            height: var(--h);
+            animation: glitch-bar 0.7s steps(1, end) both;
+        }
+
+        @keyframes glitch-bar {
+            0% { transform: translate(-6vw, var(--y)); opacity: 0.6; }
+            20% { transform: translate(5vw, var(--y)); opacity: 0.2; }
+            40% { transform: translate(-3vw, var(--y)); opacity: 0.6; }
+            60% { transform: translate(7vw, var(--y)); opacity: 0.3; }
+            80% { transform: translate(-2vw, var(--y)); opacity: 0.5; }
+            100% { transform: translate(0, var(--y)); opacity: 0; }
+        }
+
+        .glitch-tag {
+            position: absolute;
+            left: 0;
+            top: 0;
+            max-width: 80vw;
+            padding: 1.4vmin 3.4vmin;
+            border-radius: 2.4vmin;
+            border: 1px solid rgba(0, 0, 0, 0.18);
+            box-sizing: border-box;
+            font-size: 5.4vmin;
+            font-weight: 900;
+            color: #1c1c22;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            animation: glitch-tag 1.3s steps(1, end) both;
+        }
+
+        @keyframes glitch-tag {
+            0% { transform: translate(-50%, -50%) translate(var(--x), var(--y)); background: #4cc9f0; }
+            15% { transform: translate(-50%, -50%) translate(calc(var(--x) - 2vmin), var(--y)) skewX(-12deg); background: #ff6b6b; }
+            30% { transform: translate(-50%, -50%) translate(calc(var(--x) + 2vmin), calc(var(--y) + 1vmin)) skewX(10deg); background: #06d6a0; }
+            45% { transform: translate(-50%, -50%) translate(calc(var(--x) - 1vmin), calc(var(--y) - 1vmin)); background: #ffd166; }
+            60% { transform: translate(-50%, -50%) translate(calc(var(--x) + 1.5vmin), var(--y)) skewX(-8deg); background: #b388ff; }
+            80% { transform: translate(-50%, -50%) translate(var(--x), var(--y)); background: #4cc9f0; opacity: 1; }
+            100% { transform: translate(-50%, -50%) translate(var(--x), var(--y)) scale(0.6); background: #4cc9f0; opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="rainbow-bg"></div>
+        <div id="stage">
+            <div id="feed-content"></div>
+        </div>
+        <div id="chaos-meter">
+            <div id="chaos-track"><div id="chaos-fill"></div></div>
+            <div id="chaos-face">😴</div>
+        </div>
+    </div>
+
+    <script>
+        // URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
+        const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
+        const password = urlParams.get('password') || 'false';
+
+        // Apply theme settings
+        if (urlParams.has('chroma')) {
+            document.body.classList.add('chroma');
+        } else if (urlParams.has('darkmode')) {
+            document.body.classList.add('darkmode');
+        }
+        if (urlParams.has('transparent')) {
+            document.body.classList.add('transparent');
+        }
+
+        // Game state
+        let gameState = {
+            chaosLevel: 0,
+            activeElements: 0,
+            stickers: 0,
+            face: ''
+        };
+
+        const MAX_ELEMENTS = 90; // keep OBS rendering smooth during chat floods
+        const MAX_STICKERS = 9; // more than this and nothing can be read anyway
+        const stage = document.getElementById('stage');
+        const feed = document.getElementById('feed-content');
+        const palette = ['#ff6b6b', '#ffd166', '#06d6a0', '#4cc9f0', '#b388ff', '#ff8fab', '#ffa94d', '#8ce99a'];
+
+        const chaosLevels = [
+            { threshold: 0, face: '😴' },
+            { threshold: 20, face: '🙂' },
+            { threshold: 40, face: '😮' },
+            { threshold: 60, face: '🤪' },
+            { threshold: 80, face: '🔥' },
+            { threshold: 95, face: '💀' }
+        ];
+
+        function pick(list) {
+            return list[Math.floor(Math.random() * list.length)];
+        }
+
+        // Random spot inside the window, clear of the meter
+        function getRandomPosition() {
+            return {
+                x: window.innerWidth * (0.1 + Math.random() * 0.8),
+                y: window.innerHeight * (0.2 + Math.random() * 0.66)
+            };
+        }
+
+        // Add a short-lived element to the stage
+        function spawn(className, lifeMs, pos, layer) {
+            if (gameState.activeElements >= MAX_ELEMENTS) return null;
+
+            const element = document.createElement('div');
+            element.className = className;
+            if (pos) {
+                element.style.setProperty('--x', pos.x + 'px');
+                element.style.setProperty('--y', pos.y + 'px');
+            }
+
+            (layer || stage).appendChild(element);
+            gameState.activeElements++;
+
+            setTimeout(() => {
+                if (element.parentNode) {
+                    element.parentNode.removeChild(element);
+                    gameState.activeElements--;
+                }
+            }, lifeMs);
+
+            return element;
+        }
+
+        function addChaos(amount) {
+            gameState.chaosLevel = Math.min(100, gameState.chaosLevel + amount);
+        }
+
+        // Create flying text effect
+        function createFlyingText(text, username) {
+            // A flood of chat turns into fireworks instead of a wall of text
+            if (gameState.stickers >= MAX_STICKERS) {
+                createExplosion();
+                return;
+            }
+
+            const duration = 7 - (gameState.chaosLevel / 100) * 3.5 + Math.random();
+            const element = spawn('sticker ' + (Math.random() < 0.5 ? 'fly-right' : 'fly-left'), duration * 1000, null, feed);
+            if (!element) return;
+
+            gameState.stickers++;
+            setTimeout(() => { gameState.stickers--; }, duration * 1000);
+
+            element.style.setProperty('--y', (window.innerHeight * (0.17 + Math.random() * 0.68)) + 'px');
+            element.style.setProperty('--tilt', (Math.random() * 16 - 8) + 'deg');
+            element.style.animationDuration = duration + 's';
+
+            const pill = document.createElement('div');
+            pill.className = 'sticker-pill message-item';
+            pill.style.background = pick(palette);
+            pill.style.animationDelay = (-Math.random() * 2) + 's';
+
+            const name = document.createElement('strong');
+            name.textContent = username;
+            pill.appendChild(name);
+            pill.appendChild(document.createTextNode(text.length > 60 ? text.substring(0, 60) + '…' : text));
+            element.appendChild(pill);
+        }
+
+        // Create emoji chaos
+        function createEmojiChaos(emoji) {
+            for (let i = 0; i < 2; i++) {
+                setTimeout(() => {
+                    const element = spawn('pop', 1800, getRandomPosition());
+                    if (element) element.textContent = emoji;
+                }, i * 200);
+            }
+        }
+
+        // Create explosion effect
+        function createExplosion(pos) {
+            pos = pos || getRandomPosition();
+            const reach = Math.min(window.innerWidth, window.innerHeight) * 0.32;
+
+            const ring = spawn('ring', 900, pos);
+            if (ring) ring.style.setProperty('--grow', '3');
+
+            const boom = spawn('pop big', 1100, pos);
+            if (boom) boom.textContent = '💥';
+
+            for (let i = 0; i < 12; i++) {
+                const bit = spawn('bit', 1100, pos);
+                if (!bit) break;
+                const angle = (Math.PI * 2 / 12) * i + Math.random() * 0.4;
+                const distance = reach * (0.55 + Math.random() * 0.45);
+                bit.style.setProperty('--dx', (Math.cos(angle) * distance) + 'px');
+                bit.style.setProperty('--dy', (Math.sin(angle) * distance) + 'px');
+                bit.style.background = pick(palette);
+            }
+        }
+
+        // Create wave effect
+        function createWave() {
+            const wave = spawn('ring wave', 1800, getRandomPosition());
+            if (!wave) return;
+            wave.style.setProperty('--grow', '7');
+            wave.style.borderColor = pick(palette);
+        }
+
+        // Create glitch effect
+        function createGlitchText(text) {
+            const colors = ['#ff6b6b', '#4cc9f0', '#06d6a0', '#ffd166'];
+            for (let i = 0; i < 4; i++) {
+                const bar = spawn('glitch-bar', 700, { x: 0, y: Math.random() * window.innerHeight });
+                if (!bar) break;
+                bar.style.setProperty('--h', (0.5 + Math.random() * 1.8) + 'vmin');
+                bar.style.background = colors[i % colors.length];
+                bar.style.animationDelay = (Math.random() * 0.15) + 's';
+            }
+
+            const tag = spawn('glitch-tag', 1300, getRandomPosition());
+            if (tag) tag.textContent = '👾 ' + text;
+
+            stage.classList.remove('glitch');
+            void stage.offsetWidth;
+            stage.classList.add('glitch');
+            setTimeout(() => stage.classList.remove('glitch'), 600);
+        }
+
+        // Create chaos portal
+        function createPortal() {
+            const pos = getRandomPosition();
+            spawn('portal', 2200, pos);
+            const swirl = spawn('pop', 1800, pos);
+            if (swirl) swirl.textContent = '🌀';
+        }
+
+        // Screen shake effect
+        function screenShake() {
+            stage.classList.remove('shake');
+            void stage.offsetWidth;
+            stage.classList.add('shake');
+
+            setTimeout(() => {
+                stage.classList.remove('shake');
+            }, 500);
+        }
+
+        // Update chaos level
+        function updateChaosLevel() {
+            // Chaos drains away when chat goes quiet
+            gameState.chaosLevel *= 0.986;
+            if (gameState.chaosLevel < 0.5) gameState.chaosLevel = 0;
+
+            const level = gameState.chaosLevel;
+            document.getElementById('chaos-fill').style.width = level + '%';
+
+            let currentLevel = chaosLevels[0];
+            for (let entry of chaosLevels) {
+                if (level >= entry.threshold) {
+                    currentLevel = entry;
+                }
+            }
+
+            const face = document.getElementById('chaos-face');
+            face.style.left = level + '%';
+            if (currentLevel.face !== gameState.face) {
+                gameState.face = currentLevel.face;
+                face.textContent = currentLevel.face;
+                face.classList.remove('bump');
+                void face.offsetWidth;
+                face.classList.add('bump');
+            }
+
+            // Rainbow background at high chaos
+            const rainbow = document.getElementById('rainbow-bg');
+            if (level >= 80) {
+                rainbow.style.opacity = (level - 80) / 20 * 0.3;
+                rainbow.classList.add('on');
+            } else {
+                rainbow.style.opacity = 0;
+                rainbow.classList.remove('on');
+            }
+
+            // Auto-effects based on chaos level
+            if (level >= 90 && Math.random() < 0.06) {
+                screenShake();
+            }
+
+            if (level >= 60 && Math.random() < 0.05) {
+                createWave();
+            }
+
+            if (level >= 95 && Math.random() < 0.03) {
+                createPortal();
+            }
+        }
+
+        // Extract emojis from text
+        function extractEmojis(text) {
+            const emojiRegex = /(\p{Regional_Indicator}\p{Regional_Indicator}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F)(\p{Emoji_Modifier}|\u200D\p{Emoji})*|\p{Emoji_Component}\uFE0F/gu;
+            return text.match(emojiRegex) || [];
+        }
+
+        // Process incoming message
+        function processData(data) {
+            // Captions are the host's own speech shown as text. They are not chat to take part with.
+            if (data && (data.content || data).type === "captions") return;
+            // Handle different data formats from Social Stream
+            if (data && data.content) {
+                data = data.content;
+            }
+            
+            if (!data || !data.chatmessage || !data.chatname) return;
+
+            let messageText = data.chatmessage;
+            
+            // If textonly is not set, extract text from HTML
+            // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
+            if (!data.textonly) {
+                const tmp = document.createElement('template').content.appendChild(document.createElement('div'));
+                tmp.innerHTML = data.chatmessage;
+                messageText = tmp.textContent || tmp.innerText || '';
+            }
+            
+            const message = messageText.toLowerCase().trim();
+            // Read the name without loading images or running their handlers.
+            const nameTemplate = document.createElement('template');
+            const tmpName = nameTemplate.content.appendChild(document.createElement('div'));
+            tmpName.innerHTML = data.chatname;
+            const username = tmpName.textContent || tmpName.innerText || '';
+
+            // Check for special commands
+            if (message.includes('!explode')) {
+                addChaos(8);
+                createExplosion();
+            } else if (message.includes('!glitch')) {
+                addChaos(8);
+                createGlitchText(username);
+            } else if (message.includes('!shake')) {
+                addChaos(8);
+                screenShake();
+            } else if (message.includes('!portal')) {
+                addChaos(8);
+                createPortal();
+            } else {
+                // Normal message processing
+                addChaos(4);
+
+                // Check for emojis
+                const emojis = extractEmojis(messageText);
+                let words = messageText;
+                emojis.forEach(emoji => {
+                    words = words.split(emoji).join('');
+                });
+                if (words.trim()) {
+                    createFlyingText(messageText.trim(), username);
+                }
+
+                emojis.slice(0, 4).forEach(emoji => {
+                    createEmojiChaos(emoji);
+                });
+
+                // Random chaos effects once chat heats up
+                if (gameState.chaosLevel >= 50 && Math.random() < 0.2) {
+                    createExplosion();
+                }
+
+                if (gameState.chaosLevel >= 30 && Math.random() < 0.15) {
+                    createWave();
+                }
+            }
+        }
+
+        // Setup iframe communication
+        if (!urlParams.has('demo') && !chatRelay.enabled) {
+            const iframe = document.createElement("iframe");
+            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            document.body.appendChild(iframe);
+            
+            // Listen for messages
+            window.addEventListener("message", function(e) {
+                if (e.source !== iframe.contentWindow) return;
+                
+                if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        processData(e.data.dataReceived.overlayNinja);
+                    }
+                }
+            });
+        }
+
+        // Handle WebSocket connection
+        if (!urlParams.has('demo') && chatRelay.enabled) {
+            const serverUrl = chatRelay.url;
+            let socketserver = null;
+            let reconnectTimeout = null;
+
+            function connectWebSocket() {
+                socketserver = new WebSocket(serverUrl);
+
+                socketserver.onopen = function() {
+                    socketserver.send(JSON.stringify({
+                        join: sessionId.split(",")[0],
+                        out: chatRelay.out, in: chatRelay.in
+                    }));
+                };
+
+                socketserver.onclose = function() {
+                    clearTimeout(reconnectTimeout);
+                    reconnectTimeout = setTimeout(connectWebSocket, 5000);
+                };
+
+                socketserver.onerror = function() {
+                    try { socketserver.close(); } catch (e) {}
+                };
+
+                socketserver.onmessage = function(event) {
+                    if (event.data) {
+                        try {
+                            const data = JSON.parse(event.data);
+                            processData(data);
+                        } catch (e) {
+                            console.error('WebSocket parse error:', e);
+                        }
+                    }
+                };
+            }
+
+            connectWebSocket();
+        }
+
+        // Demo mode
+        if (urlParams.has('demo')) {
+            const demoMessages = [
+                'This is chaos!', '!explode', '!glitch', 'Amazing stream!', '💥💥💥',
+                'ABSOLUTE MAYHEM!', '!shake', 'Going crazy!', '🔥🔥🔥', '!portal'
+            ];
+            const demoStart = Date.now();
+
+            // Chat warms up, goes wild, then calms down again
+            function demoMessage() {
+                processData({
+                    chatname: 'ChaosUser' + Math.floor(Math.random() * 5),
+                    chatmessage: pick(demoMessages)
+                });
+
+                const phase = ((Date.now() - demoStart) / 1000) % 26;
+                const delay = phase < 5 ? 650 : (phase < 13 ? 170 : 900);
+                setTimeout(demoMessage, delay * (0.6 + Math.random() * 0.8));
+            }
+            setTimeout(demoMessage, 400);
+        }
+
+        // Update chaos level periodically
+        setInterval(updateChaosLevel, 100);
+        updateChaosLevel();
+    </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+.ssn-sticker-stage { position: fixed; top: 0; right: 0; bottom: 0; left: 0; display: grid; place-items: center; pointer-events: none; z-index: 2147483000; overflow: hidden; }
+.ssn-sticker { display: grid; justify-items: center; width: min(65vw, 520px); max-height: 85vh; opacity: 0; transition: opacity .25s; }
+.ssn-sticker.is-visible { opacity: 1; }
+.ssn-sticker img { width: 100%; max-height: 65vh; object-fit: contain; filter: drop-shadow(0 12px 16px #0004); }
+.ssn-sticker p { margin: 10px 0 0; padding: 9px 18px; border-radius: 24px; background: #111827e8; color: white; font: 600 clamp(16px, 2vw, 24px)/1.4 system-ui, sans-serif; text-align: center; max-width: 90vw; overflow-wrap: anywhere; }
+.ssn-sticker[data-motion="bounce"] img { animation: ssn-sticker-bounce 1.3s ease-in-out infinite; }
+.ssn-sticker[data-motion="float"] img { animation: ssn-sticker-float 2.5s ease-in-out infinite; }
+.ssn-sticker[data-motion="wiggle"] img { animation: ssn-sticker-wiggle 1.5s ease-in-out infinite; }
+.ssn-sticker[data-motion="rise"] img { animation: ssn-sticker-rise 2.8s ease-in-out infinite; }
+@keyframes ssn-sticker-bounce { 0%,100% { transform: translateY(0) scale(1); } 45% { transform: translateY(-28px) scale(1.035); } }
+@keyframes ssn-sticker-float { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-15px) rotate(3deg); } }
+@keyframes ssn-sticker-wiggle { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-9deg); } 75% { transform: rotate(9deg); } }
+@keyframes ssn-sticker-rise { 0%,100% { transform: translateY(15px) rotate(-5deg); } 50% { transform: translateY(-40px) rotate(5deg); } }
+@media (prefers-reduced-motion: reduce) { .ssn-sticker img { animation: none !important; } .ssn-sticker { transition: none; } }
+.ssn-sticker-stage[data-motion="off"] img { animation: none !important; }

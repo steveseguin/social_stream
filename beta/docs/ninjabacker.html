@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+	<head>
+    <meta charset="utf-8" />
+    <meta name="description" content="Connect NinjaBacker tips to Social Stream Ninja and display them in OBS.">
+    <meta name="robots" content="noindex, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/docs/ninjabacker.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="https://socialstream.ninja/docs/ninjabacker.html">
+    <meta property="og:title" content="NinjaBacker setup | Social Stream Ninja">
+    <meta property="og:description" content="Connect NinjaBacker tips to Social Stream Ninja and display them in OBS.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/docs/ninjabacker.html">
+    <meta name="twitter:title" content="NinjaBacker setup | Social Stream Ninja">
+    <meta name="twitter:description" content="Connect NinjaBacker tips to Social Stream Ninja and display them in OBS.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logo">
+
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>NinjaBacker setup | Social Stream Ninja</title>
+		<link rel="icon" href="../icons/favicon.ico" />
+		<link rel="stylesheet" href="css/styles.css" />
+		<link rel="stylesheet" href="css/guides.css" />
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem('darkMode');
+				var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+				if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) document.documentElement.classList.add('dark-mode');
+			})();
+		</script>
+	<link rel="stylesheet" href="../docs/css/site-shell.css">
+<script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="css/site-language.css">
+<script src="js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/ninjabacker.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/ninjabacker.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/ninjabacker.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/ninjabacker.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/ninjabacker.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/ninjabacker.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/ninjabacker.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/ninjabacker.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/ninjabacker.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/ninjabacker.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/ninjabacker.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/ninjabacker.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/ninjabacker.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/ninjabacker.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/ninjabacker.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/ninjabacker.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/ninjabacker.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/ninjabacker.html">
+<link rel="alternate" hreflang="et" href="https://socialstream.ninja/beta/et/docs/ninjabacker.html">
+<!-- ssn-languages:end --></head>
+	<body class="visual-guide">
+		<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="English"><span aria-hidden="true">🌐 </span><span lang="en">English</span></summary><div class="site-language-options"><a class="site-language-link" href="ninjabacker.html" lang="en" hreflang="en" aria-current="true">English</a><a class="site-language-link" href="../es/docs/ninjabacker.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../pt-br/docs/ninjabacker.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../ru/docs/ninjabacker.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../fr/docs/ninjabacker.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../de/docs/ninjabacker.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../ja/docs/ninjabacker.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../zh-cn/docs/ninjabacker.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../zh-tw/docs/ninjabacker.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../it/docs/ninjabacker.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../pl/docs/ninjabacker.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../ko/docs/ninjabacker.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../uk/docs/ninjabacker.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../ar/docs/ninjabacker.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../tr/docs/ninjabacker.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../cs/docs/ninjabacker.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../th/docs/ninjabacker.html" lang="th" hreflang="th">ไทย</a><a class="site-language-link" href="../et/docs/ninjabacker.html" lang="et" hreflang="et">Eesti</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+<section class="page-hero"><div class="container"><h1>NinjaBacker tips in Social Stream Ninja</h1><p>Receive tips in SSN, then add alerts or a Tip Jar to OBS.</p></div></section>
+<main><section class="guide-section"><div class="container">
+<nav class="guide-jump-links" aria-label="On this page"><a href="#live">Live feed</a><a href="#webhook">Webhook</a><a href="#obs">OBS display</a><a href="#test">Test and troubleshoot</a></nav>
+<div class="guide-card">
+<h2 id="live">1. Connect your account</h2>
+<div class="guide-step-layout"><div>
+<p>Start here with the SSN desktop app or Chrome extension. Keep SSN on while streaming.</p>
+<ol class="guide-steps">
+<li><a href="https://ninjabacker.com/dashboard" target="_blank" rel="noopener">Open NinjaBacker</a><span>. Create your account and finish Stripe setup to accept payments.</span></li>
+<li>In the NinjaBacker dashboard, open Social Stream Ninja and copy your Private Tip ID.</li>
+<li>In SSN, open Money &gt; Shops &amp; support &gt; Connected platforms &gt; NinjaBacker donations &gt; Setup. Enter your username and Private Tip ID.</li>
+<li>Leave Delivery on Live feed (simple), turn on NinjaBacker donations, and click Save setup.</li>
+</ol>
+<p>If Connected platforms is hidden, switch to Full mode in SSN.</p>
+<p>Live feed needs no webhook. It shows new tips while connected; it does not replay tips received while SSN was off.</p>
+</div><figure class="guide-figure"><a href="images/ninjabacker/live-setup.png"><img src="images/ninjabacker/live-setup.png" alt="SSN NinjaBacker setup with username, private Tip ID and Live feed selected" width="436" height="601" loading="lazy"></a><figcaption>Example account. Keep your Tip ID and receiver URL private.</figcaption></figure></div>
+</div>
+<div class="guide-card">
+<h2 id="webhook">2. Optional: use a webhook</h2>
+<div class="guide-step-layout"><div>
+<p>Choose Reliable webhook to queue tips for up to seven days while SSN is off.</p>
+<ol class="guide-steps">
+<li>In NinjaBacker, open Webhook. Under Webhook Signature Secret, click Generate and copy the secret. If you already use a secret, copy that one.</li>
+<li>In SSN's NinjaBacker setup, choose Reliable webhook, paste the signing secret, and click Save setup.</li>
+<li>Click Copy receiver URL in SSN. Paste it into NinjaBacker's Webhook URL field and click Save.</li>
+</ol>
+</div><figure class="guide-figure"><a href="images/ninjabacker/receiver-setup.png"><img src="images/ninjabacker/receiver-setup.png" alt="Reliable webhook setup in SSN with the generated Receiver URL and copy button" width="436" height="879" loading="lazy"></a><figcaption>Copy the generated URL; do not build one from your session ID.</figcaption></figure></div>
+<p>The receiver URL starts with:</p><pre><code>https://api.socialstream.ninja/v1/ninjabacker/webhook/...</code></pre>
+<p>Tip Jar, chat dock and other display URLs go in OBS. They cannot receive webhook requests.</p>
+
+<details class="guide-extra"><summary>Switch back to Live feed</summary><p>Switching deletes queued tips in the SSN receiver. Clear and save the old Webhook URL in NinjaBacker too.</p></details>
+</div>
+<div class="guide-card">
+<h2 id="obs">3. Add your display to OBS</h2>
+<ol class="guide-steps">
+<li>For alerts, choose NinjaBacker donations under OBS overlay for in Shops &amp; support. Copy the overlay link.</li>
+<li>For a running goal, open Money &gt; Tip Jar and Goal Meter. Choose your style and goal, then copy its link.</li>
+<li>In OBS, add a Browser Source and paste the display link. Keep SSN and the display on the same session.</li>
+</ol>
+<p><a href="tip-jar-goal-meter.html">Tip Jar styles and goal settings</a></p>
+<p>Share your public NinjaBacker tip page with viewers. Keep overlay links in OBS and receiver URLs in the webhook field.</p>
+</div>
+<div class="guide-card">
+<h2 id="test">4. Check your setup</h2>
+<p>Open the SSN NinjaBacker alert overlay. In NinjaBacker, open Testing and click Send Test Tip. Expect a test alert in that overlay.</p>
+<p>Read the result below Send Test Tip. Webhook accepted confirms receipt, not an OBS alert. On failure, correct the URL or signing secret and send a new test. Dashboard tests retry for five minutes.</p>
+<p>Test tips do not add money to the Tip Jar, appear as paid chat donations, or trigger paid rewards.</p>
+<details class="guide-extra"><summary>No test alert?</summary><p>Keep SSN on and NinjaBacker donations enabled. Check the username and Tip ID match the same account. For webhooks, refresh Delivery History in NinjaBacker and check the receiver URL and signing secret.</p></details>
+<details class="guide-extra"><summary>HTTP 405 or a display URL error?</summary><p>Copy the Receiver URL from SSN's Reliable webhook setup, save it in NinjaBacker, and send a new test tip. Saving a new URL stops retries to the old destination.</p><figure class="guide-shot guide-shot-compact"><a href="images/ninjabacker/wrong-url.png"><img src="images/ninjabacker/wrong-url.png" alt="NinjaBacker rejects a Tip Jar display URL and links to this setup guide" width="334" height="176" loading="lazy"></a></figure></details>
+<details class="guide-extra"><summary>Tips appear in chat but not in the goal?</summary><p>Check the Tip Jar session and source, donation type and paid event filters. Use a money goal for tip amounts. Refunds do not subtract from SSN alerts or goals.</p></details>
+<p><a href="https://ninjabacker.com/developers">Custom receivers and delivery details</a></p>
+</div>
+</div></section></main></body></html>

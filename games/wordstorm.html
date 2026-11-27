@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Word Storm: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Storm - Social Stream Ninja</title>
+    <link rel="icon" href="../favicon.ico" />
+    <style>
+        /* Hide scrollbars */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        * {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+            overflow: hidden;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: white;
+        }
+
+        body.chroma {
+            background: #00ff00;
+        }
+
+        body.darkmode {
+            background: #000000;
+        }
+
+        body.transparent {
+            background: transparent;
+        }
+
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* The eye of the storm grows as chat gets busier */
+        #word-storm-center {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 1em;
+            height: 1em;
+            margin: -0.5em 0 0 -0.5em;
+            font-size: 12vmin;
+            line-height: 1;
+            text-align: center;
+            opacity: 0;
+            transition: font-size 0.8s ease, opacity 0.6s ease;
+            animation: eye-wobble 2.2s ease-in-out infinite alternate;
+        }
+
+        @keyframes eye-wobble {
+            0% { transform: rotate(-9deg); }
+            100% { transform: rotate(9deg); }
+        }
+
+        #word-cloud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .word-bubble {
+            position: absolute;
+            left: 0;
+            top: 0;
+            white-space: nowrap;
+            will-change: transform;
+        }
+
+        .word-pill {
+            display: block;
+            padding: 0.3em 0.85em 0.36em;
+            border-radius: 999px;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            font-weight: 800;
+            line-height: 1.2;
+            color: #1c1c26;
+            transition: background-color 0.4s ease;
+            animation: word-spawn 0.5s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+        }
+
+        .word-pill.bump {
+            animation: word-bump 0.45s ease-out;
+        }
+
+        .word-bubble.leaving .word-pill {
+            animation: word-leave 0.4s ease-in both;
+        }
+
+        @keyframes word-spawn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes word-bump {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes word-leave {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.3); opacity: 0; }
+        }
+
+        /* Lightning jumps between words that sound alike */
+        .word-zap {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1em;
+            height: 1em;
+            margin: -0.5em 0 0 -0.5em;
+            font-size: 9vmin;
+            line-height: 1;
+            text-align: center;
+            pointer-events: none;
+            animation: zap 0.9s ease-out both;
+        }
+
+        @keyframes zap {
+            0% { transform: translate(var(--x), var(--y)) scale(0.2) rotate(-20deg); opacity: 0; }
+            25% { transform: translate(var(--x), var(--y)) scale(1.3) rotate(8deg); opacity: 1; }
+            100% { transform: translate(var(--x), var(--y)) scale(0.9) rotate(0deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="word-storm-center">🌪️</div>
+        <div id="word-cloud"></div>
+    </div>
+
+    <script>
+        // URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
+        const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
+        const password = urlParams.get('password') || 'false';
+
+        // Apply theme settings
+        if (urlParams.has('chroma')) {
+            document.body.classList.add('chroma');
+        } else if (urlParams.has('darkmode')) {
+            document.body.classList.add('darkmode');
+        }
+        if (urlParams.has('transparent')) {
+            document.body.classList.add('transparent');
+        }
+
+        // Game state
+        let gameState = {
+            words: new Map(),
+            stormLevel: 0,
+            maxWords: 32 // Maximum words on screen to prevent lag and keep them readable
+        };
+
+        const stormLevels = [
+            { threshold: 0, intensity: 0 },
+            { threshold: 10, intensity: 1 },
+            { threshold: 25, intensity: 2 },
+            { threshold: 50, intensity: 3 },
+            { threshold: 100, intensity: 4 },
+            { threshold: 200, intensity: 5 }
+        ];
+
+        // How a word looks and how close to the eye it flies. The most repeated word gets the
+        // top tier, the next few the one below and so on, so there is always room to read them.
+        const wordTiers = [
+            { places: Infinity, size: 3.3, orbit: 0.95, color: '#dfe6ee' },
+            { places: 14, size: 4.2, orbit: 0.8, color: '#ffe38a' },
+            { places: 7, size: 5.2, orbit: 0.62, color: '#8ce99a' },
+            { places: 3, size: 6.6, orbit: 0.42, color: '#74c0fc' },
+            { places: 1, size: 8.4, orbit: 0.2, color: '#ff8fab' }
+        ];
+
+        const wordCloud = document.getElementById('word-cloud');
+        const view = { width: window.innerWidth, height: window.innerHeight };
+
+        // Common words to filter out
+        const commonWords = new Set([
+            'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+            'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did',
+            'will', 'would', 'could', 'should', 'may', 'might', 'can', 'shall', 'must',
+            'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
+            'my', 'your', 'his', 'its', 'our', 'their', 'this', 'that', 'these', 'those'
+        ]);
+
+        function stripHtml(html) {
+            const tmp = document.createElement('template').content.appendChild(document.createElement('div'));
+            tmp.innerHTML = html;
+            return tmp.textContent || tmp.innerText || '';
+        }
+
+        // Extract meaningful words from text
+        function extractWords(text) {
+            return text.toLowerCase()
+                .replace(/[^\p{L}\p{N}_\s]/gu, ' ')
+                .split(/\s+/)
+                .filter(word =>
+                    word.length > 2 &&
+                    word.length < 20 &&
+                    !commonWords.has(word) &&
+                    !/^\d+$/.test(word)
+                );
+        }
+
+        // Work out which tier every word belongs in, and restyle the ones that moved
+        function rankWords() {
+            const ranked = Array.from(gameState.words.values())
+                .sort((a, b) => b.count - a.count || a.firstSeen - b.firstSeen);
+
+            ranked.forEach((entry, place) => {
+                let tier = 0;
+                if (entry.count >= 2) {
+                    for (let i = wordTiers.length - 1; i > 0; i--) {
+                        if (place < wordTiers[i].places) {
+                            tier = i;
+                            break;
+                        }
+                    }
+                }
+                if (entry.tier !== tier) {
+                    entry.tier = tier;
+                    styleWord(entry);
+                }
+            });
+        }
+
+        // Size, colour and orbit follow how popular the word is
+        function styleWord(entry) {
+            const tier = wordTiers[entry.tier];
+            entry.element.style.fontSize = tier.size + 'vmin';
+            entry.element.style.zIndex = String(entry.tier + 1);
+            entry.pill.style.backgroundColor = tier.color;
+            entry.orbitTarget = Math.max(0.12, Math.min(1, tier.orbit + entry.wander));
+            entry.width = entry.element.offsetWidth;
+            entry.height = entry.element.offsetHeight;
+        }
+
+        function removeWord(entry) {
+            if (entry.removed) return;
+            entry.removed = true;
+            gameState.words.delete(entry.text);
+            entry.element.classList.add('leaving');
+            setTimeout(() => {
+                if (entry.element.parentNode) {
+                    entry.element.parentNode.removeChild(entry.element);
+                }
+            }, 400);
+        }
+
+        // Remove the least popular word, oldest first
+        function removeOldestWord() {
+            let wordToRemove = null;
+
+            gameState.words.forEach(entry => {
+                if (!wordToRemove || entry.count < wordToRemove.count ||
+                    (entry.count === wordToRemove.count && entry.lastSeen < wordToRemove.lastSeen)) {
+                    wordToRemove = entry;
+                }
+            });
+
+            if (wordToRemove) {
+                removeWord(wordToRemove);
+            }
+        }
+
+        // Create or update word bubble
+        function createWordBubble(word) {
+            let entry = gameState.words.get(word);
+
+            if (!entry) {
+                // Check if we've reached the word limit
+                if (gameState.words.size >= gameState.maxWords) {
+                    removeOldestWord();
+                }
+
+                const bubble = document.createElement('div');
+                bubble.className = 'word-bubble';
+                const pill = document.createElement('span');
+                pill.className = 'word-pill';
+                pill.textContent = word;
+                bubble.appendChild(pill);
+                wordCloud.appendChild(bubble);
+
+                // Start in the emptiest stretch of the outer ring
+                let angle = Math.random() * Math.PI * 2;
+                let bestGap = -1;
+                for (let attempt = 0; attempt < 8; attempt++) {
+                    const candidate = Math.random() * Math.PI * 2;
+                    let gap = Math.PI;
+                    gameState.words.forEach(other => {
+                        const difference = Math.abs(Math.atan2(Math.sin(candidate - other.angle), Math.cos(candidate - other.angle)));
+                        gap = Math.min(gap, difference + Math.abs(other.orbit - 0.92));
+                    });
+                    if (gap > bestGap) {
+                        bestGap = gap;
+                        angle = candidate;
+                    }
+                }
+
+                entry = {
+                    text: word,
+                    count: 0,
+                    element: bubble,
+                    pill: pill,
+                    angle: angle,
+                    orbit: 1.15,
+                    orbitTarget: 1,
+                    wander: Math.random() * 0.16 - 0.08,
+                    drift: 0,
+                    width: 0,
+                    height: 0,
+                    tier: 0,
+                    firstSeen: Date.now(),
+                    lastSeen: 0,
+                    isNew: true,
+                    removed: false
+                };
+                gameState.words.set(word, entry);
+            } else {
+                entry.isNew = false;
+                entry.pill.classList.remove('bump');
+                void entry.pill.offsetWidth;
+                entry.pill.classList.add('bump');
+            }
+
+            entry.count++;
+            entry.lastSeen = Date.now();
+            if (entry.isNew) {
+                styleWord(entry);
+                positionWord(entry);
+            }
+
+            return entry;
+        }
+
+        // Where a word sits on its orbit right now
+        function positionWord(entry) {
+            const radiusX = view.width * 0.44;
+            const radiusY = view.height * 0.42;
+            let x = view.width / 2 + Math.cos(entry.angle) * radiusX * entry.orbit;
+            let y = view.height / 2 + Math.sin(entry.angle) * radiusY * entry.orbit;
+
+            // Never let a word hang off the edge of the window
+            const padX = entry.width / 2 + view.width * 0.01;
+            const padY = entry.height / 2 + view.height * 0.01;
+            x = Math.max(padX, Math.min(view.width - padX, x));
+            y = Math.max(padY, Math.min(view.height - padY, y));
+
+            entry.x = x;
+            entry.y = y;
+            entry.element.style.transform = 'translate(' + (x - entry.width / 2).toFixed(1) + 'px, ' + (y - entry.height / 2).toFixed(1) + 'px)';
+        }
+
+        // Lightning between two similar words
+        function createConnection(first, second) {
+            if (document.querySelectorAll('.word-zap').length >= 4) return;
+
+            const zap = document.createElement('div');
+            zap.className = 'word-zap';
+            zap.textContent = '⚡';
+            zap.style.setProperty('--x', ((first.x + second.x) / 2) + 'px');
+            zap.style.setProperty('--y', ((first.y + second.y) / 2) + 'px');
+            document.getElementById('game-container').appendChild(zap);
+            setTimeout(() => zap.remove(), 900);
+
+            [first, second].forEach(entry => {
+                entry.pill.classList.remove('bump');
+                void entry.pill.offsetWidth;
+                entry.pill.classList.add('bump');
+            });
+        }
+
+        // Check for word combos
+        function checkCombos(newEntry) {
+            const newWord = newEntry.text;
+            const similarWords = [];
+
+            gameState.words.forEach(entry => {
+                const word = entry.text;
+                if (word === newWord) return;
+
+                // Check for similar words (simple similarity)
+                if (word.includes(newWord) || newWord.includes(word)) {
+                    similarWords.push(entry);
+                } else if (word.length > 3 && newWord.length > 3) {
+                    const common = word.split('').filter(char => newWord.includes(char)).length;
+                    if (common >= Math.min(word.length, newWord.length) * 0.6) {
+                        similarWords.push(entry);
+                    }
+                }
+            });
+
+            similarWords.slice(0, 2).forEach(entry => {
+                createConnection(newEntry, entry);
+            });
+        }
+
+        // Update display
+        function updateDisplay() {
+            rankWords();
+
+            // Update storm level
+            let totalActivity = 0;
+            gameState.words.forEach(entry => {
+                totalActivity += entry.count;
+            });
+
+            let currentLevel = stormLevels[0];
+            for (let level of stormLevels) {
+                if (totalActivity >= level.threshold) {
+                    currentLevel = level;
+                }
+            }
+            gameState.stormLevel = currentLevel.intensity;
+
+            // Update storm center based on intensity
+            const stormCenter = document.getElementById('word-storm-center');
+            stormCenter.style.fontSize = (12 + currentLevel.intensity * 2.4) + 'vmin';
+            stormCenter.style.opacity = gameState.words.size > 0 ? '1' : '0';
+        }
+
+        // Words that chat has stopped saying fade back out of the storm
+        function cleanupWords() {
+            const now = Date.now();
+
+            gameState.words.forEach(entry => {
+                if (now - entry.lastSeen < 40000) return;
+
+                entry.count--;
+                entry.lastSeen = now - 20000;
+                if (entry.count <= 0) {
+                    removeWord(entry);
+                }
+            });
+
+            updateDisplay();
+        }
+
+        // Swirl everything around the eye
+        let lastFrame = performance.now();
+        function animate(now) {
+            const elapsed = Math.min(0.1, (now - lastFrame) / 1000);
+            lastFrame = now;
+            const pace = 0.1 * (1 + gameState.stormLevel * 0.45);
+
+            // Words that end up on top of each other ease apart so both stay readable
+            const list = Array.from(gameState.words.values());
+            for (let i = 0; i < list.length; i++) {
+                for (let j = i + 1; j < list.length; j++) {
+                    const first = list[i];
+                    const second = list[j];
+                    if (Math.abs(second.x - first.x) >= (first.width + second.width) / 2 ||
+                        Math.abs(second.y - first.y) >= (first.height + second.height) / 2) continue;
+
+                    const gap = Math.atan2(Math.sin(second.angle - first.angle), Math.cos(second.angle - first.angle));
+                    const push = elapsed * 0.3 * (gap >= 0 ? 1 : -1);
+                    first.angle -= push;
+                    second.angle += push;
+
+                    // the less popular of the two also slides further out
+                    const outer = first.count <= second.count ? first : second;
+                    outer.drift = Math.min(0.35, outer.drift + elapsed * 0.3);
+                }
+            }
+
+            list.forEach(entry => {
+                entry.drift = Math.max(0, entry.drift - elapsed * 0.04);
+                const target = Math.min(1, entry.orbitTarget + entry.drift);
+                entry.angle += elapsed * pace * (1.6 - entry.orbit);
+                entry.orbit += (target - entry.orbit) * Math.min(1, elapsed * 1.2);
+                positionWord(entry);
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        function layoutCloud() {
+            view.width = window.innerWidth;
+            view.height = window.innerHeight;
+            gameState.words.forEach(entry => {
+                entry.width = entry.element.offsetWidth;
+                entry.height = entry.element.offsetHeight;
+            });
+        }
+
+        // Process incoming message
+        function processData(data) {
+            // Captions are the host's own speech shown as text. They are not chat to take part with.
+            if (data && (data.content || data).type === "captions") return;
+            // Handle different data formats from Social Stream
+            if (data && data.content) {
+                data = data.content;
+            }
+            
+            if (!data || !data.chatmessage || !data.chatname) return;
+
+            let text = data.chatmessage;
+            // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
+            if (!data.textonly) {
+                text = stripHtml(text);
+            }
+            const words = extractWords(text).slice(0, 8);
+            if (words.length === 0) return;
+
+            words.forEach(word => {
+                const entry = createWordBubble(word);
+
+                // Check for combos on new words
+                if (entry.isNew) {
+                    checkCombos(entry);
+                }
+            });
+
+            updateDisplay();
+        }
+
+        // Setup iframe communication
+        if (!urlParams.has('demo') && !chatRelay.enabled) {
+            const iframe = document.createElement("iframe");
+            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            document.body.appendChild(iframe);
+            
+            // Listen for messages
+            window.addEventListener("message", function(e) {
+                if (e.source !== iframe.contentWindow) return;
+                
+                if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        processData(e.data.dataReceived.overlayNinja);
+                    }
+                }
+            });
+        }
+
+        // Handle WebSocket connection
+        if (!urlParams.has('demo') && chatRelay.enabled) {
+            const serverUrl = chatRelay.url;
+            let socketserver = null;
+            let reconnectTimeout = null;
+
+            function connectWebSocket() {
+                socketserver = new WebSocket(serverUrl);
+
+                socketserver.onopen = function() {
+                    socketserver.send(JSON.stringify({
+                        join: sessionId.split(",")[0],
+                        out: chatRelay.out, in: chatRelay.in
+                    }));
+                };
+
+                socketserver.onclose = function() {
+                    clearTimeout(reconnectTimeout);
+                    reconnectTimeout = setTimeout(connectWebSocket, 5000);
+                };
+
+                socketserver.onerror = function() {
+                    try { socketserver.close(); } catch (e) {}
+                };
+
+                socketserver.onmessage = function(event) {
+                    if (event.data) {
+                        try {
+                            const data = JSON.parse(event.data);
+                            processData(data);
+                        } catch (e) {
+                            console.error('WebSocket parse error:', e);
+                        }
+                    }
+                };
+            }
+
+            connectWebSocket();
+        }
+
+        // Demo mode
+        if (urlParams.has('demo')) {
+            const demoWords = [
+                'amazing', 'awesome', 'incredible', 'fantastic', 'wonderful', 'brilliant', 'epic', 'legendary',
+                'stream', 'chat', 'game', 'fun', 'play', 'win', 'victory', 'challenge', 'adventure',
+                'storm', 'power', 'energy', 'magic', 'spell', 'wizard', 'dragon', 'quest', 'hero'
+            ];
+
+            // A few favourites come up far more often, the way they do in a real chat
+            function demoWord() {
+                const pool = Math.random() < 0.45 ? 6 : demoWords.length;
+                return demoWords[Math.floor(Math.random() * pool)];
+            }
+
+            function demoMessage() {
+                const numWords = Math.floor(Math.random() * 3) + 1;
+                const selectedWords = [];
+
+                for (let i = 0; i < numWords; i++) {
+                    selectedWords.push(demoWord());
+                }
+
+                processData({
+                    chatname: 'DemoUser',
+                    chatmessage: selectedWords.join(' ')
+                });
+
+            }
+            setInterval(demoMessage, 800);
+            for (let i = 0; i < 9; i++) {
+                setTimeout(demoMessage, 100 + i * 120);
+            }
+        }
+
+        // Periodic cleanup
+        setInterval(cleanupWords, 5000);
+
+        // Keep the storm fitted to the window
+        window.addEventListener('resize', layoutCloud);
+
+        updateDisplay();
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>

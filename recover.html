@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Recover settings from Social Stream links. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Recover Social Stream settings</title>
+    <style>
+        :root {
+            --bg: #0f1720;
+            --panel: #152330;
+            --text: #e5ecf3;
+            --muted: #9fb4c7;
+            --accent: #3ac2ff;
+            --accent-strong: #2aa0d8;
+            --error: #ff7b7b;
+            --border: #203445;
+            --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+            --radius: 12px;
+            --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            --sans: "Segoe UI", Tahoma, "Sora", Arial, sans-serif;
+        }
+        * { box-sizing: border-box; }
+        html, body {
+            min-height: 100%;
+        }
+        body {
+            margin: 0;
+            padding: 32px 16px 64px;
+            background: radial-gradient(circle at 20% 20%, rgba(58, 194, 255, 0.1), transparent 25%),
+                        radial-gradient(circle at 80% 10%, rgba(68, 255, 171, 0.08), transparent 30%),
+                        radial-gradient(circle at 50% 80%, rgba(255, 219, 112, 0.08), transparent 30%),
+                        var(--bg);
+            background-repeat: no-repeat;
+            background-size: 140% 140%, 160% 160%, 180% 180%, cover;
+            background-attachment: fixed;
+            color: var(--text);
+            font-family: var(--sans);
+            line-height: 1.55;
+        }
+        h1 {
+            margin: 0 0 6px;
+            font-size: 24px;
+            letter-spacing: 0.2px;
+        }
+        p { margin: 0 0 12px; color: var(--muted); }
+        .card {
+            max-width: 880px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, rgba(21, 35, 48, 0.9), rgba(25, 44, 61, 0.92));
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px 20px 28px;
+        }
+        label { display: block; margin: 12px 0 6px; font-weight: 600; }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: #0e1a24;
+            color: var(--text);
+            font-size: 14px;
+            font-family: var(--sans);
+            outline: none;
+            transition: border-color 120ms ease, box-shadow 120ms ease;
+        }
+        input[type="text"]:focus, textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(58, 194, 255, 0.25);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 180px;
+            font-family: var(--mono);
+            line-height: 1.4;
+        }
+        .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        button {
+            background: var(--accent);
+            color: #06111c;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(58, 194, 255, 0.25);
+            transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+        }
+        button:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(58, 194, 255, 0.35); background: var(--accent-strong); }
+        button:active { transform: translateY(0); }
+        button[disabled] { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+        .error { color: var(--error); margin-top: 6px; }
+        .small { color: var(--muted); font-size: 13px; }
+        .panel {
+            background: #0e1a24;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+        [hidden] { display: none !important; }
+        select { max-width: 100%; padding: 10px; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 6px; }
+        button:focus, select:focus, summary:focus { outline: 2px solid var(--accent); outline-offset: 4px; }
+        .secondary { color: var(--text); background: var(--border); box-shadow: none; }
+        .secondary:hover { background: var(--panel); }
+        .query-options { margin: 12px 0 20px; }
+        summary { cursor: pointer; font-weight: 600; }
+        #inputHelp, .import-help { margin-top: 10px; }
+        #status { margin: 12px 0; }
+        #warnings { padding-left: 22px; color: #ffda91; overflow-wrap: anywhere; }
+        #warnings:empty { display: none; }
+        #summary { color: var(--text); overflow-wrap: anywhere; }
+        #output { min-height: 260px; }
+        #linkTypes { margin-bottom: 16px; }
+        #linkTypes:empty { display: none; }
+        @media (max-width: 520px) {
+            body { padding: 16px 10px; }
+            .card { padding: 18px 14px; }
+            .row button { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <main class="card">
+        <h1>Recover settings from your links</h1>
+        <p>Paste your Social Stream links to create one settings file. Combine a dock, featured chat, alerts, and other overlays from the same session.</p>
+        <label for="recoveryUrls">Your links <span class="small">&mdash; one per line</span></label>
+        <textarea id="recoveryUrls" rows="5" spellcheck="false" autocomplete="off" aria-describedby="inputHelp" placeholder="https://socialstream.ninja/dock.html?session=YOUR_ID&amp;color&#10;https://socialstream.ninja/featured.html?session=YOUR_ID&amp;fade"></textarea>
+        <p id="inputHelp" class="small">Only settings contained in these links can be recovered. Links are read in your browser; they are not opened or submitted.</p>
+        <details class="query-options">
+            <summary>Pasting just a query string?</summary>
+            <label for="queryPage">Page for links without a filename</label>
+            <select id="queryPage">
+                <option value="dock.html">Main chat / dock</option>
+                <option value="featured.html">Featured chat</option>
+                <option value="multi-alerts.html">Multi-stream alerts</option>
+                <option value="emotes.html">Emote wall</option>
+                <option value="hype.html">Viewer count / activity</option>
+                <option value="waitlist.html">Waitlist</option>
+                <option value="ticker.html">Ticker</option>
+                <option value="wordcloud.html">Word cloud</option>
+                <option value="gif.html">GIF overlay</option>
+                <option value="bot.html">Chat bot</option>
+                <option value="chatbot.html">Private chat bot</option>
+                <option value="cohost.html">Co-host</option>
+                <option value="cohost-overlay.html">Co-host overlay</option>
+                <option value="aiprompt.html">AI prompt</option>
+                <option value="aievent.html">AI event</option>
+                <option value="tipjar.html">Tip jar</option>
+                <option value="credits.html">Credits</option>
+                <option value="giveaway.html">Giveaway</option>
+                <option value="poll.html">Poll</option>
+                <option value="events.html">Events dashboard</option>
+                <option value="actions.html">Flow actions</option>
+                <option value="leaderboard.html">Leaderboard</option>
+                <option value="games.html">Games</option>
+                <option value="scoreboard.html">Scoreboard</option>
+                <option value="spotify-overlay.html">Spotify</option>
+                <option value="map.html">Map</option>
+                <option value="meta.html">Meta bar / hype train</option>
+                <option value="timer.html">Timer</option>
+                <option value="reactions.html">Reactions</option>
+            </select>
+            <p class="small">For example: <code>?session=YOUR_ID&amp;color</code>. Full links are detected automatically.</p>
+        </details>
+        <div id="linkTypes"></div>
+        <button id="generateBtn" type="button">Recover settings</button>
+        <div id="error" class="error" role="alert"></div>
+        <p id="status" role="status" aria-live="polite"></p>
+        <section id="result" class="panel" hidden aria-label="Recovered settings">
+            <p id="summary"></p>
+            <ul id="warnings"></ul>
+            <div class="row">
+                <button id="downloadBtn" type="button" disabled>Download settings file</button>
+                <button id="copyBtn" type="button" class="secondary" disabled>Copy JSON</button>
+            </div>
+            <p class="small import-help">In the Social Stream menu, use <strong>Import settings</strong> to open the downloaded <code>.data</code> file. Importing replaces your saved settings; export your current settings first if you want to keep them.</p>
+            <details id="jsonDetails">
+                <summary>View settings JSON</summary>
+                <label for="output">Generated JSON</label>
+                <textarea id="output" rows="12" readonly spellcheck="false"></textarea>
+            </details>
+        </section>
+    </main>
+
+    <script src="recover.js"></script>
+</body>
+</html>
