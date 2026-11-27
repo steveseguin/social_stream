@@ -32,8 +32,7 @@
 		el.className = cls;
 		wrap.appendChild(el);
 		root.appendChild(wrap);
-		// A readout wider than the source (12-hour time with seconds, three-digit day counts) used to run off both
-		// edges. Shrink it to fit instead; nothing changes while it already fits.
+		// Scale the whole readout around its anchor when either dimension exceeds the source.
 		var origin = c.align === "flex-start" ? "0 50%" : c.align === "flex-end" ? "100% 50%" : "50% 50%";
 		function fit() {
 			var scale = Math.min(1, Math.max(1, wrap.clientWidth - 24) / Math.max(1, el.offsetWidth), wrap.clientHeight / Math.max(1, el.offsetHeight));
