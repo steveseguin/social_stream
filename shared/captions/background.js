@@ -937,7 +937,8 @@
 			return false;
 		}
 		var picked = pickedChats();
-		return !picked.length || picked.indexOf(target) !== -1;
+		if (picked.length) return picked.indexOf(target) !== -1;
+		return !CAPTION_DEFAULT_EXCLUDED_CHAT_TYPES.has(target);
 	}
 
 	function postGapMs() {
