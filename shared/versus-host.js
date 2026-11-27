@@ -6,8 +6,8 @@
 	const STORAGE_KEY = "ssn_versus_race";
 	const SEND_GAP_MS = 150;
 
-	// undefined: not looked up yet. null: no board has used this session. Otherwise { session, state }.
-	let race;
+	let cachedSession;
+	let race = null;
 	let sendTimer = null;
 	let lastSent = 0;
 
@@ -31,8 +31,11 @@
 
 	// The score in use for the current session, if a board has ever asked for one.
 	function existing() {
-		if (race === undefined || (race && race.session !== streamID)) race = streamID ? load() : undefined;
-		return race || null;
+		if (cachedSession !== streamID) {
+			cachedSession = streamID;
+			race = streamID ? load() : null;
+		}
+		return race;
 	}
 
 	function ensure() {
@@ -95,6 +98,7 @@
 	// A new race: the count returns to zero, and followers from before this moment no longer count.
 	function reset() {
 		if (!streamID) return false;
+		cachedSession = streamID;
 		race = { session: streamID, state: SSNVersus.newState(), twitchFollows: new Set() };
 		save();
 		publish();
