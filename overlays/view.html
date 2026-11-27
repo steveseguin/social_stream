@@ -128,7 +128,7 @@
 		};
 	})();
 	</script>
-	<script src="core.js?v=24"></script>
+	<script src="core.js?v=25"></script>
 	<template id="overlay-packs">
 	<script src="templates/countries.js?v=15"></script>
 	<script data-types="*" src="templates/engines.js?v=19"></script>
@@ -139,7 +139,7 @@
 	<script src="templates/fun.js?v=15"></script>
 	<script src="templates/text.js?v=15"></script>
 	<script src="templates/gaming.js?v=17"></script>
-	<script src="templates/obs.js?v=16"></script>
+	<script src="templates/obs.js?v=17"></script>
 	<script src="templates/petrig.js?v=1"></script>
 	<script src="templates/pets.js?v=16"></script>
 	<script src="templates/extra.js?v=24"></script>
@@ -155,7 +155,7 @@
 	<script src="templates/themebar.js?v=16"></script>
 	<script src="templates/winter.js?v=3"></script>
 	<script src="templates/winterstrip.js?v=2"></script>
-	<script src="templates/winterscenes.js?v=2"></script>
+	<script src="templates/winterscenes.js?v=3"></script>
 	<script src="templates/winterfx.js?v=2"></script>
 	<script src="templates/frames2.js?v=2"></script>
 	<script src="templates/lowerfx.js?v=1"></script>
@@ -180,6 +180,18 @@
 	<script data-types="tinyworld" src="templates/tinyworlds.js?v=1"></script>
 	<script data-types="retro8" src="templates/retro8.js?v=1"></script>
 	<script data-types="retro3d" src="templates/retro3d.js?v=1"></script>
+	<script data-types="corners" src="templates/cornerkit.js?v=1"></script>
+	<script data-types="corners" src="templates/corners-harvest.js?v=1"></script>
+	<script data-types="corners" src="templates/corners-xmas.js?v=1"></script>
+	<script data-types="corners" src="templates/corners-winter.js?v=1"></script>
+	<script data-types="corners" src="templates/corners-party.js?v=1"></script>
+	<script data-types="corners" src="templates/corners-cozy.js?v=1"></script>
+	<script data-types="corners" src="templates/corners-love.js?v=1"></script>
+	<script data-types="corners" src="templates/corners-spring.js?v=1"></script>
+	<script data-types="corners" src="templates/corners-tropic.js?v=1"></script>
+	<script data-types="corners" src="templates/corners-crystal.js?v=1"></script>
+	<script data-types="corners" src="templates/corners-haunt.js?v=1"></script>
+	<script data-types="corners" src="templates/corners.js?v=1"></script>
 	<script src="templates/seasontags.js?v=1"></script>
 	</template>
 	<script>
@@ -188,13 +200,13 @@
 		var root = document.getElementById("sso-root");
 		var type = params.get("t") || "";
 		var packs = Array.prototype.slice.call(document.getElementById("overlay-packs").content.querySelectorAll("script"));
-		var selected = type && type !== "*" && packs.find(function (pack) {
+		var selected = type && type !== "*" ? packs.filter(function (pack) {
 			return (pack.dataset.types || "").split(" ").indexOf(type) !== -1;
-		});
-		// Standalone worlds and celebrations need only their pack and the two shared engines.
-		// Composable templates can use backgrounds from any pack.
-		if (selected) {
-			packs = packs.filter(function (pack) { return pack === selected || pack.dataset.types === "*"; });
+		}) : [];
+		// Standalone worlds and celebrations need only their own pack (or packs: a kit and its theme files) and the two
+		// shared engines. Composable templates can use backgrounds from any pack.
+		if (selected.length) {
+			packs = packs.filter(function (pack) { return selected.indexOf(pack) !== -1 || pack.dataset.types === "*"; });
 		}
 		var remaining = packs.length;
 		packs.forEach(function (pack) {

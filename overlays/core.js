@@ -13,6 +13,7 @@
 		{ id: "gaming", label: "Gaming" },
 		{ id: "time", label: "Clocks & timers" },
 		{ id: "scenes", label: "Scenes & frames" },
+		{ id: "corners", label: "Corner decorations" },
 		{ id: "worlds", label: "Backgrounds & worlds" },
 		{ id: "vertical", label: "Vertical 9:16" },
 		{ id: "3d", label: "3D scenes" },
