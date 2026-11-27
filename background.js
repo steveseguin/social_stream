@@ -6042,10 +6042,13 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		const senderTabId = hasSenderTabId ? senderTab.id : null;
 		const senderTabUrl = senderTab && typeof senderTab.url === "string" ? senderTab.url : "";
 
-		if (request.youtubeCaptionResult) {
-			const result = request.youtubeCaptionResult;
-			const pending = pendingYouTubeCaptionPosts.get(result.requestId);
-			if (pending && pending.tabId === senderTabId) pending.finish(result.ok === true ? "sent" : "failed");
+		if (request.youtubeCaptionResult || request.kickCaptionResult) {
+			const result = request.youtubeCaptionResult || request.kickCaptionResult;
+			const pending = pendingCaptionPosts.get(result.requestId);
+			const platform = request.youtubeCaptionResult ? "youtube" : "kick";
+			if (pending && pending.tabId === senderTabId && pending.platform === platform) {
+				pending.finish(result.ok === true ? "sent" : platform === "kick" && result.busy === true ? "busy" : "failed");
+			}
 			sendResponse({ state: isExtensionOn });
 			return response;
 		}
@@ -17706,7 +17709,7 @@ function isWebsocketSourceTabUrl(url) {
 	return !!(url && url.includes("/sources/websocket/") && (url.includes("socialstream.ninja") || url.startsWith("file://") || url.startsWith("chrome-extension://")));
 }
 
-const pendingYouTubeCaptionPosts = new Map();
+const pendingCaptionPosts = new Map();
 
 // Sends a caption post to a WebSocket source and waits for the source's own answer, in the
 // extension and in SSApp alike. Resolves "sent", "busy" (the source was in the middle of another
@@ -17719,14 +17722,14 @@ function sendCaptionToWebsocketSourceTab(tabId, message, platform) {
 			if (settled) return;
 			settled = true;
 			clearTimeout(timer);
-			if (request.captionRequestId) pendingYouTubeCaptionPosts.delete(request.captionRequestId);
+			if (request.captionRequestId) pendingCaptionPosts.delete(request.captionRequestId);
 			resolve(outcome);
 		};
 		const timer = setTimeout(() => finish("failed"), 12000);
-		if (platform === "youtube") {
-			// The desktop tab bridge acknowledges dispatch before the YouTube API finishes.
+		if (platform === "youtube" || platform === "kick") {
+			// The desktop tab bridge can acknowledge dispatch before the platform API finishes.
 			request.captionRequestId = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
-			pendingYouTubeCaptionPosts.set(request.captionRequestId, { tabId, finish });
+			pendingCaptionPosts.set(request.captionRequestId, { tabId, platform, finish });
 		}
 		try {
 			const pending = chrome.tabs.sendMessage(tabId, request, function (response) {

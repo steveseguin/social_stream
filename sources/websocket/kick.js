@@ -2375,6 +2375,11 @@ function initExtensionBridge() {
                         return false;
                     }
                     if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
+                        if (request.messageOrigin === 'caption' && request.captionRequestId) {
+                            sendKickCaption(request);
+                            sendResponse(true);
+                            return false;
+                        }
                         sendChatFromExtension(request.message)
                             .then(result => sendResponse(Boolean(result)))
                             .catch(err => {
@@ -8989,9 +8994,23 @@ async function sendChatFromExtension(message) {
     }
 }
 
-async function sendChatMessage() {
+async function sendKickCaption(request) {
+    const result = { requestId: request.captionRequestId, ok: false };
+    if (state.chat.sending) {
+        result.busy = true;
+    } else {
+        try {
+            const response = await sendChatMessage(request.message);
+            result.ok = response?.data?.is_sent === true;
+        } catch (_) {} // sendChatMessage already reports the error.
+    }
+    notifyApp({ type: 'toBackground', data: { kickCaptionResult: result } });
+}
+
+async function sendChatMessage(caption) {
     if (!els.chatMessage) return;
-    const content = els.chatMessage.value.trim();
+    const isCaption = typeof caption === 'string';
+    const content = (isCaption ? caption : els.chatMessage.value).trim();
     if (!content) {
         setChatStatus('Enter a message first.', 'warning');
         return;
@@ -9006,8 +9025,12 @@ async function sendChatMessage() {
         updateChatSendingState(true);
         setChatStatus('Sending message…');
         const response = await sendChatPayload(content, messageType, false);
+        if (isCaption && response?.data?.is_sent !== true) {
+            setChatStatus('Kick did not confirm the caption was sent.', 'warning');
+            return response;
+        }
         queuePendingKickChatEcho(content, messageType, response);
-        els.chatMessage.value = '';
+        if (!isCaption) els.chatMessage.value = '';
         setChatStatus('Message submitted. Waiting for live chat confirmation...', 'info');
         log('[CHAT] Outbound message submitted; waiting for live chat confirmation.');
         return response;
@@ -9698,6 +9721,10 @@ window.addEventListener('message', function(event) {
         return;
     }
     if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
+        if (request.messageOrigin === 'caption' && request.captionRequestId) {
+            sendKickCaption(request);
+            return;
+        }
         sendChatFromExtension(request.message).catch(function(err) {
             console.error('Kick SEND_MESSAGE via postMessage failed', err);
         });
